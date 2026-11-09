@@ -7,6 +7,7 @@ without changing authentication, payment, provider, or data ownership.
 
 from pathlib import Path
 import re
+import subprocess
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -92,17 +93,14 @@ def test_motion_utility_is_browser_only_progressive_enhancement() -> None:
 
 
 def test_motion_utility_waits_for_view_transition_dom_update_before_entering() -> None:
-    motion = _motion_source()
-
     # `startViewTransition()` may defer its update callback until the previous
-    # snapshot is captured.  Enter animation must therefore wait for the DOM
-    # update rather than running against the outgoing workspace.
-    assert "transition.updateCallbackDone" in motion
-    assert re.search(
-        r"transition\.updateCallbackDone\.then\(\(\)\s*=>\s*\{?\s*"
-        r"enter\(main,\s*[\"']enter[\"']\)",
-        motion,
+    # snapshot is captured. Exercise current/stale callbacks instead of
+    # requiring an unguarded enter() to be the first statement in a promise.
+    result = subprocess.run(
+        ["node", "--test", "tests/motion-replace-ownership.test.mjs"],
+        cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=30,
     )
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_theme_declares_shared_portal_motion_tokens_and_lifecycle_selectors() -> None:
@@ -141,14 +139,15 @@ def test_mount_portal_assigns_surface_and_delegates_render_lifecycle_to_motion()
     assert "document.body.dataset.portalSurface = surface;" in mount
     assert "const motion = window.TOANAASPortalMotion || Object.freeze({" in mount
     assert re.search(r"replace\([^)]*render[^)]*\)\s*\{\s*render\(\);\s*\}", mount)
+    assert "const sidebarMarkup = renderSidebar(page, context);" in mount
+    assert "const headerMarkup = renderHeader(page, context);" in mount
     render_shell = _section(
         mount,
         "function renderShell() {",
         "\n    const replaceResult = featureCatalogRoute",
     )
     for rendering_step in (
-        "sidebar.innerHTML = renderSidebar(page, context);",
-        "const headerMarkup = renderHeader(page, context);",
+        "if (!keepCustomerSidebar) sidebar.innerHTML = sidebarMarkup;",
         "if (!keepCustomerHeader) header.innerHTML = headerMarkup;",
         "main.innerHTML = renderPage(page, context);",
         "placeSfxCueSheetReceipt(main);",

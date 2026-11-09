@@ -1,5 +1,18 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 09/11/2026 — Quyền sở hữu chuyển trang và hiệu ứng không lặp khi cập nhật
+
+Candidate motion giữ lượt thay thế hiện hành riêng từng main; callback native cũ
+không dựng/enter lên nội dung mới. Bỏ animation vô điều kiện của toàn bài, giữ
+hiệu ứng vào trang riêng và reduced-motion. Cuộn Landing dùng cùng snapshot;
+workspace chụp viewport trước vòng đổi class/style. Không thay dữ liệu/hydration,
+route, auth authority, backend, provider hoặc ví. Node1907/1907, Python18/18;
+đây là bằng chứng local, không phải trạng thái production đã phát hành.
+
+[Receipt và giới hạn](../docs/reports/motion-20261109.md),
+[phiên Tester](../KIEM-THU/PHIEN-MOTION-20261109.md). Tải đầu còn tác vụ dài;
+không suy từ việc bỏ hiệu ứng lặp rằng toàn app hết giật.
+
 ## 08/11/2026 — Locale và công cụ âm nhạc
 
 Đã dịch chữ cố định VI/EN/ZH của tiêu đề, biểu mẫu, kết quả và ghi chú công cụ;

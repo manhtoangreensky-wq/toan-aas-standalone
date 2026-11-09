@@ -29,6 +29,7 @@
   let workspaceCleanup = null;
   let workspaceGeneration = 0;
   const entryLifecycles = new WeakMap();
+  const replaceLifecycles = new WeakMap();
   let entryGeneration = 0;
 
   function clamp(value, minimum, maximum) {
@@ -139,7 +140,13 @@
   }
 
   function replace(shell, main, render, options) {
-    const apply = typeof render === "function" ? render : () => {};
+    const renderCurrent = typeof render === "function" ? render : () => {};
+    const lifecycle = {};
+    if (main) replaceLifecycles.set(main, lifecycle);
+    const isCurrentReplace = () => !main || replaceLifecycles.get(main) === lifecycle;
+    const apply = () => {
+      if (isCurrentReplace()) renderCurrent();
+    };
     const opts = options || {};
     const isHydration = main && main.dataset && main.dataset.portalPresentationPhase === "settled";
     const markerBeforeRender = main && typeof main.getAttribute === "function"
@@ -177,7 +184,7 @@
           && typeof transition.updateCallbackDone.then === "function") {
         if (skipEnter) return transition.updateCallbackDone.then(() => {}).catch(() => {});
         return transition.updateCallbackDone.then(() => {
-          enter(main, "enter");
+          if (isCurrentReplace()) enter(main, "enter");
         }).catch(() => {});
       } else {
         if (!skipEnter) enter(main, "enter");
@@ -319,8 +326,9 @@
       if (observer) observer.unobserve(target);
     };
 
+    const pendingAtMount = new Set(targets.filter((target) => !(settleVisible && targetIsInReadableViewport(target))));
     targetDetails.forEach(({ target, targetClass, itemClass, itemIndexProperty, itemSelector: selector }) => {
-      const pending = !(settleVisible && targetIsInReadableViewport(target));
+      const pending = pendingAtMount.has(target);
       if (pending) {
         target.classList.add(targetClass, "is-pending");
         Array.from(target.querySelectorAll(selector)).slice(0, 6).forEach((item, index) => {
@@ -662,6 +670,7 @@
       if (root.getAttribute("data-landing-motion-section") !== activeLayer) {
         root.setAttribute("data-landing-motion-section", activeLayer);
       }
+      return scrollPos;
     };
 
     const resetPointer = (target) => {
@@ -824,11 +833,11 @@
     const syncHeader = () => {
       scrollFrame = 0;
       if (!isCurrentMount()) return;
-      syncScrollMotion();
+      const scrollPos = syncScrollMotion();
       if (header) {
         header.setAttribute(
           "data-landing-motion-header",
-          getScrollPosition() > 20 ? "compact" : "default"
+          scrollPos > 20 ? "compact" : "default"
         );
       }
     };

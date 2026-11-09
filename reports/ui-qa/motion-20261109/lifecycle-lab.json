@@ -1,0 +1,997 @@
+{
+  "schema": "motion-lab-v1",
+  "base_sha": "b4e52fe1e6455714d034131a8f802aa8372e5a5f",
+  "application_git_blobs": {
+    "static/portal/portal-motion.js": "51baf82563fcc86ba68cb99a92eab58d4934ee85",
+    "static/portal/portal-theme.css": "fa56d098c4437010ca4dd02955167e806aa6a5f2"
+  },
+  "limitations": "Disposable native localhost lab with CPU sampling overhead; not signed production, physical-device FPS or field INP; startup longtasks remain open.",
+  "batches": {
+    "native": {
+      "browser": "156.0.8078.80",
+      "rows": [
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "no-preference",
+          "genericArticleStarts": 7,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 476,
+          "maxFrameLabMs": 133.5,
+          "longTaskLabMs": [
+            125,
+            60,
+            83,
+            54
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": "not-visible",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/features",
+          "width": 390,
+          "motion": "no-preference",
+          "genericArticleStarts": 0,
+          "observableStarts": 1,
+          "cls": 0,
+          "lcpLabMs": 332,
+          "maxFrameLabMs": 46.5000000011176,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/features",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": "not-visible",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/studio",
+          "width": 390,
+          "motion": "no-preference",
+          "genericArticleStarts": 3,
+          "observableStarts": 1,
+          "cls": 0,
+          "lcpLabMs": 312,
+          "maxFrameLabMs": 66.5,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/studio",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": "not-visible",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "reduce",
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 380,
+          "maxFrameLabMs": 116.60000000000002,
+          "longTaskLabMs": [
+            110
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": "not-visible",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/features",
+          "width": 390,
+          "motion": "reduce",
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 372,
+          "maxFrameLabMs": 54.099999999999994,
+          "longTaskLabMs": [
+            52
+          ],
+          "errors": [],
+          "path": "/features",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": "not-visible",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/studio",
+          "width": 390,
+          "motion": "reduce",
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 316,
+          "maxFrameLabMs": 66.70000000000002,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/studio",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": "not-visible",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 1440,
+          "motion": "no-preference",
+          "genericArticleStarts": 7,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 416,
+          "maxFrameLabMs": 116.69999999999999,
+          "longTaskLabMs": [
+            118,
+            55,
+            79
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": "not-visible",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/features",
+          "width": 1440,
+          "motion": "no-preference",
+          "genericArticleStarts": 0,
+          "observableStarts": 1,
+          "cls": 0,
+          "lcpLabMs": 320,
+          "maxFrameLabMs": 46.59999999925495,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/features",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": "not-visible",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/studio",
+          "width": 1440,
+          "motion": "no-preference",
+          "genericArticleStarts": 3,
+          "observableStarts": 1,
+          "cls": 0,
+          "lcpLabMs": 324,
+          "maxFrameLabMs": 83.29999999999998,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/studio",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": "not-visible",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 1440,
+          "motion": "reduce",
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 400,
+          "maxFrameLabMs": 116.6,
+          "longTaskLabMs": [
+            107
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": "not-visible",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/features",
+          "width": 1440,
+          "motion": "reduce",
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 324,
+          "maxFrameLabMs": 45.5,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/features",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": "not-visible",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/studio",
+          "width": 1440,
+          "motion": "reduce",
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0.0015696502057613167,
+          "lcpLabMs": 364,
+          "maxFrameLabMs": 83.30000000000001,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/studio",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": "not-visible",
+          "freshDocumentVerified": true
+        }
+      ]
+    },
+    "focused-baseline": {
+      "browser": "156.0.8078.80",
+      "rows": [
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "no-preference",
+          "repeat": 1,
+          "genericArticleStarts": 7,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 468,
+          "maxFrameLabMs": 116.69999999999999,
+          "longTaskLabMs": [
+            51,
+            116,
+            58,
+            106,
+            56
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "no-preference",
+          "repeat": 2,
+          "genericArticleStarts": 7,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 384,
+          "maxFrameLabMs": 72.20000000074506,
+          "longTaskLabMs": [
+            54,
+            50,
+            54
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "no-preference",
+          "repeat": 3,
+          "genericArticleStarts": 5,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 348,
+          "maxFrameLabMs": 99.9,
+          "longTaskLabMs": [
+            53
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "reduce",
+          "repeat": 1,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 384,
+          "maxFrameLabMs": 116.49999999999997,
+          "longTaskLabMs": [
+            112,
+            54
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "reduce",
+          "repeat": 2,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 312,
+          "maxFrameLabMs": 50.00000000000003,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "reduce",
+          "repeat": 3,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 312,
+          "maxFrameLabMs": 61.69999999888242,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": null,
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        }
+      ]
+    },
+    "native-final": {
+      "browser": "156.0.8078.80",
+      "rows": [
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "no-preference",
+          "repeat": 1,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 464,
+          "maxFrameLabMs": 116.59999999999997,
+          "longTaskLabMs": [
+            108,
+            52,
+            79
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/features",
+          "width": 390,
+          "motion": "no-preference",
+          "repeat": 2,
+          "genericArticleStarts": 0,
+          "observableStarts": 1,
+          "cls": 0,
+          "lcpLabMs": 316,
+          "maxFrameLabMs": 50.60000000111759,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/features",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": "not-tested",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/studio",
+          "width": 390,
+          "motion": "no-preference",
+          "repeat": 3,
+          "genericArticleStarts": 0,
+          "observableStarts": 1,
+          "cls": 0,
+          "lcpLabMs": 592,
+          "maxFrameLabMs": 69.89999999962748,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/studio",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": "not-tested",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "reduce",
+          "repeat": 1,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 380,
+          "maxFrameLabMs": 100,
+          "longTaskLabMs": [
+            105
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/features",
+          "width": 390,
+          "motion": "reduce",
+          "repeat": 2,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 304,
+          "maxFrameLabMs": 42.90000000037253,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/features",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": "not-tested",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/studio",
+          "width": 390,
+          "motion": "reduce",
+          "repeat": 3,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 292,
+          "maxFrameLabMs": 68.69999999999999,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/studio",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": "not-tested",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 1440,
+          "motion": "no-preference",
+          "repeat": 1,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 396,
+          "maxFrameLabMs": 116.70000000000002,
+          "longTaskLabMs": [
+            104,
+            68,
+            62
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": "not-visible",
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/features",
+          "width": 1440,
+          "motion": "no-preference",
+          "repeat": 2,
+          "genericArticleStarts": 0,
+          "observableStarts": 1,
+          "cls": 0,
+          "lcpLabMs": 316,
+          "maxFrameLabMs": 39.60000000037253,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/features",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": "not-visible",
+          "navigation": "not-tested",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/studio",
+          "width": 1440,
+          "motion": "no-preference",
+          "repeat": 3,
+          "genericArticleStarts": 0,
+          "observableStarts": 1,
+          "cls": 0,
+          "lcpLabMs": 532,
+          "maxFrameLabMs": 83.30000000000001,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/studio",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": "not-visible",
+          "navigation": "not-tested",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 1440,
+          "motion": "reduce",
+          "repeat": 1,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 380,
+          "maxFrameLabMs": 116.70000000000002,
+          "longTaskLabMs": [
+            103
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": "not-visible",
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/features",
+          "width": 1440,
+          "motion": "reduce",
+          "repeat": 2,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 304,
+          "maxFrameLabMs": 43.09999999925495,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/features",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": "not-visible",
+          "navigation": "not-tested",
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/studio",
+          "width": 1440,
+          "motion": "reduce",
+          "repeat": 3,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0.0015696502057613167,
+          "lcpLabMs": 300,
+          "maxFrameLabMs": 62.29999999962746,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/studio",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": "not-visible",
+          "navigation": "not-tested",
+          "freshDocumentVerified": true
+        }
+      ]
+    },
+    "focused-final": {
+      "browser": "156.0.8078.80",
+      "rows": [
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "no-preference",
+          "repeat": 1,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 460,
+          "maxFrameLabMs": 100,
+          "longTaskLabMs": [
+            108,
+            52,
+            80
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "no-preference",
+          "repeat": 2,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 320,
+          "maxFrameLabMs": 72.4,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "no-preference",
+          "repeat": 3,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 312,
+          "maxFrameLabMs": 83.39999999999998,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "reduce",
+          "repeat": 1,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 372,
+          "maxFrameLabMs": 100,
+          "longTaskLabMs": [
+            104
+          ],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "reduce",
+          "repeat": 2,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 308,
+          "maxFrameLabMs": 66.69999999999999,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        },
+        {
+          "route": "/dashboard",
+          "width": 390,
+          "motion": "reduce",
+          "repeat": 3,
+          "genericArticleStarts": 0,
+          "observableStarts": 0,
+          "cls": 0,
+          "lcpLabMs": 292,
+          "maxFrameLabMs": 50,
+          "longTaskLabMs": [],
+          "errors": [],
+          "path": "/dashboard",
+          "nonBlank": true,
+          "overflow": false,
+          "article": {
+            "opacity": "1",
+            "transform": "none",
+            "animationName": "none"
+          },
+          "menu": {
+            "opened": "true",
+            "closed": "false",
+            "focusReturned": true
+          },
+          "navigation": {
+            "path": "/features",
+            "newDocument": true,
+            "nonBlank": true
+          },
+          "freshDocumentVerified": true
+        }
+      ]
+    }
+  },
+  "final_local_byte_binding": {
+    "head": "b4e52fe1e6455714d034131a8f802aa8372e5a5f",
+    "sha256": {
+      "static/portal/portal.js": "d41b0a9df29be29d222355cf0c92454dab4f877098dcac7a6b0d3f2af61ebbc2",
+      "static/portal/portal-motion.js": "2bd037f2b06e3a98196e4c5776497298953dbddb4ec38fcf275a19457238db90",
+      "static/portal/portal-features.js": "f786ad861fcff561d5a666c47afd6d9c5dc1912d0cac02611e32fa69c231222a",
+      "static/portal/portal.css": "4af13a62cc11da0eb457c696970b7a94053cecd54d2fd15206c309689a789d1b",
+      "static/portal/portal-theme.css": "38c8620e666fbe5120f6646db028ae0b6cc8e302ca43182d17ab44267c249008"
+    },
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "production_data_mutations": 0
+  },
+  "final_local_byte_binding_note": "head is baseline because source changes were uncommitted when measured; exact candidate app bytes and Git blobs bind the result."
+}
