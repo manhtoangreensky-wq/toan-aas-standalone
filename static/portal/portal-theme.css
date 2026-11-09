@@ -22994,6 +22994,15 @@ html:not([data-portal-theme="dark"]) body.portal-body--features [data-features-r
 html:not([data-portal-theme="dark"]) body.portal-body--features [data-features-ready] .portal-feature-count {
   color: var(--portal-action);
 }
+
+@media (max-width: 620px) {
+  body.portal-body--features .portal-page .portal-catalog-search-control .portal-input {
+    font-size: 16px;
+  }
+  .portal-page.portal-account-page :is(.portal-input, .portal-select, .portal-textarea) {
+    font-size: 16px;
+  }
+}
 html:not([data-portal-theme="dark"]) body.portal-body--features [data-features-ready] .portal-catalog-search-control {
   background: var(--portal-input-bg);
 }

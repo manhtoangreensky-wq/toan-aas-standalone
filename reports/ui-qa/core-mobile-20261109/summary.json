@@ -1,0 +1,31 @@
+{
+  "schema": "core-mobile-fields-v1",
+  "source_base": "6afca4a277c33283587e51e1b1986a09b1ce0283",
+  "records": 36,
+  "field_font_violations": 0,
+  "overflow_rows": 0,
+  "transport_passed": 36,
+  "subpixel_target_rows": 2,
+  "routes": [
+    "/features",
+    "/account"
+  ],
+  "viewports": [
+    320,
+    414,
+    1024
+  ],
+  "locales": [
+    "vi",
+    "en",
+    "zh"
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "provider_calls": 0,
+  "wallet_mutations": 0,
+  "production_data_mutations": 0,
+  "limitations": "Representative shell/forms only; no whole-app AX/contrast/keyboard or signed production claim."
+}
