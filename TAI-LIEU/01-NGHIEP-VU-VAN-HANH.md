@@ -1,5 +1,14 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 09/11/2026 — Focus chỉ thuộc lượt dựng hiện hành
+
+Candidate focus thêm token mount trong RAM; completion cũ không lấy focus trên
+DOM mới có cùng ID. Current/error/fallback giữ selection và preventScroll.
+Node 1915/1915, Python motion 18/18, native 20/20; đây là local QA có timing
+adapter, chưa phải production hoặc native API đã đóng. Không đổi dữ liệu/auth.
+[Receipt](../docs/reports/motion-focus-20261109.md),
+[phiên Tester](../KIEM-THU/PHIEN-MOTION-FOCUS-20261109.md).
+
 ## 09/11/2026 — Quyền sở hữu chuyển trang và hiệu ứng không lặp khi cập nhật
 
 Candidate motion giữ lượt thay thế hiện hành riêng từng main; callback native cũ

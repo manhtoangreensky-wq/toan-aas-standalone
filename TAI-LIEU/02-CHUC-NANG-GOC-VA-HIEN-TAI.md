@@ -1,5 +1,14 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 09/11/2026 — Focus continuation
+
+R217-10 cấm stale callback; restoreFocus cũ vẫn chạy sau mọi replace promise.
+RED 5/8 chứng minh ID trùng có thể lấy focus khỏi form mới; candidate guard
+completion theo mount hiện hành, helper giữ nguyên. 8 Node/20 native kiểm
+old/current/error/fallback và Tab/selection/values/scroll. Navigation opt-in
+vẫn lỗi ở cả PR700 và candidate, không suy focus PASS thành toàn motion/LIVE.
+[Bằng chứng](../docs/reports/motion-focus-20261109.md).
+
 ## 09/11/2026 — Đối chiếu hợp đồng motion và hành vi thực tế
 
 Nguồn gốc: docs/superpowers/specs/2026-10-16-r217-10-motion-performance.md.

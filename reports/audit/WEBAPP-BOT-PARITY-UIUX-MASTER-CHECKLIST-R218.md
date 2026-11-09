@@ -1,5 +1,15 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## Focus và đối chiếu motion — 09/11/2026
+
+- [x] PR700 CI42575690454, merge/runtimea3ebcadf, deploy42586089352; hai asset
+  local/GitHub/VPS/HTTPS khớp, Bot/Web/nginx active. Không phải LIVE/FPS.
+- [x] Focus candidate: R1, RED5/8→8/8, fullNode1915/Python18/native20, review0C0I;
+  helper/route/data giữ. [Receipt](../../docs/reports/motion-focus-20261109.md).
+- [ ] Focus exact CI/merge/deploy/reconcile; native opt-in error/startup vẫn mở.
+- [ ] Whole locale/keyboard/auth/responsive/lab/device/signed UI R218 chưa đủ
+  evidence; giữ toàn phạm vi goal, không đóng bằng motion hoặc focus unit.
+
 ## Motion bổ sung — 09/11/2026
 
 - [x] Callback ownership, Landing snapshot, workspace read/write và bỏ article replay:

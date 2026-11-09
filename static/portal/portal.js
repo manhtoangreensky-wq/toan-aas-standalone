@@ -41908,11 +41908,13 @@
   }
 
   let lastNormalizedRoute = null;
+  let mountGeneration = 0;
   let lastCustomerHeaderMarkup = null;
   let lastCustomerSidebarMarkup = null;
   let lastCustomerHeaderSessionToken = null;
   function mountPortal(override) {
     const options = arguments[1] || {};
+    const mountId = ++mountGeneration;
     if (override && typeof override === "object") window.__TOAN_AAS_PORTAL__ = override;
     if (typeof window !== "undefined" && window.location) {
       const canonicalSubDubUrl = resolveLegacySubDubCanonicalUrl(window.location.pathname, window.location.search);
@@ -42128,7 +42130,10 @@
       ? motion.replace(shell, main, renderShell, { animate: false })
       : motion.replace(shell, main, renderShell);
     if (replaceResult && typeof replaceResult.then === "function") {
-      replaceResult.then(() => restoreFocus(focus), () => restoreFocus(focus));
+      replaceResult.then(
+        () => { if (mountGeneration === mountId) restoreFocus(focus); },
+        () => { if (mountGeneration === mountId) restoreFocus(focus); }
+      );
     } else {
       restoreFocus(focus);
     }

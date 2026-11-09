@@ -1,5 +1,16 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## MOTION-NOV09-FOCUS — callback focus hiện hành
+
+Phiên: [MOTION-NOV09-FOCUS-CONTINUATION](PHIEN-MOTION-FOCUS-20261109.md).
+
+| Case | Mức | Thao tác | PASS / canh lỗi cũ | Evidence |
+|---|---|---|---|---|
+| MOTION-FOCUS-01 | nặng | Old resolve/reject sau newer pending/sync/null | Không focus ID trùng trên DOM mới | RED5/8→GREEN8/8 |
+| MOTION-FOCUS-02 | vừa | Current/error/fallback/Tab/ShiftTab | Field/selection/preventScroll/values/scroll giữ | Native20/20; Node24/24 |
+
+Không dùng adapter để khẳng định native API, production hay startup đã hoàn tất.
+
 ## MOTION-NOV09 — callback, hydration và read/write order
 
 Phiên độc lập: [MOTION-SMOOTHNESS-20261109](PHIEN-MOTION-20261109.md).
