@@ -979,3 +979,9 @@ vẫn chờ exact-SHA CI/deploy/live trong PR. Hồ sơ: `R218-LOCALE-183-RELEAS
 | MOTION-PUBLISHING-001 | vừa | Mở Đăng bài thường/giảm trên390/1440px | Toàn vùng main không co/dịch xuất hiện; vẫn có nội dung/điều khiển | PR691 đã deploy; Chrome8cấu hình; signed LIVE còn mở |
 | MOTION-LANDING-REDUCED-001 | vừa | Trang chào thường bấm phát lại, đổi sang giảm chuyển động; so với tải đầu giảm | Nút thường chạy; khi giảm nút ẩn+disabled+không focus | QA đạt; [phiên motion](PHIEN-MOTION-20261108.md) |
 | MOTION-MOBILE-HYDRATION-001 | nặng | Mở menu390px, focus link, cập nhật nền cùng phiên; Escape; lặp đổi trang/phiên/đăng xuất/Admin/locale/tên | Cùng phiên giữ menu/focus; Escape đóng/trả nút; các đổi trạng thái vẫn đóng/nền hết inert | Chrome8/8; CI/ship/signed LIVE còn mở |
+
+## Voice mobile — 09/11/2026
+
+| Case | Mức | Bước | Kết quả cần thấy | Bằng chứng hiện tại |
+|---|---|---|---|---|
+| VOICE-MOBILE-INPUT-16-001 | vừa | TTS/STT/Clone/Saved/Outputs ở320/414/1024/1440, VI/EN/ZH, light/dark | Ô nhập mobile16px; desktop từng field giữ baseline; không overflow/errors, không gọi provider | Native120cases/font acceptance; [phiên Voice](PHIEN-VOICE-MOBILE-20261109.md); CI/ship/LIVE riêng |

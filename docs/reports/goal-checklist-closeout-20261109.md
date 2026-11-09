@@ -21,6 +21,19 @@
 
 ## Quy tắc tiếp tục
 
+### Phạm vi bổ sung theo completion ledger R218
+
+Danh sách cổng trên không thay thế các yêu cầu R218 còn mở ở hàng45–58 và1153–1171:
+responsive shell/forms thêm320/414/1024 với type/target/contrast thực;
+keyboard/focus/error/recovery thực; whole-app route×state locale/AX;
+unauth direct-route/safe-next/first-paint/hydration; lab CLS/LCP/INP.
+Các mục này có thể tiếp tục đo an toàn trong QA cô lập, không cần chờ signed production.
+Không được suy ra cả nhóm đã đóng từ một bộ source contracts hoặc snapshot sau readyState complete.
+
+VOICE-MOBILE-INPUT-16-001 là một lát sửa cụ thể của cổng responsive:60field RED→120cấu hình
+được đối chiếu nguồn tại [receipt Voice](voice-mobile-readability-20261109.md).
+Nó không đóng toàn bộ typography, AX hoặc goal.
+
 - Không làm lại F/G/H/I hoặc P/L/N đã có runtime evidence.
 - Lane mới phải có RED, scope allowlist, worker receipt, independent verification, CI, merge, deploy và runtime SHA riêng.
 - Không dùng HTTP 200, CI xanh hoặc QA cô lập để thay cho signed LIVE.
