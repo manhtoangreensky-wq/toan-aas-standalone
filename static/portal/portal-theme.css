@@ -22183,6 +22183,12 @@ html[data-portal-theme="dark"] .portal-feature-workspace--voice-task form .porta
 .portal-voice-flow code { color: var(--portal-ink); overflow-wrap: anywhere; }
 .portal-voice-task-form > summary { padding: 16px; min-height: 44px; cursor: pointer; font-weight: 700; color: var(--portal-ink); }
 .portal-voice-task-form { border: 1px solid var(--portal-border); border-radius: var(--portal-radius); background: var(--portal-surface-light); }
+@media (max-width: 620px) {
+  .portal-feature-workspace--voice-task .portal-voice-clone-steps > summary {
+    min-height: 44px;
+    padding-block: 10px;
+  }
+}
 :root .portal-feature-workspace--voice-task .portal-badge { color: var(--portal-ink); background: var(--portal-surface-soft); }
 :root .portal-feature-workspace--voice-task .portal-voice-flow :is(h3, h4, dt, dd, p, summary, code) { color: var(--portal-ink) !important; }
 html:not([data-portal-theme="dark"]) .portal-feature-workspace--voice-task .portal-button--primary { background: var(--portal-action-hover) !important; background-image: none !important; color: var(--portal-on-action) !important; }
