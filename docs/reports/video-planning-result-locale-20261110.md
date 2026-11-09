@@ -3,6 +3,9 @@
 Tracker: [Issue #689](https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/689).
 Contract: [bounded spec](../superpowers/specs/2026-11-10-video-planning-result-locale.md).
 BASE: `dac863c9796cc4ef7b077d65579a70300b6d4cc7`.
+Reviewed content commit: `466e72a63a156200ecbd1491b266bb602476d0a2`.
+Final metadata HEAD and CI/runtime revisions are recorded separately in the
+GitHub delivery receipt; this source document does not claim deployment.
 
 ## Actual scope
 
@@ -95,3 +98,10 @@ PROVIDER_CALLS=0. WALLET_MUTATIONS=0. PRODUCTION_DATA_MUTATIONS=0.
 Whole-app locale, outer video forms, the separately discovered save-receipt
 rendering issue, responsive/accessibility coverage, signed lifecycle, final motion
 and production/device verification remain in the existing master ledger.
+
+TASK=RESULT-LOCALE-VIDEO-PLANNING; LOCAL_ACCEPTED.
+HEAD_SHA=466e72a63a156200ecbd1491b266bb602476d0a2 (reviewed content).
+FILES_CHANGED=3 application files; 1 CI invocation; 1 focused test; scoped
+operations/spec/tester/ledger documentation. No protected runtime file changed.
+BASELINE_FAILURES=1 historical Python literal check; BRANCH_FAILURES=the same 1;
+NEW_FAILURES=0 in comparable checks. LESSON_CANDIDATE=NONE.
