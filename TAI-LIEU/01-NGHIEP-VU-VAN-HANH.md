@@ -2380,3 +2380,13 @@ desktop giữ cỡ chữ theo từng field. Source 06e4ab9 chỉ thêm CSS Voice
 120cấu hình native QA đã đo, FullNode1880/1880. Đây là bản chờ CI/phát hành,
 không đổi xử lý giọng, upload, quote, provider, ví hoặc quyền.
 [Receipt và giới hạn](../docs/reports/voice-mobile-readability-20261109.md).
+
+## Kết quả lập kế hoạch video — candidate 10/11/2026
+
+Hai khối kết quả hướng dẫn chuyển động và kế hoạch video dài chọn chữ cố định
+theo ngôn ngữ giao diện VI/EN/ZH. Có 69 khóa dịch mới; dữ liệu khách/máy chủ,
+quyền, điều kiện khớp nguồn và thao tác lưu giữ nguyên. Không tạo video hoặc
+đổi cách xử lý phía máy chủ. Bộ kiểm thử 45/45, hồi quy Node 1.969/1.969 và
+48 lượt trình duyệt đạt; mô tả từng chương đã xuống dòng đúng trên điện thoại.
+Candidate còn chờ CI và phát hành; chưa suy thành LIVE.
+[Bằng chứng và giới hạn](../docs/reports/video-planning-result-locale-20261110.md).

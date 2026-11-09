@@ -23492,3 +23492,10 @@ html:not([data-portal-theme="dark"]) .portal-shell[data-portal-app-kind="admin"]
     font-size: 16px;
   }
 }
+
+@media (max-width: 620px) {
+  .portal-page.portal-long-form-planner .portal-stack > .portal-card > .portal-split-grid > .portal-card > pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}

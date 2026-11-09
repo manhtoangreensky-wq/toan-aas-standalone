@@ -1595,3 +1595,19 @@ Input Voice mobile15px ở baselinebd6f947f được nâng16px trong namespace t
 Các role desktop giữ nguyên (không giả định tất cả cùng15px), màu/route/action/scalar và
 processing boundary không đổi.60field RED và120native cases đối chiếu source 06e4ab9;
 CI/ship/LIVE riêng theo receipt Voice. Không suy ra engine/provider đã được thực thi.
+
+## Đối chiếu kết quả lập kế hoạch video — 10/11/2026
+
+Nguồn chức năng ban đầu: `docs/migration/CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md`,
+`tests/test_creative_motion_guide_portal_contracts.py` và
+`tests/test_long_form_video_planner_portal_contracts.py`.
+
+| Trước | Candidate | Giới hạn |
+|---|---|---|
+| Kết quả hướng dẫn chuyển động có tên mục Anh và đoạn giải thích Việt trong mọi ngôn ngữ | 24 khóa chữ cố định VI/EN/ZH; nội dung khách/máy chủ giữ nguyên | Chỉ khối kết quả, chưa phải biểu mẫu hoặc cả đường dẫn |
+| Kết quả kế hoạch video dài lẫn tên mục, đơn vị, ghi chú và xác nhận lưu | 45 khóa chữ cố định; số liệu, điều kiện lưu và nút vô hiệu không đổi | Không đổi chức năng tạo/lưu hoặc xác nhận tệp video |
+| Kỳ vọng kiểm thử cũ tìm literal `matchesRouteFamily` trong hàm menu di động | Cả BASE và candidate đã dùng bộ ánh xạ menu chung, cùng một lỗi kiểm tra nguồn | Không đổi menu hoặc làm yếu kiểm thử trong đơn vị bản dịch |
+
+Bộ 45 ca mới đi qua bộ chuẩn hóa thật; không dựng kết quả thay cho phản hồi hợp lệ.
+Lỗi tràn mô tả trên điện thoại đã sửa bằng một quy tắc CSS hẹp và đạt kiểm tra
+trình duyệt; bằng chứng cùng giới hạn CI/phát hành nằm trong receipt.
