@@ -16,4 +16,3 @@ STATUS=LOCAL_VERIFIED_PENDING_CI_DEPLOY
 - [ ] Signed production/device/LIVE.
 
 Không submit form, tạo job, upload, provider, ví, OAuth hoặc dùng dữ liệu production.
-
