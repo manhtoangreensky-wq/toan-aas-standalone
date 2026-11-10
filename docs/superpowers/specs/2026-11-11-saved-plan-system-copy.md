@@ -109,3 +109,17 @@ root/body/editor background luminance0.007113/0.012117/0.021983 all below0.18.
 Plan/scene content hash and counts6/18 unchanged; original evidence unchanged,
 quick_checkok,22ownedJobprocesses->0. No persistence flow was repeated. Snapshot
 at source commit; final CI/merge/deploy/runtime receipt in Issue689 is delivery truth.
+
+## CI dependency amendment — generated Tester metadata only
+
+CI42894662374 atHEAD32aaa9a7 passed the saved-copy stage but stopped at
+`test_readiness_json_has_explicit_truth_and_file_metadata`:294critical tests
+passed,1failed because canonical case source now1024lines/118779bytes, whereas
+`reports/migration/p0-05d-tester-workspace.json` records1013lines/117256bytes.
+This is coordinator Tester-metadata maintenance omitted from the pre-push gate,
+not an application/worker failure. Allow exactly that generated JSON dependency:
+refresh only the changed canonical-file lines/bytes/SHA plus local refresh date/
+scope; preserve every historical remote/P0/48case/financial/safety field. Do not
+change tests, app, workflows or other source. Rerun the one failed metadata test
+locally, retain all18local/native evidence, then exact newHEADCI on samePR716.
+Source fingerprint remains unchanged because this dependency is audit output.
