@@ -1,0 +1,92 @@
+{
+  "map": {
+    "Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lập Script-to-Screen Prompt Pack.": "unavailable",
+    "Máy chủ chưa trả Script-to-Screen Prompt Pack Web-native an toàn.": "invalidResult",
+    "Prompt pack trả về không còn khớp lựa chọn Web hiện tại để lưu an toàn.": "stale",
+    "Đã tạo Script-to-Screen Prompt Pack để review. Không có media, Bot, provider, output, job, ví, thanh toán hoặc publish action.": "created",
+    "Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lưu Script-to-Screen Prompt Pack thành Video Plan.": "unavailable",
+    "Script-to-Screen Prompt Pack đang được tạo lại từ brief hiện tại. Hãy chờ phản hồi trước khi lưu Video Plan.": "waiting",
+    "Script-to-Screen Prompt Pack này đã được lưu thành Video Plan Draft. Hãy mở plan hiện tại để tiếp tục.": "alreadySaved",
+    "Script-to-Screen Prompt Pack hiện tại không còn khớp lựa chọn Web trong phiên này. Hãy tạo lại trước khi lưu Video Plan.": "stale",
+    "Brief hoặc tập đang hiển thị đã thay đổi. Hãy tạo lại Script-to-Screen Prompt Pack trước khi lưu Video Plan.": "stale",
+    "Script-to-Screen Prompt Pack đang được Video Production Studio xác nhận. Vui lòng chờ.": "waiting",
+    "Máy chủ chưa xác nhận Video Plan Draft từ Script-to-Screen Prompt Pack.": "invalidReceipt",
+    "Máy chủ chưa trả receipt Video Plan content-free và đúng ranh giới an toàn.": "invalidReceipt",
+    "Đã lưu Script-to-Screen Prompt Pack thành Video Plan Draft riêng tư.": "saved",
+    "Máy chủ chưa trả Cinematic Concept Web-native an toàn.": "invalidResult",
+    "Bản nháp trả về không còn khớp lựa chọn Web hiện tại để lưu an toàn.": "stale",
+    "Đã tạo concept/storyboard/prompt để review. Không có ảnh, video, audio, tác vụ, tài sản, thanh toán hoặc publish action.": "created",
+    "Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lưu Cinematic Ad Concept thành Video Plan.": "unavailable",
+    "Cinematic Ad Concept này đã được lưu thành Video Plan Draft. Hãy mở plan hiện tại để tiếp tục.": "alreadySaved",
+    "Bản nháp hiện tại không còn khớp lựa chọn Web trong phiên này. Hãy tạo lại Cinematic Ad Concept trước khi lưu Video Plan.": "stale",
+    "Brief đang hiển thị đã thay đổi hoặc không còn khớp Cinematic Ad Concept. Hãy tạo lại concept trước khi lưu Video Plan.": "stale",
+    "Cinematic Ad Concept đang được Video Production Studio xác nhận. Vui lòng chờ.": "waiting",
+    "Máy chủ chưa xác nhận Video Plan Draft từ Cinematic Ad Concept.": "invalidReceipt",
+    "Đã lưu Cinematic Ad Concept thành Video Plan Draft riêng tư.": "saved",
+    "Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lập Storyboard Prompt Pack.": "unavailable",
+    "Video Plan đang được lưu. Brief và lựa chọn hiện tại được khóa cho đến khi máy chủ xác nhận.": "waiting",
+    "Máy chủ chưa trả Storyboard Composer Web-native an toàn.": "invalidResult",
+    "Đã tạo storyboard prompt pack để review. Không có ảnh, video hoặc audio được tạo.": "created",
+    "Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lưu Storyboard Composer thành Video Plan.": "unavailable",
+    "Storyboard Prompt Pack đang được tạo lại từ brief hiện tại. Hãy chờ phản hồi trước khi lưu Video Plan.": "waiting",
+    "Video Plan đang được lưu từ Storyboard Prompt Pack hiện tại. Vui lòng chờ receipt từ máy chủ.": "waiting",
+    "Storyboard Prompt Pack này đã được lưu thành Video Plan Draft. Hãy mở plan hiện tại để tiếp tục.": "alreadySaved",
+    "Bản nháp hiện tại không còn khớp lựa chọn Web trong phiên này. Hãy tạo lại Storyboard Composer trước khi lưu Video Plan.": "stale",
+    "Brief hoặc lựa chọn storyboard đang hiển thị đã thay đổi. Hãy tạo lại Storyboard Prompt Pack trước khi lưu Video Plan.": "stale",
+    "Storyboard đang được Video Production Studio xác nhận. Vui lòng chờ.": "waiting",
+    "Máy chủ chưa xác nhận Video Plan Draft từ Storyboard Composer.": "invalidReceipt",
+    "Đã lưu storyboard thành Video Plan Draft riêng tư.": "saved",
+    "Đã lưu Cinematic Ad Concept thành Video Plan riêng tư.": "saved",
+    "Đã lưu storyboard thành Video Plan riêng tư.": "saved",
+    "Đã lưu Script-to-Screen Prompt Pack thành Video Plan riêng tư.": "saved",
+    "Đã tạo concept quảng cáo dạng văn bản để bạn biên tập. Không có ảnh, video, audio, preview, output, job, thanh toán hoặc publish nào được tạo.": "created",
+    "Đã lưu Cinematic Ad Concept thành Video Plan Draft riêng tư. Chưa có phê duyệt, lock, render, job, media, thanh toán hoặc giao hàng.": "saved",
+    "Đã tạo storyboard và prompt pack dạng văn bản để bạn biên tập. Không có ảnh, video, audio, preview, output, job, thanh toán hoặc publish nào được tạo.": "created",
+    "Đã lưu storyboard thành Video Plan Draft riêng tư. Chưa có phê duyệt, lock, render, job, media, thanh toán hoặc giao hàng.": "saved",
+    "Đã tạo ba hướng Video Idea và storyboard text để review. Không có Telegram state, Bot/bridge, provider, media, preview, output, job, thanh toán hoặc publish nào được tạo.": "created",
+    "Đã tạo Script-to-Screen Prompt Pack để review. Chưa tạo media, runtime, job, thanh toán hoặc output.": "created",
+    "Đã lưu Script-to-Screen Prompt Pack thành Video Plan Draft riêng tư. Không có Telegram/Bot state, provider, media, job, thanh toán, publish hoặc giao hàng.": "saved"
+  },
+  "copy": {
+    "created": {
+      "vi": "Đã tạo kế hoạch. Bạn có thể rà soát và lưu.",
+      "en": "Plan created. You can review and save it.",
+      "zh": "计划已生成。您可以检查并保存。"
+    },
+    "saved": {
+      "vi": "Đã lưu kế hoạch riêng tư.",
+      "en": "Private plan saved.",
+      "zh": "私有计划已保存。"
+    },
+    "alreadySaved": {
+      "vi": "Kế hoạch đã được lưu. Hãy mở kế hoạch để tiếp tục.",
+      "en": "The plan is already saved. Open it to continue.",
+      "zh": "计划已保存。请打开计划继续。"
+    },
+    "waiting": {
+      "vi": "Đang xử lý lựa chọn hiện tại. Vui lòng chờ.",
+      "en": "Processing your current choices. Please wait.",
+      "zh": "正在处理当前选项。请稍候。"
+    },
+    "unavailable": {
+      "vi": "Không thể thực hiện thao tác lúc này. Hãy tải lại trang rồi thử lại.",
+      "en": "This action is unavailable. Reload the page and try again.",
+      "zh": "暂时无法执行此操作。请刷新页面后重试。"
+    },
+    "invalidResult": {
+      "vi": "Không thể xác nhận kết quả. Hãy tạo lại kế hoạch.",
+      "en": "The result could not be verified. Generate the plan again.",
+      "zh": "无法验证结果。请重新生成计划。"
+    },
+    "stale": {
+      "vi": "Lựa chọn đã thay đổi. Hãy tạo lại kế hoạch trước khi lưu.",
+      "en": "Your choices changed. Generate the plan again before saving.",
+      "zh": "选项已更改。请重新生成计划后再保存。"
+    },
+    "invalidReceipt": {
+      "vi": "Chưa xác nhận được việc lưu. Hãy kiểm tra danh sách kế hoạch trước khi thử lại.",
+      "en": "Saving could not be confirmed. Check your plans before trying again.",
+      "zh": "尚无法确认保存结果。请先检查计划列表，再决定是否重试。"
+    }
+  }
+}

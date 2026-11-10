@@ -1329,6 +1329,16 @@ MERGE/DEPLOY/LIVE không suy từ tests. Trạng thái delivery theo PR/checkpoi
  12protectedpaths/allotherportalbytesgiữ;khônglặp9flowlưuđãđạt.
 - [ ] VIDEO-USEFUL-UI delivery;tiếptụcràkhốidưởcácrouteschưađóng,khôngbỏ
  consent/feedback/dữliệuthật. Whole-appusable/outputlocale/auth/AX/motionvẫnmở.
+- [x] VIDEO-USEFUL-UI delivery:PR710/CI42820293401/deploy42834895394;
+ runtimee63f073f,3servicesactive/4HTTPSassetskhớp;receipt6770083456.
+- [x] REMAINING-PLANNER-UI local:Script/Cinematic/Storyboard398key/locale,
+ 9951giátrịcũgiữ;150UIledger/18field/39metadata/30session/30form/15feedback/
+ 153toast. Native18/18,9flow/9plan/42scene,162contrastmin5,7971:1;54ảnh,
+ 0error/egress/provider/ví.23Portalfunctions/integrationexacthunks/14protected.
+- [ ] REMAINING-PLANNER-UI delivery:CI/exactHEADmerge/exactSHAdeploy/runtime/
+ assetseparate. HaiImageMotion/ReferenceFormatvàserver-output/detailcòntiếp;
+ whole-appclutter/AX/auth/device/finalmotionvẫnmở. Receipt:
+ docs/reports/remaining-planner-ui-20261110.md;Issue689.
 - [x] ROUTE-ENGINE-BOT-WEB source audit requested in parallel: retained bounded
  public-source findings after one evidence correction; push/pull adapters and
  local readiness short-circuits distinguished. No engine/auth mutation.

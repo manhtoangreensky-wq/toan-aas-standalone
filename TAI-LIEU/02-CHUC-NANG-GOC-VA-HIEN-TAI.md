@@ -1697,3 +1697,20 @@ Ownerđãyêucầubỏchúng,khôngphảichỉdịchchữnộibộ.
 |Layout2cộtđểtrốngnếuasidebỏ|Dùngportal-stackhiệncó,khôngthêmCSS|6nativewidth/focus/overflowđạt |
 
 Khôngbậtenginehayhứavideođãtạo;bảnkếhoạchvẫnlàchứcnăngđượcthựcthivàlưuthật.
+
+## Ba công cụ kế hoạch còn lại — đối chiếu 10/11/2026
+
+Nguồn gốc: ba renderer/field/result và parser trong portal.js/integration.js
+tại BASEe63f073f. Không lấy nhãn catalog làm bằng chứng engine đã chạy.
+
+| Trước | Thay đổi đang nghiệm thu | Giữ nguyên |
+|---|---|---|
+|Khối số đếm/giới hạn kỹ thuật đẩy biểu mẫu xuống|Bỏ khối thừa, giữ stack chứa biểu mẫu và kết quả|16/10/10field,consent,nguồn và quyền|
+|Kết quả/biên nhận hợp lệ bị mất metadata qua parser|Giữ đúng metadata đã qua kiểm tra|Mọi normalization/source-match/cờ an toàn|
+|Dựa vào account.id không có ở trình duyệt|Dấu phiên riêng trong RAM, đúng route/epoch|API/auth/CSRF máy chủ không đổi|
+|Ô chọn số HTML khiến Cinematic không lưu được|Chuyển đúng ba chuỗi chuẩn trong matcher biểu mẫu|Sai/mismatch vẫn chặn,transport vẫn strict|
+|Thông báo khi chỉnh sửa/tạo/lưu lẫn ngôn ngữ|VI/EN/ZH ngắn gọn, lỗi vẫn hiển thị|Không giả thành công/đầu ra/provider|
+
+Đây là chức năng lập và lưu kế hoạch văn bản, không phải video đã được kết
+xuất. Native cuối, CI/phát hành và nội dung máy chủ/trang chi tiết còn mở;
+không đổi tài liệu thành tuyên bố hệ thống đã hoàn tất khi thiếu bằng chứng.

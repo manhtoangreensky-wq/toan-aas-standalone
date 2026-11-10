@@ -23572,3 +23572,23 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-self-shot-scene-planner
 html:not([data-portal-theme="dark"]) .portal-page.portal-self-shot-scene-planner form[data-portal-action="self-shot-scene-planner-compose"] .portal-checkbox > span {
   color: var(--portal-checkbox-on-dark);
 }
+
+@media (max-width: 620px) {
+  .portal-page.portal-script-to-screen-planner form[data-portal-action="script-to-screen-planner-compose"] :is(input:not([type="hidden"]), select, textarea),
+  .portal-page.portal-cinematic-concept form[data-portal-action="cinematic-concept-compose"] :is(input:not([type="hidden"]), select, textarea),
+  .portal-page.portal-storyboard-composer form[data-portal-action="storyboard-composer-compose"] :is(input:not([type="hidden"]), select, textarea) {
+    font-size: 16px;
+  }
+}
+
+html:not([data-portal-theme="dark"]) .portal-page.portal-script-to-screen-planner form[data-portal-action="script-to-screen-planner-compose"] .portal-field > label,
+html:not([data-portal-theme="dark"]) .portal-page.portal-cinematic-concept form[data-portal-action="cinematic-concept-compose"] .portal-field > label,
+html:not([data-portal-theme="dark"]) .portal-page.portal-storyboard-composer form[data-portal-action="storyboard-composer-compose"] .portal-field > label {
+  color: var(--portal-ink);
+}
+
+html:not([data-portal-theme="dark"]) .portal-page.portal-script-to-screen-planner form[data-portal-action="script-to-screen-planner-compose"] :is(.portal-field-help, .portal-form-note),
+html:not([data-portal-theme="dark"]) .portal-page.portal-cinematic-concept form[data-portal-action="cinematic-concept-compose"] :is(.portal-field-help, .portal-form-note),
+html:not([data-portal-theme="dark"]) .portal-page.portal-storyboard-composer form[data-portal-action="storyboard-composer-compose"] :is(.portal-field-help, .portal-form-note) {
+  color: var(--portal-muted);
+}

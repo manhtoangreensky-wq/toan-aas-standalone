@@ -498,6 +498,7 @@
   // bootstrap; a save may create a private plan server-side but only the
   // current signed view may receive its content-free receipt.
   let cinematicConceptSessionEpoch = 0;
+  let cinematicConceptSessionToken = "";
   let cinematicConceptComposeRequestEpoch = 0;
   let cinematicConceptSaveRequestEpoch = 0;
   // Creative Motion Guide is a finite, text-only Web-native flow.  It has
@@ -518,6 +519,7 @@
   // compose/save response must never overwrite a newer brief, episode,
   // account, route or signed bootstrap.
   let scriptToScreenPlannerSessionEpoch = 0;
+  let scriptToScreenPlannerSessionToken = "";
   let scriptToScreenPlannerComposeRequestEpoch = 0;
   let scriptToScreenPlannerSaveRequestEpoch = 0;
   // This is a DOM-only lock. It deliberately has no persisted state: a
@@ -529,6 +531,7 @@
   // account, route or bootstrap; the pending lock is DOM-only and never a
   // durable draft or a Bot callback replay mechanism.
   let storyboardComposerSessionEpoch = 0;
+  let storyboardComposerSessionToken = "";
   let storyboardComposerComposeRequestEpoch = 0;
   let storyboardComposerSaveRequestEpoch = 0;
   let storyboardComposerComposePendingRequestEpoch = 0;
@@ -847,7 +850,53 @@
       "Core Bridge đã ghi nhận trạng thái hoàn Xu canonical.": "refunded",
       "Dữ liệu canonical chỉ được hiển thị ở chế độ đọc.": "read_only",
       "Tài khoản Telegram chưa kích hoạt trong hệ thống Bot.": "unverified",
-      "Tài khoản chưa liên kết Telegram.": "unlinked"
+      "Tài khoản chưa liên kết Telegram.": "unlinked",
+      "Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lập Script-to-Screen Prompt Pack.": "planner_unavailable",
+      "Máy chủ chưa trả Script-to-Screen Prompt Pack Web-native an toàn.": "planner_invalidResult",
+      "Prompt pack trả về không còn khớp lựa chọn Web hiện tại để lưu an toàn.": "planner_stale",
+      "Đã tạo Script-to-Screen Prompt Pack để review. Không có media, Bot, provider, output, job, ví, thanh toán hoặc publish action.": "planner_created",
+      "Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lưu Script-to-Screen Prompt Pack thành Video Plan.": "planner_unavailable",
+      "Script-to-Screen Prompt Pack đang được tạo lại từ brief hiện tại. Hãy chờ phản hồi trước khi lưu Video Plan.": "planner_waiting",
+      "Script-to-Screen Prompt Pack này đã được lưu thành Video Plan Draft. Hãy mở plan hiện tại để tiếp tục.": "planner_alreadySaved",
+      "Script-to-Screen Prompt Pack hiện tại không còn khớp lựa chọn Web trong phiên này. Hãy tạo lại trước khi lưu Video Plan.": "planner_stale",
+      "Brief hoặc tập đang hiển thị đã thay đổi. Hãy tạo lại Script-to-Screen Prompt Pack trước khi lưu Video Plan.": "planner_stale",
+      "Script-to-Screen Prompt Pack đang được Video Production Studio xác nhận. Vui lòng chờ.": "planner_waiting",
+      "Máy chủ chưa xác nhận Video Plan Draft từ Script-to-Screen Prompt Pack.": "planner_invalidReceipt",
+      "Máy chủ chưa trả receipt Video Plan content-free và đúng ranh giới an toàn.": "planner_invalidReceipt",
+      "Đã lưu Script-to-Screen Prompt Pack thành Video Plan Draft riêng tư.": "planner_saved",
+      "Máy chủ chưa trả Cinematic Concept Web-native an toàn.": "planner_invalidResult",
+      "Bản nháp trả về không còn khớp lựa chọn Web hiện tại để lưu an toàn.": "planner_stale",
+      "Đã tạo concept/storyboard/prompt để review. Không có ảnh, video, audio, tác vụ, tài sản, thanh toán hoặc publish action.": "planner_created",
+      "Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lưu Cinematic Ad Concept thành Video Plan.": "planner_unavailable",
+      "Cinematic Ad Concept này đã được lưu thành Video Plan Draft. Hãy mở plan hiện tại để tiếp tục.": "planner_alreadySaved",
+      "Bản nháp hiện tại không còn khớp lựa chọn Web trong phiên này. Hãy tạo lại Cinematic Ad Concept trước khi lưu Video Plan.": "planner_stale",
+      "Brief đang hiển thị đã thay đổi hoặc không còn khớp Cinematic Ad Concept. Hãy tạo lại concept trước khi lưu Video Plan.": "planner_stale",
+      "Cinematic Ad Concept đang được Video Production Studio xác nhận. Vui lòng chờ.": "planner_waiting",
+      "Máy chủ chưa xác nhận Video Plan Draft từ Cinematic Ad Concept.": "planner_invalidReceipt",
+      "Đã lưu Cinematic Ad Concept thành Video Plan Draft riêng tư.": "planner_saved",
+      "Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lập Storyboard Prompt Pack.": "planner_unavailable",
+      "Video Plan đang được lưu. Brief và lựa chọn hiện tại được khóa cho đến khi máy chủ xác nhận.": "planner_waiting",
+      "Máy chủ chưa trả Storyboard Composer Web-native an toàn.": "planner_invalidResult",
+      "Đã tạo storyboard prompt pack để review. Không có ảnh, video hoặc audio được tạo.": "planner_created",
+      "Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lưu Storyboard Composer thành Video Plan.": "planner_unavailable",
+      "Storyboard Prompt Pack đang được tạo lại từ brief hiện tại. Hãy chờ phản hồi trước khi lưu Video Plan.": "planner_waiting",
+      "Video Plan đang được lưu từ Storyboard Prompt Pack hiện tại. Vui lòng chờ receipt từ máy chủ.": "planner_waiting",
+      "Storyboard Prompt Pack này đã được lưu thành Video Plan Draft. Hãy mở plan hiện tại để tiếp tục.": "planner_alreadySaved",
+      "Bản nháp hiện tại không còn khớp lựa chọn Web trong phiên này. Hãy tạo lại Storyboard Composer trước khi lưu Video Plan.": "planner_stale",
+      "Brief hoặc lựa chọn storyboard đang hiển thị đã thay đổi. Hãy tạo lại Storyboard Prompt Pack trước khi lưu Video Plan.": "planner_stale",
+      "Storyboard đang được Video Production Studio xác nhận. Vui lòng chờ.": "planner_waiting",
+      "Máy chủ chưa xác nhận Video Plan Draft từ Storyboard Composer.": "planner_invalidReceipt",
+      "Đã lưu storyboard thành Video Plan Draft riêng tư.": "planner_saved",
+      "Đã lưu Cinematic Ad Concept thành Video Plan riêng tư.": "planner_saved",
+      "Đã lưu storyboard thành Video Plan riêng tư.": "planner_saved",
+      "Đã lưu Script-to-Screen Prompt Pack thành Video Plan riêng tư.": "planner_saved",
+      "Đã tạo concept quảng cáo dạng văn bản để bạn biên tập. Không có ảnh, video, audio, preview, output, job, thanh toán hoặc publish nào được tạo.": "planner_created",
+      "Đã lưu Cinematic Ad Concept thành Video Plan Draft riêng tư. Chưa có phê duyệt, lock, render, job, media, thanh toán hoặc giao hàng.": "planner_saved",
+      "Đã tạo storyboard và prompt pack dạng văn bản để bạn biên tập. Không có ảnh, video, audio, preview, output, job, thanh toán hoặc publish nào được tạo.": "planner_created",
+      "Đã lưu storyboard thành Video Plan Draft riêng tư. Chưa có phê duyệt, lock, render, job, media, thanh toán hoặc giao hàng.": "planner_saved",
+      "Đã tạo ba hướng Video Idea và storyboard text để review. Không có Telegram state, Bot/bridge, provider, media, preview, output, job, thanh toán hoặc publish nào được tạo.": "planner_created",
+      "Đã tạo Script-to-Screen Prompt Pack để review. Chưa tạo media, runtime, job, thanh toán hoặc output.": "planner_created",
+      "Đã lưu Script-to-Screen Prompt Pack thành Video Plan Draft riêng tư. Không có Telegram/Bot state, provider, media, job, thanh toán, publish hoặc giao hàng.": "planner_saved"
     };
     const viFallbacks = {
       draft: "Đã cập nhật bản nháp.",
@@ -862,12 +911,20 @@
       refunded: "Đã ghi nhận trạng thái hoàn Xu.",
       read_only: "Dữ liệu đang ở chế độ chỉ xem.",
       unverified: "Hãy kích hoạt tài khoản Telegram để tiếp tục.",
-      unlinked: "Hãy liên kết tài khoản Telegram để tiếp tục."
+      unlinked: "Hãy liên kết tài khoản Telegram để tiếp tục.",
+      planner_created: "Đã tạo kế hoạch. Bạn có thể rà soát và lưu.",
+      planner_saved: "Đã lưu kế hoạch riêng tư.",
+      planner_alreadySaved: "Kế hoạch đã được lưu. Hãy mở kế hoạch để tiếp tục.",
+      planner_waiting: "Đang xử lý lựa chọn hiện tại. Vui lòng chờ.",
+      planner_unavailable: "Không thể thực hiện thao tác lúc này. Hãy tải lại trang rồi thử lại.",
+      planner_invalidResult: "Không thể xác nhận kết quả. Hãy tạo lại kế hoạch.",
+      planner_stale: "Lựa chọn đã thay đổi. Hãy tạo lại kế hoạch trước khi lưu.",
+      planner_invalidReceipt: "Chưa xác nhận được việc lưu. Hãy kiểm tra danh sách kế hoạch trước khi thử lại."
     };
     let displayText = text;
     const status = Object.prototype.hasOwnProperty.call(legacyStatusMap, text) ? legacyStatusMap[text] : "";
     if (status) {
-      const key = `customerBridgeFeedback.${status}`;
+      const key = status.startsWith("planner_") ? `remainingPlannerUi.operationFeedback.${status.slice(8)}` : `customerBridgeFeedback.${status}`;
       const fallback = viFallbacks[status];
       const i18n = typeof window !== "undefined" ? window.TOANAASI18n : null;
       if (i18n && typeof i18n.t === "function") {
@@ -8990,7 +9047,10 @@
       control.disabled = disabled;
       control.setAttribute("aria-disabled", String(disabled));
       if (disabled && !receipt && !current) {
-        control.setAttribute("title", "Prompt Pack không còn khớp brief hoặc đang được tạo lại; hãy tạo lại trước khi lưu.");
+        const i18n = window.TOANAASI18n;
+        const key = "remainingPlannerUi.feedback.staleTitle";
+        const translated = i18n && typeof i18n.t === "function" ? i18n.t(key) : "";
+        control.setAttribute("title", typeof translated === "string" && translated && translated !== key ? translated : "Hãy tạo lại kế hoạch từ lựa chọn hiện tại trước khi lưu.");
       } else {
         control.removeAttribute("title");
       }
@@ -9007,7 +9067,11 @@
       || !SCRIPT_TO_SCREEN_SAVE_FALSE_FIELDS.every((field) => data[field] === false)
       || !validVideoStudioPlanId(plan.id) || Number(plan.revision) !== 1 || plan.state !== "draft"
       || !Number.isInteger(sceneCount) || sceneCount < 3 || sceneCount > 18) return null;
-    return { destination: "video_plan", plan: { id: String(plan.id), revision: 1, state: "draft" }, scene_count: sceneCount };
+    return {
+      ...data,
+      plan: { id: String(plan.id), revision: 1, state: "draft" },
+      scene_count: sceneCount
+    };
   }
 
   // Cinematic Concept Composer adapts the Bot's static ad-concept templates
@@ -9236,7 +9300,7 @@
       || !Number.isInteger(sceneCount) || sceneCount !== 3
     ) return null;
     return {
-      destination: "video_plan",
+      ...data,
       plan: { id: String(plan.id), revision: 1, state: "draft" },
       scene_count: 3
     };
@@ -10044,11 +10108,20 @@
       control.disabled = disabled;
       control.setAttribute("aria-disabled", String(disabled));
       if (disabled && savePending) {
-        control.setAttribute("title", "Video Plan đang được lưu. Brief và lựa chọn được khóa cho đến khi máy chủ xác nhận.");
+        const i18n = window.TOANAASI18n;
+        const key = "remainingPlannerUi.feedback.savingTitle";
+        const translated = i18n && typeof i18n.t === "function" ? i18n.t(key) : "";
+        control.setAttribute("title", typeof translated === "string" && translated && translated !== key ? translated : "Đang lưu kế hoạch. Vui lòng chờ xác nhận.");
       } else if (disabled && !receipt && !current) {
-        control.setAttribute("title", "Prompt Pack không còn khớp brief hoặc đang được tạo lại; hãy tạo lại trước khi lưu.");
+        const i18n = window.TOANAASI18n;
+        const key = "remainingPlannerUi.feedback.staleTitle";
+        const translated = i18n && typeof i18n.t === "function" ? i18n.t(key) : "";
+        control.setAttribute("title", typeof translated === "string" && translated && translated !== key ? translated : "Hãy tạo lại kế hoạch từ lựa chọn hiện tại trước khi lưu.");
       } else if (disabled && receipt) {
-        control.setAttribute("title", "Prompt Pack này đã được lưu thành Video Plan Draft. Tạo lại pack nếu cần lưu một plan khác.");
+        const i18n = window.TOANAASI18n;
+        const key = "remainingPlannerUi.feedback.savedTitle";
+        const translated = i18n && typeof i18n.t === "function" ? i18n.t(key) : "";
+        control.setAttribute("title", typeof translated === "string" && translated && translated !== key ? translated : "Kế hoạch này đã được lưu. Hãy tạo lại nếu cần lưu kế hoạch khác.");
       } else {
         control.removeAttribute("title");
       }
@@ -10089,7 +10162,7 @@
       || !Number.isInteger(sceneCount) || sceneCount < 1 || sceneCount > 10
     ) return null;
     return {
-      destination: "video_plan",
+      ...data,
       plan: { id: String(plan.id), revision: 1, state: "draft" },
       scene_count: sceneCount
     };
@@ -13194,6 +13267,9 @@
   async function hydrate() {
     const bootstrapEpoch = ++portalHydrationEpoch;
     creativeMotionGuideSessionToken = "";
+    cinematicConceptSessionToken = "";
+    scriptToScreenPlannerSessionToken = "";
+    storyboardComposerSessionToken = "";
     const initialContext = base();
     const publicAuthEligible = loginChallengeRoute()
       && !(initialContext.session && initialContext.session.authenticated === true)
@@ -14460,6 +14536,9 @@
     ++notificationInboxHydrationEpoch;
     ++notificationAutomationHydrationEpoch;
     creativeMotionGuideSessionToken = account && creativeMotionGuideEnabled && initialPortalPath === "/video-studio/motion-guide" ? String(me.csrf_token || "") : "";
+    cinematicConceptSessionToken = account && cinematicConceptEnabled && initialPortalPath === "/video-studio/cinematic-concept" ? String(me.csrf_token || "") : "";
+    scriptToScreenPlannerSessionToken = account && scriptToScreenPlannerEnabled && initialPortalPath === "/video-studio/script-to-screen-planner" ? String(me.csrf_token || "") : "";
+    storyboardComposerSessionToken = account && storyboardComposerEnabled && initialPortalPath === "/video-studio/storyboard-composer" ? String(me.csrf_token || "") : "";
     merge({
       ...context,
       catalog,
@@ -18432,11 +18511,10 @@
     const currentRequestEpoch = kind === "compose"
       ? cinematicConceptComposeRequestEpoch
       : kind === "save" ? cinematicConceptSaveRequestEpoch : -1;
-    const account = base().account && typeof base().account === "object" ? base().account : {};
     return requestEpoch === currentRequestEpoch
       && sessionEpoch === cinematicConceptSessionEpoch
       && Boolean(expectedAccountId)
-      && String(account.id || "") === expectedAccountId
+      && cinematicConceptSessionToken === expectedAccountId
       && expectedPath === "/video-studio/cinematic-concept"
       && currentPortalPath() === expectedPath
       && base().cinematicConceptEnabled === true
@@ -18481,11 +18559,10 @@
     const currentRequestEpoch = kind === "compose"
       ? scriptToScreenPlannerComposeRequestEpoch
       : kind === "save" ? scriptToScreenPlannerSaveRequestEpoch : -1;
-    const account = base().account && typeof base().account === "object" ? base().account : {};
     return requestEpoch === currentRequestEpoch
       && sessionEpoch === scriptToScreenPlannerSessionEpoch
       && Boolean(expectedAccountId)
-      && String(account.id || "") === expectedAccountId
+      && scriptToScreenPlannerSessionToken === expectedAccountId
       && expectedPath === "/video-studio/script-to-screen-planner"
       && currentPortalPath() === expectedPath
       && base().scriptToScreenPlannerEnabled === true
@@ -18496,11 +18573,10 @@
     const currentRequestEpoch = kind === "compose"
       ? storyboardComposerComposeRequestEpoch
       : kind === "save" ? storyboardComposerSaveRequestEpoch : -1;
-    const account = base().account && typeof base().account === "object" ? base().account : {};
     return requestEpoch === currentRequestEpoch
       && sessionEpoch === storyboardComposerSessionEpoch
       && Boolean(expectedAccountId)
-      && String(account.id || "") === expectedAccountId
+      && storyboardComposerSessionToken === expectedAccountId
       && expectedPath === "/video-studio/storyboard-composer"
       && currentPortalPath() === expectedPath
       && base().storyboardComposerEnabled === true
@@ -30900,7 +30976,7 @@
         const payload = scriptToScreenPlannerPayload(fields);
         const expectedPath = "/video-studio/script-to-screen-planner";
         const account = base().account && typeof base().account === "object" ? base().account : {};
-        const expectedAccountId = String(account.id || "");
+        const expectedAccountId = scriptToScreenPlannerSessionToken;
         const sessionEpoch = scriptToScreenPlannerSessionEpoch;
         const requestEpoch = ++scriptToScreenPlannerComposeRequestEpoch;
         // A newer compose or any actual form edit must invalidate a prior
@@ -30982,7 +31058,7 @@
         }
         const expectedPath = "/video-studio/script-to-screen-planner";
         const account = base().account && typeof base().account === "object" ? base().account : {};
-        const expectedAccountId = String(account.id || "");
+        const expectedAccountId = scriptToScreenPlannerSessionToken;
         const sessionEpoch = scriptToScreenPlannerSessionEpoch;
         const requestEpoch = ++scriptToScreenPlannerSaveRequestEpoch;
         if (!scriptToScreenPlannerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
@@ -31258,7 +31334,7 @@
         const payload = cinematicConceptPayload(fields);
         const expectedPath = "/video-studio/cinematic-concept";
         const account = base().account && typeof base().account === "object" ? base().account : {};
-        const expectedAccountId = String(account.id || "");
+        const expectedAccountId = cinematicConceptSessionToken;
         const sessionEpoch = cinematicConceptSessionEpoch;
         const requestEpoch = ++cinematicConceptComposeRequestEpoch;
         // A new composition also invalidates a previous save response: a
@@ -31331,7 +31407,7 @@
         }
         const expectedPath = "/video-studio/cinematic-concept";
         const account = base().account && typeof base().account === "object" ? base().account : {};
-        const expectedAccountId = String(account.id || "");
+        const expectedAccountId = cinematicConceptSessionToken;
         const sessionEpoch = cinematicConceptSessionEpoch;
         const requestEpoch = ++cinematicConceptSaveRequestEpoch;
         if (!cinematicConceptRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
@@ -31625,7 +31701,7 @@
         const payload = storyboardComposerPayload(fields);
         const expectedPath = "/video-studio/storyboard-composer";
         const account = base().account && typeof base().account === "object" ? base().account : {};
-        const expectedAccountId = String(account.id || "");
+        const expectedAccountId = storyboardComposerSessionToken;
         const sessionEpoch = storyboardComposerSessionEpoch;
         const requestEpoch = ++storyboardComposerComposeRequestEpoch;
         // A newer compose or actual form edit invalidates a previous save
@@ -31707,7 +31783,7 @@
         }
         const expectedPath = "/video-studio/storyboard-composer";
         const account = base().account && typeof base().account === "object" ? base().account : {};
-        const expectedAccountId = String(account.id || "");
+        const expectedAccountId = storyboardComposerSessionToken;
         const sessionEpoch = storyboardComposerSessionEpoch;
         const requestEpoch = ++storyboardComposerSaveRequestEpoch;
         if (!storyboardComposerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
