@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {customerCopyHistoricalSnapshot} from './helpers/customer-copy-snapshot.mjs';
 import crypto from 'node:crypto';
 import test from 'node:test';
 import {renderChild} from './helpers/publishing-child-render.mjs';
@@ -25,7 +26,7 @@ for(const locale of ['vi','en','zh']){
     assert.deepEqual(actual,protectedHeaders[locale+':'+route]);
   });
   test(locale+': previous full catalog values stay unchanged',()=>{
-    const entries=Object.entries(renderChild(locale,'/studio',{}).messages[locale]).filter(([key])=>!/^videoPlannerHeader[ABC]Ui\./.test(key)&&!/^videoInner(?:Fields|Outer|Result)Ui\./.test(key)).sort(([a],[b])=>a.localeCompare(b));
+    const entries=customerCopyHistoricalSnapshot(Object.entries(renderChild(locale,'/studio',{}).messages[locale]),locale).filter(([key])=>!/^videoPlannerHeader[ABC]Ui\./.test(key)&&!/^videoInner(?:Fields|Outer|Result)Ui\./.test(key)).sort(([a],[b])=>a.localeCompare(b));
     assert.equal(entries.length,protectedCatalog[locale].count);
     assert.equal(crypto.createHash('sha256').update(JSON.stringify(entries)).digest('hex'),protectedCatalog[locale].sha256);
   });

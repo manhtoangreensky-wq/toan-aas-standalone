@@ -1669,3 +1669,17 @@ Các kỳ vọng kiểm thử cũ cấm language trong response không còn đú
 khớp nguồn hiện tại. Bốn phép dò nguồn menu đã sai từBASE vẫn ghi nhận, không
 sửa menu hoặc bỏ assertions để gọi xanh. Nhómserver-outputlocale/detail/motion
 vẫn mở, không dùng kết quả đơn vị này thay cho toàngoal.
+
+## Đối chiếu màn Đăng bài theo ảnh báo lỗi — 10/11/2026
+
+Nguồngốc:renderAutoPostHub vàautopostHub-product-controls/publishing-puritytại
+BASE2174a2b2; sourcecũbắtbuộc7nguồn/5bước/3nútchờnaykhôngcònđúngyêucầukhách.
+
+| Trước | Hiệntrạnglocal | Bằngchứng/giới hạn |
+|---|---|---|
+|7nguồnluônChờcấpquyền,3ôkhóakhôngthao tác|Bỏkhỏirenderer,khôngthaykhungrỗng|3linkthật;6native/18navigation |
+|TênĐăngbàitựđộngnhưngchưacóthao tácđăngngoài|TênĐăngbài/Publishing/内容发布|3metadata+3serverfirstpaint |
+|ToastlộCoreBridge/canonical/ledger|13thôngbáohiệnngônngữkhách,lỗivẫnalert|63caseledger,unknown/prototype/ARIA/timergiữ |
+
+Khôngxóaendpoint/backendhaytựmởquyềnđểlàmgiaodiệntrônghoạtđộng. Dọnkhốidư
+ởcáctrangkhácvàchứngminhđầuraenginevẫnđượctheodõiriêngtronggoal.

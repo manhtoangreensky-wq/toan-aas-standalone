@@ -2442,3 +2442,15 @@ Self-shot kiểm tra chặt các trường/cờ lưu, thay vì mất phản hồ
 DBtạm9kếhoạch/30cảnh,quick_checkok. Mobile16px;74/74mẫutươngphảnsángđạt,
 thấpnhất5,7971:1vớihelpvà9,4415:1ởcheckbox. Không tạo video/provider/jobthật/thuXu. Chữ máy chủ/kếhoạchđãlưu
 còn trộn ngôn ngữ và giữ mở. [Receipt](../docs/reports/video-inner-first-three-20261110.md).
+
+PR708 đã phát hành:CI42813547753,deploy42815164161 đạt;runtime2174a2b2,
+3dịchvụactive/4HTTPSassetkhớp. Bằng chứng luồnglocalkhôngsuyproviderLIVE.
+
+## Đăng bài và thông báo khách — local 10/11/2026
+
+TrangĐăngbài chỉ giữ3lốivàothật:chiếnlượckênh,lịchnộidung, ràsoátbàiđăng.
+Đã bỏ7nguồnchờquyềnghicốđịnh,3ôkhôngthao tácđược, sốđếm/5bước/hộpgiải thích
+dư. Têntrangkhôngcònhứađăngtựđộng.13thôngbáoCoreBridge/canonicalđượchiệnbằng
+chữdễhiểuđúngVI/EN/ZH; lỗivẫnhiện,khôngthayquyền/CSRF/luồngtiền/backend.
+63casethôngbáo/renderer+3metadata,6native/18link,3serverfirstpaintđạtlocal.
+ĐợtnàychờCI/pháthànhriêng. [Receipt](../docs/reports/customer-operational-ui-cleanup-20261110.md).

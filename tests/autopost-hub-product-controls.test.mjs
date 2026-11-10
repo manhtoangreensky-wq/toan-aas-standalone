@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
+import { renderChild } from './helpers/publishing-child-render.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const portal = fs.readFileSync(path.join(repoRoot, "static/portal/portal.js"), "utf8");
@@ -13,38 +14,31 @@ const context = {};
 vm.createContext(context);
 vm.runInContext(i18n, context);
 const messages = context.TOANAASI18n.messages;
-const start = portal.indexOf("  function renderAutoPostHub(page, context)");
-const end = portal.indexOf("  function renderPublishReviewPack(page, context)", start);
+const start = portal.indexOf("function renderAutoPostHub(page, context)");
+const end = portal.indexOf("function renderPublishReviewPack(page, context)", start);
 assert.ok(start >= 0 && end > start, "AutoPost renderer boundary exists");
 const renderer = portal.slice(start, end);
 const autopostKeys = Object.keys(messages.vi).filter((key) => /^autopostHub\./.test(key));
 
-test("AutoPost Hub maps all seven sources and the complete review order", () => {
+test("Publishing maps only the three existing operational destinations", () => {
   assert.match(portal, /customerPage\("\/publishing", "AutoPost Hub"/);
   assert.match(portal, /layout: "autopost-hub", type: "autopost-hub"/);
   assert.match(portal, /case "autopost-hub": return renderAutoPostHub\(page, context\);/);
-  for (const source of ["topic", "url", "affiliate", "media", "video", "image", "plan"]) {
-    assert.match(renderer, new RegExp(`data-autopost-source=\\"\\$\\{id\\}\\"`));
-    assert.match(renderer, new RegExp(`\\[\\\"${source}\\\",`));
-  }
-  for (const step of ["source", "plan", "channel", "schedule", "report"]) {
-    assert.match(renderer, new RegExp(`step\\.${step}\\.title`));
-    assert.match(renderer, new RegExp(`step\\.${step}\\.body`));
-  }
+  const view=renderChild('vi','/publishing',{});
+  const links=[...view.html.matchAll(/<a\b[^>]*href="([^"]*)"/g)].map(m=>m[1]);
+  assert.deepEqual(links,['/content/channel-strategy','/calendar','/content/publish-review']);
+  assert.equal(view.html.includes('data-autopost-source='),false);
+  assert.equal(view.html.includes('portal-autopost-steps'),false);
 });
 
 test("AutoPost Hub keeps planning presentation separate from external execution", () => {
   for (const token of [
     '"/content/channel-strategy"',
     '"/calendar"',
-    '"/content/publish-review"',
-    'data-autopost-source',
-    'autopostHubText("boundary.channelsState"',
-    'autopostHubText("boundary.publishState"',
-    'autopostHubText("boundary.metricsState"'
+    '"/content/publish-review"'
   ]) assert.ok(renderer.includes(token), `missing AutoPost contract: ${token}`);
   assert.doesNotMatch(renderer, /fetch\s*\(|api\s*\(|providerCall|wallet|PayOS|createJob/i);
-  assert.match(renderer, /type="button" disabled/);
+  assert.doesNotMatch(renderChild('vi','/publishing',{}).html,/type="button" disabled/);
 });
 
 test("AutoPost Hub fixed chrome is balanced across VI/EN/ZH", () => {

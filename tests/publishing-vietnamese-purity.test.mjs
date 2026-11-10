@@ -27,32 +27,32 @@ function render(locale){
 
 test('Vietnamese Publishing visible fixed copy is Vietnamese rather than product/developer English',()=>{
   const r=render('vi');
-  assert.ok(r.text.includes('Đăng bài tự động'),r.text);
+  assert.ok(r.text.includes('Đăng bài'),r.text);
   assert.doesNotMatch(r.text,/\b(?:AutoPost|Hub|Affiliate|Asset Vault|Campaign|Project|Web|hashtag|workspace|workflow|capability|provider|output|server|browser)\b/i);
-  assert.ok(r.title.includes('Đăng bài tự động'),r.title);
-  assert.equal(r.alias,'Đăng bài tự động');
+  assert.ok(r.title.includes('Đăng bài'),r.title);
+  assert.equal(r.alias,'Đăng bài');
   assert.doesNotMatch(r.header,/AutoPost|\bHub\b/i);
 });
 test('English Publishing keeps its English product title and source labels',()=>{
   const r=render('en');
-  assert.ok(r.text.includes('AutoPost Hub'));
-  assert.ok(r.title.includes('AutoPost Hub'));
-  assert.equal(r.alias,'AutoPost Hub');
+  assert.ok(r.text.includes('Publishing'));
+  assert.ok(r.title.includes('Publishing'));
+  assert.equal(r.alias,'Publishing');
   assert.equal(r.messages.en['autopostHub.source.affiliate.title'],'Affiliate product');
 });
 test('Chinese Publishing title and fixed intro do not expose untranslated AutoPost Hub',()=>{
   const r=render('zh');
-  assert.ok(r.text.includes('自动发布中心'),r.text);
-  assert.ok(r.title.includes('自动发布中心'),r.title);
-  assert.equal(r.alias,'自动发布中心');
+  assert.ok(r.text.includes('内容发布'),r.text);
+  assert.ok(r.title.includes('内容发布'),r.title);
+  assert.equal(r.alias,'内容发布');
   assert.doesNotMatch(r.text,/AutoPost|\bHub\b/);
 });
-test('Publishing locale presentation retains seven sources, five stages, three links and guarded external actions',()=>{
+test('Publishing locale presentation retains three real links without static permission/source or disabled external cards',()=>{
   for(const locale of ['vi','en','zh']){
     const {html}=render(locale);
-    for(const id of ['topic','url','affiliate','media','video','image','plan'])assert.ok(html.includes('data-autopost-source="'+id+'"'));
+    assert.equal(html.includes('data-autopost-source='),false);
     for(const link of ['/content/channel-strategy','/calendar','/content/publish-review'])assert.ok(html.includes('href="'+link+'"'));
-    assert.equal((html.match(/type="button" disabled/g)||[]).length,3);
-    for(const n of ['01','02','03','04','05'])assert.ok(html.includes('>'+n+'</span>'));
+    assert.equal((html.match(/type="button" disabled/g)||[]).length,0);
+    assert.equal(html.includes('portal-autopost-steps'),false);
   }
 });

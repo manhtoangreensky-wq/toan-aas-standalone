@@ -7,9 +7,9 @@ from copyfast_pages import render_portal
 
 
 @pytest.mark.parametrize("locale,title", [
-    ("vi", "Đăng bài tự động · TOAN AAS"),
-    ("en", "AutoPost Hub · TOAN AAS"),
-    ("zh", "自动发布中心 · TOAN AAS"),
+    ("vi", "Đăng bài · TOAN AAS"),
+    ("en", "Publishing · TOAN AAS"),
+    ("zh", "内容发布 · TOAN AAS"),
 ])
 def test_publishing_first_paint_title_follows_interface_language(locale, title):
     html = render_portal("/publishing", interface_locale=locale).body.decode("utf-8")

@@ -95,6 +95,8 @@ jobs:
           node --test tests/video-planner-header-locale.test.mjs
           node --test tests/video-inner-first-three-locale.test.mjs tests/video-inner-result-copy.test.mjs tests/video-inner-save-projection.test.mjs tests/video-inner-receipt-transport.test.mjs
           python -m pytest --noconftest -q tests/test_video_prompt_planner_language_receipt.py
+          node --test tests/customer-publishing-operational-ui.test.mjs tests/customer-bridge-toast-copy.test.mjs tests/autopost-hub-product-controls.test.mjs tests/publishing-vietnamese-purity.test.mjs
+          python -m pytest --noconftest -q tests/test_publishing_locale_shell_contracts.py
           python -m pytest --noconftest -q tests/test_navigation_optin_markup_regression.py tests/test_video_plan_mobile_font_contract.py
 
       - name: Executable Chrome Extension Unit Tests
