@@ -1,0 +1,47 @@
+{
+  "definitions": [
+    {
+      "route": "image-motion-planner",
+      "key": "imageMotionPlanner",
+      "count": 5,
+      "reference": {
+        "direction_id": "11111111-1111-4111-8111-111111111111",
+        "direction_title": "CUSTOMER_DIRECTION",
+        "artboard_id": "11111111-1111-4111-8111-111111111111",
+        "artboard_title": "CUSTOMER_ARTBOARD",
+        "language": "vi",
+        "aspect_ratio": "9:16",
+        "source_image_attached": true
+      }
+    },
+    {
+      "route": "reference-format-planner",
+      "key": "referenceFormatPlanner",
+      "count": 9,
+      "reference": {
+        "asset_id": "11111111-1111-4111-8111-111111111111",
+        "display_name": "CUSTOMER_VIDEO.mp4",
+        "extension": "mp4",
+        "content_type": "video/mp4",
+        "source_video_attached": true
+      }
+    }
+  ],
+  "hashes": {
+    "image-motion-planner:loading": "700d141d2c7d93da2bd71a469bd6b6a53ed551237462cb66f520b163fc29ac85",
+    "image-motion-planner:empty": "700d141d2c7d93da2bd71a469bd6b6a53ed551237462cb66f520b163fc29ac85",
+    "image-motion-planner:ready": "8e1c7524cf7016188f97775380c5943ae209770c50d60e723c7f2b21b03bcfd3",
+    "image-motion-planner:guarded": "16d16434bb17cd95a7671880184c5e5c362b90675d89713ac7d3e4a74a843743",
+    "reference-format-planner:loading": "c2da95813afbfe71f0df1cc84b56c914128a189eb9890541574a1b60d38b0e36",
+    "reference-format-planner:empty": "c2da95813afbfe71f0df1cc84b56c914128a189eb9890541574a1b60d38b0e36",
+    "reference-format-planner:ready": "760af3d91ab1f38081084ea52bcb6818550597712f0dadad95f7f9038741bfc1",
+    "reference-format-planner:guarded": "73b2941df3c6c304f212f13bbb9a535b7cbd85bf9e28a4aed790ad3052f07618"
+  },
+  "catalog": {
+    "vi": "7aab57729d8d5d356fd278ec9df58a92835d19bf6b7b523426c6fcb8b86d7869",
+    "en": "72c41ebc5dc09ca2765a570d3f423a5c967a25cb61380177f5175b08144943b3",
+    "zh": "ddc6cdfc74f57fb40f01cfbcd719fd804683c7471f75b4b7f68bd18535f168db"
+  },
+  "oldCatalogCount": 10349,
+  "newCatalogCount": 75
+}

@@ -15,7 +15,7 @@ const approved={
 // Compare every historical value while permitting only the three explicitly
 // approved metadata changes and new, separately verified copy namespaces.
 export function customerCopyHistoricalSnapshot(entries,locale){
- return entries.filter(([key])=>!key.startsWith('customerPublishingUi.')&&!key.startsWith('customerBridgeFeedback.')&&!key.startsWith('videoNextFieldsUi.')&&!key.startsWith('remainingPlannerUi.')).map(([key,value])=>{
+ return entries.filter(([key])=>!key.startsWith('customerPublishingUi.')&&!key.startsWith('customerBridgeFeedback.')&&!key.startsWith('videoNextFieldsUi.')&&!key.startsWith('remainingPlannerUi.')&&!key.startsWith('lastTwoPlannerUi.')).map(([key,value])=>{
   const index=keys.indexOf(key);
   if(index<0)return[key,value];
   assert.equal(value,approved[locale][index],'only the reviewed publishing metadata may replace its historical value: '+key);
