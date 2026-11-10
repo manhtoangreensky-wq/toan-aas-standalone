@@ -19,3 +19,13 @@ HEAD_SHA=commit chứa phiên này; receipt CI ghi mốc cuối.
 TESTER_PROJECT_STATUS=READY; LOCAL_ACCEPTANCE=PASS; PUSH_GATE=READY sau provenance.
 Không tạo tracker/bảng/thẻ trùng; sử dụng Issue #689 và mẫu/nhãn hiện có.
 Không coi nội dung cũ, detail-page labels, thiết bị hay provider LIVE đã đạt.
+
+VOC-TITLE-BUDGET bổ sung trước merge:4trường hợp từng lưu được bị prefixVI
+dài từ chối;40BASE/candidatecases đã đo. Reopen đúng tiêu chí tên dài, giữ
+test/schema/400bản dịch khác. Chờ worker2VIvaluepatch,4GREEN/0newregressions,
+2affectedVInative150char;4nonVIflows giữ. Chưa release khi gate còn mở.
+
+VOC-TITLE-BUDGET final: 4/4GREEN,40comparisons0newregression;2VInative150char
+save/readback/open đạt với fullcustomertext/title168/172. 400translationvalues,
+code/schema/max180 giữ. LOCAL_ACCEPTANCE=PASS restored trước final push.
+FinalCI gồm7pure/boundarytests+6APIregressions=13tests;oldCI chủ độngcanceled.

@@ -2527,3 +2527,8 @@ và dữ liệu khách giữ nguyên. Tên/chủ đề/khán giả không bị d
 1.392 pure cases, 36.000 kiểm chữ, 6 API regression và 6 UI flow tạo–lưu–đọc
 lại đạt; đúng 6 plan/18 scene. Chưa phát hành đợt này, không sửa kế hoạch cũ.
 [Báo cáo](../docs/reports/video-output-copy-20261111.md).
+
+Trướcpháthànhđãbổsungbiêntêndài:tiền tốVIđược rútgọn đểkhônglàmmấtkhả
+nănglưutừngđạt.4boundarytests+40BASEcomparisonsđạt0regressionmới;
+2VIUIflow150ký tựgiữđầytênkhách,lưu/readbackđúng,title168/172<=180.
+Khôngcắttênhoặctănglimit/schema;11maxcasecũvẫnghinhậntươngđươngBASE.

@@ -79,3 +79,18 @@ def test_original_request_schema_does_not_gain_new_reference_language_or_accept_
         video.ReferenceFormatPlannerRequest(asset_id=identifier,direction='product_ad',platform='tiktok',goal='educate',tone='clear',topic='Valid new topic',audience='Valid audience',language='zh',duration_seconds=30)
     with pytest.raises(ValidationError):
         video.ImageMotionPlannerRequest(direction_id=identifier,style='made_up',motion='hero_hold',music='none',duration_seconds=10)
+
+@pytest.mark.parametrize('kind,size',[('image',150),('image',155),('image',160),('reference',150)])
+def test_translation_prefix_does_not_break_previously_savable_titles(video,kind,size):
+    title='X'*size
+    if kind=='image':
+        ref={**image_ref,'direction_title':title,'language':'vi'}
+        payload=video.ImageMotionPlannerPlanSaveRequest(direction_id=identifier,style='cinematic',motion='hero_hold',music='none',duration_seconds=10,destination='video_plan',idempotency_key='owned-prefix-boundary-0001')
+        planner=video._compose_image_motion_planner(payload,ref)
+        plan,scenes=video._image_motion_planner_to_video_plan(payload,planner)
+    else:
+        payload=video.ReferenceFormatPlannerPlanSaveRequest(asset_id=identifier,direction='product_ad',platform='tiktok',goal='educate',tone='clear',topic=title,audience='CUSTOMER_AUDIENCE',language='vi',duration_seconds=30,destination='video_plan',idempotency_key='owned-prefix-boundary-0001')
+        planner=video._compose_reference_format_planner(payload,reference)
+        plan,scenes=video._reference_format_planner_to_video_plan(payload,planner)
+    assert plan.title.endswith(title),'The customer title must remain complete, not truncated'
+    assert len(plan.title)<=180 and len(scenes)==3

@@ -32,6 +32,18 @@ audiencegiữnguyên,kểcảliteral{p0}_{p1};khôngwordswap/translationrescan.
   noAPIstub/provider/media/productionwrites. UI/appfencesPR714giữ.
 - [ ]Docs/tester/provenance/CI/exactHEADmerge/exactSHAdeploy/runtime/assets.
 
+## Title-prefix budget amendment, same unit before merge
+
+40 BASE/candidate pure comparisons found4newsavefailures causedonlybylongerVI
+systemprefix(Image150/155/160,Reference150). Theseinputsusedtosavewithin180.
+No truncate/customerloss/schema-limitincrease. Exact2VIdataentriesmustshorten
+prefix;all400othertranslations/code/argsunchanged. Missingcoordinatorspec,
+notworkerimplementationfailure;R1titlebudgetworkerretainsoriginalhistory.
+- [x]4parameterizedregressionsRED;12baseline-equivalentrejectionsnotcalledfixed.
+- [x]2valueworkerpatch/4GREEN/40comparison0newregressions.
+- [x]2affectedVInative150charcases;4nonVIflowsretained,nofullmatrixrerun.
+- [ ]FinalHEADprovenance/CIonsamePR715beforeauthorizedmerge/deploy.
+
 Savedplan-detailfixedlabels/Englishshotnoteheadersvẫnlàscopetiếptheo;
 Referencecurrentinput/stale-response/session andactualImageedit/retry gates,
 AX/auth/device/signedproduction/fullappclutter/motioncuốivẫnmở.

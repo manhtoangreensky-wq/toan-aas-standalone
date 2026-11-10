@@ -1380,6 +1380,10 @@ MERGE/DEPLOY/LIVE không suy từ tests. Trạng thái delivery theo PR/checkpoi
  runtime/twoPythonhashes/4HTTPSassets;docs/reports/video-output-copy-20261111.md.
 - [ ] NEXT system-copy: saved-plan-detail labels/shot-note fixed headers,
  remaining planners' generated system prose; không nhầm với customer content.
+- [x] VIDEO-OUTPUT-COPY titlebudgetamendment:4newregressionfoundbeforemerge,
+ 2VIprefixworkerfix/400othervaluesunchanged;4GREEN/40BASE0newregressions;
+ 2affectedVInative150charfullname/lưu/readback/open,title168/172đạt.
+ OldCIcanceled,samePR715finalHEADrequired;khôngcắtinput/nớischema/max180.
 - [x] ROUTE-ENGINE-BOT-WEB source audit requested in parallel: retained bounded
  public-source findings after one evidence correction; push/pull adapters and
  local readiness short-circuits distinguished. No engine/auth mutation.

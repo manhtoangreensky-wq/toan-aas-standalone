@@ -18,3 +18,8 @@ Refresh provenance sau source/docs commit; chỉ commit hai JSON rồi verify
 final HEAD trước push github. CI → exact passed HEAD merge → exclusive exact
 merge SHA deploy → runtime/hai Python file hashes/4HTTPS assets receipt.
 PUSH_GATE=READY sau provenance. Không stage private campaign YAML của Owner.
+
+Final title-budget amendment:2VIvaluesonlyfromworker,400unchanged;4newboundary
+tests GREEN,40BASEcomparisons0newregression.2affectedVIUIflows150char fullname
+save/readback/open/title168/172đạt;4nonVIflowsretained. OldCIcanceledbeforemerge.
+Update source/datahashandprovenanceafterthisboundedamendment,samePR715.

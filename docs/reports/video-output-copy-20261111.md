@@ -57,3 +57,28 @@ Tài liệu vận hành/đối chiếu chức năng và phiên Tester đã cập
 CI/provenance/exact-HEAD merge/exact-SHA deploy/runtime/file hashes/HTTPS assets
 là các cổng riêng, chờ receipt. PROVIDER_CALLS=0; WALLET_MUTATIONS=0;
 PRODUCTION_DATA_MUTATIONS=0; LIVE_PASS=NOT_TESTED; LESSON_CANDIDATE=NONE.
+
+## Gate reopened before merge: title-prefix budget
+
+PR715 chưa merge. Kiểm tra thêm 40 biên độ dài so với BASE phát hiện bốn
+regression mới: Image VI tên150/155/160 và Reference VI chủ đề150. Các đầu
+vào này từng lưu được nhưng tiền tố bản dịch dài làm vượt giới hạn180. Đây
+là tiêu chí thiếu trong phiếu điều phối, không phải worker làm sai TARGET.
+Trạng thái nghiệm thu cần bổ sung cổng này trước phát hành; các bằng chứng
+về 400 giá trị dịch khác và bốn luồng không phải VI vẫn được giữ.
+
+Chỉ rút gọn hai tiền tố VI, không cắt tên khách, không tăng giới hạn hoặc
+đổi schema/code. Bốn regression tests đã RED. Lượt CI cũ42880606997 bị hủy
+chủ động vì không phải bản cuối; cần final HEAD CI mới sau patch. Hai luồng
+VI với đầu vào150ký tự phải tạo/lưu/đọc lại đầy đủ; không chạy lại toàn matrix.
+
+Gate này đã đóng trước final push: worker trả đúng hai giá trị VI, 400 giá trị
+khác/code/schema/giới hạn không đổi. Bốn regression tests GREEN; 40 so sánh
+với BASE có 0 regression mới, 11 trường hợp bị từ chối tương đương BASE vẫn
+ghi nhận là giới hạn cũ, không nhận là đã giải quyết.
+
+Hai luồng VI có tên/chủ đề150ký tự đã tạo–xác nhận–lưu–đọc lại–mở thành công,
+tên khách đầy đủ; tiêu đề mới168/172ký tự. DB tạm đúng2plan/6scene, không lỗi
+hoặc egress; source binding và cleanup đạt. Giữ bốn luồng không phải VI cùng
+các view/402-value evidence không bị ảnh hưởng, không chạy lại1.392case/toàn
+native. Artifact video-output-boundary-native-nov11-batch-a/.
