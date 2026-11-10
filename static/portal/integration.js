@@ -485,6 +485,7 @@
   // account, route and native form; a durable save locks the whole form until
   // the server has acknowledged its content-free receipt.
   let imageMotionPlannerSessionEpoch = 0;
+  let imageMotionPlannerSessionToken = "";
   let imageMotionPlannerComposeRequestEpoch = 0;
   let imageMotionPlannerSaveRequestEpoch = 0;
   let imageMotionPlannerComposePendingRequestEpoch = 0;
@@ -900,7 +901,39 @@
       "Đã lưu storyboard thành Video Plan Draft riêng tư. Chưa có phê duyệt, lock, render, job, media, thanh toán hoặc giao hàng.": "planner_saved",
       "Đã tạo ba hướng Video Idea và storyboard text để review. Không có Telegram state, Bot/bridge, provider, media, preview, output, job, thanh toán hoặc publish nào được tạo.": "planner_created",
       "Đã tạo Script-to-Screen Prompt Pack để review. Chưa tạo media, runtime, job, thanh toán hoặc output.": "planner_created",
-      "Đã lưu Script-to-Screen Prompt Pack thành Video Plan Draft riêng tư. Không có Telegram/Bot state, provider, media, job, thanh toán, publish hoặc giao hàng.": "planner_saved"
+      "Đã lưu Script-to-Screen Prompt Pack thành Video Plan Draft riêng tư. Không có Telegram/Bot state, provider, media, job, thanh toán, publish hoặc giao hàng.": "planner_saved",
+      "Chỉ signed Web session có CSRF, Video Studio và Image Studio đang sẵn sàng mới có thể lập Image Motion Plan.": "lasttwo_unavailable",
+      "Video Plan đang chờ máy chủ xác nhận. Direction và lựa chọn hiện tại được khóa cho đến khi request này hoàn tất.": "lasttwo_waiting",
+      "Máy chủ chưa trả Image Motion Plan Web-native an toàn.": "lasttwo_invalidResult",
+      "Image Motion Plan trả về không khớp Image Studio direction đã chọn trong phiên này.": "lasttwo_stale",
+      "Đã tạo Image Motion Plan để review. Không có render, video, preview, provider, job, payment hoặc output.": "lasttwo_created",
+      "Chỉ signed Web session có CSRF, Image Studio và Video Studio đang sẵn sàng mới có thể lưu Image Motion Plan thành Video Plan.": "lasttwo_unavailable",
+      "Image Motion Plan đang được tạo lại từ direction hiện tại. Hãy chờ phản hồi trước khi lưu Video Plan.": "lasttwo_waiting",
+      "Video Plan đang được lưu từ Image Motion Plan hiện tại. Vui lòng chờ receipt từ máy chủ.": "lasttwo_waiting",
+      "Image Motion Plan này đã được lưu thành Video Plan Draft. Hãy mở plan hiện tại để tiếp tục.": "lasttwo_alreadySaved",
+      "Bản Image Motion hiện tại không còn khớp Image Studio direction đang hoạt động. Hãy tạo lại trước khi lưu.": "lasttwo_stale",
+      "Direction hoặc lựa chọn Image Motion đang hiển thị đã thay đổi. Hãy tạo lại plan trước khi lưu Video Plan.": "lasttwo_stale",
+      "Image Motion Plan đang được Video Production Studio xác nhận. Vui lòng chờ.": "lasttwo_waiting",
+      "Máy chủ chưa xác nhận Video Plan Draft từ Image Motion Planner.": "lasttwo_invalidReceipt",
+      "Máy chủ chưa trả receipt Image Motion Video Plan content-free và đúng ranh giới an toàn.": "lasttwo_invalidReceipt",
+      "Đã lưu Image Motion Plan thành Video Plan Draft riêng tư.": "lasttwo_saved",
+      "Kết nối chưa xác nhận lần lưu. Direction đã được khóa; bấm Lưu thành Video Plan để thử lại đúng request này.": "lasttwo_recovery",
+      "Chỉ signed Web session có CSRF và Video Studio đang sẵn sàng mới có thể lập Reference Format Plan.": "lasttwo_unavailable",
+      "Máy chủ chưa trả Reference Format Plan Web-native an toàn.": "lasttwo_invalidResult",
+      "Reference Format Plan trả về không khớp video Asset Vault và lựa chọn đang có trong phiên này.": "lasttwo_stale",
+      "Đã tạo Reference Format Plan để review. Không có phân tích video, render, provider, job, payment hoặc output.": "lasttwo_created",
+      "Chỉ signed Web session có CSRF và Video Studio đang sẵn sàng mới có thể lưu Reference Format Plan thành Video Plan.": "lasttwo_unavailable",
+      "Bản Reference Format hiện tại không còn khớp video Asset Vault đang hoạt động. Hãy tạo lại trước khi lưu.": "lasttwo_stale",
+      "Reference Format Plan đang được Video Production Studio xác nhận. Vui lòng chờ.": "lasttwo_waiting",
+      "Máy chủ chưa xác nhận Video Plan Draft từ Reference Format Planner.": "lasttwo_invalidReceipt",
+      "Máy chủ chưa trả receipt Reference Format Video Plan content-free và đúng ranh giới an toàn.": "lasttwo_invalidReceipt",
+      "Đã lưu Reference Format Plan thành Video Plan Draft riêng tư.": "lasttwo_saved",
+      "Đã lưu Reference Format Plan thành Video Plan riêng tư.": "lasttwo_saved",
+      "Đã lưu Image Motion Plan thành Video Plan riêng tư.": "lasttwo_saved",
+      "Đã tạo Image Motion Plan để review. Ảnh nguồn không được mở/đọc; không có video, preview, audio, provider, job, payment hoặc output nào được tạo.": "lasttwo_created",
+      "Đã lưu Image Motion Plan thành Video Plan Draft riêng tư. Ảnh nguồn không được mở/đọc; chưa có render, job, media, thanh toán hoặc giao hàng.": "lasttwo_saved",
+      "Đã tạo Reference Format Plan để review. Video nguồn không được mở hoặc phân tích; không có media, provider, Bot, job, Xu, thanh toán, publish hoặc output nào được tạo.": "lasttwo_created",
+      "Đã lưu Reference Format Plan thành Video Plan Draft riêng tư. Video nguồn không được mở/phân tích; chưa có render, job, media, thanh toán hoặc giao hàng.": "lasttwo_saved"
     };
     const viFallbacks = {
       draft: "Đã cập nhật bản nháp.",
@@ -923,12 +956,21 @@
       planner_unavailable: "Không thể thực hiện thao tác lúc này. Hãy tải lại trang rồi thử lại.",
       planner_invalidResult: "Không thể xác nhận kết quả. Hãy tạo lại kế hoạch.",
       planner_stale: "Lựa chọn đã thay đổi. Hãy tạo lại kế hoạch trước khi lưu.",
-      planner_invalidReceipt: "Chưa xác nhận được việc lưu. Hãy kiểm tra danh sách kế hoạch trước khi thử lại."
+      planner_invalidReceipt: "Chưa xác nhận được việc lưu. Hãy kiểm tra danh sách kế hoạch trước khi thử lại.",
+      lasttwo_created: "Đã tạo kế hoạch. Bạn có thể rà soát và lưu.",
+      lasttwo_saved: "Đã lưu kế hoạch riêng tư.",
+      lasttwo_alreadySaved: "Kế hoạch đã được lưu. Hãy mở kế hoạch để tiếp tục.",
+      lasttwo_waiting: "Đang xử lý lựa chọn hiện tại. Vui lòng chờ.",
+      lasttwo_unavailable: "Không thể thực hiện thao tác lúc này. Hãy tải lại trang rồi thử lại.",
+      lasttwo_invalidResult: "Không thể xác nhận kết quả. Hãy tạo lại kế hoạch.",
+      lasttwo_stale: "Lựa chọn đã thay đổi. Hãy tạo lại kế hoạch trước khi lưu.",
+      lasttwo_invalidReceipt: "Chưa xác nhận được việc lưu. Hãy kiểm tra danh sách kế hoạch trước khi thử lại.",
+      lasttwo_recovery: "Chưa xác nhận lần lưu trước. Các lựa chọn đã khóa; bấm lưu để thử lại đúng lần lưu đó."
     };
     let displayText = text;
     const status = Object.prototype.hasOwnProperty.call(legacyStatusMap, text) ? legacyStatusMap[text] : "";
     if (status) {
-      const key = status.startsWith("planner_") ? `remainingPlannerUi.operationFeedback.${status.slice(8)}` : `customerBridgeFeedback.${status}`;
+      const key = status.startsWith("lasttwo_") ? `lastTwoOperationFeedbackUi.${status.slice(8)}` : status.startsWith("planner_") ? `remainingPlannerUi.operationFeedback.${status.slice(8)}` : `customerBridgeFeedback.${status}`;
       const fallback = viFallbacks[status];
       const i18n = typeof window !== "undefined" ? window.TOANAASI18n : null;
       if (i18n && typeof i18n.t === "function") {
@@ -9665,11 +9707,16 @@
       || data.source_metadata_owner_checked !== true || !IMAGE_MOTION_SAVE_FALSE_FIELDS.every((field) => data[field] === false)
       || !validVideoStudioPlanId(plan.id) || Number(plan.revision) !== 1 || plan.state !== "draft"
       || !Number.isInteger(Number(data.scene_count)) || Number(data.scene_count) !== 3) return null;
-    return { destination: "video_plan", plan: { id: String(plan.id), revision: 1, state: "draft" }, scene_count: 3 };
+    return { ...data, plan: { id: String(plan.id), revision: 1, state: "draft" }, scene_count: 3 };
   }
 
   function reconcileImageMotionPlannerSaveControls(route) {
     if (route !== "/video-studio/image-motion-planner" || currentPortalPath() !== route) return;
+    const feedbackText = (key, fallback) => {
+      const i18n = window.TOANAASI18n;
+      const value = i18n && typeof i18n.t === "function" ? i18n.t(key) : "";
+      return typeof value === "string" && value && value !== key ? value : fallback;
+    };
     const form = document.querySelector('form[data-portal-action="image-motion-planner-compose"]');
     const references = imageMotionPlannerOwnedReferences();
     const source = imageMotionPlanSaveSource(base().imageMotionPlannerSaveSource, references);
@@ -9701,7 +9748,7 @@
     const statusNote = form && form.querySelector("[data-image-motion-planner-stale-note]");
     if (saveRecoveryRequired && statusNote) {
       statusNote.hidden = false;
-      statusNote.textContent = "Kết nối chưa xác nhận lần lưu trước. Direction được khóa; bấm “Lưu thành Video Plan” để thử lại đúng request đó.";
+      statusNote.textContent = feedbackText("lastTwoFeedbackUi.recoveryNote", "Chưa xác nhận được lần lưu trước. Các lựa chọn được giữ nguyên; hãy bấm lưu để thử lại đúng lần lưu đó.");
     }
     document.querySelectorAll('[data-portal-action="image-motion-planner-save-plan"]').forEach((control) => {
       if (!Object.prototype.hasOwnProperty.call(control.dataset, "imageMotionPlannerInitialDisabled")) {
@@ -9711,15 +9758,15 @@
       control.disabled = disabled;
       control.setAttribute("aria-disabled", String(disabled));
       if (disabled && savePending) {
-        control.setAttribute("title", "Video Plan đang được lưu. Direction và lựa chọn được khóa cho đến khi máy chủ xác nhận.");
+        control.setAttribute("title", feedbackText("lastTwoFeedbackUi.savingTitle", "Đang lưu kế hoạch. Vui lòng chờ xác nhận."));
       } else if (!disabled && saveRecoveryRequired) {
-        control.setAttribute("title", "Kết nối chưa xác nhận lần lưu trước. Bấm để thử lại đúng Image Motion Plan với cùng idempotency key.");
+        control.setAttribute("title", feedbackText("lastTwoFeedbackUi.retryTitle", "Thử lại đúng lần lưu trước với các lựa chọn đã giữ nguyên."));
       } else if (disabled && saveRecoveryRequired) {
-        control.setAttribute("title", "Kết nối chưa xác nhận lần lưu trước. Direction được khóa cho tới khi request này được thử lại hoặc phiên được làm mới.");
+        control.setAttribute("title", feedbackText("lastTwoFeedbackUi.recoveryLockedTitle", "Các lựa chọn được khóa cho đến khi thử lại lần lưu trước hoặc tải lại phiên."));
       } else if (disabled && !receipt && !current) {
-        control.setAttribute("title", "Image Motion Plan không còn khớp direction hoặc lựa chọn đang hiển thị; hãy tạo lại trước khi lưu.");
+        control.setAttribute("title", feedbackText("lastTwoFeedbackUi.staleTitle", "Hãy tạo lại kế hoạch từ lựa chọn hiện tại trước khi lưu."));
       } else if (disabled && receipt) {
-        control.setAttribute("title", "Image Motion Plan này đã được lưu thành Video Plan Draft. Tạo lại plan nếu cần lưu một plan khác.");
+        control.setAttribute("title", feedbackText("lastTwoFeedbackUi.savedTitle", "Kế hoạch này đã được lưu. Hãy tạo lại nếu cần lưu kế hoạch khác."));
       } else {
         control.removeAttribute("title");
       }
@@ -9865,7 +9912,7 @@
       || !REFERENCE_FORMAT_SAVE_FALSE_FIELDS.every((field) => data[field] === false)
       || !validVideoStudioPlanId(plan.id) || Number(plan.revision) !== 1 || plan.state !== "draft"
       || !Number.isInteger(Number(data.scene_count)) || Number(data.scene_count) !== 3) return null;
-    return { destination: "video_plan", plan: { id: String(plan.id), revision: 1, state: "draft" }, scene_count: 3 };
+    return { ...data, plan: { id: String(plan.id), revision: 1, state: "draft" }, scene_count: 3 };
   }
 
   // Storyboard Prompt Pack Composer carries the Bot's static storyboard
@@ -13274,6 +13321,7 @@
     cinematicConceptSessionToken = "";
     scriptToScreenPlannerSessionToken = "";
     storyboardComposerSessionToken = "";
+    imageMotionPlannerSessionToken = "";
     const initialContext = base();
     const publicAuthEligible = loginChallengeRoute()
       && !(initialContext.session && initialContext.session.authenticated === true)
@@ -14543,6 +14591,7 @@
     cinematicConceptSessionToken = account && cinematicConceptEnabled && initialPortalPath === "/video-studio/cinematic-concept" ? String(me.csrf_token || "") : "";
     scriptToScreenPlannerSessionToken = account && scriptToScreenPlannerEnabled && initialPortalPath === "/video-studio/script-to-screen-planner" ? String(me.csrf_token || "") : "";
     storyboardComposerSessionToken = account && storyboardComposerEnabled && initialPortalPath === "/video-studio/storyboard-composer" ? String(me.csrf_token || "") : "";
+    imageMotionPlannerSessionToken = account && imageMotionPlannerEnabled && initialPortalPath === "/video-studio/image-motion-planner" ? String(me.csrf_token || "") : "";
     merge({
       ...context,
       catalog,
@@ -18591,11 +18640,10 @@
     const currentRequestEpoch = kind === "compose"
       ? imageMotionPlannerComposeRequestEpoch
       : kind === "save" ? imageMotionPlannerSaveRequestEpoch : -1;
-    const account = base().account && typeof base().account === "object" ? base().account : {};
     return requestEpoch === currentRequestEpoch
       && sessionEpoch === imageMotionPlannerSessionEpoch
       && Boolean(expectedAccountId)
-      && String(account.id || "") === expectedAccountId
+      && imageMotionPlannerSessionToken === expectedAccountId
       && expectedPath === "/video-studio/image-motion-planner"
       && currentPortalPath() === expectedPath
       && base().imageMotionPlannerEnabled === true
@@ -31468,7 +31516,7 @@
         const payload = imageMotionPlannerPayload(fields, references);
         const expectedPath = "/video-studio/image-motion-planner";
         const account = base().account && typeof base().account === "object" ? base().account : {};
-        const expectedAccountId = String(account.id || "");
+        const expectedAccountId = imageMotionPlannerSessionToken;
         const sessionEpoch = imageMotionPlannerSessionEpoch;
         const requestEpoch = ++imageMotionPlannerComposeRequestEpoch;
         // A newer composition or actual native form edit invalidates every
@@ -31543,7 +31591,7 @@
         }
         const expectedPath = "/video-studio/image-motion-planner";
         const account = base().account && typeof base().account === "object" ? base().account : {};
-        const expectedAccountId = String(account.id || "");
+        const expectedAccountId = imageMotionPlannerSessionToken;
         const sessionEpoch = imageMotionPlannerSessionEpoch;
         const requestEpoch = ++imageMotionPlannerSaveRequestEpoch;
         if (!imageMotionPlannerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;

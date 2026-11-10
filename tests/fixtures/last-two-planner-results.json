@@ -1,0 +1,292 @@
+{
+  "rows": [
+    {
+      "part": "image",
+      "route": "image-motion-planner",
+      "key": "imageMotionPlanner",
+      "source": {
+        "direction_id": "ae29ee59-e568-448f-818f-b427b3dc8db7",
+        "style": "product_reveal",
+        "motion": "orbit_reveal",
+        "music": "cinematic_light",
+        "duration_seconds": 10
+      },
+      "result": {
+        "planner": {
+          "reference": {
+            "direction_id": "ae29ee59-e568-448f-818f-b427b3dc8db7",
+            "direction_title": "Hero product motion source",
+            "artboard_id": "d08b83ce-1583-4901-ad81-03077778b1a3",
+            "artboard_title": "Image motion artboard",
+            "language": "vi",
+            "aspect_ratio": "9:16",
+            "source_image_attached": true
+          },
+          "title": "Image Motion Plan — Hero product motion source",
+          "style": {
+            "id": "product_reveal",
+            "label": "Hé lộ sản phẩm"
+          },
+          "motion": {
+            "id": "orbit_reveal",
+            "label": "Orbit hé lộ"
+          },
+          "music": {
+            "id": "cinematic_light",
+            "label": "Cinematic nhẹ"
+          },
+          "duration_seconds": 10,
+          "scenes": [
+            {
+              "index": 1,
+              "start_seconds": 0,
+              "end_seconds": 4,
+              "title": "Thiết lập continuity",
+              "visual_direction": "Establish the subject and composition described by the private Image Studio direction “Hero product motion source”; preserve recognizable subject geometry, legitimate marks and the existing composition direction. làm rõ hình dáng, màu sắc, logo hợp lệ và chi tiết sản phẩm mà không thay đổi chúng.",
+              "camera": "stable establishing frame with a controlled focal anchor",
+              "transition": "clean opening hold",
+              "audio_direction": "nhịp ambient/cinematic nhẹ, không lời, chỉ là note biên tập",
+              "editorial_note": "Kế hoạch không đọc hoặc phân tích ảnh; editor cần kiểm tra visual continuity trên nguồn hợp lệ trước khi thực thi."
+            },
+            {
+              "index": 2,
+              "start_seconds": 4,
+              "end_seconds": 7,
+              "title": "Chuyển động chính",
+              "visual_direction": "Keep the subject and composition described by the private Image Studio direction “Hero product motion source” consistent while chuyển từ ngữ cảnh sang chi tiết bằng một vòng cung nhẹ có kiểm soát. Maintain natural depth, lighting and object relationships.",
+              "camera": "gentle orbit với hero framing",
+              "transition": "detail match cut",
+              "audio_direction": "nhịp ambient/cinematic nhẹ, không lời, chỉ là note biên tập",
+              "editorial_note": "Không tạo frame, footage, preview hoặc yêu cầu provider. Đây là direction để editor review."
+            },
+            {
+              "index": 3,
+              "start_seconds": 7,
+              "end_seconds": 10,
+              "title": "Hero frame để review",
+              "visual_direction": "Resolve on a stable hero frame for the subject and composition described by the private Image Studio direction “Hero product motion source”; leave any copy/CTA as an empty editorial decision and do not invent readable text or logos.",
+              "camera": "stable hero hold with clear subject separation",
+              "transition": "clean settle",
+              "audio_direction": "nhịp ambient/cinematic nhẹ, không lời, chỉ là note biên tập",
+              "editorial_note": "Xác nhận quyền sử dụng, thương hiệu, claim và consent trước khi đưa plan vào một execution workflow đã được cấp riêng."
+            }
+          ],
+          "review_before_use": [
+            "Kiểm tra rằng Image Studio direction và ảnh Image Vault còn thuộc account hiện tại trước khi dùng ở workflow khác.",
+            "Rà soát continuity của chủ thể, thương hiệu/logo hợp lệ, claim, consent và quyền sử dụng trước khi thực thi.",
+            "Đây là Video Plan direction; xác nhận riêng một workflow có engine/provider đã được cấp nếu sau này cần tạo media."
+          ]
+        },
+        "execution": "web_native_image_motion_planning_only",
+        "input_persisted": false,
+        "source_media_inspected": false,
+        "source_metadata_owner_checked": true,
+        "provider_called": false,
+        "image_created": false,
+        "video_created": false,
+        "audio_created": false,
+        "preview_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      },
+      "receipt": {
+        "destination": "video_plan",
+        "plan": {
+          "id": "b1f8c06a-d2e6-4151-97b4-cdad21fa7cca",
+          "revision": 1,
+          "state": "draft"
+        },
+        "scene_count": 3,
+        "execution": "web_native_image_motion_video_plan_server_recomputed",
+        "draft_recomputed_on_server": true,
+        "web_video_plan_persisted": true,
+        "browser_result_persisted": false,
+        "telegram_state_changed": false,
+        "bot_called": false,
+        "bridge_called": false,
+        "source_metadata_owner_checked": true,
+        "media_uploads": false,
+        "provider_called": false,
+        "image_created": false,
+        "video_created": false,
+        "audio_created": false,
+        "preview_created": false,
+        "output_created": false,
+        "job_created": false,
+        "wallet_mutated": false,
+        "payment_started": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "delivery_created": false,
+        "approval_created": false,
+        "plan_approved": false,
+        "plan_locked": false,
+        "generation_started": false,
+        "fact_checked": false,
+        "rights_verified": false,
+        "source_media_inspected": false
+      },
+      "receiptEvidence": "finite synthetic unit-only image schema; NOT a real Image UI/save proof"
+    },
+    {
+      "part": "reference",
+      "route": "reference-format-planner",
+      "key": "referenceFormatPlanner",
+      "source": {
+        "asset_id": "124ec903-e051-4b0d-9043-324ff82556c5",
+        "direction": "product_ad",
+        "platform": "tiktok",
+        "goal": "educate",
+        "tone": "clear",
+        "topic": "Bộ công cụ quản lý đơn hàng cho shop online nhỏ",
+        "audience": "Chủ shop online cần quy trình gọn và dễ theo dõi",
+        "language": "vi",
+        "duration_seconds": 30
+      },
+      "result": {
+        "planner": {
+          "reference": {
+            "asset_id": "124ec903-e051-4b0d-9043-324ff82556c5",
+            "display_name": "Video format tham chiếu",
+            "extension": "mp4",
+            "content_type": "video/mp4",
+            "source_video_attached": true
+          },
+          "title": "Kế hoạch format tham chiếu — Bộ công cụ quản lý đơn hàng cho shop online nhỏ",
+          "direction": {
+            "id": "product_ad",
+            "label": "Quảng cáo sản phẩm"
+          },
+          "platform": {
+            "id": "tiktok",
+            "label": "TikTok"
+          },
+          "goal": {
+            "id": "educate",
+            "label": "Chia sẻ kiến thức"
+          },
+          "tone": {
+            "id": "clear",
+            "label": "Rõ ràng, tự nhiên"
+          },
+          "topic": "Bộ công cụ quản lý đơn hàng cho shop online nhỏ",
+          "audience": "Chủ shop online cần quy trình gọn và dễ theo dõi",
+          "language": "vi",
+          "duration_seconds": 30,
+          "scenes": [
+            {
+              "index": 1,
+              "start_seconds": 0,
+              "end_seconds": 10,
+              "title": "Hook nguyên bản",
+              "visual_direction": "Mở bằng một tình huống quan sát được cho chủ đề mới; không lặp lại người, thương hiệu, câu chữ, shot hay nhịp của video nguồn. Chủ đề mới: Bộ công cụ quản lý đơn hàng cho shop online nhỏ. Khán giả: Chủ shop online cần quy trình gọn và dễ theo dõi. Hướng format: mở bằng một tình huống hoặc chi tiết sản phẩm có thể quan sát. Nền tảng: TikTok; mục tiêu: ưu tiên bước làm có thể kiểm tra và mời người xem lưu lại.",
+              "camera": "Hướng camera biên tập: chi tiết sản phẩm rõ, chuyển động có động cơ và hero hold ổn định",
+              "transition": "detail match cut có kiểm soát",
+              "audio_direction": "Hướng giọng / âm thanh: ngắn gọn, trực tiếp và dễ hiểu; không có audio được tạo.",
+              "editorial_note": "Video Asset Vault được chọn không bị mở, tải, giải mã, cắt frame hoặc phân tích. Nó chỉ là kiểm tra quyền tham chiếu thuộc Web account hiện tại. Đây là scene 1 của plan text riêng tư; không tạo media, preview, job, thanh toán hay publish action."
+            },
+            {
+              "index": 2,
+              "start_seconds": 10,
+              "end_seconds": 20,
+              "title": "Demo / bằng chứng cần review",
+              "visual_direction": "Diễn giải một thao tác hoặc giải thích mới cho chủ đề; mọi claim vẫn cần người dùng kiểm tra bằng chứng trước khi dùng. Chủ đề mới: Bộ công cụ quản lý đơn hàng cho shop online nhỏ. Khán giả: Chủ shop online cần quy trình gọn và dễ theo dõi. Hướng format: minh họa cách dùng hoặc bằng chứng cần được kiểm tra riêng. Nền tảng: TikTok; mục tiêu: ưu tiên bước làm có thể kiểm tra và mời người xem lưu lại.",
+              "camera": "Hướng camera biên tập: chi tiết sản phẩm rõ, chuyển động có động cơ và hero hold ổn định",
+              "transition": "detail match cut có kiểm soát",
+              "audio_direction": "Hướng giọng / âm thanh: ngắn gọn, trực tiếp và dễ hiểu; không có audio được tạo.",
+              "editorial_note": "Video Asset Vault được chọn không bị mở, tải, giải mã, cắt frame hoặc phân tích. Nó chỉ là kiểm tra quyền tham chiếu thuộc Web account hiện tại. Đây là scene 2 của plan text riêng tư; không tạo media, preview, job, thanh toán hay publish action."
+            },
+            {
+              "index": 3,
+              "start_seconds": 20,
+              "end_seconds": 30,
+              "title": "Kết nguyên bản & khoảng CTA",
+              "visual_direction": "Kết ở hero frame nguyên bản, chừa khoảng CTA mềm để biên tập; không bịa chữ, dấu hiệu nhận diện hoặc tuyên bố hiệu quả. Chủ đề mới: Bộ công cụ quản lý đơn hàng cho shop online nhỏ. Khán giả: Chủ shop online cần quy trình gọn và dễ theo dõi. Hướng format: kết ở khung hero sạch với một bước tiếp theo không phóng đại. Nền tảng: TikTok; mục tiêu: ưu tiên bước làm có thể kiểm tra và mời người xem lưu lại.",
+              "camera": "Hướng camera biên tập: chi tiết sản phẩm rõ, chuyển động có động cơ và hero hold ổn định",
+              "transition": "detail match cut có kiểm soát",
+              "audio_direction": "Hướng giọng / âm thanh: ngắn gọn, trực tiếp và dễ hiểu; không có audio được tạo.",
+              "editorial_note": "Video Asset Vault được chọn không bị mở, tải, giải mã, cắt frame hoặc phân tích. Nó chỉ là kiểm tra quyền tham chiếu thuộc Web account hiện tại. Đây là scene 3 của plan text riêng tư; không tạo media, preview, job, thanh toán hay publish action."
+            }
+          ],
+          "review_before_use": [
+            "Xác nhận bạn có quyền dùng video đã chọn làm tham chiếu riêng tư trước khi chuyển sang workflow khác.",
+            "Thay toàn bộ nhận diện, thương hiệu, logo, giọng nói, câu chữ, shot order và phần tử có bảo hộ bằng sáng tạo nguyên bản; plan này không xác minh quyền.",
+            "Rà soát claim, giá, disclosure, consent và chính sách nền tảng trước khi dùng một execution hoặc publishing workflow được cấp riêng."
+          ]
+        },
+        "execution": "web_native_reference_format_planning_only",
+        "input_persisted": false,
+        "source_video_opened": false,
+        "source_metadata_owner_checked": true,
+        "reference_analysis_performed": false,
+        "source_link_fetched": false,
+        "provider_called": false,
+        "image_created": false,
+        "video_created": false,
+        "audio_created": false,
+        "preview_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      },
+      "receipt": {
+        "destination": "video_plan",
+        "plan": {
+          "id": "b1f8c06a-d2e6-4151-97b4-cdad21fa7cca",
+          "revision": 1,
+          "state": "draft"
+        },
+        "scene_count": 3,
+        "execution": "web_native_reference_format_video_plan_server_recomputed",
+        "draft_recomputed_on_server": true,
+        "web_video_plan_persisted": true,
+        "browser_result_persisted": false,
+        "telegram_state_changed": false,
+        "bot_called": false,
+        "bridge_called": false,
+        "source_video_opened": false,
+        "source_metadata_owner_checked": true,
+        "reference_analysis_performed": false,
+        "source_link_fetched": false,
+        "media_uploads": false,
+        "provider_called": false,
+        "image_created": false,
+        "video_created": false,
+        "audio_created": false,
+        "preview_created": false,
+        "output_created": false,
+        "job_created": false,
+        "wallet_mutated": false,
+        "payment_started": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "delivery_created": false,
+        "approval_created": false,
+        "plan_approved": false,
+        "plan_locked": false,
+        "generation_started": false,
+        "fact_checked": false,
+        "rights_verified": false
+      },
+      "receiptEvidence": "actual owned isolated UI save/readback receipt"
+    }
+  ],
+  "catalog": {
+    "vi": "676eff8e5a3138267fc8a90e105d009e5fffce9a3b55b37ba8a75587bf2cdf31",
+    "en": "f25b55e876e41dd294e35d97eb2ab2c299fbc406e2ff731de47d4c0c6d1a6d7b",
+    "zh": "bf5eebc7069a97834617b257052646c7fab79a8320f68128c30ef77b93e5da3c"
+  },
+  "oldCatalogCount": 10424,
+  "newCatalogCount": 59
+}

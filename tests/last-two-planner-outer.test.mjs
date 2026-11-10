@@ -22,7 +22,7 @@ for(const d of fixture.definitions)for(const locale of['vi','en','zh'])for(const
 for(const locale of['vi','en','zh']){
  const messages=renderChild(locale,'/studio',{}).messages[locale];
  test(locale+': all 10349 released catalog entries remain unchanged',()=>{
-  const entries=Object.entries(messages).filter(([k])=>!k.startsWith('lastTwoPlannerUi.')).sort(([a],[b])=>a<b?-1:a>b?1:0);
+  const entries=Object.entries(messages).filter(([k])=>!k.startsWith('lastTwoPlannerUi.')&&!k.startsWith('lastTwoResultUi.')&&!k.startsWith('lastTwoSaveUi.')&&!k.startsWith('lastTwoFeedbackUi.')&&!k.startsWith('lastTwoOperationFeedbackUi.')).sort(([a],[b])=>a<b?-1:a>b?1:0);
   assert.equal(entries.length,fixture.oldCatalogCount);assert.equal(crypto.createHash('sha256').update(JSON.stringify(entries)).digest('hex'),fixture.catalog[locale]);
  });
  test(locale+': new last-two catalog contains only the 75 used keys',()=>assert.equal(Object.keys(messages).filter(k=>k.startsWith('lastTwoPlannerUi.')).length,fixture.newCatalogCount));

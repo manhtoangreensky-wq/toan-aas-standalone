@@ -1357,6 +1357,19 @@ MERGE/DEPLOY/LIVE không suy từ tests. Trạng thái delivery theo PR/checkpoi
  exact4lineguard/4strings;39caseledger+6legacyaffected,6native/12ảnhđạt;
  lỗi cụthể/unknown/role/timergiữ,khôngđổiAPI/auth/quyền/thànhcông.
 - [ ] GENERIC-GUARD delivery:CI/exactHEADmerge/exactSHAdeploy/runtime/assets.
+- [x] GENERIC-GUARD delivery:PR713/CI42866893518/deploy42868899639,
+ runtimed72eed76,3active/healthok/4assetsbyteexact;receipt6774901665.
+- [x] LAST-TWO-RESULTS-FLOW local:60result/save+7dynamic+9toastkeys/locale,
+ 10424oldvalueskept;20guards,90renderer/catalog,27lockledger,111toast vàDOM
+ markerRED->GREEN.12nativeview/6actualflows,6plan18scene,36ảnh,522contrastpass,
+ 17protectedpathsunchanged,0egress/provider/wallet/production;46ownedprocesses->0.
+- [ ] LAST-TWO-RESULTS-FLOW delivery:provenance/CI/exactHEADmerge/deploy/runtime/
+ 4HTTPSassets;docs/reports/last-two-results-flow-20261111.md.
+- [ ] NEXT SERVER-OUTPUT-LOCALE:review/scene/choice/plan-detailsystemcopycòntrộn,
+ khôngcoiđódữliệukháchhoặckeyfixedUIđãđóngtoàntrang;dịchtheocontentlanguage.
+- [ ] NEXT ReferenceFormatcurrent-input/sourcefreshness/stale-response/session
+ fences vàImageactualedit/retrypending/recoverybrowserevidence;6happyflowskhông
+ thaycácgatethật. SauđómớitiếptụcAX/auth/device vàmotioncuốiđúngthứtự.
 - [x] ROUTE-ENGINE-BOT-WEB source audit requested in parallel: retained bounded
  public-source findings after one evidence correction; push/pull adapters and
  local readiness short-circuits distinguished. No engine/auth mutation.

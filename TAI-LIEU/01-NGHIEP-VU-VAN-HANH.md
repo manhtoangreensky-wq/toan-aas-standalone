@@ -2496,3 +2496,20 @@ ba dịch vụ active và4HTTPSasset khớp. Riêng dòng thông báo chung theo
 được bỏ bằng exactguardVI/EN/ZH;khôngđổi quyền hay giấu lỗi cụthể.6nativeview
 chứng minh thông báo chungkhôngxuất hiện,còn lỗi tảidữliệuvẫnalert.
 [Báo cáo](../docs/reports/generic-guard-toast-removal-20261111.md).
+
+PR713đãpháthành:CI42866893518/deploy42868899639đạt,runtimed72eed76,
+ba dịch vụ active và4assetHTTPSkhớp. Dòng thông báo chungkhôngcònđược tạo;
+khôngđổi quyền hay báo thao tác thất bại thành công.
+
+## Kết quả và lưu hai công cụ tham chiếu — local11/11/2026
+
+ImageMotion đã sửa cổng UI dựa vào mã tài khoản không xuất ra trình duyệt;
+dùngdấuphiênRAMriêng,giữepoch/path/auth/enabled. Cả ImageMotion/ReferenceFormat
+giữđủmetadatađãxácminhqua4parser,khôngbỏvalidation. Kếtquảtrốngkhôngcòncard
+thừa;receiptlưuthậtloạiprep/nútlưulặp.76keyfixedUI/dynamic/toastđúngVI/EN/ZH,
+10424giátrịcũgiữ.6UIflowtạo-xácnhận-lưu-readback-mởđạt,6plan18sceneđúng
+trongDBtạm;12view/36ảnh,522mẫutươngphảnđạtmin5,5225:1. Chưapháthành.
+Server-generatedreview/scene/choicecopyvẫnlẫngenerictermsvàlàbướctiếp,
+khôngphải dữliệukhách;khôngcoifixedUI làtoàntrangđãdịch. Referencecurrent-input/
+stale-response/session vàactualedit/retrybrowsergatesvẫnmở.
+[Báo cáo](../docs/reports/last-two-results-flow-20261111.md).

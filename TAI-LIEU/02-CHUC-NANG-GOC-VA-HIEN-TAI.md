@@ -1736,3 +1736,18 @@ Trước:legacyguarded được đổi thành "Không thể thực hiện thao t
 nhưng vẫn là dòng chung Owner yêu cầu bỏ. Nay exactguardtoastkhông tạo node
 haytimer cho đúnglegacy/VI/EN/ZHcâu đó. Lỗi cụthể/unknown vẫn hiển thị,
 status/backend/quyềnkhôngđổi. Không coi việc xóa thông báo là tạo thành công.
+
+## Kết quả/lưu hai công cụ tham chiếu —11/11/2026
+
+Nguồngốc:2result/2saveproducer,4receiptparser vàImageMotionrequestfence tạiBASEd72eed76.
+
+|Trước|Hiệntrạnglocal|Bằngchứng/giớihạn|
+|---|---|---|
+|Imagebấm0POSTvìaccount.idkhôngđượccấp|PrivateRAMstamp,capture/currentepoch/path/Authgiữ|20focusedpass,6actualmobileflowskhônginternalID|
+|Referenceđãlưunhưngreceiptbiếnmất/nútlưuvẫnbật|Giữđúngmetadatađãxácminh,parseridempotent|6plan18scene/readback/open,terminalbuttonabsent|
+|Emptycard/confirmationpaneldưsaukhilưu|Emptyreturn"",receiptchỉhiệnkếtquảlưuthật|42renderer×2checks;sourcecallsgiữ|
+|Fixedlabels/cảnhbáo/toasttrộnVI/EN/ZH|76keymới,unknownerrors/lock/retrygiữ|27lockcases/111toastpass|
+|Vùngkếtquảphụthuộclayoutcũ|2semanticdataattrsvalidresult/receiptonly|DOMstale-noteRED->GREEN,21markerasserts|
+
+Nộidungmẫumáychủvàtrangplanđãlưuvẫnmởchờdịchthuần;6happyflowskhôngđóng
+Referencecurrent-input/stale-session/actualretry/device/Safari/motion/engineoutput.
