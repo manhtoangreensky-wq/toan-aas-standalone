@@ -51,6 +51,15 @@ IMAGE_MOTION_OUTPUT_COPY = {
     '_compose_image_motion_planner.line5088.col12': {'en': 'Check that the Image Studio direction and Image Vault images still belong to the current account before using them in another workflow.', 'vi': 'Kiểm tra rằng định hướng Xưởng hình ảnh và ảnh trong Kho hình ảnh còn thuộc tài khoản hiện tại trước khi dùng ở quy trình làm việc khác.', 'zh': '在其他工作流中使用之前，请确认图像工作室指引及图像库中的图片仍属于当前账户。'},
     '_compose_image_motion_planner.line5089.col12': {'en': 'Review subject continuity, valid brands/logos, claims, consent, and usage rights before execution.', 'vi': 'Rà soát tính nhất quán của chủ thể, thương hiệu/biểu trưng hợp lệ, tuyên bố, sự đồng ý và quyền sử dụng trước khi thực thi.', 'zh': '在执行前，请仔细核对主体连贯性、合法品牌/标志、声明、同意以及使用权。'},
     '_compose_image_motion_planner.line5090.col12': {'en': 'This is a Video Plan direction; separately confirm a workflow with a provisioned engine/provider if media generation is needed later.', 'vi': 'Đây là định hướng Kế hoạch video; hãy xác nhận riêng một quy trình làm việc có công cụ xử lý/nhà cung cấp đã được cấp nếu sau này cần tạo nội dung nghe nhìn.', 'zh': '此为视频计划方向指引；若后续需要生成媒体，请单独确认具备已分配引擎/服务商的工作流程。'},
+    'savedPlan.audio': {'en': 'Audio direction: {p0}', 'vi': 'Định hướng âm thanh: {p0}', 'zh': '声音方向：{p0}'},
+    'savedPlan.briefBoundary': {'en': 'Editing plan only; no video has been created.', 'vi': 'Kế hoạch biên tập; chưa tạo video.', 'zh': '仅为编辑方案，尚未生成视频。'},
+    'savedPlan.briefSettings': {'en': 'Style: {p0}. Motion: {p1}. Music: {p2}.', 'vi': 'Phong cách: {p0}. Chuyển động: {p1}. Âm nhạc: {p2}.', 'zh': '风格：{p0}。动作：{p1}。音乐：{p2}。'},
+    'savedPlan.briefSource': {'en': 'Image direction: {p0}.', 'vi': 'Hướng hình ảnh: {p0}.', 'zh': '图像方向：{p0}。'},
+    'savedPlan.camera': {'en': 'Camera: {p0}', 'vi': 'Góc máy: {p0}', 'zh': '镜头：{p0}'},
+    'savedPlan.editorial': {'en': 'Editing note: {p0}', 'vi': 'Ghi chú biên tập: {p0}', 'zh': '剪辑备注：{p0}'},
+    'savedPlan.objective': {'en': 'Animate the selected image.', 'vi': 'Tạo chuyển động từ hình ảnh đã chọn.', 'zh': '为所选图片设计动态效果。'},
+    'savedPlan.sceneTitle': {'en': 'Scene {p0} — {p1}', 'vi': 'Cảnh {p0} — {p1}', 'zh': '场景 {p0} — {p1}'},
+    'savedPlan.timing': {'en': 'Timing: {p0}s–{p1}s.', 'vi': 'Thời gian: {p0}–{p1} giây.', 'zh': '时间：{p0}–{p1} 秒。'},
 }
 
 REFERENCE_FORMAT_OUTPUT_COPY = {
@@ -138,4 +147,12 @@ REFERENCE_FORMAT_OUTPUT_COPY = {
     '_compose_reference_format_planner.line5207.col51': {'en': 'Demonstrate a new action or explanation for the topic; all claims still require user evidence verification before use.', 'vi': 'Diễn giải một thao tác hoặc giải thích mới cho chủ đề; mọi tuyên bố vẫn cần người dùng kiểm tra bằng chứng trước khi dùng.', 'zh': '为该主题阐述一项新的操作或解释；所有声明在使用前仍需用户核验凭证。'},
     '_compose_reference_format_planner.line5208.col13': {'en': 'Original ending & call-to-action space', 'vi': 'Kết nguyên bản & khoảng trống cho lời kêu gọi hành động', 'zh': '原创收尾与行动呼吁空间'},
     '_compose_reference_format_planner.line5208.col51': {'en': 'End on an original hero frame, leaving space for a soft editorial call to action; do not invent text, identifying marks, or performance claims.', 'vi': 'Kết ở khung hình chủ thể trọng tâm nguyên bản, chừa khoảng trống cho lời kêu gọi hành động nhẹ nhàng để biên tập; không bịa chữ, dấu hiệu nhận diện hoặc tuyên bố hiệu quả.', 'zh': '收尾于原创焦点画面，留出温和的行动呼吁空间以便剪辑；切勿编造文字、识别标记或效果声明。'},
+    'savedPlan.audio': {'en': 'Audio direction: {p0}', 'vi': 'Định hướng âm thanh: {p0}', 'zh': '声音方向：{p0}'},
+    'savedPlan.briefBoundary': {'en': 'Editing plan only; no video has been created.', 'vi': 'Kế hoạch biên tập; chưa tạo video.', 'zh': '仅为编辑方案，尚未生成视频。'},
+    'savedPlan.briefSettings': {'en': 'Direction: {p0}. Platform: {p1}. Tone: {p2}.', 'vi': 'Hướng nội dung: {p0}. Nền tảng: {p1}. Giọng điệu: {p2}.', 'zh': '内容方向：{p0}。平台：{p1}。语调：{p2}。'},
+    'savedPlan.briefSource': {'en': 'Selected video: {p0}.', 'vi': 'Tệp tham chiếu: {p0}.', 'zh': '参考文件：{p0}。'},
+    'savedPlan.camera': {'en': 'Camera: {p0}', 'vi': 'Góc máy: {p0}', 'zh': '镜头：{p0}'},
+    'savedPlan.editorial': {'en': 'Editing note: {p0}', 'vi': 'Ghi chú biên tập: {p0}', 'zh': '剪辑备注：{p0}'},
+    'savedPlan.sceneTitle': {'en': 'Scene {p0} — {p1}', 'vi': 'Cảnh {p0} — {p1}', 'zh': '场景 {p0} — {p1}'},
+    'savedPlan.timing': {'en': 'Timing: {p0}s–{p1}s.', 'vi': 'Thời gian: {p0}–{p1} giây.', 'zh': '时间：{p0}–{p1} 秒。'},
 }

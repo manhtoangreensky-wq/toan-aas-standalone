@@ -1011,3 +1011,14 @@ vẫn chờ exact-SHA CI/deploy/live trong PR. Hồ sơ: `R218-LOCALE-183-RELEAS
 |---|---|---|---|---|
 | VOICE-MOBILE-INPUT-16-001 | vừa | TTS/STT/Clone/Saved/Outputs ở320/414/1024/1440, VI/EN/ZH, light/dark | Ô nhập mobile16px; desktop từng field giữ baseline; không overflow/errors, không gọi provider | Native120cases/font acceptance; [phiên Voice](PHIEN-VOICE-MOBILE-20261109.md); CI/ship/LIVE riêng |
 | VOICE-CLONE-TOUCH-001 | vừa | Mở “Quy trình thêm giọng” ở320/414, click/Space/Enter, lặpVI/EN/ZH light/dark | Summary tối thiểu44px; marker/toggle/focus native; bảy bước không đổi | Native Clone12RED→green; cùng phiên Voice; CI/ship/LIVE riêng |
+
+## Saved-plan system copy — 11/11/2026
+
+| Case | Mức | Bước | Kết quả bắt buộc | Bằng chứng |
+|---|---|---|---|---|
+| SPC-LANGUAGE | vừa | Tạo và lưu Image vi/en/zh, Reference vi/en với mọi lựa chọn hiện có | Chữ hệ thống lưu theo ngôn ngữ nội dung, không theo UI; raw language giữ | [Phiên SPC](PHIEN-SAVED-PLAN-SYSTEM-COPY-20261111.md) |
+| SPC-CUSTOMER | nặng | Dùng tên/chủ đề/audience có literal {p0}/{p1}; lưu rồi GET/mở | Dữ liệu khách, ID, timing, tags, scene roles và giới hạn không đổi | Phiên SPC; không production data |
+| SPC-USEFUL | vừa | Mở kế hoạch mới và cảnh đã lưu | Không audience bịa; brief3dòng và4dòng ghi chú có dữ liệu thật, không đoạn giải thích lặp | Phiên SPC |
+| SPC-BOUNDARY | nặng | So40biên độ dài với BASE, gồm EN Reference có tên tệp |0newrejection; không đổi guard URL, không cắt dữ liệu khách | Phiên SPC;11giới hạn cũ vẫn mở |
+| SPC-NATIVE | nặng |6luồng thật tạo–xác nhận–lưu–đọc lại–mở ởlocalhost |6plan18scene đúng; field được mở lại bằng dữ liệu đã lưu; dọn Job về0 | Phiên SPC; signedproduction/device riêng |
+| SPC-DARK | vừa | Mở6kế hoạch đã lưu trên bản sao DB QA, bật tối bằng công tắc thật | DOMtheme/palette tối thực tế; field còn đúng;0compose/0save, không suy từ URL | Phiên SPC; không lặp luồng lưu đã đạt |

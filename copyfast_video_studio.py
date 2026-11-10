@@ -5104,6 +5104,9 @@ def _image_motion_planner_to_video_plan(
     """Convert server-recomputed planning text into an editable private plan."""
 
     result = ImageMotionPlannerResult.model_validate(planner)
+    language = str(result.reference.language).strip().lower()
+    language = language if language in ("vi", "en", "zh") else "vi"
+    text = lambda key: IMAGE_MOTION_OUTPUT_COPY[key][language]
     ratio = result.reference.aspect_ratio if result.reference.aspect_ratio in ASPECT_RATIOS else "custom"
     plan = PlanPayload.model_validate(
         {
@@ -5112,15 +5115,14 @@ def _image_motion_planner_to_video_plan(
             "language": result.reference.language,
             "aspect_ratio": ratio,
             "target_duration_seconds": result.duration_seconds,
-            "objective": "Private image-to-motion editorial plan derived from an owner-scoped Image Studio direction.",
-            "audience": "Private Web editor",
+            "objective": text("savedPlan.objective"),
+            "audience": "",
             "brief": _body(
                 "\n".join(
                     (
-                        "This is a private, editable Image Motion authoring plan.",
-                        f"Source direction: {result.reference.direction_title}.",
-                        f"Style: {result.style.label}. Motion: {result.motion.label}. Music direction: {result.music.label}.",
-                        "The source image was not opened or inspected. Saving this plan does not create, queue, render or deliver media.",
+                        text("savedPlan.briefSource").format(p0=result.reference.direction_title),
+                        text("savedPlan.briefSettings").format(p0=result.style.label, p1=result.motion.label, p2=result.music.label),
+                        text("savedPlan.briefBoundary"),
                     )
                 ),
                 label="Brief Image Motion Video Plan",
@@ -5139,17 +5141,16 @@ def _image_motion_planner_to_video_plan(
     for scene in result.scenes:
         notes = "\n".join(
             (
-                f"Planner timing: {scene.start_seconds}s–{scene.end_seconds}s.",
-                f"Camera: {scene.camera}",
-                f"Audio direction: {scene.audio_direction}",
-                f"Editorial note: {scene.editorial_note}",
-                "No source media was inspected and no media generation was started.",
+                text("savedPlan.timing").format(p0=scene.start_seconds, p1=scene.end_seconds),
+                text("savedPlan.camera").format(p0=scene.camera),
+                text("savedPlan.audio").format(p0=scene.audio_direction),
+                text("savedPlan.editorial").format(p0=scene.editorial_note),
             )
         )
         scenes.append(
             ScenePayload.model_validate(
                 {
-                    "title": _line(f"Scene {scene.index} — {scene.title}", label="Tên Image Motion scene", minimum=2, maximum=180),
+                    "title": _line(text("savedPlan.sceneTitle").format(p0=scene.index, p1=scene.title), label="Tên Image Motion scene", minimum=2, maximum=180),
                     "scene_type": _video_prompt_planner_scene_type(ordinal=scene.index, total=len(result.scenes)),
                     "duration_seconds": scene.end_seconds - scene.start_seconds,
                     "visual_direction": _body(scene.visual_direction, label="Image Motion visual direction", maximum=4_600),
@@ -5275,6 +5276,7 @@ def _reference_format_planner_to_video_plan(
     """Persist only server-recomputed text as a private editable Video Plan."""
 
     result = ReferenceFormatPlannerResult.model_validate(planner)
+    text = lambda key: REFERENCE_FORMAT_OUTPUT_COPY[key][result.language]
     ratio = REFERENCE_FORMAT_PLANNER_PLATFORMS[payload.platform]["aspect_ratio"]
     plan = PlanPayload.model_validate(
         {
@@ -5284,7 +5286,7 @@ def _reference_format_planner_to_video_plan(
             "aspect_ratio": ratio,
             "target_duration_seconds": result.duration_seconds,
             "objective": _body(
-                f"{result.goal.label}: {REFERENCE_FORMAT_PLANNER_GOALS[payload.goal]['direction']}",
+                f"{result.goal.label}: {text(f'REFERENCE_FORMAT_PLANNER_GOALS.{payload.goal}.direction')}",
                 label="Mục tiêu Reference Format Video Plan",
                 maximum=1_200,
             ),
@@ -5292,10 +5294,9 @@ def _reference_format_planner_to_video_plan(
             "brief": _body(
                 "\n".join(
                     (
-                        "This is a private, editable Reference Format authoring plan.",
-                        f"Selected Asset Vault video: {result.reference.display_name}.",
-                        f"Direction: {result.direction.label}. Platform: {result.platform.label}. Tone: {result.tone.label}.",
-                        "The selected video was not opened or analyzed. Saving this plan does not create, queue, render or deliver media.",
+                        text("savedPlan.briefSource").format(p0=result.reference.display_name),
+                        text("savedPlan.briefSettings").format(p0=result.direction.label, p1=result.platform.label, p2=result.tone.label),
+                        text("savedPlan.briefBoundary"),
                     )
                 ),
                 label="Brief Reference Format Video Plan",
@@ -5315,17 +5316,16 @@ def _reference_format_planner_to_video_plan(
     for scene in result.scenes:
         notes = "\n".join(
             (
-                f"Planner timing: {scene.start_seconds}s–{scene.end_seconds}s.",
-                f"Camera: {scene.camera}",
-                f"Audio direction: {scene.audio_direction}",
-                f"Editorial note: {scene.editorial_note}",
-                "No source video was opened/analyzed and no media generation was started.",
+                text("savedPlan.timing").format(p0=scene.start_seconds, p1=scene.end_seconds),
+                text("savedPlan.camera").format(p0=scene.camera),
+                text("savedPlan.audio").format(p0=scene.audio_direction),
+                text("savedPlan.editorial").format(p0=scene.editorial_note),
             )
         )
         scenes.append(
             ScenePayload.model_validate(
                 {
-                    "title": _line(f"Scene {scene.index} — {scene.title}", label="Tên Reference Format scene", minimum=2, maximum=180),
+                    "title": _line(text("savedPlan.sceneTitle").format(p0=scene.index, p1=scene.title), label="Tên Reference Format scene", minimum=2, maximum=180),
                     "scene_type": _video_prompt_planner_scene_type(ordinal=scene.index, total=len(result.scenes)),
                     "duration_seconds": scene.end_seconds - scene.start_seconds,
                     "visual_direction": _body(scene.visual_direction, label="Reference Format visual direction", maximum=4_600),
