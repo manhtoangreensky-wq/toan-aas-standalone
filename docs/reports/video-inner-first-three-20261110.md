@@ -105,3 +105,11 @@ BRANCH_FAILURES=4BASE-equivalent navliterals in declaredPython comparison;
 NEW_FAILURES=0in accepted targeted comparable gates, finalCIstillrequired.
 DEPLOY=NOT_YET; LIVE_PASS=NOT_TESTED; LESSON_CANDIDATE=NONE.
 Whole goal remains active; M-FINAL stays last, no narrowed completion claim.
+
+InitialCI42811840989 stopped after117critical passes at the root-only-color
+contract: the exact accepted checkbox color had been written as a literal in
+the scoped rule. The coordinator spec omitted the palette-token placement rule.
+Worker R1A hoists the unchanged#e6f6fb value into first:root token
+portal-checkbox-on-dark; same selector uses that token. Single affected Python
+gate1/1pass and exact token-resolution comparison confirm the computed color is
+unchanged, so74contrast/18native/9flows are retained without rerunning them.

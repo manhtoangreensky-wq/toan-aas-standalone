@@ -44,6 +44,7 @@
   --portal-action: #0f766e;
   --portal-action-hover: #115e59;
   --portal-on-action: #ffffff;
+  --portal-checkbox-on-dark: #e6f6fb;
   --portal-brand: #0d9488;
   --portal-brand-hover: #0f766e;
   --portal-context: #0369a1;
@@ -23569,5 +23570,5 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-self-shot-scene-planner
 }
 
 html:not([data-portal-theme="dark"]) .portal-page.portal-self-shot-scene-planner form[data-portal-action="self-shot-scene-planner-compose"] .portal-checkbox > span {
-  color: #e6f6fb;
+  color: var(--portal-checkbox-on-dark);
 }
