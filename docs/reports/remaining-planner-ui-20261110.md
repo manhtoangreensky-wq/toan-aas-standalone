@@ -75,3 +75,13 @@ không đổi cài đặt hoặc dùng đường vòng.
 
 PROVIDER_CALLS=0; WALLET_MUTATIONS=0; PRODUCTION_DATA_MUTATIONS=0.
 DEPLOY=NOT_YET; LIVE_PASS=NOT_TESTED; LESSON_CANDIDATE=NONE.
+
+## Delivery receipt — PR711
+
+Đã merge từHEAD32f8b318;CI42855342492 đạt cả VerifyWebApp và AuthenticatedQA.
+Deploy42857198280 đạt, runtime7f8753d5c35c6827a76fe9579041b1fe3812ba39.
+Ba dịch vụ active,healthok và4HTTPSassets khớp byte;không suy signedLIVE.
+ArtefactCI:browser13782657461,authenticated13783331735.
+ReceiptIssue689:6773302122;PRcomment6773303001. Mốc NOT_YET phía trên là
+trạng thái trước phát hành, được thay bằng bằng chứng delivery này.
+Hai phiếu outerUI tiếp theo ở branch riêng;không thêm vào711.

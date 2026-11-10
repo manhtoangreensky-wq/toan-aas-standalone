@@ -52,7 +52,7 @@ for(const locale of['vi','en','zh'])for(const row of rows)for(const mode of['emp
 for(const locale of['vi','en','zh']){
  const messages=renderChild(locale,'/studio',{}).messages[locale];
  test(locale+': all 9951 previously released catalog entries remain unchanged',()=>{
-  const entries=Object.entries(messages).filter(([k])=>!k.startsWith('videoNextFieldsUi.')&&!k.startsWith('remainingPlannerUi.')).sort(([a],[b])=>a.localeCompare(b));
+  const entries=Object.entries(messages).filter(([k])=>!k.startsWith('videoNextFieldsUi.')&&!k.startsWith('remainingPlannerUi.')&&!k.startsWith('lastTwoPlannerUi.')).sort(([a],[b])=>a.localeCompare(b));
   assert.equal(entries.length,9951);assert.equal(crypto.createHash('sha256').update(JSON.stringify(entries)).digest('hex'),catalog[locale]);
  });
  test(locale+': new scoped catalog has every actual worker field/result key',()=>assert.equal(Object.keys(messages).filter(k=>k.startsWith('videoNextFieldsUi.')||k.startsWith('remainingPlannerUi.')).length,398));

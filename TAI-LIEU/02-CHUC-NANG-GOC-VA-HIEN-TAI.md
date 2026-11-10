@@ -1714,3 +1714,18 @@ tại BASEe63f073f. Không lấy nhãn catalog làm bằng chứng engine đã c
 Đây là chức năng lập và lưu kế hoạch văn bản, không phải video đã được kết
 xuất. Native cuối, CI/phát hành và nội dung máy chủ/trang chi tiết còn mở;
 không đổi tài liệu thành tuyên bố hệ thống đã hoàn tất khi thiếu bằng chứng.
+
+## Hai biểu mẫu tham chiếu — đối chiếu11/11/2026
+
+Nguồn gốc:renderImageMotionPlanner/renderReferenceFormatPlanner tạiBASE7f8753d5,
+không thay source/result/normalizer/backend bằng giao diện trông thuyết phục hơn.
+
+|Trước|Hiện trạng local|Bằng chứng/giới hạn|
+|---|---|---|
+|Intro/số đếm/aside giớihạn thực thi đẩy form xuống|Bỏ khối thừa,giữstack/form5/9field|24statecontrolscalars/guards/resultcallsgiữ|
+|Nhãn/option trộn ngôn ngữ|75keydùngthậtVI/EN/ZH,36aliasthừađãbỏ|10349giátrịcũbyte-identical|
+|Mobile15px,lightlabel/help1,2653:1|14controlmobile16px,20mẫu sáng đạt|12native/120mẫugiữguardsempty/blocked|
+|Không có tham chiếu trong tài khoản|Vẫn khóa thao tác,hiện hướng dẫn nguồn|Không dựngAPIreferencehoặcfalse-ready|
+
+Đây là dọn đúng biểu mẫu,không phải nghiệm thu tạo/lưu kết quả hoặc đầu ra
+video. Phần đó tiếp theo;không đổi nhãn thành công để che chức năng chưa đạt.

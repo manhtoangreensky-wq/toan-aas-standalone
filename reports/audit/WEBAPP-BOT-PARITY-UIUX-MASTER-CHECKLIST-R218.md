@@ -1339,6 +1339,18 @@ MERGE/DEPLOY/LIVE không suy từ tests. Trạng thái delivery theo PR/checkpoi
  assetseparate. HaiImageMotion/ReferenceFormatvàserver-output/detailcòntiếp;
  whole-appclutter/AX/auth/device/finalmotionvẫnmở. Receipt:
  docs/reports/remaining-planner-ui-20261110.md;Issue689.
+- [x] REMAINING-PLANNER-UI delivery:PR711/CI42855342492/deploy42857198280;
+ runtime7f8753d5,3dịchvụactive/healthok/4HTTPSassetsbyte-exact;receipt6773302122.
+- [ ] LAST-TWO-OUTER-IMAGE/REFERENCE:haiworkerđộc lập;baseline24states đều
+ locale/clutterRED,24controlpass.R1reference8stateEN/ZHđạt;R2sửađúng16state
+ ảnhhưởng;14mobile15px/20lightcontrastRED cần3ruleCSSriêng. Chưaápdụngcode,
+ result/save/outputlocale vẫnđểbướctiếp;wholegoal/motioncuốivẫnmở.
+- [x] LAST-TWO-OUTER local:workerR2accepted16affected+8retained;75key/locale,
+ 10349giátrịcũ/5-9controlgiữ;3CSSrulesexact.12nativeview/120contrastpass,
+ 42mobilecontrol16px/0error/egress/productwrite;15protectedpathsunchanged.
+- [ ] LAST-TWO-OUTER delivery:CI/provenance/exactHEADmerge/deploy/runtime/assets;
+ docs/reports/last-two-planner-outer-20261111.md. Kếtquả/lưu/biênnhận của2trang
+ làbướctiếp;khôngđónggoal/engine/Safari/signedLIVE/motiontừouterforms.
 - [x] ROUTE-ENGINE-BOT-WEB source audit requested in parallel: retained bounded
  public-source findings after one evidence correction; push/pull adapters and
  local readiness short-circuits distinguished. No engine/auth mutation.

@@ -2476,3 +2476,17 @@ chuyển ba ô chọn số ở biểu mẫu, không nới bộ chuẩn hóa dữ
 30caseform/30casephiên/15casecảnh báo/153toast đạt;native18/18 với9luồng lưu
 thật9plan/42scene;162mẫu tương phản>=5,7971:1. Chưa phát hành và chưa chứng minh video/provider thật. Xem
 [báo cáo đang thực hiện](../docs/reports/remaining-planner-ui-20261110.md).
+
+Đợt này đã phát hành PR711:CI42855342492/deploy42857198280 đạt,
+runtime7f8753d5,ba dịch vụ active và bốn assetHTTPS khớp. Không đồng nghĩa
+đầu ra video/provider hoặc toàn goal đã hoàn tất;native là kế hoạch văn bản.
+
+## Biểu mẫu chuyển động ảnh và định dạng tham chiếu — local11/11/2026
+
+Hai form còn đủ5/9trường nhưng bỏ intro/số đếm/aside giới hạn/header kỹ thuật,
+không để cột rỗng.75khóa dùng thực/locale;10349giá trị cũ giữ. Khi tài khoản
+chưa có tham chiếu thật,các ô/nút vẫn khóa đúng quyền,không giả trạng thái sẵn sàng.
+12nativeviewVI/EN/ZH320tối/1440sáng đạt,120mẫu tương phản>=4,5:1 và42control
+mobile>=16px;0productwrite/provider/ví. Chưa phát hành đợt này;phần kết quả,
+biên nhận và lưu của hai trang còn trong bước tiếp theo.
+[Báo cáo](../docs/reports/last-two-planner-outer-20261111.md).
