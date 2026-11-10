@@ -22,6 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, Strict
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now, video_studio_enabled
+from copyfast_video_output_copy import IMAGE_MOTION_OUTPUT_COPY, REFERENCE_FORMAT_OUTPUT_COPY
 
 
 router = APIRouter(prefix="/api/v1/video-studio", tags=["Web Video Production Studio"])
@@ -5031,33 +5032,36 @@ def _compose_image_motion_planner(
     source image, video, preview, audio or engine output exists.
     """
 
-    style = IMAGE_MOTION_PLANNER_STYLES[payload.style]
-    motion = IMAGE_MOTION_PLANNER_MOTIONS[payload.motion]
-    music = IMAGE_MOTION_PLANNER_MUSIC[payload.music]
+    language = str(reference.get("language", "")).strip().lower()
+    language = language if language in ("vi", "en", "zh") else "vi"
+    text = lambda key: IMAGE_MOTION_OUTPUT_COPY[key][language]
+    style = {key: text(f"IMAGE_MOTION_PLANNER_STYLES.{payload.style}.{key}") for key in ("label", "direction")}
+    motion = {key: text(f"IMAGE_MOTION_PLANNER_MOTIONS.{payload.motion}.{key}") for key in ("label", "action", "camera", "transition")}
+    music = {key: text(f"IMAGE_MOTION_PLANNER_MUSIC.{payload.music}.{key}") for key in ("label", "direction")}
     windows = _image_motion_scene_windows(payload.duration_seconds)
     source_title = reference["direction_title"]
-    subject = f"the subject and composition described by the private Image Studio direction “{source_title}”"
+    subject = text('_compose_image_motion_planner.line5039.col14') .format(p0=source_title)
     beats = (
         {
-            "title": "Thiết lập continuity",
-            "visual_direction": f"Establish {subject}; preserve recognizable subject geometry, legitimate marks and the existing composition direction. {style['direction']}.",
-            "camera": "stable establishing frame with a controlled focal anchor",
-            "transition": "clean opening hold",
-            "editorial_note": "Kế hoạch không đọc hoặc phân tích ảnh; editor cần kiểm tra visual continuity trên nguồn hợp lệ trước khi thực thi.",
+            "title": text('_compose_image_motion_planner.line5042.col21'),
+            "visual_direction": text('_compose_image_motion_planner.line5043.col32') .format(p0=subject, p1=style['direction']),
+            "camera": text('_compose_image_motion_planner.line5044.col22'),
+            "transition": text('_compose_image_motion_planner.line5045.col26'),
+            "editorial_note": text('_compose_image_motion_planner.line5046.col30'),
         },
         {
-            "title": "Chuyển động chính",
-            "visual_direction": f"Keep {subject} consistent while {motion['action']}. Maintain natural depth, lighting and object relationships.",
+            "title": text('_compose_image_motion_planner.line5049.col21'),
+            "visual_direction": text('_compose_image_motion_planner.line5050.col32') .format(p0=subject, p1=motion['action']),
             "camera": motion["camera"],
             "transition": motion["transition"],
-            "editorial_note": "Không tạo frame, footage, preview hoặc yêu cầu provider. Đây là direction để editor review.",
+            "editorial_note": text('_compose_image_motion_planner.line5053.col30'),
         },
         {
-            "title": "Hero frame để review",
-            "visual_direction": f"Resolve on a stable hero frame for {subject}; leave any copy/CTA as an empty editorial decision and do not invent readable text or logos.",
-            "camera": "stable hero hold with clear subject separation",
-            "transition": "clean settle",
-            "editorial_note": "Xác nhận quyền sử dụng, thương hiệu, claim và consent trước khi đưa plan vào một execution workflow đã được cấp riêng.",
+            "title": text('_compose_image_motion_planner.line5056.col21'),
+            "visual_direction": text('_compose_image_motion_planner.line5057.col32') .format(p0=subject),
+            "camera": text('_compose_image_motion_planner.line5058.col22'),
+            "transition": text('_compose_image_motion_planner.line5059.col26'),
+            "editorial_note": text('_compose_image_motion_planner.line5060.col30'),
         },
     )
     scenes: list[dict[str, Any]] = []
@@ -5078,16 +5082,16 @@ def _compose_image_motion_planner(
         )
     result = {
         "reference": _image_motion_reference_public(reference),
-        "title": f"Image Motion Plan — {source_title}",
-        "style": _image_motion_choice(IMAGE_MOTION_PLANNER_STYLES, payload.style),
-        "motion": _image_motion_choice(IMAGE_MOTION_PLANNER_MOTIONS, payload.motion),
-        "music": _image_motion_choice(IMAGE_MOTION_PLANNER_MUSIC, payload.music),
+        "title": text('_compose_image_motion_planner.line5081.col17') .format(p0=source_title),
+        "style": _image_motion_choice({payload.style: style}, payload.style),
+        "motion": _image_motion_choice({payload.motion: motion}, payload.motion),
+        "music": _image_motion_choice({payload.music: music}, payload.music),
         "duration_seconds": payload.duration_seconds,
         "scenes": scenes,
         "review_before_use": [
-            "Kiểm tra rằng Image Studio direction và ảnh Image Vault còn thuộc account hiện tại trước khi dùng ở workflow khác.",
-            "Rà soát continuity của chủ thể, thương hiệu/logo hợp lệ, claim, consent và quyền sử dụng trước khi thực thi.",
-            "Đây là Video Plan direction; xác nhận riêng một workflow có engine/provider đã được cấp nếu sau này cần tạo media.",
+            text('_compose_image_motion_planner.line5088.col12'),
+            text('_compose_image_motion_planner.line5089.col12'),
+            text('_compose_image_motion_planner.line5090.col12'),
         ],
     }
     return ImageMotionPlannerResult.model_validate(result).model_dump()
@@ -5181,62 +5185,59 @@ def _compose_reference_format_planner(
     and channel goal—while requiring a newly supplied topic and audience.
     """
 
-    direction = REFERENCE_FORMAT_PLANNER_DIRECTIONS[payload.direction]
-    platform = REFERENCE_FORMAT_PLANNER_PLATFORMS[payload.platform]
-    goal = REFERENCE_FORMAT_PLANNER_GOALS[payload.goal]
-    tone = REFERENCE_FORMAT_PLANNER_TONES[payload.tone]
+    text = lambda key: REFERENCE_FORMAT_OUTPUT_COPY[key][payload.language]
+    direction = {key: text(f"REFERENCE_FORMAT_PLANNER_DIRECTIONS.{payload.direction}.{key}") for key in ("label", "hook", "middle", "finish", "camera", "transition")}
+    platform = {**REFERENCE_FORMAT_PLANNER_PLATFORMS[payload.platform], "label": text(f"REFERENCE_FORMAT_PLANNER_PLATFORMS.{payload.platform}.label")}
+    goal = {key: text(f"REFERENCE_FORMAT_PLANNER_GOALS.{payload.goal}.{key}") for key in ("label", "direction")}
+    tone = {key: text(f"REFERENCE_FORMAT_PLANNER_TONES.{payload.tone}.{key}") for key in ("label", "direction")}
     windows = _image_motion_scene_windows(payload.duration_seconds)
     if payload.language == "en":
         beat_specs = (
-            ("Original opening hook", "Open with one original, observable situation for the new topic; do not reproduce the source video's people, brand, wording, shots or timing."),
-            ("Clear middle demonstration", "Show one new, reviewable action or explanation for the new topic. Keep all claims conditional until a human checks evidence."),
-            ("Original resolution & CTA space", "Resolve into a stable original hero frame with room for a gentle editorial CTA; do not invent readable text, marks or performance claims."),
+            (text('_compose_reference_format_planner.line5191.col13'), text('_compose_reference_format_planner.line5191.col38')),
+            (text('_compose_reference_format_planner.line5192.col13'), text('_compose_reference_format_planner.line5192.col43')),
+            (text('_compose_reference_format_planner.line5193.col13'), text('_compose_reference_format_planner.line5193.col48')),
         )
-        source_note = "The selected Asset Vault video was not opened, fetched, decoded, sampled or analyzed. It is only a current-account reference permission check."
-        camera_prefix = "Editorial camera direction"
-        audio_prefix = "Tone direction"
+        source_note = text('_compose_reference_format_planner.line5195.col22')
+        camera_prefix = text('_compose_reference_format_planner.line5196.col24')
+        audio_prefix = text('_compose_reference_format_planner.line5197.col23')
         review = [
-            "Confirm you have the right to use the selected source as a private reference before any further workflow.",
-            "Replace every identity, brand, logo, voice, wording, shot order and protected element with original work; this plan does not verify rights.",
-            "Check factual claims, prices, disclosures, consent and platform policies before a separate approved execution or publishing workflow.",
+            text('_compose_reference_format_planner.line5199.col12'),
+            text('_compose_reference_format_planner.line5200.col12'),
+            text('_compose_reference_format_planner.line5201.col12'),
         ]
-        title = f"Reference Format Plan — {payload.topic}"
+        title = text('_compose_reference_format_planner.line5203.col16') .format(p0=payload.topic)
     else:
         beat_specs = (
-            ("Hook nguyên bản", "Mở bằng một tình huống quan sát được cho chủ đề mới; không lặp lại người, thương hiệu, câu chữ, shot hay nhịp của video nguồn."),
-            ("Demo / bằng chứng cần review", "Diễn giải một thao tác hoặc giải thích mới cho chủ đề; mọi claim vẫn cần người dùng kiểm tra bằng chứng trước khi dùng."),
-            ("Kết nguyên bản & khoảng CTA", "Kết ở hero frame nguyên bản, chừa khoảng CTA mềm để biên tập; không bịa chữ, dấu hiệu nhận diện hoặc tuyên bố hiệu quả."),
+            (text('_compose_reference_format_planner.line5206.col13'), text('_compose_reference_format_planner.line5206.col35')),
+            (text('_compose_reference_format_planner.line5207.col13'), text('_compose_reference_format_planner.line5207.col51')),
+            (text('_compose_reference_format_planner.line5208.col13'), text('_compose_reference_format_planner.line5208.col51')),
         )
-        source_note = "Video Asset Vault được chọn không bị mở, tải, giải mã, cắt frame hoặc phân tích. Nó chỉ là kiểm tra quyền tham chiếu thuộc Web account hiện tại."
-        camera_prefix = "Hướng camera biên tập"
-        audio_prefix = "Hướng giọng / âm thanh"
+        source_note = text('_compose_reference_format_planner.line5210.col22')
+        camera_prefix = text('_compose_reference_format_planner.line5211.col24')
+        audio_prefix = text('_compose_reference_format_planner.line5212.col23')
         review = [
-            "Xác nhận bạn có quyền dùng video đã chọn làm tham chiếu riêng tư trước khi chuyển sang workflow khác.",
-            "Thay toàn bộ nhận diện, thương hiệu, logo, giọng nói, câu chữ, shot order và phần tử có bảo hộ bằng sáng tạo nguyên bản; plan này không xác minh quyền.",
-            "Rà soát claim, giá, disclosure, consent và chính sách nền tảng trước khi dùng một execution hoặc publishing workflow được cấp riêng.",
+            text('_compose_reference_format_planner.line5214.col12'),
+            text('_compose_reference_format_planner.line5215.col12'),
+            text('_compose_reference_format_planner.line5216.col12'),
         ]
-        title = f"Kế hoạch format tham chiếu — {payload.topic}"
+        title = text('_compose_reference_format_planner.line5218.col16') .format(p0=payload.topic)
     scenes: list[dict[str, Any]] = []
     for index, (start, end) in enumerate(windows, start=1):
         beat_title, original_direction = beat_specs[index - 1]
         if payload.language == "en":
             visual = (
-                f"{original_direction} New topic: {payload.topic}. Audience: {payload.audience}. "
-                f"Reference format direction: {direction['hook'] if index == 1 else direction['middle'] if index == 2 else direction['finish']}. "
-                f"Platform: {platform['label']}; target objective: {goal['direction']}."
+                text('_compose_reference_format_planner.line5224.col16') .format(p0=original_direction, p1=payload.topic, p2=payload.audience, p3=direction['hook'] if index == 1 else direction['middle'] if index == 2 else direction['finish'], p4=platform['label'], p5=goal['direction'])
             )
-            camera = f"{camera_prefix}: {direction['camera']}"
-            audio = f"{audio_prefix}: {tone['direction']}; no audio is generated."
-            editorial = f"{source_note} This is scene {index} of a text-only private plan; it creates no media, preview, job, payment or publish action."
+            camera = text('_compose_reference_format_planner.line5228.col21') .format(p0=camera_prefix, p1=direction['camera'])
+            audio = text('_compose_reference_format_planner.line5229.col20') .format(p0=audio_prefix, p1=tone['direction'])
+            editorial = text('_compose_reference_format_planner.line5230.col24') .format(p0=source_note, p1=index)
         else:
             visual = (
-                f"{original_direction} Chủ đề mới: {payload.topic}. Khán giả: {payload.audience}. "
-                f"Hướng format: {direction['hook'] if index == 1 else direction['middle'] if index == 2 else direction['finish']}. "
-                f"Nền tảng: {platform['label']}; mục tiêu: {goal['direction']}."
+                text('_compose_reference_format_planner.line5233.col16') .format(p0=original_direction, p1=payload.topic, p2=payload.audience, p3=direction['hook'] if index == 1 else direction['middle'] if index == 2 else direction['finish'], p4=platform['label'], p5=goal['direction'])
             )
-            camera = f"{camera_prefix}: {direction['camera']}"
-            audio = f"{audio_prefix}: {tone['direction']}; không có audio được tạo."
-            editorial = f"{source_note} Đây là scene {index} của plan text riêng tư; không tạo media, preview, job, thanh toán hay publish action."
+            camera = text('_compose_reference_format_planner.line5237.col21') .format(p0=camera_prefix, p1=direction['camera'])
+            audio = text('_compose_reference_format_planner.line5238.col20') .format(p0=audio_prefix, p1=tone['direction'])
+            editorial = text('_compose_reference_format_planner.line5239.col24') .format(p0=source_note, p1=index)
         scenes.append(
             {
                 "index": index,
@@ -5253,10 +5254,10 @@ def _compose_reference_format_planner(
     result = {
         "reference": _reference_format_reference_public(reference),
         "title": title,
-        "direction": _reference_format_choice(REFERENCE_FORMAT_PLANNER_DIRECTIONS, payload.direction),
-        "platform": _reference_format_choice(REFERENCE_FORMAT_PLANNER_PLATFORMS, payload.platform),
-        "goal": _reference_format_choice(REFERENCE_FORMAT_PLANNER_GOALS, payload.goal),
-        "tone": _reference_format_choice(REFERENCE_FORMAT_PLANNER_TONES, payload.tone),
+        "direction": _reference_format_choice({payload.direction: direction}, payload.direction),
+        "platform": _reference_format_choice({payload.platform: platform}, payload.platform),
+        "goal": _reference_format_choice({payload.goal: goal}, payload.goal),
+        "tone": _reference_format_choice({payload.tone: tone}, payload.tone),
         "topic": payload.topic,
         "audience": payload.audience,
         "language": payload.language,
