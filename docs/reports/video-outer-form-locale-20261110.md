@@ -87,7 +87,10 @@ repeat PR705's unchanged backend compose/save workflow or claim production succe
 ## Current gates
 
 PUSH_GATE=READY; TESTER_PROJECT_STATUS=READY.
-DEPLOY=NO; signed production LIVE_PASS=NOT_TESTED.
+CI=42770940744 SUCCESS; PR706 merged as564467fbc04cf7445e09bb9d74ed1ea10de0487f.
+DEPLOY=42790145586 SUCCESS. Fresh VPS HEAD equals the merge; Bot/Web/nginx active,
+health payload valid and four HTTPS app assets match committed bytes exactly.
+Signed production LIVE_PASS=NOT_TESTED.
 PROVIDER_CALLS=0; WALLET_MUTATIONS=0; PRODUCTION_DATA_MUTATIONS=0.
 The only native product POST permitted is the existing deterministic text-only
 suggestion endpoint in an owned temporary QA account/database; every other product
@@ -141,6 +144,9 @@ PROTECTED_COMPARATORS=authserver/Bot/engine/provider/wallet/PayOS/ENV/schema/
 data/deployworkflow unchanged; priorcatalog andcontrols preserved.
 Final metadata HEAD/CI/runtime revisions are distinct delivery evidence.
 LESSON_CANDIDATE=NONE.
+Delivery receipt: Issue #689 comment6763754695 and PR706 comment6763755245.
+CI artifacts13741328876(browser) and13742366977(authenticated). This document is
+reconciled after delivery; the next docs update is not a new application deploy.
 
 CI42769997711 failed after169critical cases on the Chat CSS source-test's EOF
 boundary: it consumed unrelated later video rules and could not match its own

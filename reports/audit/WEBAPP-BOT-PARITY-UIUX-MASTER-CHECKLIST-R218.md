@@ -1291,8 +1291,16 @@ MERGE/DEPLOY/LIVE không suy từ tests. Trạng thái delivery theo PR/checkpoi
 - [x] VIDEO-OUTER-FORM local:132khóa/9361giá trị cũ giữ;24renderer,2280Node
   trước prerequisite,9sessionstamp+192integrationaffected;24nativeaccepted
   dùng18giữ+6sửa. Actual3suggestionsPOST/card, dark/roadmap/copy/guards giữ.
-- [ ] VIDEO-OUTER-FORM delivery: CI/merge/deploy/runtime/asset còn mở; không
-  suy signedLIVE từ local. Source sessionsnapshotkhông đổi authAPI/server.
+- [x] VIDEO-OUTER-FORM delivery: PR706/CI42770940744/deploy42790145586 đạt,
+  runtime564467fb,3dịch vụ active,4HTTPSasset khớp byte; signedLIVE vẫn riêng.
+  Source sessionsnapshotkhông đổi authAPI/server.
+- [x] VIDEO-HEADERS local: ba phiếu16key,9493giá trị cũ/locale giữ nguyên;
+  candidate47giữ+1câuTrungsửa riêng=48,focused139/139,native48/48 tại
+  320tối/1440sáng. Source exact và9tệp protected đạt; không chạy lại mã đã đạt.
+- [ ] VIDEO-HEADERS delivery: provenance/CI/merge/deploy/runtime/asset theo
+  `docs/reports/video-planner-headers-20261110.md`; signedLIVE riêng.
+- [ ] NEXT-VIDEO-INNER: field/result/badge tám trang vẫn trộn ngôn ngữ;
+  ảnh script-to-screenVI320 là witness. Không đóng toàn trang bằng header.
 
 Evidence và giới hạn: `docs/reports/video-planning-result-locale-20261110.md`,
 spec cùng ngày và `KIEM-THU/PHIEN-VIDEO-RESULT-LOCALE-20261110.md`.

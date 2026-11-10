@@ -92,6 +92,7 @@ jobs:
           node --test tests/video-motion-selected-name.test.mjs
           node --test tests/video-planning-outer-locale.test.mjs
           node --test tests/video-motion-actor-snapshot.test.mjs
+          node --test tests/video-planner-header-locale.test.mjs
           python -m pytest --noconftest -q tests/test_navigation_optin_markup_regression.py tests/test_video_plan_mobile_font_contract.py
 
       - name: Executable Chrome Extension Unit Tests

@@ -17258,6 +17258,126 @@
     });
   });
 
+  const VIDEO_PLANNER_HEADER_A_COPY_ROWS = [
+    [
+      "prompt-planner.title",
+      "Lập mô tả tạo video",
+      "Video prompt planner",
+      "视频提示词规划"
+    ],
+    [
+      "prompt-planner.description",
+      "Từ mô tả sáng tạo, lập trình tự cảnh, mô tả tạo nội dung và điều cần tránh để rà soát trước khi dùng trong quy trình khác.",
+      "Turn a creative brief into a shot sequence, prompts and constraints for review before use in another workflow.",
+      "根据创意描述编写镜头顺序、提示词和限制条件，供用于其他流程前检查。"
+    ],
+    [
+      "idea-planner.title",
+      "Lập ý tưởng video",
+      "Video idea planner",
+      "视频创意规划"
+    ],
+    [
+      "idea-planner.description",
+      "Từ ý tưởng quảng cáo, điện ảnh hoặc tùy chỉnh, lập ba phương án, bảng phân cảnh sáu cảnh và định hướng hình ảnh, video để rà soát.",
+      "Turn an advertising, cinematic or custom idea into three concepts, a six-scene storyboard and image/video directions for review.",
+      "将广告、电影感或自定义想法转化为三个方案、六场景分镜及图像和视频方向，供检查。"
+    ],
+    [
+      "self-shot-planner.title",
+      "Lập cảnh tự quay",
+      "Self-shot scene planner",
+      "自拍场景规划"
+    ],
+    [
+      "self-shot-planner.description",
+      "Từ mô tả tự quay, lập định hướng đổi bối cảnh, khung hình chính, chuyển động và âm thanh để rà soát; công cụ này không nhận hoặc xử lý tệp đa phương tiện.",
+      "Plan background changes, keyframes, motion and audio directions from a self-shot brief for review; this tool does not receive or process media files.",
+      "根据自拍描述规划背景变化、关键帧、运动和音频方向，供检查；此工具不会接收或处理媒体文件。"
+    ]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    VIDEO_PLANNER_HEADER_A_COPY_ROWS.forEach((row) => {
+      MESSAGES[locale][`videoPlannerHeaderAUi.${row[0]}`] = row[index + 1];
+    });
+  });
+
+  const VIDEO_PLANNER_HEADER_B_COPY_ROWS = [
+    [
+      "script-to-screen-planner.title",
+      "Từ kịch bản đến phân cảnh",
+      "Script-to-screen planner",
+      "从脚本到分镜"
+    ],
+    [
+      "script-to-screen-planner.description",
+      "Từ mô tả, lập kịch bản, bảng phân cảnh và mô tả tạo hình ảnh, video để rà soát; không tạo tệp đa phương tiện, bản dựng hoặc đầu ra.",
+      "Turn a brief into a script, storyboard and image/video prompts for review; no media, render or output is created.",
+      "根据描述编写脚本、分镜和图像及视频提示词，供检查；不会创建媒体、渲染或输出。"
+    ],
+    [
+      "cinematic-concept.title",
+      "Lập ý tưởng quảng cáo điện ảnh",
+      "Cinematic ad concept composer",
+      "电影感广告创意编写"
+    ],
+    [
+      "cinematic-concept.description",
+      "Từ mô tả quảng cáo, lập định hướng sáng tạo, kịch bản, bảng phân cảnh và mô tả tạo nội dung để rà soát trước khi thực hiện trong quy trình khác.",
+      "Turn an advertising brief into creative directions, a script, storyboard and prompts for review before execution in another workflow.",
+      "根据广告描述编写创意方向、脚本、分镜和提示词，供在其他流程执行前检查。"
+    ],
+    [
+      "image-motion-planner.title",
+      "Lập chuyển động từ ảnh",
+      "Image motion planner",
+      "图像运动规划"
+    ],
+    [
+      "image-motion-planner.description",
+      "Chọn định hướng hình ảnh có tham chiếu tới kho ảnh để lập chuyển động ba cảnh, rà soát và xác nhận lưu thành kế hoạch video riêng tư.",
+      "Choose image directions with an image-vault reference to plan three motion scenes, review them and confirm saving a private video plan.",
+      "选择带图像库引用的图像方向，规划三个运动场景，检查后确认保存为私有视频计划。"
+    ]
+  ];
+  VIDEO_PLANNER_HEADER_B_COPY_ROWS.forEach(function (row) {
+    ["vi", "en", "zh"].forEach(function (locale, index) {
+      MESSAGES[locale][`videoPlannerHeaderBUi.${row[0]}`] = row[index + 1];
+    });
+  });
+
+  const VIDEO_PLANNER_HEADER_C_COPY_ROWS = [
+    [
+      "reference-format-planner.title",
+      "Lập định dạng tham chiếu",
+      "Reference format planner",
+      "参考格式规划"
+    ],
+    [
+      "reference-format-planner.description",
+      "Từ định dạng video tham chiếu đã chọn, lập kế hoạch ba cảnh nguyên bản có mục tiêu kênh rõ ràng, rồi xác nhận lưu thành kế hoạch video riêng tư.",
+      "Turn a selected reference-video format into an original three-scene plan with a clear channel goal, then confirm saving a private video plan.",
+      "根据所选参考视频格式编写具有明确频道目标的原创三场景计划，再确认保存为私有视频计划。"
+    ],
+    [
+      "storyboard-composer.title",
+      "Soạn bảng phân cảnh và mô tả",
+      "Storyboard prompt-pack composer",
+      "分镜提示词包编写"
+    ],
+    [
+      "storyboard-composer.description",
+      "Từ chủ đề, lập ba định hướng sáng tạo, quy tắc hình ảnh nhất quán, trình tự cảnh và bộ mô tả để rà soát trước khi dùng trong quy trình khác.",
+      "Turn a topic into three creative directions, consistent visual rules, a shot sequence and a prompt pack for review before use in another workflow.",
+      "根据主题编写三个创意方向、一致的视觉规则、镜头顺序和提示词包，供用于其他流程前检查。"
+    ]
+  ];
+  VIDEO_PLANNER_HEADER_C_COPY_ROWS.forEach((row) => {
+    ["vi", "en", "zh"].forEach((locale, index) => {
+      MESSAGES[locale][`videoPlannerHeaderCUi.${row[0]}`] = row[index + 1];
+    });
+  });
+
   const VOICE_STUDIO_UI_COPY_ROWS = [
     ["feedback.filtered","Đã áp dụng bộ lọc.","Filters applied.","已应用筛选条件。"],
     ["feedback.all","Đã hiển thị tất cả hồ sơ.","Showing all profiles.","已显示全部档案。"],
