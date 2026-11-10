@@ -2465,3 +2465,14 @@ dư;formhiệnđầyđủchiềurộng. Toànbộform15/12/17field,consent/nútl
 guardgiữbyte-identical.6renderer/6nativeVI320tối/1440sángđạt,12protectedpaths
 khôngđổi;9flowlưuđãđạtđượcdùnglại,khôngtạolạikếhoạchchỉvìbỏtrangtrí.
 ChờCI/pháthànhđợtriêng. [Receipt](../docs/reports/video-useful-ui-20261110.md).
+
+## Ba công cụ kế hoạch còn lại — đang nghiệm thu 10/11/2026
+
+Script/Cinematic/Storyboard đã bỏ khối giới thiệu, số đếm và ô giải thích kỹ
+thuật thừa; giữ đủ16/10/10trường và thao tác tạo/lưu kế hoạch. Metadata hợp lệ
+được giữ qua các lớp kiểm tra; dấu phiên riêng trong RAM thay điều kiện dựa
+vào mã tài khoản không được cấp cho trình duyệt. Bộ so khớp Cinematic chỉ
+chuyển ba ô chọn số ở biểu mẫu, không nới bộ chuẩn hóa dữ liệu vận chuyển.
+30caseform/30casephiên/15casecảnh báo/153toast đạt;native18/18 với9luồng lưu
+thật9plan/42scene;162mẫu tương phản>=5,7971:1. Chưa phát hành và chưa chứng minh video/provider thật. Xem
+[báo cáo đang thực hiện](../docs/reports/remaining-planner-ui-20261110.md).

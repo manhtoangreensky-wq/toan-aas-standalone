@@ -242,7 +242,7 @@ def test_cinematic_concept_save_is_explicit_content_free_and_tab_bound() -> None
     ):
         assert boundary in PORTAL
     assert 'source.execution !== "web_native_video_plan_server_recomputed"' in PORTAL
-    assert "Receipt không giữ product, message, concept, storyboard hoặc prompt" in PORTAL
+    assert 'uiText("remainingPlannerUi.cinematicresult.savedReceiptDesc"' in PORTAL
 
 
 def test_cinematic_concept_backend_stays_request_only_and_never_claims_delivery() -> None:

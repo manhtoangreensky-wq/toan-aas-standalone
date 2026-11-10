@@ -98,6 +98,7 @@ jobs:
           node --test tests/customer-publishing-operational-ui.test.mjs tests/customer-bridge-toast-copy.test.mjs tests/autopost-hub-product-controls.test.mjs tests/publishing-vietnamese-purity.test.mjs
           python -m pytest --noconftest -q tests/test_publishing_locale_shell_contracts.py
           node --test tests/video-useful-ui.test.mjs
+          node --test tests/remaining-planner-current-flow.test.mjs tests/remaining-planner-receipt-transport.test.mjs tests/remaining-planner-session-ownership.test.mjs tests/remaining-planner-cinematic-form.test.mjs tests/remaining-planner-feedback.test.mjs tests/remaining-planner-operation-feedback.test.mjs tests/remaining-planner-ui.test.mjs
           python -m pytest --noconftest -q tests/test_navigation_optin_markup_regression.py tests/test_video_plan_mobile_font_contract.py
 
       - name: Executable Chrome Extension Unit Tests
