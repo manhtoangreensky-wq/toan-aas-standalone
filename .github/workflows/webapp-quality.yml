@@ -93,6 +93,8 @@ jobs:
           node --test tests/video-planning-outer-locale.test.mjs
           node --test tests/video-motion-actor-snapshot.test.mjs
           node --test tests/video-planner-header-locale.test.mjs
+          node --test tests/video-inner-first-three-locale.test.mjs tests/video-inner-result-copy.test.mjs tests/video-inner-save-projection.test.mjs tests/video-inner-receipt-transport.test.mjs
+          python -m pytest --noconftest -q tests/test_video_prompt_planner_language_receipt.py
           python -m pytest --noconftest -q tests/test_navigation_optin_markup_regression.py tests/test_video_plan_mobile_font_contract.py
 
       - name: Executable Chrome Extension Unit Tests

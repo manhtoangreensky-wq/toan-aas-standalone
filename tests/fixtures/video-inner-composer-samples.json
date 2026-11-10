@@ -1,0 +1,506 @@
+[
+  {
+    "route": "prompt-planner",
+    "key": "videoPromptPlanner",
+    "source": {
+      "mode": "prompt_to_video",
+      "brief": "Giới thiệu công cụ xử lý đơn hàng cho cửa hàng nhỏ với thao tác rõ ràng.",
+      "platform": "tiktok",
+      "ratio": "9:16",
+      "duration_seconds": 15,
+      "scene_count": 3,
+      "style_pack": "corporate_tech_commercial",
+      "action_pack": "slow_push_in",
+      "audio_mode": "modern_electronic",
+      "detail_level": "director",
+      "motion": "Máy quay tiến chậm theo thao tác tay tự nhiên.",
+      "background": "Quầy làm việc sáng và tối giản.",
+      "must_keep": [
+        "Bố cục rõ ràng"
+      ],
+      "must_avoid": [
+        "Chữ méo"
+      ],
+      "language": "vi"
+    },
+    "result": {
+      "planner": {
+        "title": "Video Prompt Plan: Giới thiệu công cụ xử lý đơn hàng cho cửa hàng nhỏ với thao tác rõ ràng.",
+        "mode": "prompt_to_video",
+        "language": "vi",
+        "brief": "Giới thiệu công cụ xử lý đơn hàng cho cửa hàng nhỏ với thao tác rõ ràng.",
+        "platform": "tiktok",
+        "ratio": "9:16",
+        "duration_seconds": 15,
+        "scene_count": 3,
+        "style_pack": {
+          "id": "corporate_tech_commercial",
+          "label": "Corporate Tech Commercial"
+        },
+        "action_pack": {
+          "id": "slow_push_in",
+          "label": "Slow Push-in"
+        },
+        "audio_mode": {
+          "id": "modern_electronic",
+          "label": "Modern Electronic"
+        },
+        "detail_level": "director",
+        "needs_clarification": false,
+        "motion": "Máy quay tiến chậm theo thao tác tay tự nhiên.",
+        "background": "Quầy làm việc sáng và tối giản.",
+        "must_keep": [
+          "Bố cục rõ ràng"
+        ],
+        "must_avoid": [
+          "Chữ méo"
+        ],
+        "continuity_locks": [
+          "Giữ chủ thể, tỷ lệ khung hình và mạch cảnh nhất quán.",
+          "Giữ chuyển động máy quay có chủ đích, mỗi shot chỉ có một hành động chính.",
+          "Không dùng chữ sinh ngẫu nhiên, watermark hoặc chi tiết hình học thiếu ổn định.",
+          "Bố cục rõ ràng"
+        ],
+        "coverage": {
+          "ok": true,
+          "missing": []
+        },
+        "cautions": [
+          "Chân dung, chữ, logo, bao bì và chi tiết sản phẩm có thể sai lệch; cần kiểm tra quyền sử dụng và độ chính xác trước khi dùng."
+        ],
+        "review_before_use": [
+          "Đây là bản kế hoạch văn bản; chưa tạo, render hoặc xem trước video.",
+          "Kiểm tra sự thật, quyền sử dụng nội dung, thương hiệu, chân dung và mọi tuyên bố trước khi dùng.",
+          "Rà soát khung hình, typography/CTA và tính khả thi trước khi đưa direction sang một workflow riêng."
+        ],
+        "prompt": "[Global Vision & Tone]\nCreate an original video direction from this written brief only.\n  Brief: Giới thiệu công cụ xử lý đơn hàng cho cửa hàng nhỏ với thao tác rõ ràng.\nPlatform: tiktok. Aspect ratio: 9:16. Duration: 15 seconds.\nStyle: Corporate Tech Commercial. Mood: clarity, trust and capability. Lighting: clean neutral lighting with restrained brand accents.\nUse global vision, timed shots, camera, audio and continuity direction. Write production directions in Vietnamese.\n\n[Subject / Environment Lock]\n  Main subject or topic: Giới thiệu công cụ xử lý đơn hàng cho cửa hàng nhỏ với thao tác rõ ràng.\n  Background/context: Quầy làm việc sáng và tối giản..\nMust keep: Giữ chủ thể, tỷ lệ khung hình và mạch cảnh nhất quán.; Giữ chuyển động máy quay có chủ đích, mỗi shot chỉ có một hành động chính.; Không dùng chữ sinh ngẫu nhiên, watermark hoặc chi tiết hình học thiếu ổn định.; Bố cục rõ ràng\n\n[Shot Breakdown]\n1. [0.0-5.0s] hook: visual Giới thiệu công cụ xử lý đơn hàng cho cửa hàng nhỏ với thao tác rõ ràng.; clarity, trust and capability; setting: Quầy làm việc sáng và tối giản.; action hold natural action while the visual focus gradually increases; camera Máy quay tiến chậm theo thao tác tay tự nhiên.; transition clean cut; audio modern electronic bed with a soft riser and clean transition cues\n2. [5.0-10.0s] main action: visual Giới thiệu công cụ xử lý đơn hàng cho cửa hàng nhỏ với thao tác rõ ràng.; clarity, trust and capability; setting: Quầy làm việc sáng và tối giản.; action hold natural action while the visual focus gradually increases; camera smooth dolly, detail inserts and a clear team-wide composition; transition clean cut; audio modern electronic bed with a soft riser and clean transition cues\n3. [10.0-15.0s] final hold: visual Giới thiệu công cụ xử lý đơn hàng cho cửa hàng nhỏ với thao tác rõ ràng.; clarity, trust and capability; setting: Quầy làm việc sáng và tối giản.; action hold natural action while the visual focus gradually increases; camera Máy quay tiến chậm theo thao tác tay tự nhiên.; transition final hold; audio modern electronic bed with a soft riser and clean transition cues\n\n[Camera / Action]\nPrimary camera direction: Máy quay tiến chậm theo thao tác tay tự nhiên..\nPrimary action: hold natural action while the visual focus gradually increases. Transition logic: clean cut.\n\n[Audio / Timing]\nmodern electronic bed with a soft riser and clean transition cues\n\n[Negative Constraints]\nChữ méo; avoid unreadable screen text and generic stock-video behavior; distorted face, identity change, warped product, broken logo, misspelled text, random readable text, extra limbs, extra people, unstable geometry, flicker, morphing, watermark, unrelated objects\n\n[Final Hold]\nHold the final composition for 0.5-1.0 seconds with stable geometry and clean negative space. Do not generate readable CTA text; add verified text separately after review.",
+        "negative_prompt": "Chữ méo; avoid unreadable screen text and generic stock-video behavior; distorted face, identity change, warped product, broken logo, misspelled text, random readable text, extra limbs, extra people, unstable geometry, flicker, morphing, watermark, unrelated objects",
+        "shots": [
+          {
+            "index": 1,
+            "start_seconds": 0.0,
+            "end_seconds": 5.0,
+            "beat": "hook",
+            "visual": "Giới thiệu công cụ xử lý đơn hàng cho cửa hàng nhỏ với thao tác rõ ràng.; clarity, trust and capability; setting: Quầy làm việc sáng và tối giản.",
+            "action": "hold natural action while the visual focus gradually increases",
+            "camera": "Máy quay tiến chậm theo thao tác tay tự nhiên.",
+            "transition": "clean cut",
+            "audio": "modern electronic bed with a soft riser and clean transition cues"
+          },
+          {
+            "index": 2,
+            "start_seconds": 5.0,
+            "end_seconds": 10.0,
+            "beat": "main action",
+            "visual": "Giới thiệu công cụ xử lý đơn hàng cho cửa hàng nhỏ với thao tác rõ ràng.; clarity, trust and capability; setting: Quầy làm việc sáng và tối giản.",
+            "action": "hold natural action while the visual focus gradually increases",
+            "camera": "smooth dolly, detail inserts and a clear team-wide composition",
+            "transition": "clean cut",
+            "audio": "modern electronic bed with a soft riser and clean transition cues"
+          },
+          {
+            "index": 3,
+            "start_seconds": 10.0,
+            "end_seconds": 15.0,
+            "beat": "final hold",
+            "visual": "Giới thiệu công cụ xử lý đơn hàng cho cửa hàng nhỏ với thao tác rõ ràng.; clarity, trust and capability; setting: Quầy làm việc sáng và tối giản.",
+            "action": "hold natural action while the visual focus gradually increases",
+            "camera": "Máy quay tiến chậm theo thao tác tay tự nhiên.",
+            "transition": "final hold",
+            "audio": "modern electronic bed with a soft riser and clean transition cues"
+          }
+        ]
+      },
+      "execution": "web_native_deterministic_video_plan_only",
+      "input_persisted": false,
+      "source_media_inspected": false,
+      "provider_called": false,
+      "video_created": false,
+      "preview_created": false,
+      "output_created": false,
+      "job_created": false,
+      "payment_started": false,
+      "wallet_mutated": false,
+      "asset_saved": false,
+      "publish_action_created": false,
+      "fact_checked": false,
+      "rights_verified": false
+    },
+    "receipt": {
+      "destination": "video_plan",
+      "plan": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "revision": 1,
+        "state": "draft"
+      },
+      "scene_count": 3,
+      "execution": "web_native_video_plan_server_recomputed",
+      "draft_recomputed_on_server": true,
+      "web_video_plan_persisted": true,
+      "browser_result_persisted": false,
+      "pending_bot_save_created": false,
+      "telegram_state_changed": false,
+      "bot_called": false,
+      "bridge_called": false,
+      "source_media_inspected": false,
+      "media_uploads": false,
+      "provider_called": false,
+      "image_created": false,
+      "video_created": false,
+      "audio_created": false,
+      "preview_created": false,
+      "output_created": false,
+      "job_created": false,
+      "wallet_mutated": false,
+      "payment_started": false,
+      "asset_saved": false,
+      "publish_action_created": false,
+      "delivery_created": false,
+      "approval_created": false,
+      "plan_approved": false,
+      "plan_locked": false,
+      "generation_started": false,
+      "fact_checked": false,
+      "rights_verified": false
+    },
+    "type": "Synthetic data from actual pure server composer; not API/save/live proof"
+  },
+  {
+    "route": "idea-planner",
+    "key": "videoIdeaPlanner",
+    "source": {
+      "idea_kind": "ad",
+      "product_type": "service",
+      "topic": "Công cụ xử lý đơn hàng cho cửa hàng nhỏ",
+      "audience": "Chủ cửa hàng cần giảm việc lặp lại",
+      "goal": "sales",
+      "context": "technology",
+      "platform": "tiktok",
+      "language": "vi",
+      "duration_seconds": 30,
+      "idea_set": 2,
+      "idea_choice": 3,
+      "custom_brief": ""
+    },
+    "result": {
+      "planner": {
+        "title": "Video Idea: Công cụ xử lý đơn hàng cho cửa hàng nhỏ",
+        "idea_kind": "ad",
+        "product_type": "service",
+        "platform": "tiktok",
+        "aspect_ratio": "9:16",
+        "goal": "sales",
+        "context": "technology",
+        "topic": "Công cụ xử lý đơn hàng cho cửa hàng nhỏ",
+        "audience": "Chủ cửa hàng cần giảm việc lặp lại",
+        "language": "vi",
+        "duration_seconds": 30,
+        "idea_set": 2,
+        "selected_concept": {
+          "index": 3,
+          "title": "Một ngày có và không có giải pháp",
+          "premise": "So sánh nhịp ngày trước/sau bằng cùng một bối cảnh dễ nhận ra.",
+          "hook": "Một ngày bận rộn có thể nhẹ hơn như thế nào?",
+          "story_structure": "Trước → đối chiếu → thay đổi → kết quả.",
+          "cta": "Mời người xem khám phá thêm."
+        },
+        "concepts": [
+          {
+            "index": 1,
+            "title": "Đừng mắc lỗi này",
+            "premise": "Mở bằng một sai lầm phổ biến, mô tả ngắn hậu quả rồi đưa hướng xử lý vào.",
+            "hook": "Một lỗi nhỏ có thể làm quy trình rối hơn bạn nghĩ.",
+            "story_structure": "Cảnh báo → lỗi → cách làm → kết quả.",
+            "cta": "Mời người xem lưu checklist này."
+          },
+          {
+            "index": 2,
+            "title": "Ba mẹo nhanh",
+            "premise": "Mỗi scene nêu một mẹo gọn để người xem có thể lưu và xem lại.",
+            "hook": "Ba bước gọn để bắt đầu ngay hôm nay.",
+            "story_structure": "Hook → mẹo 1 → mẹo 2 → mẹo 3 → CTA.",
+            "cta": "Mời người xem lưu video để áp dụng."
+          },
+          {
+            "index": 3,
+            "title": "Một ngày có và không có giải pháp",
+            "premise": "So sánh nhịp ngày trước/sau bằng cùng một bối cảnh dễ nhận ra.",
+            "hook": "Một ngày bận rộn có thể nhẹ hơn như thế nào?",
+            "story_structure": "Trước → đối chiếu → thay đổi → kết quả.",
+            "cta": "Mời người xem khám phá thêm."
+          }
+        ],
+        "scenes": [
+          {
+            "index": 1,
+            "start_seconds": 0,
+            "end_seconds": 5,
+            "title": "Hook",
+            "visual_direction": "Công cụ xử lý đơn hàng cho cửa hàng nhỏ; bối cảnh technology; hướng 'Một ngày có và không có giải pháp'. So sánh nhịp ngày trước/sau bằng cùng một bối cảnh dễ nhận ra. Scene 1 ưu tiên bố cục rõ, chủ thể nhất quán và khoảng trống an toàn cho biên tập.",
+            "camera": "close-up rõ điểm nhìn",
+            "narration": "Mở bằng tình huống hoặc lợi ích dễ nhận ra.",
+            "image_prompt": "Original editorial image direction for Công cụ xử lý đơn hàng cho cửa hàng nhỏ, technology context, hook, consistent subject, close-up rõ điểm nhìn, reviewable composition, no watermark, no readable fabricated text.",
+            "video_prompt": "Original video direction for Công cụ xử lý đơn hàng cho cửa hàng nhỏ: hook, close-up rõ điểm nhìn, controlled natural movement, stable identity/product, motivated transition, no invented claims or readable fabricated text.",
+            "audio_direction": "Nhịp âm thanh chỉ là note biên tập: ambient hoặc pulse nhẹ, không tạo audio.",
+            "transition": "clean cut"
+          },
+          {
+            "index": 2,
+            "start_seconds": 5,
+            "end_seconds": 10,
+            "title": "Bối cảnh",
+            "visual_direction": "Công cụ xử lý đơn hàng cho cửa hàng nhỏ; bối cảnh technology; hướng 'Một ngày có và không có giải pháp'. So sánh nhịp ngày trước/sau bằng cùng một bối cảnh dễ nhận ra. Scene 2 ưu tiên bố cục rõ, chủ thể nhất quán và khoảng trống an toàn cho biên tập.",
+            "camera": "wide context",
+            "narration": "Cho thấy vấn đề hoặc nhịp sống liên quan.",
+            "image_prompt": "Original editorial image direction for Công cụ xử lý đơn hàng cho cửa hàng nhỏ, technology context, bối cảnh, consistent subject, wide context, reviewable composition, no watermark, no readable fabricated text.",
+            "video_prompt": "Original video direction for Công cụ xử lý đơn hàng cho cửa hàng nhỏ: bối cảnh, wide context, controlled natural movement, stable identity/product, motivated transition, no invented claims or readable fabricated text.",
+            "audio_direction": "Nhịp âm thanh chỉ là note biên tập: ambient hoặc pulse nhẹ, không tạo audio.",
+            "transition": "motivated cut"
+          },
+          {
+            "index": 3,
+            "start_seconds": 10,
+            "end_seconds": 15,
+            "title": "Phát hiện",
+            "visual_direction": "Công cụ xử lý đơn hàng cho cửa hàng nhỏ; bối cảnh technology; hướng 'Một ngày có và không có giải pháp'. So sánh nhịp ngày trước/sau bằng cùng một bối cảnh dễ nhận ra. Scene 3 ưu tiên bố cục rõ, chủ thể nhất quán và khoảng trống an toàn cho biên tập.",
+            "camera": "over-the-shoulder",
+            "narration": "Đưa chủ đề vào như một hướng xử lý có thể hiểu.",
+            "image_prompt": "Original editorial image direction for Công cụ xử lý đơn hàng cho cửa hàng nhỏ, technology context, phát hiện, consistent subject, over-the-shoulder, reviewable composition, no watermark, no readable fabricated text.",
+            "video_prompt": "Original video direction for Công cụ xử lý đơn hàng cho cửa hàng nhỏ: phát hiện, over-the-shoulder, controlled natural movement, stable identity/product, motivated transition, no invented claims or readable fabricated text.",
+            "audio_direction": "Nhịp âm thanh chỉ là note biên tập: ambient hoặc pulse nhẹ, không tạo audio.",
+            "transition": "match cut"
+          },
+          {
+            "index": 4,
+            "start_seconds": 15,
+            "end_seconds": 20,
+            "title": "Demo",
+            "visual_direction": "Công cụ xử lý đơn hàng cho cửa hàng nhỏ; bối cảnh technology; hướng 'Một ngày có và không có giải pháp'. So sánh nhịp ngày trước/sau bằng cùng một bối cảnh dễ nhận ra. Scene 4 ưu tiên bố cục rõ, chủ thể nhất quán và khoảng trống an toàn cho biên tập.",
+            "camera": "stable detail / slow push-in",
+            "narration": "Mô tả thao tác hoặc cơ chế ở mức biên tập.",
+            "image_prompt": "Original editorial image direction for Công cụ xử lý đơn hàng cho cửa hàng nhỏ, technology context, demo, consistent subject, stable detail / slow push-in, reviewable composition, no watermark, no readable fabricated text.",
+            "video_prompt": "Original video direction for Công cụ xử lý đơn hàng cho cửa hàng nhỏ: demo, stable detail / slow push-in, controlled natural movement, stable identity/product, motivated transition, no invented claims or readable fabricated text.",
+            "audio_direction": "Nhịp âm thanh chỉ là note biên tập: ambient hoặc pulse nhẹ, không tạo audio.",
+            "transition": "clean settle"
+          },
+          {
+            "index": 5,
+            "start_seconds": 20,
+            "end_seconds": 25,
+            "title": "Kết quả",
+            "visual_direction": "Công cụ xử lý đơn hàng cho cửa hàng nhỏ; bối cảnh technology; hướng 'Một ngày có và không có giải pháp'. So sánh nhịp ngày trước/sau bằng cùng một bối cảnh dễ nhận ra. Scene 5 ưu tiên bố cục rõ, chủ thể nhất quán và khoảng trống an toàn cho biên tập.",
+            "camera": "before-after comparison",
+            "narration": "Nêu kết quả cần được tự kiểm tra trước khi dùng ngoài.",
+            "image_prompt": "Original editorial image direction for Công cụ xử lý đơn hàng cho cửa hàng nhỏ, technology context, kết quả, consistent subject, before-after comparison, reviewable composition, no watermark, no readable fabricated text.",
+            "video_prompt": "Original video direction for Công cụ xử lý đơn hàng cho cửa hàng nhỏ: kết quả, before-after comparison, controlled natural movement, stable identity/product, motivated transition, no invented claims or readable fabricated text.",
+            "audio_direction": "Nhịp âm thanh chỉ là note biên tập: ambient hoặc pulse nhẹ, không tạo audio.",
+            "transition": "gentle hold"
+          },
+          {
+            "index": 6,
+            "start_seconds": 25,
+            "end_seconds": 30,
+            "title": "CTA",
+            "visual_direction": "Công cụ xử lý đơn hàng cho cửa hàng nhỏ; bối cảnh technology; hướng 'Một ngày có và không có giải pháp'. So sánh nhịp ngày trước/sau bằng cùng một bối cảnh dễ nhận ra. Scene 6 ưu tiên bố cục rõ, chủ thể nhất quán và khoảng trống an toàn cho biên tập.",
+            "camera": "calm hero frame",
+            "narration": "Đặt lời mời hành động không ép buộc.",
+            "image_prompt": "Original editorial image direction for Công cụ xử lý đơn hàng cho cửa hàng nhỏ, technology context, cta, consistent subject, calm hero frame, reviewable composition, no watermark, no readable fabricated text.",
+            "video_prompt": "Original video direction for Công cụ xử lý đơn hàng cho cửa hàng nhỏ: cta, calm hero frame, controlled natural movement, stable identity/product, motivated transition, no invented claims or readable fabricated text.",
+            "audio_direction": "Nhịp âm thanh chỉ là note biên tập: ambient hoặc pulse nhẹ, không tạo audio.",
+            "transition": "fade to neutral"
+          }
+        ],
+        "caption": "Một ngày bận rộn có thể nhẹ hơn như thế nào? Mời người xem khám phá thêm.",
+        "hashtags": [
+          "#TOANAAS",
+          "#VideoIdea",
+          "#ContentPlanning",
+          "#Tiktok"
+        ],
+        "review_before_use": [
+          "Tự kiểm tra claim, thông tin sản phẩm/dịch vụ và bằng chứng trước khi dùng ở kênh bên ngoài.",
+          "Chỉ dùng chủ đề, thương hiệu, hình ảnh, giọng nói và nguồn tư liệu mà bạn có quyền sử dụng.",
+          "Plan này là direction biên tập; rà soát consent, nhận diện và nội dung hiển thị trước bất kỳ runtime riêng nào."
+        ]
+      },
+      "execution": "web_native_deterministic_video_idea_only",
+      "input_persisted": false,
+      "telegram_state_changed": false,
+      "bot_called": false,
+      "bridge_called": false,
+      "source_media_inspected": false,
+      "provider_called": false,
+      "image_created": false,
+      "video_created": false,
+      "audio_created": false,
+      "preview_created": false,
+      "output_created": false,
+      "job_created": false,
+      "payment_started": false,
+      "wallet_mutated": false,
+      "asset_saved": false,
+      "publish_action_created": false,
+      "fact_checked": false,
+      "rights_verified": false
+    },
+    "receipt": {
+      "destination": "video_plan",
+      "plan": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "revision": 1,
+        "state": "draft"
+      },
+      "scene_count": 6,
+      "execution": "web_native_video_plan_server_recomputed",
+      "draft_recomputed_on_server": true,
+      "web_video_plan_persisted": true,
+      "browser_result_persisted": false,
+      "pending_bot_save_created": false,
+      "telegram_state_changed": false,
+      "bot_called": false,
+      "bridge_called": false,
+      "source_media_inspected": false,
+      "media_uploads": false,
+      "provider_called": false,
+      "image_created": false,
+      "video_created": false,
+      "audio_created": false,
+      "preview_created": false,
+      "output_created": false,
+      "job_created": false,
+      "wallet_mutated": false,
+      "payment_started": false,
+      "asset_saved": false,
+      "publish_action_created": false,
+      "delivery_created": false,
+      "approval_created": false,
+      "plan_approved": false,
+      "plan_locked": false,
+      "generation_started": false,
+      "fact_checked": false,
+      "rights_verified": false
+    },
+    "type": "Synthetic data from actual pure server composer; not API/save/live proof"
+  },
+  {
+    "route": "self-shot-planner",
+    "key": "selfShotScenePlanner",
+    "source": {
+      "subject_kind": "product",
+      "subject_description": "Chai giữ nhiệt màu xanh do thương hiệu sở hữu",
+      "preserve_details": "Dáng chai và màu xanh đậm đã có quyền dùng",
+      "direction_mode": "context",
+      "custom_direction": "",
+      "target_context": "Bàn làm việc sáng và gọn",
+      "motion": "pushin",
+      "custom_motion": "",
+      "music": "corporate",
+      "custom_music": "",
+      "platform": "reels",
+      "duration_seconds": 20,
+      "language": "vi",
+      "rights_to_source_confirmed": true,
+      "person_likeness_consent_confirmed": true,
+      "brand_or_logo_rights_confirmed": true,
+      "no_impersonation_or_harm_confirmed": true
+    },
+    "result": {
+      "planner": {
+        "title": "Self-shot Scene Direction: Chai giữ nhiệt màu xanh do thương hiệu sở hữu",
+        "subject_kind": "product",
+        "subject_description": "Chai giữ nhiệt màu xanh do thương hiệu sở hữu",
+        "preserve_details": "Dáng chai và màu xanh đậm đã có quyền dùng",
+        "direction_mode": "context",
+        "direction_label": "đổi bối cảnh xung quanh nhưng giữ chủ thể nhất quán",
+        "target_context": "Bàn làm việc sáng và gọn",
+        "motion": "pushin",
+        "motion_label": "slow push-in để reveal chủ thể",
+        "music": "corporate",
+        "music_label": "corporate nhẹ, sáng và rõ",
+        "platform": "reels",
+        "aspect_ratio": "9:16",
+        "duration_seconds": 20,
+        "language": "vi",
+        "transformation_brief": "Giữ Dáng chai và màu xanh đậm đã có quyền dùng ổn định cho Chai giữ nhiệt màu xanh do thương hiệu sở hữu; đổi bối cảnh xung quanh nhưng giữ chủ thể nhất quán. Chuyển bối cảnh biên tập sang Bàn làm việc sáng và gọn trong direction 20 giây cho Instagram Reels.",
+        "video_prompt": "Original text direction only: Chai giữ nhiệt màu xanh do thương hiệu sở hữu trong Bàn làm việc sáng và gọn; giữ Dáng chai và màu xanh đậm đã có quyền dùng; đổi bối cảnh xung quanh nhưng giữ chủ thể nhất quán; slow push-in để reveal chủ thể; bố cục sạch, ánh sáng hợp lý, hình học và nhận diện ổn định, không méo logo, không dựng sự kiện hoặc bằng chứng. Đây không phải yêu cầu tạo video.",
+        "keyframe_image_prompt": "Original keyframe direction only cho Chai giữ nhiệt màu xanh do thương hiệu sở hữu trong Bàn làm việc sáng và gọn; giữ Dáng chai và màu xanh đậm đã có quyền dùng; khung biên tập sạch, phối cảnh tự nhiên, nhận diện/dáng sản phẩm ổn định, không watermark, không tạo chữ đọc được.",
+        "motion_suggestions": [
+          "Mở bằng khung dễ đọc của Chai giữ nhiệt màu xanh do thương hiệu sở hữu trước khi đổi bối cảnh.",
+          "Dùng slow push-in để reveal chủ thể, rồi để transition có lý do từ hành động hoặc điểm cắt nhìn thấy được.",
+          "Kết ở hero frame ổn định, có thể review, chừa khoảng cho nhãn biên tập nếu cần."
+        ],
+        "identity_safety": [
+          "Chỉ giữ các chi tiết đã mô tả: Dáng chai và màu xanh đậm đã có quyền dùng.",
+          "Không mạo danh, thay đổi nhận diện người có thể nhận ra, hoặc ngụ ý consent, endorsement hay sự kiện không đúng sự thật.",
+          "Consent và right-to-use do khách hàng xác nhận là một assertion; planner này không xác minh các quyền đó."
+        ],
+        "finishing_notes": [
+          "Direction âm thanh: corporate nhẹ, sáng và rõ. Đây chỉ là note, không tạo nhạc, SFX, voice hoặc preview.",
+          "Phụ đề, dịch, lồng tiếng và giao hàng cuối phải đi qua workflow riêng đã được phê duyệt."
+        ],
+        "review_before_use": [
+          "Xác nhận mọi người có thể nhận diện được đều có consent, và bạn có right-to-use nguồn cùng transformation được yêu cầu.",
+          "Review quyền thương hiệu, nhạc, địa điểm, talent, claim thực tế và yêu cầu disclosure trước khi sản xuất hoặc đăng.",
+          "Pack này chỉ có text direction; nó không nhận, mở, kiểm tra hay biến đổi media và không tạo provider request, job, thanh toán hoặc delivery."
+        ]
+      },
+      "execution": "web_native_deterministic_self_shot_scene_planner_only",
+      "input_persisted": false,
+      "telegram_state_changed": false,
+      "bot_called": false,
+      "bridge_called": false,
+      "source_media_inspected": false,
+      "provider_called": false,
+      "image_created": false,
+      "video_created": false,
+      "audio_created": false,
+      "preview_created": false,
+      "output_created": false,
+      "job_created": false,
+      "payment_started": false,
+      "wallet_mutated": false,
+      "asset_saved": false,
+      "publish_action_created": false,
+      "fact_checked": false,
+      "rights_verified": false
+    },
+    "receipt": {
+      "destination": "video_plan",
+      "plan": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "revision": 1,
+        "state": "draft"
+      },
+      "scene_count": 1,
+      "execution": "web_native_self_shot_scene_video_plan_server_recomputed",
+      "draft_recomputed_on_server": true,
+      "web_video_plan_persisted": true,
+      "browser_result_persisted": false,
+      "pending_bot_save_created": false,
+      "telegram_state_changed": false,
+      "bot_called": false,
+      "bridge_called": false,
+      "source_media_inspected": false,
+      "media_uploads": false,
+      "provider_called": false,
+      "image_created": false,
+      "video_created": false,
+      "audio_created": false,
+      "preview_created": false,
+      "output_created": false,
+      "job_created": false,
+      "wallet_mutated": false,
+      "payment_started": false,
+      "asset_saved": false,
+      "publish_action_created": false,
+      "delivery_created": false,
+      "approval_created": false,
+      "plan_approved": false,
+      "plan_locked": false,
+      "generation_started": false,
+      "fact_checked": false,
+      "rights_verified": false
+    },
+    "type": "Synthetic data from actual pure server composer; not API/save/live proof"
+  }
+]

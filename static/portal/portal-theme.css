@@ -23548,3 +23548,26 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-long-form-planner form[
 html:not([data-portal-theme="dark"]) .portal-page.portal-long-form-planner form[data-portal-action="long-form-roadmap-compose"] :is(.portal-field-help, .portal-form-note) {
   color: var(--portal-muted);
 }
+
+@media (max-width: 620px) {
+  .portal-page.portal-video-prompt-planner form[data-portal-action="video-prompt-plan"] :is(input:not([type="hidden"]), select, textarea),
+  .portal-page.portal-video-idea-planner form[data-portal-action="video-idea-planner-compose"] :is(input:not([type="hidden"]), select, textarea),
+  .portal-page.portal-self-shot-scene-planner form[data-portal-action="self-shot-scene-planner-compose"] :is(input:not([type="hidden"]), select, textarea) {
+    font-size: 16px;
+  }
+}
+
+html:not([data-portal-theme="dark"]) .portal-page.portal-video-prompt-planner form[data-portal-action="video-prompt-plan"] .portal-field > label,
+html:not([data-portal-theme="dark"]) .portal-page.portal-video-idea-planner form[data-portal-action="video-idea-planner-compose"] .portal-field > label,
+html:not([data-portal-theme="dark"]) .portal-page.portal-self-shot-scene-planner form[data-portal-action="self-shot-scene-planner-compose"] .portal-field > label {
+  color: var(--portal-ink);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-video-prompt-planner form[data-portal-action="video-prompt-plan"] :is(.portal-field-help, .portal-form-note, .portal-checkbox > span),
+html:not([data-portal-theme="dark"]) .portal-page.portal-video-idea-planner form[data-portal-action="video-idea-planner-compose"] :is(.portal-field-help, .portal-form-note, .portal-checkbox > span),
+html:not([data-portal-theme="dark"]) .portal-page.portal-self-shot-scene-planner form[data-portal-action="self-shot-scene-planner-compose"] :is(.portal-field-help, .portal-form-note, .portal-checkbox > span) {
+  color: var(--portal-muted);
+}
+
+html:not([data-portal-theme="dark"]) .portal-page.portal-self-shot-scene-planner form[data-portal-action="self-shot-scene-planner-compose"] .portal-checkbox > span {
+  color: #e6f6fb;
+}
