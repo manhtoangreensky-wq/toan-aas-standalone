@@ -1683,3 +1683,17 @@ BASE2174a2b2; sourcecũbắtbuộc7nguồn/5bước/3nútchờnaykhôngcònđún
 
 Khôngxóaendpoint/backendhaytựmởquyềnđểlàmgiaodiệntrônghoạtđộng. Dọnkhốidư
 ởcáctrangkhácvàchứngminhđầuraenginevẫnđượctheodõiriêngtronggoal.
+
+## Đối chiếu mật độ ba trang video — 10/11/2026
+
+Nguồnđịnhnghĩagốc:3outerrendererVideoPrompt/VideoIdea/SelfShotởBASE5ad97cf9.
+Các đoạnintro/metrics0/guard-list/finalscopekhôngphảichứcnăngthựcthi;
+Ownerđãyêucầubỏchúng,khôngphảichỉdịchchữnộibộ.
+
+| Trước | Hiệntrạnglocal | Giữ |
+|---|---|---|
+|Formbịđẩyxuốngbởigiảithích/sốđếmvàasidekhôngthao tác|Bỏ3khốitrangtrímỗitrang,đổiwrapperthànhverticalstack|Form/kếtquả/lưuthậtbyte-identical |
+|Headerformnóiphiên/CSRF/template/storage|Bỏđúng3paragraphngoàiform|Khôngxóakiểmtraquyền/CSRF/consent/inputhelp |
+|Layout2cộtđểtrốngnếuasidebỏ|Dùngportal-stackhiệncó,khôngthêmCSS|6nativewidth/focus/overflowđạt |
+
+Khôngbậtenginehayhứavideođãtạo;bảnkếhoạchvẫnlàchứcnăngđượcthựcthivàlưuthật.
