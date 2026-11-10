@@ -834,15 +834,58 @@
     const region = document.querySelector("[data-portal-toast]");
     const text = String(message || "").trim();
     if (!region || !text) return;
+    const legacyStatusMap = {
+      "Bản nháp canonical đã được cập nhật.": "draft",
+      "Dữ liệu canonical đang chờ bước xác nhận phù hợp.": "awaiting_confirm",
+      "Yêu cầu đã được canonical queue ghi nhận.": "queued",
+      "Core Bridge đang cập nhật trạng thái canonical.": "processing",
+      "Dữ liệu canonical đã được cập nhật.": "completed",
+      "Core Bridge chưa thể cấp dữ liệu an toàn.": "failed",
+      "Yêu cầu không tạo kết quả; ledger canonical không bị browser thay đổi.": "failed_no_charge",
+      "Khả năng này đang được Core Bridge bảo vệ.": "guarded",
+      "Yêu cầu đã được canonical hủy.": "cancelled",
+      "Core Bridge đã ghi nhận trạng thái hoàn Xu canonical.": "refunded",
+      "Dữ liệu canonical chỉ được hiển thị ở chế độ đọc.": "read_only",
+      "Tài khoản Telegram chưa kích hoạt trong hệ thống Bot.": "unverified",
+      "Tài khoản chưa liên kết Telegram.": "unlinked"
+    };
+    const viFallbacks = {
+      draft: "Đã cập nhật bản nháp.",
+      awaiting_confirm: "Vui lòng kiểm tra thông tin và xác nhận.",
+      queued: "Yêu cầu đã được tiếp nhận.",
+      processing: "Đang cập nhật trạng thái.",
+      completed: "Dữ liệu đã được cập nhật.",
+      failed: "Không thể tải dữ liệu. Vui lòng thử lại.",
+      failed_no_charge: "Yêu cầu chưa tạo được kết quả.",
+      guarded: "Không thể thực hiện thao tác này lúc này.",
+      cancelled: "Yêu cầu đã được hủy.",
+      refunded: "Đã ghi nhận trạng thái hoàn Xu.",
+      read_only: "Dữ liệu đang ở chế độ chỉ xem.",
+      unverified: "Hãy kích hoạt tài khoản Telegram để tiếp tục.",
+      unlinked: "Hãy liên kết tài khoản Telegram để tiếp tục."
+    };
+    let displayText = text;
+    const status = Object.prototype.hasOwnProperty.call(legacyStatusMap, text) ? legacyStatusMap[text] : "";
+    if (status) {
+      const key = `customerBridgeFeedback.${status}`;
+      const fallback = viFallbacks[status];
+      const i18n = typeof window !== "undefined" ? window.TOANAASI18n : null;
+      if (i18n && typeof i18n.t === "function") {
+        const translated = i18n.t(key);
+        displayText = typeof translated === "string" && translated && translated !== key ? translated : fallback;
+      } else {
+        displayText = fallback;
+      }
+    }
     const className = `portal-toast${type === "error" ? " portal-toast--warning" : ""}`;
     const existing = typeof region.querySelectorAll === "function" ? Array.from(region.querySelectorAll(".portal-toast")) : [];
     const duplicate = existing
-      .find((item) => item.textContent === text && item.className === className);
+      .find((item) => item.textContent === displayText && item.className === className);
     if (duplicate) return;
     const node = document.createElement("div");
     node.className = className;
     if (typeof node.setAttribute === "function") node.setAttribute("role", type === "error" ? "alert" : "status");
-    node.textContent = text;
+    node.textContent = displayText;
     region.appendChild(node);
     const visible = typeof region.querySelectorAll === "function" ? region.querySelectorAll(".portal-toast") : [];
     for (let index = 0; index < visible.length - 2; index += 1) visible[index].remove();

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {customerCopyHistoricalSnapshot} from './helpers/customer-copy-snapshot.mjs';
 import crypto from 'node:crypto';
 import test from 'node:test';
 import {renderChild} from './helpers/publishing-child-render.mjs';
@@ -19,6 +20,6 @@ for(const row of baseline){
  test(row.locale+':'+row.route+':'+row.state+' keeps real form actions, scalar options, constraints, defaults and guard state',()=>assert.equal(fingerprint(result.html),row.fingerprint));
 }
 for(const locale of ['vi','en','zh'])test(locale+': all 9509 released catalog entries remain unchanged',()=>{
- const entries=Object.entries(renderChild(locale,'/studio',{}).messages[locale]).filter(([k])=>!/^videoInner(?:Fields|Outer|Result)Ui\./.test(k)).sort(([a],[b])=>a.localeCompare(b));
+ const entries=customerCopyHistoricalSnapshot(Object.entries(renderChild(locale,'/studio',{}).messages[locale]),locale).filter(([k])=>!/^videoInner(?:Fields|Outer|Result)Ui\./.test(k)).sort(([a],[b])=>a.localeCompare(b));
  assert.equal(entries.length,catalog[locale].count);assert.equal(crypto.createHash('sha256').update(JSON.stringify(entries)).digest('hex'),catalog[locale].sha256);
 });

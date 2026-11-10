@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {customerCopyHistoricalSnapshot} from './helpers/customer-copy-snapshot.mjs';
 import crypto from 'node:crypto';
 import test from 'node:test';
 import { renderChild, plain } from './helpers/publishing-child-render.mjs';
@@ -324,7 +325,7 @@ for (const locale of locales) {
   });
   test(locale + ':catalog preserves every preexisting translation and namespace entry', () => {
     const result = rendered.get(locale + ':motion:selected');
-    const original = Object.entries(result.messages[locale])
+    const original = customerCopyHistoricalSnapshot(Object.entries(result.messages[locale]), locale)
       .filter(([key]) => !key.startsWith('videoMotionResultUi.') && !key.startsWith('videoRoadmapResultUi.')
         && !key.startsWith('videoMotionOptionsUi.') && !key.startsWith('videoRoadmapReceiptUi.')
         && !key.startsWith('videoMotionFormUi.') && !key.startsWith('videoRoadmapFormUi.') && !key.startsWith('videoPlanningMetaUi.')

@@ -16344,28 +16344,38 @@
     return `<section class="portal-card portal-card-pad portal-content-prompt-pack-result"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(publishReviewText("result.kicker", "Chỉ rà soát trên Web"))}</span><h2 class="portal-card-title">${safeText(String(pack.title || publishReviewText("result.titleFallback", "Gói rà soát")))}</h2><p class="portal-card-subtitle">${safeText(publishReviewText("result.body", "Đây là văn bản để bạn tự kiểm tra. Nó không phải bài đăng, lịch đăng, số liệu, thao tác tài khoản mạng xã hội hoặc biên nhận giao tệp."))}</p></div>${badge("read_only")}</div><div class="portal-content-prompt-pack-layout"><section class="portal-content-prompt-pack-checks"><strong>${safeText(publishReviewText("result.caption", "Chú thích"))}</strong><pre>${safeText(String(pack.caption || ""))}</pre></section><section class="portal-content-prompt-pack-checks"><strong>${safeText(publishReviewText("result.hashtagsCta", "Hashtag và lời kêu gọi"))}</strong><div class="portal-storyboard-composer-hashtags">${hashtags.map((item) => `<span>${safeText(String(item))}</span>`).join("")}</div><p><strong>${safeText(publishReviewText("result.ctaLabel", "Lời kêu gọi"))}:</strong> ${safeText(String(pack.cta || ""))}</p></section></div>${prompt ? `<section class="portal-content-prompt-pack-section"><h3>${safeText(publishReviewText("result.sourcePrompt", "Prompt tham chiếu"))}</h3><div><article><span>${safeText(publishReviewText("result.referenceBadge", "GỐC"))}</span><pre>${safeText(prompt)}</pre></article></div></section>` : ""}<section class="portal-content-prompt-pack-checks"><strong>${safeText(publishReviewText("result.checklistTitle", "Danh sách kiểm tra trước khi dùng bên ngoài"))}</strong>${publishReviewPackList(pack.review_checklist.map(publishReviewPackSystemCopy), publishReviewText("result.checklistFallback", "Tự kiểm tra tuyên bố, quyền sử dụng, định dạng và chính sách kênh đích."))}</section><div class="portal-form-footer"><span class="portal-form-note">${safeText(publishReviewPackSystemCopy(pack.copy_instruction))}</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/content-studio">${safeText(publishReviewText("result.openContentStudio", "Mở Content Studio"))}</a><a class="portal-button portal-button--quiet" href="/workboard">${safeText(publishReviewText("result.openWorkboard", "Mở Workboard"))}</a></div></div></section>`;
   }
 
-  function renderAutoPostHub(page, context) {
-    const sourceCards = [
-      ["topic", "source.topic.title", "source.topic.body"],
-      ["url", "source.url.title", "source.url.body"],
-      ["affiliate", "source.affiliate.title", "source.affiliate.body"],
-      ["media", "source.media.title", "source.media.body"],
-      ["video", "source.video.title", "source.video.body"],
-      ["image", "source.image.title", "source.image.body"],
-      ["plan", "source.plan.title", "source.plan.body"]
-    ];
-    const sourceMarkup = sourceCards.map(([id, titleKey, bodyKey]) => `<li class="portal-autopost-source" data-autopost-source="${id}"><span class="portal-autopost-source-index" aria-hidden="true">${sourceCards.findIndex((item) => item[0] === id) + 1}</span><div><strong>${safeText(autopostHubText(titleKey, id))}</strong><p>${safeText(autopostHubText(bodyKey, "Nguồn chỉ được dùng khi máy chủ công bố capability."))}</p></div><span class="portal-autopost-status">${safeText(autopostHubText("source.guarded", "Chờ cấp quyền"))}</span></li>`).join("");
-    const workflowSteps = [
-      ["01", "step.source.title", "step.source.body"],
-      ["02", "step.plan.title", "step.plan.body"],
-      ["03", "step.channel.title", "step.channel.body"],
-      ["04", "step.schedule.title", "step.schedule.body"],
-      ["05", "step.report.title", "step.report.body"]
-    ];
-    const stepMarkup = workflowSteps.map(([number, titleKey, bodyKey]) => `<li><span>${number}</span><div><strong>${safeText(autopostHubText(titleKey, number))}</strong><small>${safeText(autopostHubText(bodyKey, "Trạng thái sẽ do máy chủ xác minh."))}</small></div></li>`).join("");
-    const laneCard = (className, titleKey, bodyKey, statusKey, href) => `<section class="portal-card portal-card-pad portal-autopost-lane ${className}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(autopostHubText(`${titleKey}.kicker`, "AutoPost"))}</span><h2 class="portal-card-title">${safeText(autopostHubText(`${titleKey}.title`, "Workspace"))}</h2><p class="portal-card-subtitle">${safeText(autopostHubText(`${titleKey}.${bodyKey}`, "Dữ liệu và quyền sẽ được máy chủ xác minh."))}</p></div>${badge("guarded")}</div><div class="portal-autopost-lane-footer"><span>${safeText(autopostHubText(`${titleKey}.${statusKey}`, "Chưa kết nối"))}</span>${href ? `<a class="portal-button portal-button--quiet" href="${href}">${safeText(autopostHubText("action.open", "Mở"))}</a>` : `<button class="portal-button portal-button--quiet" type="button" disabled>${safeText(autopostHubText("action.wait", "Đang chờ"))}</button>`}</div></section>`;
-    return `<article class="portal-page portal-autopost-hub">${renderHero(page, context)}<section class="portal-autopost-intro"><div><span class="portal-section-kicker">${safeText(autopostHubText("intro.kicker", "AutoPost · một workspace rõ ràng"))}</span><h2>${safeText(autopostHubText("intro.title", "Chuẩn bị, rà soát và theo dõi nội dung đa kênh."))}</h2><p>${safeText(autopostHubText("intro.body", "Tất cả nguồn, thương hiệu, kênh, lịch, hàng đợi và báo cáo được đặt theo đúng thứ tự thao tác. Các bước bên ngoài chỉ mở khi máy chủ công bố quyền thật."))}</p></div><dl><div><dt>7</dt><dd>${safeText(autopostHubText("metric.sources", "Nguồn đầu vào"))}</dd></div><div><dt>5</dt><dd>${safeText(autopostHubText("metric.steps", "Bước kiểm soát"))}</dd></div><div><dt>0</dt><dd>${safeText(autopostHubText("metric.external", "Kết nối bên ngoài"))}</dd></div></dl></section><section class="portal-card portal-card-pad portal-autopost-steps"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(autopostHubText("steps.kicker", "Trình tự làm việc"))}</span><h2 class="portal-card-title">${safeText(autopostHubText("steps.title", "Đi từ nguồn đến báo cáo, không bỏ bước"))}</h2><p class="portal-card-subtitle">${safeText(autopostHubText("steps.body", "Mỗi bước giữ bản nháp, trạng thái và ranh giới riêng để dễ kiểm tra."))}</p></div>${badge("read_only")}</div><ol>${stepMarkup}</ol></section><div class="portal-autopost-layout"><section class="portal-card portal-card-pad portal-autopost-sources"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(autopostHubText("source.kicker", "Bước 1 · nguồn"))}</span><h2 class="portal-card-title">${safeText(autopostHubText("source.title", "Chọn nguồn nội dung"))}</h2><p class="portal-card-subtitle">${safeText(autopostHubText("source.body", "Chỉ chọn nguồn thuộc phiên và quyền của tài khoản hiện tại."))}</p></div>${badge("guarded")}</div><ul>${sourceMarkup}</ul></section><div class="portal-autopost-lanes">${laneCard("portal-autopost-brand", "brand", "body", "status", "/content/channel-strategy")}${laneCard("portal-autopost-calendar", "calendar", "body", "status", "/calendar")}${laneCard("portal-autopost-review", "review", "body", "status", "/content/publish-review")}${laneCard("portal-autopost-channels", "channels", "body", "status", "")}${laneCard("portal-autopost-queue", "queue", "body", "status", "")}${laneCard("portal-autopost-affiliate", "affiliate", "body", "status", "")}</div></div><section class="portal-card portal-card-pad portal-autopost-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(autopostHubText("boundary.kicker", "Ranh giới vận hành"))}</span><h2 class="portal-card-title">${safeText(autopostHubText("boundary.title", "Không giả kết nối, lịch đăng hoặc số liệu"))}</h2><p class="portal-card-subtitle">${safeText(autopostHubText("boundary.body", "Đây là lớp trình bày và chuẩn bị. Không tạo publish, quảng cáo, thanh toán, job hoặc báo cáo giả."))}</p></div>${badge("guarded")}</div><div class="portal-autopost-boundary-grid"><div><strong>${safeText(autopostHubText("boundary.content", "Nguồn và nội dung"))}</strong><span>${safeText(autopostHubText("boundary.contentState", "Giữ trong phạm vi tài khoản"))}</span></div><div><strong>${safeText(autopostHubText("boundary.channels", "Kênh và OAuth"))}</strong><span>${safeText(autopostHubText("boundary.channelsState", "Chưa kết nối"))}</span></div><div><strong>${safeText(autopostHubText("boundary.publish", "Lịch và đăng bài"))}</strong><span>${safeText(autopostHubText("boundary.publishState", "Chờ adapter máy chủ"))}</span></div><div><strong>${safeText(autopostHubText("boundary.metrics", "Affiliate và số liệu"))}</strong><span>${safeText(autopostHubText("boundary.metricsState", "Không có số liệu suy đoán"))}</span></div></div></section></article>`;
-  }
+function renderAutoPostHub(page, context) {
+  const text = (key, fallback) => (typeof uiText === "function" ? (uiText(`customerPublishingUi.${key}`, fallback) ?? fallback) : fallback);
+  const items = [
+    {
+      key: "strategy",
+      href: "/content/channel-strategy",
+      title: "Chiến lược kênh",
+      body: "Quản lý đối tượng, giọng văn và định hướng nội dung của kênh.",
+      open: "Mở chiến lược kênh"
+    },
+    {
+      key: "calendar",
+      href: "/calendar",
+      title: "Lịch nội dung",
+      body: "Xem và sắp xếp kế hoạch nội dung theo ngày.",
+      open: "Mở lịch nội dung"
+    },
+    {
+      key: "review",
+      href: "/content/publish-review",
+      title: "Rà soát bài đăng",
+      body: "Chuẩn bị nội dung, kiểm tra và sao chép bài đăng.",
+      open: "Mở rà soát bài đăng"
+    }
+  ];
+  const cards = items
+    .map(
+      (item) => `<section class="portal-card portal-card-pad"><h2 class="portal-card-title">${safeText(text(`${item.key}.title`, item.title))}</h2><p class="portal-card-subtitle">${safeText(text(`${item.key}.body`, item.body))}</p><a class="portal-button portal-button--primary" href="${item.href}">${safeText(text(`${item.key}.open`, item.open))}</a></section>`
+    )
+    .join("");
+  return `<article class="portal-page portal-autopost-hub">${renderHero(page, context)}<div class="portal-stack">${cards}</div></article>`;
+}
 
   function renderPublishReviewPack(page, context) {
     const canCompose = Boolean(context.capabilities && context.capabilities["publish-review-pack-compose"] === true);
