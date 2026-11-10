@@ -81,7 +81,9 @@ generated Tester local-file metadata updated before push; no weakening tests.
 - [x]Keyboard/focus/font>=16mobile, readonly/archived/empty/error/guarded semantics kept.
 - [x]Owned copied DB actual GET/reopened fields unchanged;0compose/save/provider/
   wallet/production/.env/media accesses; source/evidence binding and Job->0.
-- [ ]Ops/original-feature/Tester/canonicalcase+local-file-metadata/provenance ready.
+- [x]Ops/original-feature/Tester/canonicalcase+local-file-metadata ready; metadata
+  test1pass. Web-only sourceprovenance c2fef5c57c7dca6fc6e0113c81cc4c82fe27d615,
+  fingerprint1a3cc7017452193b9e9b7186a6a1cc1f9f7c76eee9533781bc35d19b64593661.
 - [ ]ExactHEADCI/merge/exactSHAdeploy/runtime/assets receipt on Issue689.
 
 Commands: node --test tests/saved-video-detail-ui.test.mjs ->zero failures after
