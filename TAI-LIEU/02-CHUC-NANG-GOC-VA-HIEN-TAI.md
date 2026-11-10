@@ -1729,3 +1729,10 @@ không thay source/result/normalizer/backend bằng giao diện trông thuyết 
 
 Đây là dọn đúng biểu mẫu,không phải nghiệm thu tạo/lưu kết quả hoặc đầu ra
 video. Phần đó tiếp theo;không đổi nhãn thành công để che chức năng chưa đạt.
+
+## Thông báo chung không có hướng xử lý —11/11/2026
+
+Trước:legacyguarded được đổi thành "Không thể thực hiện thao tác này lúc này."
+nhưng vẫn là dòng chung Owner yêu cầu bỏ. Nay exactguardtoastkhông tạo node
+haytimer cho đúnglegacy/VI/EN/ZHcâu đó. Lỗi cụthể/unknown vẫn hiển thị,
+status/backend/quyềnkhôngđổi. Không coi việc xóa thông báo là tạo thành công.

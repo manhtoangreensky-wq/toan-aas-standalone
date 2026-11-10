@@ -31,7 +31,7 @@ function runtime(locale){
  return{toast,nodes,timers};
 }
 for(const[locale,index]of[['vi',2],['en',3],['zh',4]]){
- for(const row of cases)test(locale+': exact '+row[0]+' feedback is localized without internal terminology',()=>{const r=runtime(locale);r.toast(row[1],'error');assert.equal(r.nodes.length,1);assert.equal(r.nodes[0].textContent,row[index]);assert.equal(r.nodes[0].attributes.role,'alert');assert.match(r.nodes[0].className,/warning/);assert.equal(r.timers[0].ms,6500);});
+ for(const row of cases)test(locale+': exact '+row[0]+' feedback follows its customer presentation rule',()=>{const r=runtime(locale);r.toast(row[1],'error');if(row[0]==='guarded'){assert.equal(r.nodes.length,0);assert.equal(r.timers.length,0);return;}assert.equal(r.nodes.length,1);assert.equal(r.nodes[0].textContent,row[index]);assert.equal(r.nodes[0].attributes.role,'alert');assert.match(r.nodes[0].className,/warning/);assert.equal(r.timers[0].ms,6500);});
  for(const text of['CUSTOMER message <b>keep & text</b>','__proto__','constructor','toString'])test(locale+': unknown message remains exact: '+text,()=>{const r=runtime(locale);r.toast(text);assert.equal(r.nodes[0]?.textContent,text);assert.equal(r.nodes[0].attributes.role,'status');});
- test(locale+': duplicate feedback stays deduplicated and dismisses on same timer',()=>{const r=runtime(locale);r.toast(cases[7][1],'error');r.toast(cases[7][1],'error');assert.equal(r.nodes.length,1);assert.equal(r.timers.length,1);r.timers[0].fn();assert.equal(r.nodes.length,0);});
+ test(locale+': duplicate feedback stays deduplicated and dismisses on same timer',()=>{const r=runtime(locale);r.toast(cases[5][1],'error');r.toast(cases[5][1],'error');assert.equal(r.nodes.length,1);assert.equal(r.timers.length,1);r.timers[0].fn();assert.equal(r.nodes.length,0);});
 }

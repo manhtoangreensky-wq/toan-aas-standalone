@@ -1351,6 +1351,12 @@ MERGE/DEPLOY/LIVE không suy từ tests. Trạng thái delivery theo PR/checkpoi
 - [ ] LAST-TWO-OUTER delivery:CI/provenance/exactHEADmerge/deploy/runtime/assets;
  docs/reports/last-two-planner-outer-20261111.md. Kếtquả/lưu/biênnhận của2trang
  làbướctiếp;khôngđónggoal/engine/Safari/signedLIVE/motiontừouterforms.
+- [x] LAST-TWO-OUTER delivery:PR712/CI42862697374/deploy42865305307;
+ runtime61ab02b8,3servicesactive/healthok/4HTTPSassetexact.
+- [x] CUSTOMER-GENERIC-GUARD-TOAST-REMOVE local:Ownerảnhmới,mộtworkerR1,
+ exact4lineguard/4strings;39caseledger+6legacyaffected,6native/12ảnhđạt;
+ lỗi cụthể/unknown/role/timergiữ,khôngđổiAPI/auth/quyền/thànhcông.
+- [ ] GENERIC-GUARD delivery:CI/exactHEADmerge/exactSHAdeploy/runtime/assets.
 - [x] ROUTE-ENGINE-BOT-WEB source audit requested in parallel: retained bounded
  public-source findings after one evidence correction; push/pull adapters and
  local readiness short-circuits distinguished. No engine/auth mutation.
