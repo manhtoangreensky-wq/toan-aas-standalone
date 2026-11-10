@@ -2454,3 +2454,14 @@ dư. Têntrangkhôngcònhứađăngtựđộng.13thôngbáoCoreBridge/canonical�
 chữdễhiểuđúngVI/EN/ZH; lỗivẫnhiện,khôngthayquyền/CSRF/luồngtiền/backend.
 63casethôngbáo/renderer+3metadata,6native/18link,3serverfirstpaintđạtlocal.
 ĐợtnàychờCI/pháthànhriêng. [Receipt](../docs/reports/customer-operational-ui-cleanup-20261110.md).
+
+PR709đãpháthành:CI42816570958/deploy42818143065đạt,runtime5ad97cf9,
+3dịchvụactive/4HTTPSassetskhớp. Khôngđồngnghĩatựđăngbàilênmạngxãhộiđãbật.
+
+## Biểu mẫu video gọn — local 10/11/2026
+
+Prompt/idea/self-shotđãbỏintro/sốđếm0/khốigiảithíchthựcthi/phạmvi/headernộibộ
+dư;formhiệnđầyđủchiềurộng. Toànbộform15/12/17field,consent/nútlưu/kếtquảvà
+guardgiữbyte-identical.6renderer/6nativeVI320tối/1440sángđạt,12protectedpaths
+khôngđổi;9flowlưuđãđạtđượcdùnglại,khôngtạolạikếhoạchchỉvìbỏtrangtrí.
+ChờCI/pháthànhđợtriêng. [Receipt](../docs/reports/video-useful-ui-20261110.md).
