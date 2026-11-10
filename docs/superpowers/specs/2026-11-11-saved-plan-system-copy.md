@@ -62,7 +62,9 @@ frontend and deployment workflow. No production writes or paid-provider calls.
 - [x] Dark supplement:6already-saved plan views, actual toggle/DOM/computed
   palette proof;0compose/0save,282label samples min5.522477721172796:1.
 - [x] Sensitive files and all other application text outside two function spans unchanged.
-- [ ] Ops/original-feature/tester and source provenance ready before push.
+- [x] Ops/original-feature/tester and Web-only source provenance ready before push:
+  source f5ab4e3248f06dd406d33a38234bc1b4d14ab3e8,
+  fingerprint83308074cb7e6fc8617087cd5aa1db8d604a41556fcba81cfc98032980ce8d99.
 - [ ] CI/exact HEAD merge/deploy/runtime/assets have separate receipts.
 
 Each packet includes current source anchors, exact target requirements, complete
