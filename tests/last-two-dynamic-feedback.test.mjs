@@ -1,0 +1,29 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import test from 'node:test';
+const portal=fs.readFileSync(new URL('../static/portal/portal.js',import.meta.url),'utf8'),integration=fs.readFileSync(new URL('../static/portal/integration.js',import.meta.url),'utf8'),catalog=fs.readFileSync(new URL('../static/portal/portal-i18n.js',import.meta.url),'utf8');
+const copy={vi:{staleNote:'Lựa chọn đã thay đổi. Hãy tạo lại kế hoạch trước khi lưu.',staleTitle:'Hãy tạo lại kế hoạch từ lựa chọn hiện tại trước khi lưu.',savedTitle:'Kế hoạch này đã được lưu. Hãy tạo lại nếu cần lưu kế hoạch khác.',savingTitle:'Đang lưu kế hoạch. Vui lòng chờ xác nhận.',recoveryNote:'Chưa xác nhận được lần lưu trước. Các lựa chọn được giữ nguyên; hãy bấm lưu để thử lại đúng lần lưu đó.',retryTitle:'Thử lại đúng lần lưu trước với các lựa chọn đã giữ nguyên.',recoveryLockedTitle:'Các lựa chọn được khóa cho đến khi thử lại lần lưu trước hoặc tải lại phiên.'},en:{staleNote:'Your choices changed. Generate the plan again before saving.',staleTitle:'Generate a plan from your current choices before saving.',savedTitle:'This plan is already saved. Generate a new plan to save another.',savingTitle:'Saving the plan. Please wait for confirmation.',recoveryNote:'The previous save is not confirmed. Your choices remain locked; select Save to retry that same save.',retryTitle:'Retry the previous save with the same locked choices.',recoveryLockedTitle:'Choices stay locked until you retry the previous save or reload the session.'},zh:{staleNote:'选项已更改。请重新生成计划后再保存。',staleTitle:'请根据当前选项重新生成计划后再保存。',savedTitle:'此计划已保存。如需保存其他计划，请重新生成。',savingTitle:'正在保存计划。请等待确认。',recoveryNote:'尚未确认上一次保存。当前选项保持锁定；请选择保存以重试同一次操作。',retryTitle:'使用保持锁定的相同选项重试上一次保存。',recoveryLockedTitle:'选项将保持锁定，直到重试上一次保存或重新加载会话。'}};
+const fn=(source,name)=>{const a=source.indexOf('  function '+name+'('),b=source.indexOf('\n  }',a)+4;assert.ok(a>=0);return source.slice(a,b);};
+function runtime(locale,state){
+ const noop=()=>{},makeControl=()=>({disabled:false,dataset:{},attrs:{},setAttribute(k,v){this.attrs[k]=v;},removeAttribute(k){delete this.attrs[k];}}),control=makeControl(),field=makeControl(),note={hidden:true,textContent:''},surface={toggleAttribute:noop},page={querySelector:()=>surface,querySelectorAll:selector=>selector.includes('save-plan')?[control]:[surface]},form={dataset:{},attrs:{},getAttribute:()=> 'image-motion-planner-compose',querySelector:()=>note,querySelectorAll:()=>[field],closest:()=>page,setAttribute(k,v){this.attrs[k]=v;}};
+ const document={readyState:'loading',addEventListener:noop,documentElement:{lang:locale,setAttribute:noop,getAttribute:()=>null},body:{classList:{add:noop,remove:noop}},querySelector:()=>form,querySelectorAll:()=>[control]},window={document,navigator:{language:locale},location:{pathname:'/video-studio/image-motion-planner',search:''},localStorage:{getItem:()=>null,setItem:noop},addEventListener:noop,dispatchEvent:noop};
+ const saved=state==='saved',fresh=!['stale','recoveryStale'].includes(state),pending=state==='pending',recovery=state.startsWith('recovery'),receipt=saved?{plan:{id:'11111111-1111-4111-8111-111111111111'}}:null;
+ const ctx=vm.createContext({window,document,URL,URLSearchParams,Intl,console});vm.runInContext(catalog,ctx);window.TOANAASI18n.setLocale(locale,{emit:false});Object.assign(ctx,{portalI18n:()=>window.TOANAASI18n,getBootstrap:()=>({}),base:()=>({}),currentPortalPath:()=>'/video-studio/image-motion-planner',ensureImageMotionPlannerDraftControls:noop,validVideoStudioPlanId:()=>true,normalizeImageMotionSaveReceipt:()=>receipt||{},imageMotionPlannerFormMatchesSavedSource:()=>fresh,imageMotionPlannerOwnedReferences:()=>[],imageMotionPlanSaveSource:()=>({}),imageMotionPlanSaveReceipt:()=>receipt,imageMotionPlanSaveSourceMatchesResult:()=>true,imageMotionPlanSaveSourceMatchesCurrentFields:()=>fresh,imageMotionPlannerCurrentFormFields:()=>({}),imageMotionPlannerSavePendingRequestEpoch:pending?1:0,imageMotionPlannerSaveRecoveryRequestEpoch:recovery?1:0,imageMotionPlannerComposePendingRequestEpoch:0});
+ return{ctx,form,control,field,note,fresh,pending,recovery};
+}
+for(const locale of['vi','en','zh']){
+ for(const state of['current','stale','saved'])test(locale+': Image stale helper '+state+' preserves lock and localized feedback',()=>{
+  const r=runtime(locale,state);vm.runInContext(fn(portal,'uiText')+'\n'+fn(portal,'synchronizeImageMotionPlannerDraftFreshness'),r.ctx);r.ctx.synchronizeImageMotionPlannerDraftFreshness(r.form);
+  assert.equal(r.control.disabled,state!=='current');assert.equal(r.note.hidden,state!=='stale');
+  assert.equal(r.form.dataset.imageMotionPlannerDraftState,state==='current'?'fresh':state);
+  if(state==='stale'){assert.equal(r.note.textContent,copy[locale].staleNote);assert.equal(r.control.attrs.title,copy[locale].staleTitle);}
+  else if(state==='saved')assert.equal(r.control.attrs.title,copy[locale].savedTitle);else assert.equal(r.control.attrs.title,undefined);
+ });
+ for(const state of['current','stale','saved','pending','recoveryRetry','recoveryStale'])test(locale+': Image save controls '+state+' retain pending/recovery locks and localized title',()=>{
+  const r=runtime(locale,state);vm.runInContext(fn(integration,'reconcileImageMotionPlannerSaveControls'),r.ctx);r.ctx.reconcileImageMotionPlannerSaveControls('/video-studio/image-motion-planner');
+  assert.equal(r.control.disabled,!['current','recoveryRetry'].includes(state));assert.equal(r.field.disabled,r.pending||r.recovery);
+  const key={stale:'staleTitle',saved:'savedTitle',pending:'savingTitle',recoveryRetry:'retryTitle',recoveryStale:'recoveryLockedTitle'}[state];assert.equal(r.control.attrs.title,key?copy[locale][key]:undefined);
+  if(r.recovery){assert.equal(r.note.hidden,false);assert.equal(r.note.textContent,copy[locale].recoveryNote);}
+ });
+}

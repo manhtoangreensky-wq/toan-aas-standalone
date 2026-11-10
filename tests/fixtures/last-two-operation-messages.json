@@ -1,0 +1,83 @@
+{
+  "map": {
+    "Chỉ signed Web session có CSRF, Video Studio và Image Studio đang sẵn sàng mới có thể lập Image Motion Plan.": "unavailable",
+    "Video Plan đang chờ máy chủ xác nhận. Direction và lựa chọn hiện tại được khóa cho đến khi request này hoàn tất.": "waiting",
+    "Máy chủ chưa trả Image Motion Plan Web-native an toàn.": "invalidResult",
+    "Image Motion Plan trả về không khớp Image Studio direction đã chọn trong phiên này.": "stale",
+    "Đã tạo Image Motion Plan để review. Không có render, video, preview, provider, job, payment hoặc output.": "created",
+    "Chỉ signed Web session có CSRF, Image Studio và Video Studio đang sẵn sàng mới có thể lưu Image Motion Plan thành Video Plan.": "unavailable",
+    "Image Motion Plan đang được tạo lại từ direction hiện tại. Hãy chờ phản hồi trước khi lưu Video Plan.": "waiting",
+    "Video Plan đang được lưu từ Image Motion Plan hiện tại. Vui lòng chờ receipt từ máy chủ.": "waiting",
+    "Image Motion Plan này đã được lưu thành Video Plan Draft. Hãy mở plan hiện tại để tiếp tục.": "alreadySaved",
+    "Bản Image Motion hiện tại không còn khớp Image Studio direction đang hoạt động. Hãy tạo lại trước khi lưu.": "stale",
+    "Direction hoặc lựa chọn Image Motion đang hiển thị đã thay đổi. Hãy tạo lại plan trước khi lưu Video Plan.": "stale",
+    "Image Motion Plan đang được Video Production Studio xác nhận. Vui lòng chờ.": "waiting",
+    "Máy chủ chưa xác nhận Video Plan Draft từ Image Motion Planner.": "invalidReceipt",
+    "Máy chủ chưa trả receipt Image Motion Video Plan content-free và đúng ranh giới an toàn.": "invalidReceipt",
+    "Đã lưu Image Motion Plan thành Video Plan Draft riêng tư.": "saved",
+    "Kết nối chưa xác nhận lần lưu. Direction đã được khóa; bấm Lưu thành Video Plan để thử lại đúng request này.": "recovery",
+    "Chỉ signed Web session có CSRF và Video Studio đang sẵn sàng mới có thể lập Reference Format Plan.": "unavailable",
+    "Máy chủ chưa trả Reference Format Plan Web-native an toàn.": "invalidResult",
+    "Reference Format Plan trả về không khớp video Asset Vault và lựa chọn đang có trong phiên này.": "stale",
+    "Đã tạo Reference Format Plan để review. Không có phân tích video, render, provider, job, payment hoặc output.": "created",
+    "Chỉ signed Web session có CSRF và Video Studio đang sẵn sàng mới có thể lưu Reference Format Plan thành Video Plan.": "unavailable",
+    "Bản Reference Format hiện tại không còn khớp video Asset Vault đang hoạt động. Hãy tạo lại trước khi lưu.": "stale",
+    "Reference Format Plan đang được Video Production Studio xác nhận. Vui lòng chờ.": "waiting",
+    "Máy chủ chưa xác nhận Video Plan Draft từ Reference Format Planner.": "invalidReceipt",
+    "Máy chủ chưa trả receipt Reference Format Video Plan content-free và đúng ranh giới an toàn.": "invalidReceipt",
+    "Đã lưu Reference Format Plan thành Video Plan Draft riêng tư.": "saved",
+    "Đã lưu Reference Format Plan thành Video Plan riêng tư.": "saved",
+    "Đã lưu Image Motion Plan thành Video Plan riêng tư.": "saved",
+    "Đã tạo Image Motion Plan để review. Ảnh nguồn không được mở/đọc; không có video, preview, audio, provider, job, payment hoặc output nào được tạo.": "created",
+    "Đã lưu Image Motion Plan thành Video Plan Draft riêng tư. Ảnh nguồn không được mở/đọc; chưa có render, job, media, thanh toán hoặc giao hàng.": "saved",
+    "Đã tạo Reference Format Plan để review. Video nguồn không được mở hoặc phân tích; không có media, provider, Bot, job, Xu, thanh toán, publish hoặc output nào được tạo.": "created",
+    "Đã lưu Reference Format Plan thành Video Plan Draft riêng tư. Video nguồn không được mở/phân tích; chưa có render, job, media, thanh toán hoặc giao hàng.": "saved"
+  },
+  "copy": {
+    "created": {
+      "vi": "Đã tạo kế hoạch. Bạn có thể rà soát và lưu.",
+      "en": "Plan created. You can review and save it.",
+      "zh": "计划已生成。您可以检查并保存。"
+    },
+    "saved": {
+      "vi": "Đã lưu kế hoạch riêng tư.",
+      "en": "Private plan saved.",
+      "zh": "私有计划已保存。"
+    },
+    "alreadySaved": {
+      "vi": "Kế hoạch đã được lưu. Hãy mở kế hoạch để tiếp tục.",
+      "en": "The plan is already saved. Open it to continue.",
+      "zh": "计划已保存。请打开计划继续。"
+    },
+    "waiting": {
+      "vi": "Đang xử lý lựa chọn hiện tại. Vui lòng chờ.",
+      "en": "Processing your current choices. Please wait.",
+      "zh": "正在处理当前选项。请稍候。"
+    },
+    "unavailable": {
+      "vi": "Không thể thực hiện thao tác lúc này. Hãy tải lại trang rồi thử lại.",
+      "en": "This action is unavailable. Reload the page and try again.",
+      "zh": "暂时无法执行此操作。请刷新页面后重试。"
+    },
+    "invalidResult": {
+      "vi": "Không thể xác nhận kết quả. Hãy tạo lại kế hoạch.",
+      "en": "The result could not be verified. Generate the plan again.",
+      "zh": "无法验证结果。请重新生成计划。"
+    },
+    "stale": {
+      "vi": "Lựa chọn đã thay đổi. Hãy tạo lại kế hoạch trước khi lưu.",
+      "en": "Your choices changed. Generate the plan again before saving.",
+      "zh": "选项已更改。请重新生成计划后再保存。"
+    },
+    "invalidReceipt": {
+      "vi": "Chưa xác nhận được việc lưu. Hãy kiểm tra danh sách kế hoạch trước khi thử lại.",
+      "en": "Saving could not be confirmed. Check your plans before trying again.",
+      "zh": "尚无法确认保存结果。请先检查计划列表，再决定是否重试。"
+    },
+    "recovery": {
+      "vi": "Chưa xác nhận lần lưu trước. Các lựa chọn đã khóa; bấm lưu để thử lại đúng lần lưu đó.",
+      "en": "The previous save is not confirmed. Your choices are locked; select Save to retry that same save.",
+      "zh": "尚未确认上一次保存。选项已锁定；请选择保存以重试同一次操作。"
+    }
+  }
+}
