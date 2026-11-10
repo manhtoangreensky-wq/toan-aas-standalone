@@ -1611,3 +1611,17 @@ Nguồn chức năng ban đầu: `docs/migration/CREATIVE_MOTION_GUIDE_CALLBACK_
 Bộ 45 ca mới đi qua bộ chuẩn hóa thật; không dựng kết quả thay cho phản hồi hợp lệ.
 Lỗi tràn mô tả trên điện thoại đã sửa bằng một quy tắc CSS hẹp và đạt kiểm tra
 trình duyệt; bằng chứng cùng giới hạn CI/phát hành nằm trong receipt.
+
+## Đối chiếu xác nhận lưu và lựa chọn — 10/11/2026
+
+Nguồn gốc chức năng vẫn là các contract long-form/motion đã dẫn ở trên và
+`tests/test_copyfast_long_form_video_planner.py`; không đổi thành dịch vụ tạo video.
+
+| Trước | Candidate | Bằng chứng/giới hạn |
+|---|---|---|
+| Phản hồi lưu bị rút gọn rồi kiểm tra lại như định dạng gốc, mất xác nhận | Dữ liệu đã xác minh được chuyển đầy đủ tới bootstrap, renderer nhận bản chiếu đúng |84handler+60renderer;12luồng UI thật tạo/lưu/mở |
+| Bộ lọc nhận nhầm câu cấm chuẩn trong kết quả là yêu cầu mô phỏng | Chỉ đúng câu cố định trong character_bible của kết quả được loại khỏi phép quét |108ca; không đổi bộ lọc đầu vào hoặc schema |
+| Nhãn lựa chọn cố định còn sai ngôn ngữ, ô native nở hoặc cắt tên |19nhãn theo locale; scalar9/3/7giữ, ô có giới hạn và tên đầy đủ khi cần |24native+20helper; không tự thu gọn nội dung hoặc thêm ô rỗng |
+
+Hai quan sát nhập liệu/che nút còn được giữ trong receipt; không dùng kết quả
+đạt hiện tại để gọi chúng đã sửa. Signed production/device và motion vẫn riêng.

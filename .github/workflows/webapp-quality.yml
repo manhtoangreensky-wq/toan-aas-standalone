@@ -88,6 +88,8 @@ jobs:
         run: |
           node --test tests/video-studio-vi-locale.test.mjs
           node --test tests/video-planning-result-locale.test.mjs
+          node --test tests/video-motion-options-locale.test.mjs tests/video-roadmap-save-receipt.test.mjs tests/video-plan-confirmation-flow.test.mjs tests/video-long-form-compose-guard.test.mjs
+          node --test tests/video-motion-selected-name.test.mjs
           python -m pytest --noconftest -q tests/test_navigation_optin_markup_regression.py tests/test_video_plan_mobile_font_contract.py
 
       - name: Executable Chrome Extension Unit Tests

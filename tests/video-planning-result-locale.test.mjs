@@ -325,7 +325,8 @@ for (const locale of locales) {
   test(locale + ':catalog preserves every preexisting translation and namespace entry', () => {
     const result = rendered.get(locale + ':motion:selected');
     const original = Object.entries(result.messages[locale])
-      .filter(([key]) => !key.startsWith('videoMotionResultUi.') && !key.startsWith('videoRoadmapResultUi.'))
+      .filter(([key]) => !key.startsWith('videoMotionResultUi.') && !key.startsWith('videoRoadmapResultUi.')
+        && !key.startsWith('videoMotionOptionsUi.') && !key.startsWith('videoRoadmapReceiptUi.'))
       .sort(([a], [b]) => a.localeCompare(b));
     assert.equal(original.length, 9266);
     assert.equal(crypto.createHash('sha256').update(JSON.stringify(original)).digest('hex'), catalogBaseline[locale]);

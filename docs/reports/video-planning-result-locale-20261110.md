@@ -91,8 +91,15 @@ The independent tester session is
 Projects metadata and the 48 historical cases are not recreated or overwritten.
 The focused 45-case suite is added to the existing CI locale step.
 
-PUSH_GATE=READY.
-DEPLOY=NO. LIVE_PASS=NOT_TESTED.
+PUSH_GATE=READY; delivered through PR #704.
+CI=42668319118 SUCCESS (Verify and Authenticated QA).
+MERGE_SHA=b5410b5e587337f0d050e70d1a92fcaff85adc17.
+DEPLOY=42670123474 SUCCESS; freshly checked runtime equals MERGE_SHA;
+Bot/Web/nginx active and health payload valid. Public HTTPS portal.js, i18n and
+theme CSS bytes match their committed versions exactly. CSS canonical LF hash is
+3c203410de605af4f49705ea3da860139152689a5f8b5906e8665116ab9e3763,
+not the earlier Windows physical-file hash.
+Signed production LIVE_PASS=NOT_TESTED.
 PROVIDER_CALLS=0. WALLET_MUTATIONS=0. PRODUCTION_DATA_MUTATIONS=0.
 
 Whole-app locale, outer video forms, the separately discovered save-receipt
@@ -105,3 +112,8 @@ FILES_CHANGED=3 application files; 1 CI invocation; 1 focused test; scoped
 operations/spec/tester/ledger documentation. No protected runtime file changed.
 BASELINE_FAILURES=1 historical Python literal check; BRANCH_FAILURES=the same 1;
 NEW_FAILURES=0 in comparable checks. LESSON_CANDIDATE=NONE.
+
+Delivery evidence: Issue #689 comment 6747582386 and PR #704 comment 6747583103;
+CI artifact IDs 13697109262 (browser) and 13698631021 (authenticated matrix).
+This source report was reconciled after release; documentation changes do not
+represent a new application deployment.

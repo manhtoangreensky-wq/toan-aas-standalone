@@ -17056,7 +17056,32 @@
   const CREATIVE_MOTION_GUIDE_LANGUAGE_OPTIONS = Object.freeze([["vi", "Tiếng Việt"], ["en", "English"], ["zh", "中文（简体）"]]);
 
   function creativeMotionGuideOptions(options, value) {
-    return options.map(([id, label]) => `<option value="${safeText(id)}"${id === value ? " selected" : ""}>${safeText(label)}</option>`).join("");
+    const labels = {
+      "Sản phẩm / quảng cáo": ["topic.product", "Sản phẩm / quảng cáo"],
+      "Affiliate / TikTok Shop": ["topic.affiliate", "Tiếp thị liên kết / TikTok Shop"],
+      "AI tool / phần mềm": ["topic.ai_tool", "Công cụ trí tuệ nhân tạo / phần mềm"],
+      "Địa điểm / không gian": ["topic.place", "Địa điểm / không gian"],
+      "Thời trang / lifestyle": ["topic.fashion", "Thời trang / lối sống"],
+      "Food / nhà hàng / đồ uống": ["topic.food", "Ẩm thực / nhà hàng / đồ uống"],
+      "Giáo dục / hướng dẫn": ["topic.education", "Giáo dục / hướng dẫn"],
+      "Câu chuyện cinematic": ["topic.story", "Câu chuyện điện ảnh"],
+      "Tự nhập chủ đề": ["topic.custom", "Tự nhập chủ đề"],
+      "Cinematic": ["style.cinematic", "Điện ảnh"],
+      "TikTok / Reels nhanh": ["style.tiktok", "TikTok / Reels nhịp nhanh"],
+      "Tutorial hướng dẫn": ["style.tutorial", "Hướng dẫn từng bước"],
+      "Quảng cáo bán hàng": ["style.ads", "Quảng cáo bán hàng"],
+      "FPV / drone motion": ["style.fpv", "Góc nhìn thứ nhất / chuyển động thiết bị bay"],
+      "3D / product reveal": ["style.reveal", "Giới thiệu sản phẩm ba chiều"],
+      "UGC đời thường": ["style.ugc", "Nội dung người dùng đời thường"],
+      "Tiếng Việt": ["language.vi", "Tiếng Việt"],
+      "English": ["language.en", "Tiếng Anh"],
+      "中文（简体）": ["language.zh", "Tiếng Trung giản thể"]
+    };
+    return options.map(([id, label]) => {
+      const copy = Object.prototype.hasOwnProperty.call(labels, label) ? labels[label] : null;
+      const text = copy ? uiText(`videoMotionOptionsUi.${copy[0]}`, copy[1]) : label;
+      return `<option value="${safeText(id)}"${id === value ? " selected" : ""}>${safeText(text)}</option>`;
+    }).join("");
   }
 
   function creativeMotionGuideListMarkup(items) {
@@ -17139,12 +17164,22 @@
     return list.length ? `<ul>${list.map((item) => `<li>${safeText(String(item))}</li>`).join("")}</ul>` : `<p>${safeText(fallback)}</p>`;
   }
 
+  /**
+   * Render long-form roadmap save receipt.
+   *
+   * Bounded renderer for the validated long-form video plan save receipt.
+   * Displays confirmed draft state, chapter count, revision number, and link to video studio.
+   * Uses safeText and uiText to localize copy across Vietnamese, English, and Chinese.
+   *
+   * @param {Object} raw - Already validated compact save receipt projection {destination, plan, scene_count}
+   * @returns {string} Safe HTML string for the save receipt confirmation card, or empty string if plan is invalid
+   */
   function renderLongFormRoadmapSaveReceipt(raw) {
-    const receipt = normalizeLongFormRoadmapPlanSaveReceipt(raw);
+    const receipt = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
     const plan = receipt.plan && typeof receipt.plan === "object" ? receipt.plan : null;
     if (!plan) return "";
     const planPath = `/video-studio/${encodeURIComponent(String(plan.id))}`;
-    return `<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Video Production Studio riêng tư</span><h2 class="portal-card-title">Đã lưu Long-form Video Plan Draft</h2><p class="portal-card-subtitle">${safeText(String(receipt.scene_count || 0))} chapters · revision ${safeText(String(plan.revision || 1))}. Receipt không giữ topic, outline, character bible, chapter hoặc prompt trong browser.</p></div>${badge("draft")}</div><div class="portal-form-footer"><span class="portal-form-note">Plan là bản ghi owner-only có thể biên tập. Không có pending Telegram, Bot/provider call, media, preview, output, job, Xu, PayOS, asset, publish, delivery, approval, lock hoặc generation.</span><a class="portal-button portal-button--primary" href="${safeText(planPath)}">Mở Video Plan</a></div></section>`;
+    return `<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("videoRoadmapReceiptUi.kicker", "Không gian kế hoạch video riêng tư"))}</span><h2 class="portal-card-title">${safeText(uiText("videoRoadmapReceiptUi.title", "Đã lưu bản nháp kế hoạch video dài"))}</h2><p class="portal-card-subtitle">${safeText(String(receipt.scene_count || 0))} ${safeText(uiText("videoRoadmapReceiptUi.chapters", "chương"))} · ${safeText(uiText("videoRoadmapReceiptUi.revision", "phiên bản"))} ${safeText(String(plan.revision || 1))}. ${safeText(uiText("videoRoadmapReceiptUi.body", "Xác nhận lưu không giữ chủ đề, dàn ý, hồ sơ nhân vật, chương hoặc mô tả trong trình duyệt."))}</p></div>${badge("draft")}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(uiText("videoRoadmapReceiptUi.note", "Kế hoạch là bản ghi riêng tư của tài khoản và có thể biên tập. Không tạo trạng thái chờ trên Telegram, gọi trợ lý tự động hoặc nhà cung cấp, tạo tệp đa phương tiện, bản xem trước, tệp đầu ra, tác vụ, tài nguyên, xuất bản, bàn giao, phê duyệt, khóa hoặc tạo nội dung; không thay đổi Xu hay PayOS."))}</span><a class="portal-button portal-button--primary" href="${safeText(planPath)}">${safeText(uiText("videoRoadmapReceiptUi.open", "Mở kế hoạch video"))}</a></div></section>`;
   }
 
   function renderLongFormRoadmapResult(raw, rawSource, canSaveToVideoPlan) {
@@ -39402,6 +39437,44 @@
     return Boolean(selected && Number(selected.index) === draft.selected_suggestion && selected.title === guide.topic);
   }
 
+  let creativeMotionGuideSelectedNameFrame = null;
+
+  function scheduleCreativeMotionGuideSelectedNames() {
+    if (creativeMotionGuideSelectedNameFrame !== null || typeof window.requestAnimationFrame !== "function") return;
+    creativeMotionGuideSelectedNameFrame = window.requestAnimationFrame(() => {
+      creativeMotionGuideSelectedNameFrame = null;
+      if (normalizePath(window.location.pathname) !== "/video-studio/motion-guide") return;
+      const form = document.querySelector('form[data-portal-action="creative-motion-guide-compose"]');
+      if (!form || form.isConnected === false) return;
+      const canvas = document.createElement("canvas");
+      const context = canvas && typeof canvas.getContext === "function" ? canvas.getContext("2d") : null;
+      if (!context) return;
+      const updates = Array.from(form.querySelectorAll("select")).map((control) => {
+        const field = control.closest(".portal-field");
+        if (!field || control.isConnected === false) return null;
+        const selected = control.selectedOptions && control.selectedOptions[0];
+        const text = selected ? String(selected.textContent || "") : "";
+        const style = window.getComputedStyle(control);
+        context.font = style.font;
+        const arrowBudget = parseFloat(style.fontSize) || 16;
+        const available = Math.max(0, control.clientWidth - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0) - arrowBudget);
+        const needed = Boolean(text && available > 0 && context.measureText(text).width > available);
+        const hint = field.querySelector("[data-creative-motion-guide-selected-name]");
+        return { control, field, text, needed, hint };
+      }).filter(Boolean);
+      updates.forEach(({ control, text, needed, hint }) => {
+        if (!needed) { if (hint) hint.remove(); return; }
+        if (!hint) {
+          hint = document.createElement("small");
+          hint.setAttribute("data-creative-motion-guide-selected-name", control.name);
+          hint.setAttribute("aria-hidden", "true");
+          control.insertAdjacentElement("afterend", hint);
+        }
+        if (hint.textContent !== text) hint.textContent = text;
+      });
+    });
+  }
+
   function synchronizeCreativeMotionGuideForm(form) {
     if (!form || form.getAttribute("data-portal-action") !== "creative-motion-guide-compose") return;
     const topic = form.querySelector("[data-creative-motion-guide-topic-kind]");
@@ -39504,6 +39577,7 @@
     form.dataset.creativeMotionGuideState = flowPending ? "processing" : (stale ? "stale" : (hasGuide ? "fresh" : "draft"));
     document.querySelectorAll("[data-creative-motion-guide-rendered-result]").forEach((surface) => surface.toggleAttribute("data-stale", stale));
     document.querySelectorAll("[data-creative-motion-guide-result-stale]").forEach((surface) => { surface.hidden = !stale; });
+    scheduleCreativeMotionGuideSelectedNames();
   }
 
   function markCreativeMotionGuideDraftEdited(form) {
@@ -41827,6 +41901,10 @@
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     });
     window.addEventListener("resize", closeSidebarAboveMobileBreakpoint);
+    window.addEventListener("resize", scheduleCreativeMotionGuideSelectedNames);
+    if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === "function") {
+      document.fonts.ready.then(scheduleCreativeMotionGuideSelectedNames);
+    }
   }
 
   function bindVideoPreviewPlayer(main) {
