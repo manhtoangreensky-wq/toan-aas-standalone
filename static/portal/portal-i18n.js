@@ -16726,6 +16726,538 @@
     });
   });
 
+  const VIDEO_PLANNING_META_COPY_ROWS = [
+    [
+      "notes.integrationTitle",
+      "Trạng thái tích hợp",
+      "Integration status",
+      "集成状态"
+    ],
+    [
+      "notes.safetyTitle",
+      "Nguyên tắc an toàn",
+      "Safety rules",
+      "安全原则"
+    ],
+    [
+      "motion.description",
+      "Chọn chủ đề, so sánh ba gợi ý, chọn phong cách và nhận hướng dẫn chuyển động bằng văn bản để rà soát — không tạo video.",
+      "Choose a topic, compare three suggestions, select a style and receive text motion directions for review — no video is created.",
+      "选择主题、比较三条建议、选择风格，并获取供检查的文字运动指南，不会创建视频。"
+    ],
+    [
+      "motion.notes.flow",
+      "Quy trình hướng dẫn bằng văn bản gồm: chọn nhóm hoặc nhập chủ đề → xem ba gợi ý → chọn một hướng → chọn phong cách → tạo hướng dẫn. Khi đổi lựa chọn, kết quả cũ được giữ để so sánh và cần tạo lại; không tự chuyển trang hoặc đặt lại biểu mẫu.",
+      "The text-planning flow is: choose a category or enter a topic → view three suggestions → select one direction → choose a style → create the guide. Editing a selection keeps the old result for comparison and marks it for recreation; it does not navigate away or reset the form.",
+      "文字规划流程为：选择类别或输入主题 → 查看三条建议 → 选择一个方向 → 选择风格 → 创建指南。更改选项后会保留旧结果供比较并提示重新创建，不会自动跳转或重置表单。"
+    ],
+    [
+      "motion.notes.boundary",
+      "Công cụ này không thay đổi trạng thái Telegram hoặc trợ lý tự động, không dùng không gian hình ảnh, tải tệp lên, gọi nhà cung cấp, tạo hình ảnh, video hoặc âm thanh, dựng phim, xem trước, tạo tệp đầu ra hay tác vụ, thay đổi Xu hoặc PayOS, tạo tài nguyên, xuất bản hoặc bàn giao.",
+      "This tool does not change Telegram or bot state, use the image workspace, upload files, call providers, generate images, video or audio, render, preview, create output or jobs, change Xu or PayOS, create assets, publish or deliver.",
+      "此工具不会更改Telegram或机器人状态、使用图像工作区、上传文件、调用供应商、生成图像、视频或音频、渲染、预览、创建输出或任务、更改Xu或PayOS、创建资源、发布或交付。"
+    ],
+    [
+      "roadmap.title",
+      "Kế hoạch video dài",
+      "Long-form video roadmap",
+      "长视频规划"
+    ],
+    [
+      "roadmap.description",
+      "Từ chủ đề, thời lượng, phong cách và cấu trúc, lập dàn ý, hồ sơ nhân vật, kế hoạch từng chương và các phần mô tả tạo nội dung cho video dài.",
+      "Turn a topic, duration, style and structure into a reviewable outline, character guide, chapter roadmap and prompt sections for long-form video.",
+      "根据主题、时长、风格和结构，为长视频编写可检查的大纲、角色指南、章节规划和提示词部分。"
+    ],
+    [
+      "roadmap.notes.flow",
+      "Biểu mẫu lập kế hoạch video dài được kiểm tra phiên đăng nhập và mã chống giả mạo. Kết quả chỉ được giữ trong phiên hiện tại; không tạo trạng thái chờ, kế hoạch đang xây, dự án, cảnh hoặc trạng thái khác của trợ lý tự động.",
+      "The long-form planner checks the signed-in session and anti-forgery token. Results remain only in the current session; no pending state, developing plan, project, scene or other bot state is created.",
+      "长视频规划表单会检查登录会话和防伪令牌。结果仅保存在当前会话中，不会创建待处理状态、开发中的计划、项目、场景或其他机器人状态。"
+    ],
+    [
+      "roadmap.notes.boundary",
+      "Không gọi Telegram, trợ lý tự động, cầu nối hoặc nhà cung cấp; không xử lý tệp nguồn, tạo hình ảnh, video, âm thanh, bản dựng, bản xem trước, tệp đầu ra, tác vụ, tài nguyên, xuất bản hoặc bàn giao; không thay đổi ví Xu hay PayOS. Lưu chỉ tạo bản nháp kế hoạch video riêng tư do máy chủ tạo lại.",
+      "No Telegram, bot, bridge or provider is called; no source media is processed; no image, video, audio, render, preview, output, job, asset, publication or delivery is created; and the Xu wallet and PayOS are unchanged. Saving only creates a private video plan draft recomputed by the server.",
+      "不会调用Telegram、机器人、桥接或供应商，不会处理源媒体，创建图像、视频、音频、渲染、预览、输出、任务、资源、发布或交付，也不会更改Xu钱包或PayOS。保存仅创建由服务器重新生成的私有视频计划草稿。"
+    ]
+  ];
+  VIDEO_PLANNING_META_COPY_ROWS.forEach(function (row) {
+    ["vi", "en", "zh"].forEach(function (locale, index) {
+      MESSAGES[locale][`videoPlanningMetaUi.${row[0]}`] = row[index + 1];
+    });
+  });
+
+  const VIDEO_MOTION_FORM_COPY_ROWS = [
+    ["card.prompt", "Mô tả tạo video", "Video prompt", "视频提示词"],
+    ["card.motion", "Chuyển động", "Motion", "运动"],
+    ["card.audio", "Âm thanh", "Audio", "音频"],
+    ["empty.customTitle", "Chủ đề tự nhập không cần bộ gợi ý", "A custom topic does not need suggestions", "自定义主题无需建议集"],
+    ["empty.title", "Chưa có ba gợi ý", "No suggestions yet", "暂无三条建议"],
+    ["empty.customBody", "Nhập chủ đề, chọn phong cách rồi tạo hướng dẫn. Không có thẻ hoặc lựa chọn ngầm nào được tự áp dụng.", "Enter a topic, choose a style and create the guide. No card or hidden selection is applied automatically.", "输入主题、选择风格并创建指南。不会自动应用卡片或隐藏选项。"],
+    ["empty.body", "Chọn nhóm và ngôn ngữ rồi bấm “Tạo 3 gợi ý” để xem một bộ định hướng.", "Choose a category and language, then select “Create 3 suggestions” to view one set of directions.", "选择类别和语言，然后点击“创建3条建议”查看一组方向。"],
+    ["intro.kicker", "Lập kế hoạch chuyển động", "Motion planning", "运动规划"],
+    ["intro.title", "Chọn hướng chuyển động rõ ràng — không tự tạo video.", "Choose a clear motion direction — no video is created automatically.", "选择明确的运动方向，不会自动创建视频。"],
+    ["intro.body", "Chọn nhóm hoặc chủ đề riêng, xem ba gợi ý, chọn một hướng rồi tạo hướng dẫn. Mọi điều chỉnh giữ nguyên biểu mẫu tại chỗ; không quay lại trang trước, không đặt lại ngầm và không gọi nhà cung cấp.", "Choose a category or custom topic, view three suggestions, select one direction and create the guide. Changes keep the form in place without navigating back, silently resetting it or calling a provider.", "选择类别或自定义主题、查看三条建议、选择一个方向并创建指南。调整时表单保持原位，不会返回上一页、暗中重置或调用供应商。"],
+    ["steps.label", "Quy trình hướng dẫn chuyển động", "Motion guide workflow", "运动指南流程"],
+    ["steps.topic", "Chủ đề", "Topic", "主题"],
+    ["steps.suggestions", "Gợi ý", "Suggestions", "建议"],
+    ["steps.style", "Phong cách", "Style", "风格"],
+    ["steps.guide", "Hướng dẫn", "Guide", "指南"],
+    ["form.kicker", "Định hướng sáng tạo", "Creative direction", "创意方向"],
+    ["form.title", "Lập hướng dẫn chuyển động sáng tạo", "Create a creative motion guide", "创建创意运动指南"],
+    ["form.body", "Mỗi bước đều được kiểm tra phiên đăng nhập và mã chống giả mạo. Các lựa chọn chỉ được giữ trong phiên hiện tại; không ghi sang trợ lý tự động, Telegram, bộ nhớ trình duyệt, nhà cung cấp, tác vụ hoặc thanh toán.", "Every step checks the signed-in session and anti-forgery token. Selections remain only in the current session and are not written to the bot, Telegram, browser storage, a provider, jobs or payments.", "每一步都会检查登录会话和防伪令牌。选项仅保存在当前会话中，不会写入机器人、Telegram、浏览器存储、供应商、任务或支付。"],
+    ["field.topic", "Nhóm nội dung", "Content category", "内容类别"],
+    ["field.topicHelp", "Nhóm có sẵn dùng ba gợi ý do máy chủ tạo lại; chủ đề riêng không dùng gợi ý hoặc trạng thái của trợ lý tự động.", "Catalog categories use three suggestions recomputed by the server; custom topics do not reuse suggestions or bot state.", "预设类别使用服务器重新生成的三条建议；自定义主题不会复用建议或机器人状态。"],
+    ["field.language", "Ngôn ngữ hướng dẫn", "Guide language", "指南语言"],
+    ["field.languageHelp", "Hướng dẫn bằng tiếng Việt, tiếng Anh hoặc tiếng Trung đều là văn bản để rà soát.", "Vietnamese, English and Chinese guides are text for review only.", "越南语、英语和中文指南均为仅供检查的文字。"],
+    ["field.custom", "Chủ đề tự nhập", "Custom topic", "自定义主题"],
+    ["field.customPlaceholder", "Ví dụ: giới thiệu quy trình chào đón và hướng dẫn khách hàng mới", "Example: introduce a clear onboarding process for new customers", "例如：介绍清晰的新客户引导流程"],
+    ["field.customHelp", "Không nhập đường dẫn, mã tệp, mã truy cập, chứng từ thanh toán hoặc yêu cầu mô phỏng người hay tác phẩm cụ thể.", "Do not enter URLs, media or file identifiers, access tokens, payment documents or requests to imitate a specific person or work.", "请勿输入网址、媒体或文件标识、访问令牌、支付凭证，或模仿特定人物或作品的请求。"],
+    ["suggest.note", "Bước 1: tạo hoặc làm mới ba gợi ý. Không tự thay nhóm hoặc chọn thẻ thay bạn.", "Step 1: create or refresh three suggestions. The category is not changed and no card is selected for you.", "第1步：创建或刷新三条建议。不会自动更改类别或代您选择卡片。"],
+    ["suggest.create", "Tạo 3 gợi ý", "Create 3 suggestions", "创建3条建议"],
+    ["compare.kicker", "Bước 2 · So sánh", "Step 2 · Compare", "第2步·比较"],
+    ["compare.title", "Ba gợi ý, một lựa chọn rõ ràng", "Three suggestions, one clear choice", "三条建议，一个明确选择"],
+    ["compare.set", "Bộ {count} · {topic}", "Set {count} · {topic}", "第{count}组 · {topic}"],
+    ["compare.empty", "Kết quả chỉ xuất hiện sau khi bạn yêu cầu một bộ gợi ý.", "Results appear only after you request a suggestion set.", "请求建议集后才会显示结果。"],
+    ["compare.refresh", "Đổi sang bộ gợi ý tiếp theo", "Show the next suggestion set", "显示下一组建议"],
+    ["compare.edit", "Chỉnh nhóm / chủ đề", "Edit category / topic", "修改类别／主题"],
+    ["style.kicker", "Bước 3 · Phong cách", "Step 3 · Style", "第3步·风格"],
+    ["style.title", "Chọn phong cách sau khi đã xác định hướng", "Choose a style after selecting a direction", "确定方向后选择风格"],
+    ["style.body", "Đổi phong cách không tự tạo lại hướng dẫn. Nút cuối chỉ sẵn sàng khi có một thẻ đã chọn hoặc chủ đề tự nhập hợp lệ.", "Changing the style does not recreate the guide automatically. The final button is available only with one selected card or a valid custom topic.", "更改风格不会自动重新创建指南。仅在选择了一张卡片或输入有效自定义主题后，最后一个按钮才可用。"],
+    ["style.label", "Phong cách chuyển động", "Motion style", "运动风格"],
+    ["compose.note", "Bước 4: tạo hướng dẫn bằng văn bản từ lựa chọn hiện tại. Máy chủ tạo lại thẻ đã chọn; trình duyệt không gửi tiêu đề hoặc mô tả đã hiển thị.", "Step 4: create text directions from the current selections. The server recomputes the selected card; the browser does not submit rendered titles or prompts.", "第4步：根据当前选项创建文字指南。服务器会重新生成已选卡片；浏览器不会提交已显示的标题或提示词。"],
+    ["compose.submit", "Tạo hướng dẫn chuyển động", "Create motion guide", "创建运动指南"],
+    ["boundary.kicker", "Giới hạn thực hiện", "Execution boundary", "执行边界"],
+    ["boundary.title", "Lập định hướng, không chạy bộ tạo video", "Plan directions without running a video engine", "规划方向，不运行视频引擎"],
+    ["boundary.body", "Hướng dẫn chuyển động sáng tạo chỉ trả mô tả và định hướng biên tập bằng văn bản. Công cụ này không phải bộ lập kế hoạch chuyển động hình ảnh và không dùng không gian hình ảnh.", "The creative motion guide returns prompts and editorial directions as text only. It is not the image motion planner and does not use the image workspace.", "创意运动指南仅返回文字提示词和编辑方向。它不是图像运动规划器，也不会使用图像工作区。"],
+    ["boundary.telegram", "Telegram / trợ lý tự động / cầu nối", "Telegram / bot / bridge", "Telegram／机器人／桥接"],
+    ["boundary.source", "Không gian hình ảnh / tệp nguồn / tải lên", "Image workspace / source media / upload", "图像工作区／源媒体／上传"],
+    ["boundary.provider", "Nhà cung cấp / hình ảnh / video / âm thanh", "Provider / image / video / audio", "供应商／图像／视频／音频"],
+    ["boundary.output", "Dựng phim / xem trước / tệp đầu ra / tác vụ", "Render / preview / output / job", "渲染／预览／输出／任务"],
+    ["boundary.money", "Ví / Xu / PayOS", "Wallet / Xu / PayOS", "钱包／Xu／PayOS"],
+    ["boundary.delivery", "Tài nguyên / xuất bản / bàn giao", "Asset / publication / delivery", "资源／发布／交付"],
+    ["boundary.off", "Không thực hiện", "Not performed", "不执行"],
+    ["scope.kicker", "Phạm vi thực hiện", "Scope", "范围"],
+    ["scope.title", "Giữ quy trình có kiểm soát, không tạo kết quả giả", "Keep the workflow controlled without fabricated results", "控制流程，不伪造结果"],
+    ["scope.body", "Để tạo tệp đa phương tiện, cần dùng quy trình riêng có kiểm tra quyền sở hữu tài nguyên, khả năng cung cấp dịch vụ, xác nhận và nhật ký. Hướng dẫn này không tuyên bố đã thực hiện các bước đó.", "Creating media requires a separate workflow with asset ownership, provider readiness, confirmation and audit checks. This guide does not claim those steps have run.", "创建媒体需要独立流程，并检查资源所有权、供应商就绪状态、确认和审计。本指南不会声称已执行这些步骤。"],
+    ["sync.customDisabled", "Nhập chủ đề tự chọn hợp lệ trước khi tạo hướng dẫn.", "Enter a valid custom topic before creating the guide.", "创建指南前请输入有效的自定义主题。"],
+    ["sync.selectionDisabled", "Tạo rồi chọn một thẻ gợi ý trước khi tạo hướng dẫn.", "Create suggestions and select one card before creating the guide.", "创建指南前请先生成建议并选择一张卡片。"],
+    ["sync.stale", "Chủ đề, thẻ hoặc phong cách đã thay đổi. Hướng dẫn đang hiển thị thuộc lựa chọn trước; hãy tạo lại khi đã sẵn sàng.", "The topic, card or style has changed. The displayed guide belongs to the previous selections; recreate it when ready.", "主题、卡片或风格已更改。当前指南对应之前的选项；准备好后请重新创建。"],
+    ["sync.customSuggestions", "Chủ đề tự nhập không dùng thẻ gợi ý. Các thẻ của nhóm trước được ẩn và không thể được chọn.", "Custom topics do not use suggestion cards. Cards from the previous category are hidden and cannot be selected.", "自定义主题不使用建议卡片。之前类别的卡片会隐藏且无法选择。"],
+    ["sync.changedSuggestions", "Nhóm hoặc ngôn ngữ đã đổi. Các thẻ của bộ trước được ẩn; hãy tạo lại ba gợi ý cho lựa chọn hiện tại.", "The category or language has changed. Previous cards are hidden; recreate three suggestions for the current selections.", "类别或语言已更改。之前的卡片会隐藏；请为当前选项重新创建三条建议。"]
+  ];
+  VIDEO_MOTION_FORM_COPY_ROWS.forEach((row) => {
+    ["vi", "en", "zh"].forEach((locale, index) => {
+      MESSAGES[locale][`videoMotionFormUi.${row[0]}`] = row[index + 1];
+    });
+  });
+
+  const VIDEO_ROADMAP_FORM_COPY_ROWS = [
+    [
+      "option.topic.sales",
+      "Bán hàng / tiếp thị liên kết",
+      "Sales / affiliate marketing",
+      "销售／联盟营销"
+    ],
+    [
+      "option.topic.education",
+      "Giáo dục / hướng dẫn",
+      "Education / tutorial",
+      "教育／教程"
+    ],
+    [
+      "option.topic.story",
+      "Kể chuyện / giải trí",
+      "Storytelling / entertainment",
+      "讲故事／娱乐"
+    ],
+    [
+      "option.topic.custom",
+      "Chủ đề riêng",
+      "Custom topic",
+      "自定义主题"
+    ],
+    [
+      "option.style.professional",
+      "Chuyên nghiệp",
+      "Professional",
+      "专业"
+    ],
+    [
+      "option.style.viral",
+      "Lan truyền / nhịp nhanh",
+      "Viral / fast-paced",
+      "易传播／快节奏"
+    ],
+    [
+      "option.style.cinematic",
+      "Điện ảnh",
+      "Cinematic",
+      "电影感"
+    ],
+    [
+      "option.style.custom",
+      "Phong cách riêng",
+      "Custom style",
+      "自定义风格"
+    ],
+    [
+      "option.structure.guided",
+      "Tự đề xuất theo thời lượng",
+      "Suggest from duration",
+      "根据时长自动建议"
+    ],
+    [
+      "option.structure.chapters",
+      "Chia theo chương",
+      "Divide into chapters",
+      "按章节划分"
+    ],
+    [
+      "option.structure.segments",
+      "Nhiều đoạn dễ cắt",
+      "Easy-to-cut segments",
+      "便于剪辑的多个片段"
+    ],
+    [
+      "option.structure.scenes",
+      "Kế hoạch cảnh rõ ràng",
+      "Clear scene roadmap",
+      "清晰的场景规划"
+    ],
+    [
+      "option.structure.custom",
+      "Cấu trúc riêng",
+      "Custom structure",
+      "自定义结构"
+    ],
+    [
+      "option.platform.youtube",
+      "YouTube",
+      "YouTube",
+      "YouTube"
+    ],
+    [
+      "option.platform.facebook",
+      "Facebook / Watch",
+      "Facebook / Watch",
+      "Facebook／Watch"
+    ],
+    [
+      "option.platform.course",
+      "Khóa học trực tuyến",
+      "Online course",
+      "在线课程"
+    ],
+    [
+      "option.platform.podcast",
+      "Chương trình trò chuyện có hình",
+      "Video podcast",
+      "视频播客"
+    ],
+    [
+      "option.platform.vertical",
+      "Bản dọc chia đoạn",
+      "Segmented vertical version",
+      "分段竖版"
+    ],
+    [
+      "option.platform.custom",
+      "Kênh riêng",
+      "Custom channel",
+      "自定义渠道"
+    ],
+    [
+      "option.language.vi",
+      "Tiếng Việt",
+      "Vietnamese",
+      "越南语"
+    ],
+    [
+      "option.language.en",
+      "Tiếng Anh",
+      "English",
+      "英语"
+    ],
+    [
+      "field.topicCategory",
+      "Nhóm chủ đề",
+      "Topic category",
+      "主题类别"
+    ],
+    [
+      "field.topicCategoryHelp",
+      "Chọn một trong bốn nhóm chủ đề để lập kế hoạch có thể rà soát. Thao tác này không gọi nhà cung cấp trí tuệ nhân tạo hoặc video.",
+      "Choose one of four topic categories to create a reviewable plan. This does not call an AI or video provider.",
+      "从四个主题类别中选择一个，创建可检查的计划。此操作不会调用人工智能或视频供应商。"
+    ],
+    [
+      "field.topic",
+      "Chủ đề / sản phẩm",
+      "Topic / product",
+      "主题／产品"
+    ],
+    [
+      "field.topicPlaceholder",
+      "Ví dụ: hướng dẫn chủ cửa hàng nhỏ xây quy trình xử lý đơn hàng rõ ràng",
+      "Example: help small shop owners build a clear order-handling process",
+      "例如：帮助小店主建立清晰的订单处理流程"
+    ],
+    [
+      "field.topicHelp",
+      "Chỉ nhập nội dung bạn có quyền sử dụng. Không nhập đường dẫn, tệp đa phương tiện, mã truy cập, mã xác thực dùng một lần, thông tin thanh toán, danh tính người khác hoặc yêu cầu mô phỏng người hay thương hiệu khi chưa được phép.",
+      "Enter only content you have rights to use. Do not enter URLs, media, access tokens, one-time passwords, payment information, another person's identity or requests to imitate a person or brand without permission.",
+      "仅输入您有权使用的内容。请勿输入网址、媒体、访问令牌、一次性验证码、支付信息、他人身份，或未经许可模仿人物或品牌的请求。"
+    ],
+    [
+      "field.audience",
+      "Khán giả chính",
+      "Primary audience",
+      "主要受众"
+    ],
+    [
+      "field.audiencePlaceholder",
+      "Ví dụ: chủ cửa hàng trực tuyến muốn giảm việc lặp lại và theo dõi đơn hàng dễ hơn",
+      "Example: online shop owners who want less repetitive work and easier order tracking",
+      "例如：希望减少重复工作并更轻松跟踪订单的网店主"
+    ],
+    [
+      "field.duration",
+      "Thời lượng mục tiêu (phút)",
+      "Target duration (minutes)",
+      "目标时长（分钟）"
+    ],
+    [
+      "field.durationHelp",
+      "Các mức gợi ý là 3 / 5 / 10 / 30 / 60 phút hoặc tùy chỉnh. Ứng dụng nhận 3–120 phút để kế hoạch có giới hạn rõ ràng, dễ rà soát và có thể lưu lại.",
+      "Suggested durations are 3 / 5 / 10 / 30 / 60 minutes or a custom duration. The app accepts 3–120 minutes so the roadmap stays bounded, reviewable and saveable as a plan.",
+      "建议时长为3／5／10／30／60分钟，也可自定义。应用接受3–120分钟，使规划范围明确、便于检查并可保存为计划。"
+    ],
+    [
+      "field.style",
+      "Phong cách",
+      "Style",
+      "风格"
+    ],
+    [
+      "field.customStyle",
+      "Phong cách tùy chỉnh (bắt buộc khi chọn Phong cách riêng)",
+      "Custom style (required when Custom style is selected)",
+      "自定义风格（选择自定义风格时必填）"
+    ],
+    [
+      "field.customStylePlaceholder",
+      "Ví dụ: phong cách tài liệu bình tĩnh, người dẫn thân thiện, nhịp chậm để hướng dẫn",
+      "Example: a calm documentary style, a friendly host and a slow instructional pace",
+      "例如：平静的纪录片风格、亲切的主持人和缓慢的教学节奏"
+    ],
+    [
+      "field.customStyleHelp",
+      "Chỉ là định hướng bằng văn bản để rà soát; không tạo giọng đọc, nhạc, bản dựng hoặc video.",
+      "Text directions for review only; no voice, music, render or video is created.",
+      "仅为供检查的文字方向，不会创建配音、音乐、渲染或视频。"
+    ],
+    [
+      "field.structure",
+      "Cách chia kế hoạch",
+      "Roadmap structure",
+      "规划结构"
+    ],
+    [
+      "field.structureHelp",
+      "Máy chủ giới hạn 3–30 chương để việc lập kế hoạch không trở thành thao tác dựng phim hàng loạt.",
+      "The server limits the roadmap to 3–30 chapters so planning does not become a bulk rendering action.",
+      "服务器将规划限制为3–30章，避免将规划变成批量渲染操作。"
+    ],
+    [
+      "field.customStructure",
+      "Cấu trúc tùy chỉnh (bắt buộc khi chọn Cấu trúc riêng)",
+      "Custom structure (required when Custom structure is selected)",
+      "自定义结构（选择自定义结构时必填）"
+    ],
+    [
+      "field.customStructurePlaceholder",
+      "Ví dụ: 6 chương x 5 phút, mở đầu → minh họa → ví dụ → danh sách kiểm tra → tổng kết → kêu gọi hành động",
+      "Example: 6 chapters x 5 minutes, opening → demonstration → example → checklist → recap → call to action",
+      "例如：6章，每章5分钟，开场→演示→示例→检查清单→总结→行动号召"
+    ],
+    [
+      "field.platform",
+      "Nền tảng đầu ra dự kiến",
+      "Intended output platform",
+      "预期输出平台"
+    ],
+    [
+      "field.language",
+      "Ngôn ngữ kế hoạch",
+      "Roadmap language",
+      "规划语言"
+    ],
+    [
+      "intro.kicker",
+      "Lập kế hoạch video dài",
+      "Long-form video planning",
+      "长视频规划"
+    ],
+    [
+      "intro.title",
+      "Từ chủ đề đến kế hoạch video dài rõ ràng — không tạo video.",
+      "Turn a topic into a clear long-form roadmap — no video is created.",
+      "将主题变成清晰的长视频规划，不会创建视频。"
+    ],
+    [
+      "intro.beforeCode",
+      "Từ quy trình ",
+      "The ",
+      "将"
+    ],
+    [
+      "intro.afterCode",
+      ", lập dàn ý, hồ sơ nhân vật, kế hoạch từng chương và các phần mô tả tạo nội dung cho video dài 3–120 phút. Đây là kế hoạch bằng văn bản để rà soát, không phải quy trình tạo video.",
+      " flow becomes an outline, character guide, chapter roadmap and prompt sections for a 3–120 minute video. This is text planning for review, not a video production runtime.",
+      "流程转换为3–120分钟视频的大纲、角色指南、章节规划和提示词部分。这是供检查的文字规划，并非视频生产运行流程。"
+    ],
+    [
+      "intro.minutes",
+      "Phút được lập kế hoạch",
+      "Planned minutes",
+      "规划分钟数"
+    ],
+    [
+      "intro.chapters",
+      "Chương để rà soát",
+      "Chapters for review",
+      "供检查的章节"
+    ],
+    [
+      "intro.calls",
+      "Lần gọi nhà cung cấp / tạo tệp đa phương tiện",
+      "Provider / media calls",
+      "供应商／媒体调用"
+    ],
+    [
+      "form.kicker",
+      "Mô tả video dài",
+      "Long-form brief",
+      "长视频描述"
+    ],
+    [
+      "form.title",
+      "Lập kế hoạch trước khi sản xuất",
+      "Plan the roadmap before production",
+      "制作前先规划"
+    ],
+    [
+      "form.body",
+      "Máy chủ kiểm tra phiên đăng nhập và mã chống giả mạo rồi áp dụng mẫu lập kế hoạch cố định. Mô tả và kết quả chỉ được giữ trong phiên hiện tại; không ghi vào Telegram, trạng thái, dự án hoặc cảnh của trợ lý tự động, nhà cung cấp, tác vụ, ví hay thanh toán.",
+      "The server checks the signed-in session and anti-forgery token, then applies a deterministic planning template. Briefs and results remain only in the current session; they are not written to Telegram, bot state, bot projects or scenes, providers, jobs, wallets or payments.",
+      "服务器检查登录会话和防伪令牌后，应用确定性的规划模板。描述和结果仅保存在当前会话中，不会写入Telegram、机器人状态、机器人项目或场景、供应商、任务、钱包或支付。"
+    ],
+    [
+      "form.note",
+      "Nút này chỉ lập dàn ý, chương và mô tả bằng văn bản để rà soát; không gửi yêu cầu tạo hình ảnh, video, âm thanh, tài nguyên, tác vụ hoặc thanh toán.",
+      "This button creates outline, chapter and prompt text for review only; it does not request images, video, audio, assets, jobs or payments.",
+      "此按钮仅创建供检查的大纲、章节和提示词文字，不会请求创建图像、视频、音频、资源、任务或支付。"
+    ],
+    [
+      "form.submit",
+      "Tạo kế hoạch video dài",
+      "Create long-form roadmap",
+      "创建长视频规划"
+    ],
+    [
+      "boundary.kicker",
+      "Giới hạn thực hiện",
+      "Execution boundary",
+      "执行边界"
+    ],
+    [
+      "boundary.title",
+      "Lập kế hoạch, không chạy bộ tạo video dài",
+      "Plan a roadmap without running long-video production",
+      "编写规划，不运行长视频生产流程"
+    ],
+    [
+      "boundary.body",
+      "Công cụ này không gọi Telegram, trợ lý tự động hoặc cầu nối; không tạo trạng thái chờ, dự án hoặc cảnh của trợ lý tự động; không xử lý hay tải tệp nguồn lên, gọi nhà cung cấp, dựng phim, xem trước, tạo tệp đầu ra, tác vụ, tài nguyên, xuất bản hoặc bàn giao; không thay đổi Xu hay PayOS.",
+      "This tool does not call Telegram, a bot or bridge; create pending bot state, bot projects or scenes; process or upload source media; call providers; render, preview, create output, jobs or assets; publish or deliver; or change Xu or PayOS.",
+      "此工具不会调用Telegram、机器人或桥接，创建机器人待处理状态、项目或场景，处理或上传源媒体，调用供应商，渲染、预览、创建输出、任务或资源，发布、交付，或更改Xu或PayOS。"
+    ],
+    [
+      "boundary.telegram",
+      "Telegram / trợ lý tự động / cầu nối",
+      "Telegram / bot / bridge",
+      "Telegram／机器人／桥接"
+    ],
+    [
+      "boundary.botState",
+      "Dự án / trạng thái chờ của trợ lý tự động",
+      "Bot project / pending state",
+      "机器人项目／待处理状态"
+    ],
+    [
+      "boundary.source",
+      "Tệp nguồn / tải lên",
+      "Source media / upload",
+      "源媒体／上传"
+    ],
+    [
+      "boundary.provider",
+      "Mô hình / nhà cung cấp",
+      "Model / provider",
+      "模型／供应商"
+    ],
+    [
+      "boundary.output",
+      "Dựng phim / xem trước / tệp đầu ra",
+      "Render / preview / output",
+      "渲染／预览／输出"
+    ],
+    [
+      "boundary.money",
+      "Tác vụ / ví / thanh toán",
+      "Job / wallet / payment",
+      "任务／钱包／支付"
+    ],
+    [
+      "boundary.delivery",
+      "Tài nguyên / xuất bản / bàn giao",
+      "Asset / publication / delivery",
+      "资源／发布／交付"
+    ],
+    [
+      "boundary.off",
+      "Không thực hiện",
+      "Not performed",
+      "不执行"
+    ],
+    [
+      "scope.kicker",
+      "Phạm vi thực hiện",
+      "Scope",
+      "范围"
+    ],
+    [
+      "scope.title",
+      "Lập kế hoạch trước, thực hiện theo quy trình riêng sau",
+      "Plan first, execute later under a separate contract",
+      "先规划，再按独立约定执行"
+    ],
+    [
+      "scope.body",
+      "Dùng kế hoạch để kiểm tra trình tự, nhận định, quyền sử dụng, sự đồng ý và an toàn thương hiệu. Khi cần lịch sử phiên bản, xác nhận lưu thành kế hoạch video riêng; thao tác này cũng không dựng phim hoặc tạo tệp đa phương tiện.",
+      "Use the roadmap to check sequence, claims, usage rights, consent and brand safety. When version history is needed, confirm saving it as a separate video plan; that action does not render or create media either.",
+      "使用规划检查顺序、声明、使用权、同意和品牌安全。需要版本历史时，可确认保存为独立视频计划；此操作也不会渲染或创建媒体。"
+    ]
+  ];
+
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    VIDEO_ROADMAP_FORM_COPY_ROWS.forEach((row) => {
+      MESSAGES[locale][`videoRoadmapFormUi.${row[0]}`] = row[index + 1];
+    });
+  });
+
   const VOICE_STUDIO_UI_COPY_ROWS = [
     ["feedback.filtered","Đã áp dụng bộ lọc.","Filters applied.","已应用筛选条件。"],
     ["feedback.all","Đã hiển thị tất cả hồ sơ.","Showing all profiles.","已显示全部档案。"],

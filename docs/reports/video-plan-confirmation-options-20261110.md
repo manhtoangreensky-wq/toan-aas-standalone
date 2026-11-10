@@ -103,9 +103,18 @@ BRANCH_FAILURES=the same historical expectation; NEW_FAILURES=0 in comparable ga
 PROTECTED_COMPARATORS=backend/auth/Bot/route-engine/provider/wallet/PayOS/schema/
 ENV/deployment workflow unchanged; option scalars/actions/guards/catalog retained.
 PROVIDER_CALLS=0; WALLET_MUTATIONS=0; PRODUCTION_DATA_MUTATIONS=0.
-DEPLOY=NO; signed production LIVE_PASS=NOT_TESTED; LESSON_CANDIDATE=NONE.
+CI=42758216447 SUCCESS (Verify and Authenticated QA).
+MERGE=PR705, SHA3e6732446a89ce84ddc90711294b6e504bc593b8.
+DEPLOY=42759733192 SUCCESS; fresh VPS HEAD equals the merge; Bot/Web/nginx active
+and health payload valid. Four public HTTPS app assets match canonical committed
+bytes exactly. Signed production LIVE_PASS=NOT_TESTED; LESSON_CANDIDATE=NONE.
 HEAD_SHA=873fae6e9a2d2f9f030c917b5ac82c1ba3eac10b (reviewed content).
 FILES_CHANGED=4 application files;1 CI step extension;5 new focused test files
 and1 prior catalog-test scope update;9 scoped operational/tester/ledger documents.
 Final metadata HEAD and CI/runtime SHA are separate delivery evidence; the
 reviewed content commit is not itself a claim of deployment.
+
+Delivery evidence: Issue #689 comment6759554668 and PR705 comment6759555021.
+CI artifact IDs13737115541(browser) and13737370101(authenticated). This source
+document was reconciled after delivery; the next documentation update is not a
+separate application deployment. Follow-up outer-form batch remains independent.

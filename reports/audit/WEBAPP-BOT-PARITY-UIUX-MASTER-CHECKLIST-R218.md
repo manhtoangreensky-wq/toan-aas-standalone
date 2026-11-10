@@ -1277,13 +1277,22 @@ MERGE/DEPLOY/LIVE không suy từ tests. Trạng thái delivery theo PR/checkpoi
 - [x] VIDEO-MOTION-OPTIONS-LOCALE local:19nhãn, font16mobile, khung/contrast
   và tên đang chọn có dòng đầy đủ chỉ khi cần;24/24native,20helper,332focused,
   2256/2256fullNode. Giữ9335mục dịch cũ/locale và69khóa kết quả đã phát hành.
-- [ ] VIDEO-PLAN-CONFIRMATION-OPTIONS delivery: chờ CI/merge/deploy/runtime/asset
-  đúng candidate. Source và local acceptance không thay signed production.
+- [x] VIDEO-PLAN-CONFIRMATION-OPTIONS delivery: PR705, CI42758216447,
+  deploy42759733192 đều đạt; VPS3e673244,3dịch vụ active,4asset HTTPS khớp byte.
+  Signed production interaction vẫn riêng, không suy LIVE từ source/CI/asset.
 - [ ] Lifecycle follow-up: một lần chủ đề rỗng chưa xác định nguyên nhân,
   không tái hiện trong12ca trace cuối; hai vị trí pre-click bị navbar che tâm
   nhưng click thường mở được. Không coi là đã sửa hoặc vô hại.
 - [ ] Next: biểu mẫu/lựa chọn/metadata bên ngoài hai kết quả còn lẫn ngôn ngữ;
   audit12render đã tái hiện, không đóng whole-route locale từ69khóa kết quả.
+  Ba phiếu outer-form đã giao độc lập; nghiệm thu gộp theo spec
+  `docs/superpowers/specs/2026-11-10-video-outer-form-locale.md`, baseline15ca
+  có6protected đạt/9localeRED. Không trộn vào PR705 đã phát hành.
+- [x] VIDEO-OUTER-FORM local:132khóa/9361giá trị cũ giữ;24renderer,2280Node
+  trước prerequisite,9sessionstamp+192integrationaffected;24nativeaccepted
+  dùng18giữ+6sửa. Actual3suggestionsPOST/card, dark/roadmap/copy/guards giữ.
+- [ ] VIDEO-OUTER-FORM delivery: CI/merge/deploy/runtime/asset còn mở; không
+  suy signedLIVE từ local. Source sessionsnapshotkhông đổi authAPI/server.
 
 Evidence và giới hạn: `docs/reports/video-planning-result-locale-20261110.md`,
 spec cùng ngày và `KIEM-THU/PHIEN-VIDEO-RESULT-LOCALE-20261110.md`.

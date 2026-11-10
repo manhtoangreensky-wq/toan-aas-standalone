@@ -90,6 +90,14 @@ hoặc gom các task đã xong để kiểm tra chung một lần, tránh dùng 
   toàn bộ kiểm tra local. Dùng các cổng tối thiểu đã định, không suy LIVE từ CI.
 - Tiến trình đang chạy được theo dõi bằng handle/log thật; không mở thêm model
   chỉ để hỏi lại trạng thái hoặc kiểm tra cùng một phần chưa đổi.
+- Runner giao diện mới phải qua một ca đại diện trước khi mở matrix. Khi gặp
+  lỗi chặn chung hoặc timeout chưa phân loại, dừng ở ca đầu và lưu witness;
+  không lặp cùng lỗi qua mọi locale/viewport. Sửa bộ chạy chỉ khi đã chứng minh
+  nguyên nhân thuộc harness, không ép thao tác hay giả phản hồi để đạt.
+- Phiếu CSS phải ghi cả quy tắc đang thắng trong cascade (selector, theme,
+  priority, nền thực tế), không chỉ màu đích; phiếu dữ liệu phải kèm đúng cấu
+  trúc công khai đang được consumer đọc. Tránh giao thiếu context rồi nghiệm
+  thu lại nhiều vòng. Việc này là trách nhiệm điều phối, không tính lỗi thợ.
 
 Đây là quy tắc điều phối trong dự án theo lệnh Owner, không tự sửa skill hay
 thăng cấp thành luật toàn cục. Các chốt ENV/secret, dữ liệu, provider, ví và

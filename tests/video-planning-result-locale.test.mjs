@@ -326,7 +326,8 @@ for (const locale of locales) {
     const result = rendered.get(locale + ':motion:selected');
     const original = Object.entries(result.messages[locale])
       .filter(([key]) => !key.startsWith('videoMotionResultUi.') && !key.startsWith('videoRoadmapResultUi.')
-        && !key.startsWith('videoMotionOptionsUi.') && !key.startsWith('videoRoadmapReceiptUi.'))
+        && !key.startsWith('videoMotionOptionsUi.') && !key.startsWith('videoRoadmapReceiptUi.')
+        && !key.startsWith('videoMotionFormUi.') && !key.startsWith('videoRoadmapFormUi.') && !key.startsWith('videoPlanningMetaUi.'))
       .sort(([a], [b]) => a.localeCompare(b));
     assert.equal(original.length, 9266);
     assert.equal(crypto.createHash('sha256').update(JSON.stringify(original)).digest('hex'), catalogBaseline[locale]);

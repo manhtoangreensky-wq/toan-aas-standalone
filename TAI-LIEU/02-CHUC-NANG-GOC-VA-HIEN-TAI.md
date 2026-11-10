@@ -1625,3 +1625,15 @@ Nguồn gốc chức năng vẫn là các contract long-form/motion đã dẫn �
 
 Hai quan sát nhập liệu/che nút còn được giữ trong receipt; không dùng kết quả
 đạt hiện tại để gọi chúng đã sửa. Signed production/device và motion vẫn riêng.
+
+## Đối chiếu biểu mẫu video — 10/11/2026
+
+| Trước | Candidate | Bằng chứng/giới hạn |
+|---|---|---|
+| Biểu mẫu/card/metadata lẫn chữ Việt/Anh/Trung |132khóa chữ cố định theo locale; chữ khách/máy chủ và protocol code giữ nguyên |24renderer, source đảo ngược đúng scope,9361keycũ giữ |
+| UI bật gợi ý nhưng requestfence đọc account.id không có trong phản hồi trình duyệt |Dùng dấu phiên riêng từ dữ liệu phiên hiện hành đã có, giữ toàn bộ chốt epoch/tuyến/phiên |9handler faithful-no-id+clicknative3thẻ; không đổi authAPI |
+| Roadmap mobile15px, nhãn/ghi chú sáng mờ; motion cảnh báo bị!importantghi đè |Ba rule roadmap và hai rule motion sáng giới hạn đúng form |24nativeaccepted:18giữ+6sửa; không đổi dark/layout/option/payload |
+
+Các định nghĩa gốc trong renderer và contractprivate-route vẫn còn dùng; sai ở
+cách gắn chữ cố định/ownershipstatephíaUI, không phải đổi chức năng lập kế hoạch
+thành tạo video. Density, toàn ứng dụng, authlifecycle vàmotion cuối vẫn mở.

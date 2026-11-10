@@ -55,7 +55,8 @@ def test_creative_motion_guide_is_a_private_native_route_not_image_motion_or_pwa
     shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
     assert '"/video-studio/motion-guide"' not in shell
     assert "Image Motion Planner" in PORTAL
-    assert "không là Image Motion Planner" in PORTAL
+    assert 'uiText("videoMotionFormUi.boundary.body",' in PORTAL
+    assert "không phải bộ lập kế hoạch chuyển động hình ảnh" in PORTAL
 
 
 def test_creative_motion_guide_rejects_cross_mode_custom_data_without_erasing_the_draft() -> None:
@@ -132,7 +133,8 @@ def test_creative_motion_guide_keeps_stale_cards_and_runtime_out_of_the_product_
     sync = _portal_form_sync()
     assert "data-creative-motion-guide-suggestions-stale" in sync
     assert "suggestionCards.hidden = staleSuggestions;" in sync
-    assert "Các card của bộ trước được ẩn" in sync
+    assert 'uiText("videoMotionFormUi.sync.changedSuggestions",' in sync
+    assert "Các thẻ của bộ trước được ẩn" in sync
     assert "Its 23 emitted `motion|...` literals" in MIGRATION_CONTRACT
     assert "does not inspect/upload source media" in MIGRATION_CONTRACT
 
