@@ -1265,16 +1265,29 @@ MERGE/DEPLOY/LIVE không suy từ tests. Trạng thái delivery theo PR/checkpoi
   cho mô tả từng chương ở <=620px; ca 390px từ sáu ô tràn về 0. Native cuối
   24/24 result + 24/24 wrap đạt, 42 tổ hợp khác nhau; không page error, request
   ngoài hoặc ghi sản phẩm. Chuỗi dài và xuống dòng gốc được giữ ở 12 ca mobile.
-- [ ] RESULT-LOCALE-VIDEO-PLANNING delivery: CI đúng HEAD, merge, deploy,
-  runtime và asset cần bằng chứng riêng; receipt local không thay signed LIVE.
+- [x] RESULT-LOCALE-VIDEO-PLANNING delivery: PR704 merge/deploy, CI42668319118
+  đạt, deploy42670123474; runtime b5410b5e,3dịch vụ active và3tệp HTTPS khớp
+  đúng committed bytes. Signed production interaction vẫn riêng, không suy LIVE.
 - [x] AUTH anonymous bounded: sáu route x390/1440 có12/12 đúng chính sách;
   helper safeReturnPath thật22/22; không protected flash được quan sát. Chưa
   đóng signed hydration/auth lifecycle và không suy /studio/ từ /studio.
-- [ ] Next: xác nhận đã lưu long-form bị chuẩn hóa hai lần;3/3 source-render
-  không hiện dù phản hồi31khóa hợp lệ. Giữ guard dữ liệu, không đổi backend.
+- [x] VIDEO-ROADMAP-SAVE-RECEIPT local: sửa đúng projection/transport handoff
+  và false-positive của câu cấm chuẩn; actual create/save/read-back/open12/12,
+  120FormData snapshots,12kếhoạch/36cảnh trongDBtạm; backend/auth/tiền giữ nguyên.
+- [x] VIDEO-MOTION-OPTIONS-LOCALE local:19nhãn, font16mobile, khung/contrast
+  và tên đang chọn có dòng đầy đủ chỉ khi cần;24/24native,20helper,332focused,
+  2256/2256fullNode. Giữ9335mục dịch cũ/locale và69khóa kết quả đã phát hành.
+- [ ] VIDEO-PLAN-CONFIRMATION-OPTIONS delivery: chờ CI/merge/deploy/runtime/asset
+  đúng candidate. Source và local acceptance không thay signed production.
+- [ ] Lifecycle follow-up: một lần chủ đề rỗng chưa xác định nguyên nhân,
+  không tái hiện trong12ca trace cuối; hai vị trí pre-click bị navbar che tâm
+  nhưng click thường mở được. Không coi là đã sửa hoặc vô hại.
 - [ ] Next: biểu mẫu/lựa chọn/metadata bên ngoài hai kết quả còn lẫn ngôn ngữ;
   audit12render đã tái hiện, không đóng whole-route locale từ69khóa kết quả.
 
 Evidence và giới hạn: `docs/reports/video-planning-result-locale-20261110.md`,
 spec cùng ngày và `KIEM-THU/PHIEN-VIDEO-RESULT-LOCALE-20261110.md`.
 Nhóm responsive/keyboard/auth signed và M-FINAL-01..06 ở trên vẫn mở.
+Evidence đơn vị kế tiếp: `docs/reports/video-plan-confirmation-options-20261110.md`
+và `KIEM-THU/PHIEN-VIDEO-PLAN-CONFIRMATION-20261110.md`. Áp dụng quy tắc Owner
+nghiệm thu một lượt trên mã ổn định, gom task hoàn tất; không lặp trên mã không đổi.

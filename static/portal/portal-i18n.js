@@ -16648,6 +16648,84 @@
     });
   });
 
+  const VIDEO_MOTION_OPTIONS_COPY_ROWS = [
+    ["topic.product", "Sản phẩm / quảng cáo", "Product / advertising", "产品／广告"],
+    ["topic.affiliate", "Tiếp thị liên kết / TikTok Shop", "Affiliate marketing / TikTok Shop", "联盟营销／TikTok Shop"],
+    ["topic.ai_tool", "Công cụ trí tuệ nhân tạo / phần mềm", "AI tools / software", "人工智能工具／软件"],
+    ["topic.place", "Địa điểm / không gian", "Place / space", "地点／空间"],
+    ["topic.fashion", "Thời trang / lối sống", "Fashion / lifestyle", "时尚／生活方式"],
+    ["topic.food", "Ẩm thực / nhà hàng / đồ uống", "Food / restaurant / drinks", "美食／餐厅／饮品"],
+    ["topic.education", "Giáo dục / hướng dẫn", "Education / tutorial", "教育／教程"],
+    ["topic.story", "Câu chuyện điện ảnh", "Cinematic story", "电影感故事"],
+    ["topic.custom", "Tự nhập chủ đề", "Enter a custom topic", "输入自定义主题"],
+    ["style.cinematic", "Điện ảnh", "Cinematic", "电影感"],
+    ["style.tiktok", "TikTok / Reels nhịp nhanh", "Fast-paced TikTok / Reels", "快节奏TikTok／Reels"],
+    ["style.tutorial", "Hướng dẫn từng bước", "Step-by-step tutorial", "分步教程"],
+    ["style.ads", "Quảng cáo bán hàng", "Sales advertisement", "销售广告"],
+    ["style.fpv", "Góc nhìn thứ nhất / chuyển động thiết bị bay", "First-person view / drone movement", "第一人称视角／无人机运动"],
+    ["style.reveal", "Giới thiệu sản phẩm ba chiều", "3D product reveal", "三维产品展示"],
+    ["style.ugc", "Nội dung người dùng đời thường", "Everyday user-generated content", "日常用户创作内容"],
+    ["language.vi", "Tiếng Việt", "Vietnamese", "越南语"],
+    ["language.en", "Tiếng Anh", "English", "英语"],
+    ["language.zh", "Tiếng Trung giản thể", "Simplified Chinese", "简体中文"]
+  ];
+
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    VIDEO_MOTION_OPTIONS_COPY_ROWS.forEach((row) => {
+      MESSAGES[locale][`videoMotionOptionsUi.${row[0]}`] = row[index + 1];
+    });
+  });
+
+  const VIDEO_ROADMAP_RECEIPT_COPY_ROWS = [
+    [
+      "kicker",
+      "Không gian kế hoạch video riêng tư",
+      "Private video planning workspace",
+      "私有视频规划工作区"
+    ],
+    [
+      "title",
+      "Đã lưu bản nháp kế hoạch video dài",
+      "Long-form video plan draft saved",
+      "已保存长视频计划草稿"
+    ],
+    [
+      "chapters",
+      "chương",
+      "chapters",
+      "章"
+    ],
+    [
+      "revision",
+      "phiên bản",
+      "revision",
+      "版本"
+    ],
+    [
+      "body",
+      "Xác nhận lưu không giữ chủ đề, dàn ý, hồ sơ nhân vật, chương hoặc mô tả trong trình duyệt.",
+      "The save receipt does not retain topics, outlines, character guides, chapters or prompts in the browser.",
+      "保存确认不会在浏览器中保留主题、大纲、角色指南、章节或提示词。"
+    ],
+    [
+      "note",
+      "Kế hoạch là bản ghi riêng tư của tài khoản và có thể biên tập. Không tạo trạng thái chờ trên Telegram, gọi trợ lý tự động hoặc nhà cung cấp, tạo tệp đa phương tiện, bản xem trước, tệp đầu ra, tác vụ, tài nguyên, xuất bản, bàn giao, phê duyệt, khóa hoặc tạo nội dung; không thay đổi Xu hay PayOS.",
+      "The plan is a private, editable account-owned record. Saving does not create pending Telegram state, call a bot or provider, create media, previews, output, jobs or assets, publish, deliver, approve, lock or generate content, or change Xu or PayOS.",
+      "该计划是账户私有且可编辑的记录。保存不会创建Telegram待处理状态、调用机器人或供应商、创建媒体、预览、输出、任务或资源、发布、交付、审批、锁定或生成内容，也不会更改Xu或PayOS。"
+    ],
+    [
+      "open",
+      "Mở kế hoạch video",
+      "Open video plan",
+      "打开视频计划"
+    ]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    VIDEO_ROADMAP_RECEIPT_COPY_ROWS.forEach((row) => {
+      MESSAGES[locale][`videoRoadmapReceiptUi.${row[0]}`] = row[index + 1];
+    });
+  });
+
   const VOICE_STUDIO_UI_COPY_ROWS = [
     ["feedback.filtered","Đã áp dụng bộ lọc.","Filters applied.","已应用筛选条件。"],
     ["feedback.all","Đã hiển thị tất cả hồ sơ.","Showing all profiles.","已显示全部档案。"],

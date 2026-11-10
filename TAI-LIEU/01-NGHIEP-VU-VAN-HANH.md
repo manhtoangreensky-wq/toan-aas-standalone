@@ -2390,3 +2390,17 @@ quyền, điều kiện khớp nguồn và thao tác lưu giữ nguyên. Không 
 48 lượt trình duyệt đạt; mô tả từng chương đã xuống dòng đúng trên điện thoại.
 Candidate còn chờ CI và phát hành; chưa suy thành LIVE.
 [Bằng chứng và giới hạn](../docs/reports/video-planning-result-locale-20261110.md).
+
+## Xác nhận lưu và lựa chọn video — candidate 10/11/2026
+
+Kế hoạch video dài đã qua luồng QA thật tạo, xác nhận, lưu, đọc lại và mở đúng
+kế hoạch:12/12cấu hình,12kếhoạch/36cảnh trongDBtạm. Giao diện giữ phản hồi đã
+kiểm tra qua ranh giới chuẩn hóa đúng một lần; không thay API lưu hoặc quyền.
+Câu cấm an toàn cố định của máy chủ không còn tự chặn kết quả hợp lệ, nhưng
+đầu vào và phản hồi nguy hiểm vẫn bị kiểm tra.
+
+19lựa chọn chuyển động và7nhãn xác nhận dùng VI/EN/ZH; ô chọn nằm trong khung,
+font chỉnh sửa mobile16px, tên dài có dòng đầy đủ chỉ khi cần. Native24/24,
+Node2256/2256 và focused332/332 đạt. Đây là candidate chờ CI/phát hành, không
+phải bằng chứng production hoặc toàn ứng dụng đã hoàn tất.
+[Receipt và các quan sát còn mở](../docs/reports/video-plan-confirmation-options-20261110.md).

@@ -8461,7 +8461,7 @@
     });
     const safety = longFormRoadmapSafetyError(
       roadmap.title, roadmap.topic, roadmap.audience, roadmap.style_label, roadmap.structure, roadmap.audio_direction,
-      roadmap.caption, roadmap.cta, ...(roadmap.outline || []), ...(roadmap.character_bible || []),
+      roadmap.caption, roadmap.cta, ...(roadmap.outline || []), ...(characterBible || []).filter((item) => item !== "Guard: chỉ dùng người, thương hiệu, giọng nói và nguồn tham chiếu có quyền; không mô phỏng người được nhận diện."),
       ...chapters.flatMap((item) => Object.values(item || {})), ...(roadmap.review_before_use || [])
     );
     return Boolean(
@@ -30749,7 +30749,7 @@
           if (result.status !== "draft") throw new Error("Máy chủ chưa xác nhận Video Plan Draft từ Long-form Roadmap.");
           const receipt = longFormRoadmapPlanSaveReceipt(result.data);
           if (!receipt) throw new Error("Máy chủ chưa trả receipt Video Plan content-free và đúng ranh giới an toàn.");
-          merge({ longFormRoadmapSaveReceipt: receipt });
+          merge({ longFormRoadmapSaveReceipt: result.data });
           toast(result.message || "Đã lưu Long-form Roadmap thành Video Plan Draft riêng tư.");
         } catch (error) {
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
