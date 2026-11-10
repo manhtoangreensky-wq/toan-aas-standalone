@@ -23609,3 +23609,58 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-cinematic-concept form[
 html:not([data-portal-theme="dark"]) .portal-page.portal-cinematic-concept form[data-portal-action="reference-format-planner-compose"] :is(.portal-field > small, .portal-form-note) {
   color: var(--portal-muted);
 }
+
+/* Saved-plan supporting text and content-first editing layout. */
+.portal-page.portal-video-studio-detail :is(.portal-form-note, small) {
+  color: var(--portal-muted);
+}
+.portal-page:is(.portal-video-studio, .portal-video-studio-detail) .portal-hero .portal-eyebrow {
+  display: none;
+}
+.portal-page.portal-video-studio .portal-video-studio-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+.portal-page.portal-video-studio-detail .portal-video-studio-detail-summary > dl {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px 24px;
+}
+.portal-page.portal-video-studio-detail .portal-video-studio-detail-summary > dl > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.portal-page.portal-video-studio-detail .portal-video-studio-detail-summary > dl > div > dt {
+  color: var(--portal-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.portal-page.portal-video-studio-detail .portal-video-studio-detail-summary > dl > div > dd {
+  margin: 0;
+  color: var(--portal-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Complete light semantic roles and readable mobile saved-plan controls. */
+html:not([data-portal-theme="dark"]) .portal-page:is(.portal-video-studio, .portal-video-studio-detail) :is(.portal-field > label, .portal-field > span:not(.portal-field-help), .portal-video-runtime-grid strong, .portal-video-scene-history > strong, .portal-video-version-list strong, .portal-video-studio-events strong) {
+  color: var(--portal-ink);
+}
+html:not([data-portal-theme="dark"]) .portal-page:is(.portal-video-studio, .portal-video-studio-detail) :is(.portal-form-note, .portal-field-help, small, .portal-video-plan-meta span, .portal-video-scene-meta span, .portal-video-scene-history > div, .portal-video-scene-history em, .portal-video-version-list p) {
+  color: var(--portal-muted);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-video-studio-detail .portal-video-runtime-grid > div {
+  border-color: var(--portal-border);
+  background: var(--portal-surface-light);
+}
+@media (max-width: 620px) {
+  .portal-page:is(.portal-video-studio, .portal-video-studio-detail) :is(input:not([type="hidden"]), select, textarea) {
+    font-size: 16px;
+  }
+}

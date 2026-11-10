@@ -155,11 +155,14 @@ for (const locale of ['vi', 'en', 'zh']) {
   }
 }
 
+const removedPresentationKeys = new Set(['intro.description','create.description','boundary.title',
+  'boundary.description','boundary.generation','boundary.render','boundary.delivery']);
 for (const expected of expectedVI) {
-  test('VI renders the approved literal: ' + expected.key, () => {
+  test('VI retains approved catalogue and presentation: ' + expected.key, () => {
     const state = expected.key === 'access.description' ? 'guarded' : 'ready-empty';
     const result = rendered.get('vi:' + state);
     assert.equal(result.messages.vi['videoStudioUi.' + expected.key], expected.text);
-    assert.ok(result.text.includes(expected.text), 'The literal must be visible in the real route renderer');
+    assert.equal(result.text.includes(expected.text), !removedPresentationKeys.has(expected.key),
+      'Useful literals stay visible; explicitly removed boilerplate stays absent');
   });
 }

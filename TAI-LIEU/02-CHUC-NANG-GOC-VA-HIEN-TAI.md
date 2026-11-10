@@ -1782,3 +1782,20 @@ Nguồn đối chiếu: hai converter tại BASE7ef871e3, không phải tính n�
 Không rewrite records cũ, không diễn giải việc lưu kế hoạch là đã tạo tệp.
 Detail UI labels/tags,11giới hạn title cũ, các planner khác và full-goal gates
 vẫn mở. Nguồn case chuẩn và phiên Tester SPC được thêm trước push.
+
+## UI kế hoạch đã lưu — đối chiếu 11/11/2026
+
+NguồnBASE652af67d:5renderer vàUUIDpage.section,scopedthemeCSS; khôngengine/APIchange.
+
+|Trước|Hành vi mới trong code|Bằng chứng/giới hạn|
+|---|---|---|
+|Intro/counter/boundary vàtechnicalparagraphs cheeditor|Bỏ đúng markup tĩnh,khôngbỏform/control/history/guard|48views/1392interactiveattrsparity|
+|3summaryfacts là3ô106px|Facts inline/wrap,gọn nhưng đủ trạng thái/revision/scenecount|320actualmax54px|
+|Rawsystemtagchips trộn thẻ khách|Finite known-origin metadata decoration filtered,custom/unknown/rawinputs preserved|Tagcases3locale,0contextmutation|
+|Nhãn sáng trênwhite/mobile15px/runtimegraytiles|Scopelabel/support/surface roles dùngtokens,mobile16px|2718samplesmin5.3313,54aggregateviews|
+|UUIDsectionrawEnglish ởbreadcrumb|Existingpage.titlelookup cho displayleaf|3localeRED->GREEN,6actualheaders|
+|DuplicatefieldIDs làm label sai control|Khôngsửa lén trongclutterpatch; namespace next|9BASEduplicateIDgroups;khôngclaimwholeAX|
+
+API/names/actions/confirmations/readonly/archived/clientdata giữ nguyên; không
+migrate/cậpnhật productionrecords. Rawtagediting/oldrecords/title/stale-retry/
+auth/device/signedLIVE/motion-last vẫn thuộcfullgoal,khôngđóng bởiđợtUI này.

@@ -12,6 +12,13 @@ const studioStart = portalSource.indexOf("  const VIDEO_STUDIO_FORMATS");
 const studioEnd = portalSource.indexOf("\n  // Image Creative Studio", studioStart);
 assert.ok(studioStart > 0 && studioEnd > studioStart, "Video Studio source boundary exists");
 const studioSource = portalSource.slice(studioStart, studioEnd);
+const tagChoiceSource = ['IMAGE_MOTION_STYLES','IMAGE_MOTION_MOTIONS','IMAGE_MOTION_MUSIC',
+  'REFERENCE_FORMAT_DIRECTIONS','REFERENCE_FORMAT_PLATFORMS','REFERENCE_FORMAT_GOALS','REFERENCE_FORMAT_TONES']
+  .map(name => {
+    const declaration = portalSource.match(new RegExp('^  const ' + name + ' = new Set\\([^\\n]+\\);$', 'm'));
+    assert.ok(declaration, 'Actual tag-choice dependency exists: ' + name);
+    return declaration[0];
+  }).join('\n');
 const hubStart = portalSource.indexOf("  function renderVideoHub");
 const hubEnd = portalSource.indexOf("\n  function renderImageSuiteHub", hubStart);
 assert.ok(hubStart > 0 && hubEnd > hubStart, "Video Hub source boundary exists");
@@ -59,6 +66,7 @@ function createHarness(locale) {
   vm.createContext(ctx);
   vm.runInContext(i18nSource, ctx);
   ctx.TOANAASI18n.setLocale(locale, { emit: false });
+  vm.runInContext(tagChoiceSource, ctx);
   vm.runInContext(studioSource, ctx);
   return ctx;
 }
@@ -227,7 +235,7 @@ for (const locale of ["vi", "en", "zh"]) {
       'name="title"', 'name="brief"', 'name="target_duration_seconds"', 'name="format"', 'name="scene_type"',
       'href="/video-studio/12345678-abcd"'
     ]) assert.match(combined, new RegExp(contract.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), contract);
-    assert.match(textOf(home), locale === "vi" ? /Lập kế hoạch video/ : locale === "en" ? /Video planning/ : /视频规划/);
+    assert.match(textOf(home), locale === "vi" ? /Lập kế hoạch video/ : locale === "en" ? /Create a video plan/ : /创建视频计划/);
   });
 }
 

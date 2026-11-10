@@ -1022,3 +1022,15 @@ vẫn chờ exact-SHA CI/deploy/live trong PR. Hồ sơ: `R218-LOCALE-183-RELEAS
 | SPC-BOUNDARY | nặng | So40biên độ dài với BASE, gồm EN Reference có tên tệp |0newrejection; không đổi guard URL, không cắt dữ liệu khách | Phiên SPC;11giới hạn cũ vẫn mở |
 | SPC-NATIVE | nặng |6luồng thật tạo–xác nhận–lưu–đọc lại–mở ởlocalhost |6plan18scene đúng; field được mở lại bằng dữ liệu đã lưu; dọn Job về0 | Phiên SPC; signedproduction/device riêng |
 | SPC-DARK | vừa | Mở6kế hoạch đã lưu trên bản sao DB QA, bật tối bằng công tắc thật | DOMtheme/palette tối thực tế; field còn đúng;0compose/0save, không suy từ URL | Phiên SPC; không lặp luồng lưu đã đạt |
+
+## Saved-plan detail UI — 11/11/2026
+
+|Case|Mức|Bước|Kết quả bắt buộc|Bằng chứng|
+|---|---|---|---|---|
+|VDUI-CONTENT|vừa|Mở list/detailVI/EN/ZH,ready/readonly/archived/guarded/loading/failed|Không intro/boundary/boilerplate thừa; đủ forms/actions/history/states|[Phiên VDUI](PHIEN-SAVED-PLAN-DETAIL-UI-20261111.md)|
+|VDUI-TAGS|vừa|Dùng2autoorigins,custom/lookalike/prototype/bothmarkers|Chips metadata hữu hạn được bỏ; custom/unknown/raw fields giữ nguyên|76Nodecumulative;khôngblankcontainer|
+|VDUI-READABILITY|nặng|320/360/1440,light/dark,3locale|Labels/support/meta>=4.5;mobileinput>=16;khôngoverflow/focusloss|15retained+39rechecked,2718samplesmin5.3313|
+|VDUI-DENSITY|vừa|Xem summary320 và form tạo desktop|3facts vẫnđủ,maxheight72px;onecolumn,noemptylane/eyebrowbox|Nativeactualmax54px|
+|VDUI-PROTOCOL|nặng|SoBASEcontrolcontracts vàcopiedDBactualGET/reopened|1392attrs/48views và1332fieldvalues khôngđổi,6plan18scene/hash/quickcheckgiữ|0compose/save;source/evidencebinding|
+|VDUI-SECTION|vừa|MởUUIDdetail tại320/1440 ở3locale|Nhómnavigation đúnglocale,khôngrawVideoProductionStudio;h1/route/overflow giữ|3RED->GREEN+6headernative|
+|VDUI-ID-FOLLOWUP|nặng|Kiểmlabel.control của scene-title vàduplicateIDs|NEXT:namespace5forms,khôngđổi name/actions/data;chưađạt ởBASE|9duplicateIDgroups,sceneLabel.control=false;fullgoalopen|
