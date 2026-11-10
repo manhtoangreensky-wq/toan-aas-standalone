@@ -1751,3 +1751,18 @@ Nguồngốc:2result/2saveproducer,4receiptparser vàImageMotionrequestfence t�
 
 Nộidungmẫumáychủvàtrangplanđãlưuvẫnmởchờdịchthuần;6happyflowskhôngđóng
 Referencecurrent-input/stale-session/actualretry/device/Safari/motion/engineoutput.
+
+## Nội dung hệ thống hai kế hoạch — 11/11/2026
+
+Nguồn gốc: hai pure composers và catalog hiển thị tại BASE1b76f75d.
+
+| Trước | Hiện trạng local | Giữ nguyên |
+|---|---|---|
+| Image trộn VI/EN bất kể language | Chữ hệ thống theo vi/en/zh hiện có của reference | Raw reference, ID, duration, ba scene và helper/schema |
+| Reference en vẫn ghép catalog VI, vi lẫn từ chung tiếng Anh | Catalog và template cùng theo payload vi/en | Accepted languages vẫn vi/en; không thêm zh |
+| System text và customer text khó phân biệt | Chỉ fixed phrase lookup, named format truyền giá trị một lần | Customer source_title/topic/audience kể cả literal braces |
+| Compose và recompute cùng gọi composer nhưng nội dung còn trộn ngôn ngữ | Cả hai tiếp tục gọi cùng pure composer đã dịch | Idempotency, quyền, validation và persist flags không đổi |
+
+Không rewrite/migrate kế hoạch cũ. Detail labels/English shot-note headers,
+các planner khác, stale-session/current-input, auth/AX/device và motion cuối
+chưa được suy là hoàn tất từ đợt dịch hai hàm này.

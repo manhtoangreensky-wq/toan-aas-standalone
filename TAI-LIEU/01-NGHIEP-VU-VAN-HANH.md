@@ -2513,3 +2513,17 @@ Server-generatedreview/scene/choicecopyvẫnlẫngenerictermsvàlàbướctiếp
 khôngphải dữliệukhách;khôngcoifixedUI làtoàntrangđãdịch. Referencecurrent-input/
 stale-response/session vàactualedit/retrybrowsergatesvẫnmở.
 [Báo cáo](../docs/reports/last-two-results-flow-20261111.md).
+
+PR714 đã phát hành: CI42874187644/deploy42876152399 đạt, runtime1b76f75d,
+ba dịch vụ active và bốn asset HTTPS khớp. Sáu luồng kế hoạch tạo/lưu đã kiểm
+thật ở QA cô lập; không suy provider/video LIVE.
+
+## Nội dung do máy chủ sinh — local 11/11/2026
+
+Hai công cụ tham chiếu dùng 134 cụm chữ hệ thống đã duyệt theo ngôn ngữ nội
+dung: Image vi/en/zh từ mã ngôn ngữ định hướng ảnh; Reference giữ vi/en hiện
+có, không thêm lựa chọn mới. Mã khác chỉ dùng chữ dự phòng VI, raw language
+và dữ liệu khách giữ nguyên. Tên/chủ đề/khán giả không bị dịch hoặc quét thay từ.
+1.392 pure cases, 36.000 kiểm chữ, 6 API regression và 6 UI flow tạo–lưu–đọc
+lại đạt; đúng 6 plan/18 scene. Chưa phát hành đợt này, không sửa kế hoạch cũ.
+[Báo cáo](../docs/reports/video-output-copy-20261111.md).

@@ -1370,6 +1370,16 @@ MERGE/DEPLOY/LIVE không suy từ tests. Trạng thái delivery theo PR/checkpoi
 - [ ] NEXT ReferenceFormatcurrent-input/sourcefreshness/stale-response/session
  fences vàImageactualedit/retrypending/recoverybrowserevidence;6happyflowskhông
  thaycácgatethật. SauđómớitiếptụcAX/auth/device vàmotioncuốiđúngthứtự.
+- [x] LAST-TWO-RESULTS-FLOW delivery: PR714/CI42874187644/deploy42876152399,
+ runtime1b76f75d,3active/healthok/4assetsexact;receipt6775918473.
+- [x] VIDEO-OUTPUT-COPY local:134phrases×3locales,2purecomposer/1import,
+ 1392cases/36000systemchecks,6APIregressions,12nativeview/6UIflows,
+ 153actualsystemfields đúng contentlanguage;6plan18scene/versions,0egress,
+ 16protectedpathsunchanged. Không rewrite old plans/customer data.
+- [ ] VIDEO-OUTPUT-COPY delivery: CI/provenance/exactHEADmerge/exactSHAdeploy/
+ runtime/twoPythonhashes/4HTTPSassets;docs/reports/video-output-copy-20261111.md.
+- [ ] NEXT system-copy: saved-plan-detail labels/shot-note fixed headers,
+ remaining planners' generated system prose; không nhầm với customer content.
 - [x] ROUTE-ENGINE-BOT-WEB source audit requested in parallel: retained bounded
  public-source findings after one evidence correction; push/pull adapters and
  local readiness short-circuits distinguished. No engine/auth mutation.
