@@ -86,7 +86,7 @@ jobs:
 
       - name: Video Studio locale and navigation presentation regressions
         run: |
-          node --test tests/video-studio-vi-locale.test.mjs
+          node --test tests/video-studio-vi-locale.test.mjs tests/video-uiux-locale-presentation.test.mjs tests/saved-video-detail-ui.test.mjs
           node --test tests/video-planning-result-locale.test.mjs
           node --test tests/video-motion-options-locale.test.mjs tests/video-roadmap-save-receipt.test.mjs tests/video-plan-confirmation-flow.test.mjs tests/video-long-form-compose-guard.test.mjs
           node --test tests/video-motion-selected-name.test.mjs

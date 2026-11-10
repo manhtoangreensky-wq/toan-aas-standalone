@@ -2549,3 +2549,17 @@ mới.6luồng lưu–đọc lại–mở đúng6plan18scene;6lượt xem tối 
 tắc thật,282mẫu nhãn min5.522477721172796:1. Trạng thái CI/merge/deploy/runtime
 theo receipt cuối trên Issue689, không suy từ localPASS.
 [Báo cáo](../docs/reports/saved-plan-system-copy-20261111.md).
+
+## UI danh sách và chi tiết kế hoạch — thay đổi 11/11/2026
+
+Trang ưu tiên form tạo/biên tập, thư viện và cảnh; bỏ intro/số liệu lặp/bảng
+giải thích kỹ thuật. Trạng thái/phiên bản/số cảnh vẫn đủ nhưng là dòng gọn.
+Metadata tự tạo không còn chips lặp; thẻ khách/unknown và dữ liệu trong form
+không bị dịch hoặc viết lại. Nhóm điều hướng dùng khóa dịch sẵn có; inputmobile
+tối thiểu16px. Màu nhãn/nội dung và ô thời lượng sáng dùng semantic tokens hiện có.
+
+Local54aggregateviews(15giữ+39kiểmlại),1332fieldmatches;2718mẫu chữ min5.331309340518602,
+0indeterminate;summary320max54px. Thêm6header-onlyviews;0compose/save/provider/ví/
+productionwrite. CI/merge/deploy/runtime theo receipt cuối Issue689.
+Lỗi labelIDlặp có sẵn được ghi để namespace ở bước tiếp; không nhận đã hoàn tất
+toàn bộ accessibility/thiết bị/phiênkhách. [Báo cáo](../docs/reports/saved-plan-detail-ui-20261111.md).
