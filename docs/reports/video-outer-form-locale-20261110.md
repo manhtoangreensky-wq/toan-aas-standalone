@@ -1,6 +1,7 @@
 # Video outer-form locale — combined acceptance, 10/11/2026
 
 BASE_SHA=3e6732446a89ce84ddc90711294b6e504bc593b8.
+Reviewed content commit: `81accc8504406c7d922544434fed9cdd3995ca1a`.
 Tracker: Issue #689. Spec: `docs/superpowers/specs/2026-11-10-video-outer-form-locale.md`.
 This is a new batch after deployed PR705, not a replacement for the full goal.
 
@@ -129,3 +130,14 @@ than reexecuted solely to correct a label.
 Whole-app locale, meaningful-content density, keyboard/accessibility, auth lifecycle,
 unexplained historical input-loss observation, fixed-nav overlap and final-motion
 M-FINAL gates remain in the master ledger. This copy unit cannot close them.
+
+TASK=VIDEO-OUTER-FORM-LOCALE; LOCAL_ACCEPTED.
+HEAD_SHA=81accc8504406c7d922544434fed9cdd3995ca1a (reviewed content).
+FILES_CHANGED=4applicationfiles,1CIstep,2newfocusedtests,2scopedexistingtest
+amendments and9operational/tester/ledgerdocuments. Secret/private state not staged.
+BASELINE_FAILURES=one unrelated historical Python literal; BRANCH_FAILURES=the
+same historical item; NEW_FAILURES=0in comparable declared gates.
+PROTECTED_COMPARATORS=authserver/Bot/engine/provider/wallet/PayOS/ENV/schema/
+data/deployworkflow unchanged; priorcatalog andcontrols preserved.
+Final metadata HEAD/CI/runtime revisions are distinct delivery evidence.
+LESSON_CANDIDATE=NONE.
