@@ -1799,3 +1799,14 @@ NguồnBASE652af67d:5renderer vàUUIDpage.section,scopedthemeCSS; khôngengine/A
 API/names/actions/confirmations/readonly/archived/clientdata giữ nguyên; không
 migrate/cậpnhật productionrecords. Rawtagediting/oldrecords/title/stale-retry/
 auth/device/signedLIVE/motion-last vẫn thuộcfullgoal,khôngđóng bởiđợtUI này.
+
+## Video label association — đối chiếu 11/11/2026
+
+|Trước tạiBASEb1a48e09|Code mới|Bằng chứng/giới hạn|
+|---|---|---|
+|9duplicateIDgroups,scene-title label trỏ khácform|4existingrenderFields consumers truyền namespace role/UUID|24RED->GREEN,27passed|
+|Generichelper đã có optionalnamespace nhưngVideo chưa dùng|Reusehelper5tharg,khôngsửahelper/signature/normalizer|Only4callsubstrings,19protectedpaths unchanged|
+|Data/action/disabled có nguycơ đổi khi xửlýIDs|WholeHTML trừid/for/aria-describedby exactBASE|24views/digest/rawrecords exact;12native/336clickfocus/0valuechanges|
+
+Không data migration hay productionrecords writes; actual clickfocus kiểm riêng,
+không coi renderPASS là toànappAX/providerLIVE/device. Otherfullgoalgates giữmở.
