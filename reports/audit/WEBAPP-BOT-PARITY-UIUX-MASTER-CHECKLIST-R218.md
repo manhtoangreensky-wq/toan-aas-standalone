@@ -1297,10 +1297,30 @@ MERGE/DEPLOY/LIVE không suy từ tests. Trạng thái delivery theo PR/checkpoi
 - [x] VIDEO-HEADERS local: ba phiếu16key,9493giá trị cũ/locale giữ nguyên;
   candidate47giữ+1câuTrungsửa riêng=48,focused139/139,native48/48 tại
   320tối/1440sáng. Source exact và9tệp protected đạt; không chạy lại mã đã đạt.
-- [ ] VIDEO-HEADERS delivery: provenance/CI/merge/deploy/runtime/asset theo
-  `docs/reports/video-planner-headers-20261110.md`; signedLIVE riêng.
+- [x] VIDEO-HEADERS delivery: PR707/CI42794532333/deploy42795957847 đạt;
+ runtimebf1e7ee3,3dịch vụ active/4HTTPSassetkhớp. Receipt6764571014 tạiIssue689;
+ signedLIVE riêng, không suy từ delivery.
 - [ ] NEXT-VIDEO-INNER: field/result/badge tám trang vẫn trộn ngôn ngữ;
   ảnh script-to-screenVI320 là witness. Không đóng toàn trang bằng header.
+- [ ] VIDEO-INNER-FIRST-THREE: prompt/idea/self-shot có18/18render lẫn chữ;
+ ba phiếuFIELDS/OUTER/RESULT theo spec2026-11-10-video-inner-first-three-locale.md,
+ nghiệm thu gộp; năm trang còn lại vẫn tiếp theo, motion cuối không đổi thứ tự.
+- [ ] VIDEO-INNER-SAVE prerequisite: actual composer/transport exposed missing
+ prompt language and repeated compact-result/receipt parsing. RED21cases14pass/
+ 7fail, transport21cases15pass/6fail,Python2fail. Exact worker-only contract
+ `2026-11-10-video-inner-save-prerequisite.md`; do not weaken save/auth guards.
+- [x] VIDEO-INNER-FIRST-THREE local:420keys/9509priorentriespreserved;99case
+ combinedledger,Python36retained+10affectedpass,4BASEnavfailunchanged;18native/
+ 9actualflows,DB9plans/30scenes;74contrastaccepted, mobile16px. Guards preserved.
+- [ ] VIDEO-INNER-FIRST-THREE delivery: CI/provenance/merge/deploy/runtime/assets
+ receipt separate. Server-template/outputlanguage and saved-plan-detail locale
+ remain open, as do five remaining pages; no whole-route/goal closure.
+- [x] ROUTE-ENGINE-BOT-WEB source audit requested in parallel: retained bounded
+ public-source findings after one evidence correction; push/pull adapters and
+ local readiness short-circuits distinguished. No engine/auth mutation.
+- [ ] ROUTE-ENGINE-BOT-WEB final output: runtime/service/route registration and
+ public readiness checks do not prove a completed Web product artifact. Keep
+ end-to-end proof open; provider/wallet/production writes remain prohibited.
 
 Evidence và giới hạn: `docs/reports/video-planning-result-locale-20261110.md`,
 spec cùng ngày và `KIEM-THU/PHIEN-VIDEO-RESULT-LOCALE-20261110.md`.

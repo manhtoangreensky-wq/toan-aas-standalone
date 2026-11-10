@@ -190,15 +190,14 @@ def assert_planner_shape(planner: dict, source: dict) -> None:
     """The transient result stays compact, exact and renderer-neutral."""
 
     assert set(planner) == {
-        "title", "mode", "brief", "platform", "ratio", "duration_seconds", "scene_count",
+        "title", "mode", "language", "brief", "platform", "ratio", "duration_seconds", "scene_count",
         "style_pack", "action_pack", "audio_mode", "detail_level", "needs_clarification",
         "motion", "background", "must_keep", "must_avoid", "continuity_locks", "coverage",
         "cautions", "review_before_use", "prompt", "negative_prompt", "shots",
     }
-    # ``language`` is validated at request time only.  It remains outside the
-    # canonical persisted/display result schema so the planner does not invent
-    # a second language/output contract.
-    assert "language" not in planner
+    # The validated response echoes the original language so the unchanged
+    # current-source save fence can compare it without profile inference.
+    assert planner["language"] == source["language"]
     assert planner["mode"] == source["mode"]
     assert planner["brief"] == source["brief"]
     assert planner["platform"] == source["platform"]

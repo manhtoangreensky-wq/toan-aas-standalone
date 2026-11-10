@@ -328,7 +328,7 @@ for (const locale of locales) {
       .filter(([key]) => !key.startsWith('videoMotionResultUi.') && !key.startsWith('videoRoadmapResultUi.')
         && !key.startsWith('videoMotionOptionsUi.') && !key.startsWith('videoRoadmapReceiptUi.')
         && !key.startsWith('videoMotionFormUi.') && !key.startsWith('videoRoadmapFormUi.') && !key.startsWith('videoPlanningMetaUi.')
-        && !/^videoPlannerHeader[ABC]Ui\./.test(key))
+        && !/^videoPlannerHeader[ABC]Ui\./.test(key) && !/^videoInner(?:Fields|Outer|Result)Ui\./.test(key))
       .sort(([a], [b]) => a.localeCompare(b));
     assert.equal(original.length, 9266);
     assert.equal(crypto.createHash('sha256').update(JSON.stringify(original)).digest('hex'), catalogBaseline[locale]);

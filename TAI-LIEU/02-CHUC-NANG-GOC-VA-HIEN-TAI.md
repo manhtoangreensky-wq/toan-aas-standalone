@@ -1651,3 +1651,21 @@ Nguồn khởi tạo của đơn vị này là tám định nghĩa route/tiêu �
 
 PR704/705/706 đã được phát hành theo receipt tương ứng; các đoạn candidate phía
 trên là mốc QA lịch sử, không thay thế SHA runtime trong receipt phát hành.
+
+## Đối chiếu ba biểu mẫu và đường lưu — 10/11/2026
+
+Nguồn gốc: các contract/Python test hiện có của VideoPrompt/VideoIdea/SelfShot
+và renderer tạiBASEbf1e7ee3; không đổi chức năng lập kế hoạch thành tạo video.
+
+| Trước | Hiện trạng local | Bằng chứng/giới hạn |
+|---|---|---|
+|Nhãn/option/result cố định lẫn chữ|420keyVI/EN/ZH; dữliệunguồn giữ|99casegộp; không dịch server/customerprose |
+|Promptsave so language nhưng DTOkhông cólanguage|Thêmfield bắtbuộcvi/en,check vàgiữquaUI|Python10affectedpass; không bỏso sánh |
+|Receipt/result bị rút gọn rồi kiểm tra transport lần nữa|Giữđủmetadatađãxácminh; giữmọi normalizercall|60affectedpass; SelfShotclosedkeys/falseflags được tăng |
+|Ônhậpmobile15px|Đúng3form16px<=620px|Native18/18; desktopkhôngđổi |
+|Nút lưu có thể mất dù phản hồi hợp lệ|9luồngthậtđã lưu/readback/mở trongDBtạm|9plan/30scene, không suy production/providerLIVE |
+
+Các kỳ vọng kiểm thử cũ cấm language trong response không còn đúng với contract
+khớp nguồn hiện tại. Bốn phép dò nguồn menu đã sai từBASE vẫn ghi nhận, không
+sửa menu hoặc bỏ assertions để gọi xanh. Nhómserver-outputlocale/detail/motion
+vẫn mở, không dùng kết quả đơn vị này thay cho toàngoal.

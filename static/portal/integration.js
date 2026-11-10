@@ -8038,7 +8038,7 @@
     const title = typeof planner.title === "string" && planner.title.length > 0 && planner.title.length <= 320 ? planner.title : "";
     const safety = videoPromptPlannerSafetyError(title, brief, motion, background, prompt, negativePrompt, ...shots.flatMap((shot) => [shot && shot.beat, shot && shot.visual, shot && shot.action, shot && shot.camera, shot && shot.transition, shot && shot.audio]), ...(planner.continuity_locks || []), ...(planner.must_keep || []), ...(planner.must_avoid || []), ...(planner.cautions || []), ...(planner.review_before_use || []));
     return Boolean(
-      title && VIDEO_PROMPT_PLANNER_MODES.has(mode) && brief && VIDEO_PROMPT_PLANNER_PLATFORMS.has(platform)
+      title && (planner.language === "vi" || planner.language === "en") && VIDEO_PROMPT_PLANNER_MODES.has(mode) && brief && VIDEO_PROMPT_PLANNER_PLATFORMS.has(platform)
       && VIDEO_PROMPT_PLANNER_RATIOS.has(ratio) && Number.isInteger(duration) && duration >= 3 && duration <= 180
       && Number.isInteger(sceneCount) && sceneCount >= 0 && sceneCount <= 10 && VIDEO_PROMPT_PLANNER_DETAIL_LEVELS.has(detailLevel)
       && typeof planner.needs_clarification === "boolean"
@@ -8139,11 +8139,7 @@
       || !validVideoStudioPlanId(plan.id) || revision !== 1 || plan.state !== "draft"
       || !Number.isInteger(sceneCount) || sceneCount < 1 || sceneCount > 10
     ) return null;
-    return {
-      destination: "video_plan",
-      plan: { id: String(plan.id), revision: 1, state: "draft" },
-      scene_count: sceneCount
-    };
+    return { ...data, plan: { id: String(plan.id), revision: 1, state: "draft" } };
   }
 
   // Bot `videoidea` is a finite, text-first planning conversation. Keep its
@@ -8331,7 +8327,7 @@
       || data.draft_recomputed_on_server !== true || data.web_video_plan_persisted !== true
       || !VIDEO_IDEA_SAVE_FALSE_FIELDS.every((field) => data[field] === false)
       || !validVideoStudioPlanId(plan.id) || Number(plan.revision) !== 1 || plan.state !== "draft" || Number(data.scene_count) !== 6) return null;
-    return { destination: "video_plan", plan: { id: String(plan.id), revision: 1, state: "draft" }, scene_count: 6 };
+    return { ...data, plan: { id: String(plan.id), revision: 1, state: "draft" } };
   }
 
   // Bot `longvideo` is a finite planning conversation. Its Web-native input
@@ -8688,7 +8684,7 @@
       || data.draft_recomputed_on_server !== true || data.web_video_plan_persisted !== true
       || !SELF_SHOT_SCENE_SAVE_FALSE_FIELDS.every((field) => data[field] === false)
       || !validVideoStudioPlanId(plan.id) || Number(plan.revision) !== 1 || plan.state !== "draft" || Number(data.scene_count) !== 1) return null;
-    return { destination: "video_plan", plan: { id: String(plan.id), revision: 1, state: "draft" }, scene_count: 1 };
+    return { ...data, plan: { id: String(plan.id), revision: 1, state: "draft" } };
   }
 
   // Bot Task3D vproduct has two text-first products that need one shared,

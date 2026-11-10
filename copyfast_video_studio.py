@@ -1631,6 +1631,7 @@ class VideoPromptPlannerResult(BaseModel):
 
     title: str
     mode: str
+    language: str
     brief: str
     platform: str
     ratio: str
@@ -1663,6 +1664,13 @@ class VideoPromptPlannerResult(BaseModel):
     def validate_result_mode(cls, value: str) -> str:
         if value not in VIDEO_PROMPT_PLANNER_MODES:
             raise ValueError("Mode kết quả không hợp lệ")
+        return value
+
+    @field_validator("language")
+    @classmethod
+    def validate_result_language(cls, value: str) -> str:
+        if value not in {"vi", "en"}:
+            raise ValueError("Ngôn ngữ kết quả không hợp lệ")
         return value
 
     @field_validator("brief")
@@ -2097,6 +2105,7 @@ def _compose_video_prompt_plan(payload: VideoPromptPlannerRequest) -> dict[str, 
     result = {
         "title": _planner_title(payload),
         "mode": payload.mode,
+        "language": payload.language,
         "brief": payload.brief,
         "platform": payload.platform,
         "ratio": payload.ratio,

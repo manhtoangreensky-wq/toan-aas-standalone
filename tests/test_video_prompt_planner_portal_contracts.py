@@ -81,8 +81,9 @@ def test_video_prompt_planner_result_is_exact_bounded_and_honest() -> None:
         assert "shots" in source
 
     # `language` is request validation only, not a second result/output schema.
-    assert "planner.language" not in normalizer
-    assert "planner.language" not in validator
+    assert 'const language = typeof planner.language === "string" ? planner.language : "";' in normalizer
+    assert '(language !== "vi" && language !== "en")' in normalizer
+    assert '(planner.language === "vi" || planner.language === "en")' in validator
     # Response validators must use the backend's exact result bounds.  The
     # form can remain more compact for UX, but a valid server receipt may not
     # be discarded merely because it contains a full-length direction.
@@ -212,7 +213,7 @@ def test_video_prompt_planner_save_is_explicit_content_free_and_tab_bound() -> N
     ):
         assert boundary in receipt_normalizer
     assert 'source.execution !== "web_native_video_plan_server_recomputed"' in receipt_normalizer
-    assert "Receipt không giữ brief, prompt, timeline hoặc scene content" in PORTAL
+    assert 'uiText("videoInnerResultUi.prompt.receiptNote"' in PORTAL
 
 
 def test_video_prompt_planner_backend_is_request_only_with_no_durable_mutation() -> None:
