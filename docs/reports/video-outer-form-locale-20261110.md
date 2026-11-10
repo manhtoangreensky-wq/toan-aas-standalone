@@ -141,3 +141,13 @@ PROTECTED_COMPARATORS=authserver/Bot/engine/provider/wallet/PayOS/ENV/schema/
 data/deployworkflow unchanged; priorcatalog andcontrols preserved.
 Final metadata HEAD/CI/runtime revisions are distinct delivery evidence.
 LESSON_CANDIDATE=NONE.
+
+CI42769997711 failed after169critical cases on the Chat CSS source-test's EOF
+boundary: it consumed unrelated later video rules and could not match its own
+mobile block. Only the test's Chat layer extraction is bounded by the next
+existing Document/PDF marker; all Chat assertions and app CSS remain unchanged.
+The current application/native evidence is reused; no app repair or repeated
+browser/full local run is needed for this test-harness correction.
+The same bounded-file run exposed two adjacent EOF extraction defects in
+Document/PDF and Analytics. They are bounded by their next existing layer
+markers as well; no declaration/value/assertion is changed or removed.

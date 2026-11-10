@@ -103,6 +103,16 @@ fixture success substitutes for repair. The original matrix is incomplete and
 is not counted as24PASS. Native pilot and private-snapshot negative/stale-session
 regression must pass before resuming remaining cases.
 
+CI amendment: `tests/test_teal_cyan_ui_foundation_contracts.py` may bound only
+the Chat layer extraction at the next existing Document/PDF layer marker instead
+of EOF. Its mobile regex was falsely consuming later unrelated CSS and failed
+when video color rules were appended. Keep all Chat assertions and application
+CSS unchanged; run only this failed test plus the bounded file, not browser/full
+local suites. CI run42769997711 failed on that source-harness boundary,169pass.
+The bounded file run found the same defect in its adjacent Document/PDF and
+Analytics extractions; bound those two at their existing next-layer markers too,
+retaining all90tests/assertions and no application changes.
+
 ## Accepted local evidence
 
 132new keys exactly match reviewed copy;9361prior values per locale remain
