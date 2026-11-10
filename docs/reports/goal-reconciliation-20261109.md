@@ -28,7 +28,9 @@ deployed và LIVE là bốn mức khác nhau. Sổ GitHub duy nhất là Issue68
 - Audit kế tiếp đã đo12source-render của hai biểu mẫu: còn chữ lẫn ngôn ngữ.
   Candidate đã sửa receipt31khóa cùng cổng compose false-positive,19lựa chọn
   và7nhãn xác nhận; actual create/save/read-back/open12/12, motion24/24,
-  332focused và2256Node đạt. Chờ CI/phát hành, chưa đóng toàn bộ biểu mẫu.
+  332focused và2256Node đạt. PR705 đã merge/deploy, CI42758216447 đạt,
+  runtime3e673244 và4asset HTTPS khớp. Chưa đóng toàn bộ biểu mẫu; ba task
+  outer-form/metadata đã nghiệm thu gộp:132khóa/24nativeaccepted, chờ CI/phát hành.
 - Một lần chủ đề rỗng chưa rõ nguyên nhân không tái hiện trong120FormData
   snapshots cuối; hai pre-click overlap positions vẫn ghi nhận. Không đánh dấu
   đã sửa từ các lượt sau đạt. Tiếp tục lifecycle/keyboard theo đúng nhóm.

@@ -23523,8 +23523,28 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-creative-motion-guide f
   color: var(--portal-muted);
 }
 
+html:not([data-portal-theme="dark"]) .portal-page.portal-creative-motion-guide form[data-portal-action="creative-motion-guide-compose"] .portal-form-note {
+  color: var(--portal-muted);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-creative-motion-guide form[data-portal-action="creative-motion-guide-compose"] .portal-creative-motion-guide-suggestions-stale {
+  color: var(--portal-ink) !important;
+}
+
 @media (max-width: 620px) {
   .portal-page.portal-creative-motion-guide form[data-portal-action="creative-motion-guide-compose"] :is(input:not([type="hidden"]), select, textarea) {
     font-size: 16px;
   }
+}
+
+@media (max-width: 620px) {
+  .portal-page.portal-long-form-planner form[data-portal-action="long-form-roadmap-compose"] :is(input:not([type="hidden"]), select, textarea) {
+    font-size: 16px;
+  }
+}
+
+html:not([data-portal-theme="dark"]) .portal-page.portal-long-form-planner form[data-portal-action="long-form-roadmap-compose"] .portal-field > label {
+  color: var(--portal-ink);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-long-form-planner form[data-portal-action="long-form-roadmap-compose"] :is(.portal-field-help, .portal-form-note) {
+  color: var(--portal-muted);
 }

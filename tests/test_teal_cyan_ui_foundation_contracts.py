@@ -3364,7 +3364,7 @@ def test_light_chat_workspace_final_surface_keeps_private_authoring_readable() -
 
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     layer = re.search(
-        r"/\* Final light AI Chat Workspace surface \*/(?P<css>.*)\Z",
+        r"/\* Final light AI Chat Workspace surface \*/(?P<css>.*?)(?=/\* Final light Document & PDF Workspace surface \*/)",
         theme_source,
         flags=re.DOTALL,
     )
@@ -3467,7 +3467,7 @@ def test_light_document_workspace_final_surface_keeps_private_planning_readable(
 
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     layer = re.search(
-        r"/\* Final light Document & PDF Workspace surface \*/(?P<css>.*)\Z",
+        r"/\* Final light Document & PDF Workspace surface \*/(?P<css>.*?)(?=/\* Final light Analytics Workspace surface \*/)",
         theme_source,
         flags=re.DOTALL,
     )
@@ -3590,7 +3590,7 @@ def test_light_analytics_workspace_final_surface_keeps_manual_measurement_readab
 
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     layer = re.search(
-        r"/\* Final light Analytics Workspace surface \*/(?P<css>.*)\Z",
+        r"/\* Final light Analytics Workspace surface \*/(?P<css>.*?)(?=/\* Final light Subtitle Studio surface \*/)",
         theme_source,
         flags=re.DOTALL,
     )

@@ -506,6 +506,7 @@
   // bootstrap.  There is deliberately no pending Telegram conversation or
   // durable receipt to replay.
   let creativeMotionGuideSessionEpoch = 0;
+  let creativeMotionGuideSessionToken = "";
   let creativeMotionGuideSuggestionsRequestEpoch = 0;
   let creativeMotionGuideComposeRequestEpoch = 0;
   // Only one finite Motion Guide request may be active in a signed tab. The
@@ -13153,6 +13154,7 @@
 
   async function hydrate() {
     const bootstrapEpoch = ++portalHydrationEpoch;
+    creativeMotionGuideSessionToken = "";
     const initialContext = base();
     const publicAuthEligible = loginChallengeRoute()
       && !(initialContext.session && initialContext.session.authenticated === true)
@@ -14418,6 +14420,7 @@
     ++notificationSessionEpoch;
     ++notificationInboxHydrationEpoch;
     ++notificationAutomationHydrationEpoch;
+    creativeMotionGuideSessionToken = account && creativeMotionGuideEnabled && initialPortalPath === "/video-studio/motion-guide" ? String(me.csrf_token || "") : "";
     merge({
       ...context,
       catalog,
@@ -18401,15 +18404,14 @@
       && Boolean(base().session && base().session.authenticated === true);
   }
 
-  function creativeMotionGuideRequestIsCurrent(kind, requestEpoch, sessionEpoch, expectedAccountId, expectedPath) {
+  function creativeMotionGuideRequestIsCurrent(kind, requestEpoch, sessionEpoch, expectedSessionToken, expectedPath) {
     const currentRequestEpoch = kind === "suggestions"
       ? creativeMotionGuideSuggestionsRequestEpoch
       : kind === "compose" ? creativeMotionGuideComposeRequestEpoch : -1;
-    const account = base().account && typeof base().account === "object" ? base().account : {};
     return requestEpoch === currentRequestEpoch
       && sessionEpoch === creativeMotionGuideSessionEpoch
-      && Boolean(expectedAccountId)
-      && String(account.id || "") === expectedAccountId
+      && Boolean(expectedSessionToken)
+      && creativeMotionGuideSessionToken === expectedSessionToken
       && expectedPath === "/video-studio/motion-guide"
       && currentPortalPath() === expectedPath
       && base().creativeMotionGuideEnabled === true
@@ -31024,8 +31026,7 @@
           selected_suggestion: 0,
           style
         };
-        const account = base().account && typeof base().account === "object" ? base().account : {};
-        const expectedAccountId = String(account.id || "");
+        const expectedSessionToken = creativeMotionGuideSessionToken;
         const sessionEpoch = creativeMotionGuideSessionEpoch;
         const requestEpoch = ++creativeMotionGuideSuggestionsRequestEpoch;
         // A fresh suggestion set makes any old guide source stale, but the
@@ -31033,7 +31034,7 @@
         // silently erased. It also cancels an older compose reply.
         ++creativeMotionGuideComposeRequestEpoch;
         creativeMotionGuideSuggestionsPendingRequestEpoch = requestEpoch;
-        if (!creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+        if (!creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedSessionToken, expectedPath)) {
           if (creativeMotionGuideSuggestionsPendingRequestEpoch === requestEpoch) creativeMotionGuideSuggestionsPendingRequestEpoch = 0;
           return;
         }
@@ -31049,7 +31050,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(suggestionPayload)
           });
-          if (!creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          if (!creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedSessionToken, expectedPath)) return;
           const data = result.data && typeof result.data === "object" ? result.data : {};
           if (result.status !== "draft" || !creativeMotionGuideSuggestionsIsSafe(data)
             || !creativeMotionGuideSuggestionsMatchPayload(data, suggestionPayload)) {
@@ -31069,8 +31070,8 @@
           } catch (_) {
             fieldsStillMatch = false;
           }
-          if (!fieldsStillMatch || !creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
-            if (creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+          if (!fieldsStillMatch || !creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedSessionToken, expectedPath)) {
+            if (creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedSessionToken, expectedPath)) {
               merge({ pageStates: { ...(base().pageStates || {}), [expectedPath]: "ready" } });
             }
             return;
@@ -31082,13 +31083,13 @@
           });
           toast(result.message || "Đã tạo đúng ba gợi ý Creative Motion để so sánh.");
         } catch (error) {
-          if (!creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          if (!creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedSessionToken, expectedPath)) return;
           const disabled = error && Number(error.status) === 503;
           merge({ pageStates: { ...(base().pageStates || {}), [expectedPath]: disabled ? "guarded" : "ready" } });
           throw error;
         } finally {
           if (creativeMotionGuideSuggestionsPendingRequestEpoch === requestEpoch) creativeMotionGuideSuggestionsPendingRequestEpoch = 0;
-          if (creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+          if (creativeMotionGuideRequestIsCurrent("suggestions", requestEpoch, sessionEpoch, expectedSessionToken, expectedPath)) {
             synchronizeCreativeMotionGuideBusyState(route);
           }
         }
@@ -31144,12 +31145,11 @@
         if (payload.topic_kind !== "custom" && !creativeMotionGuideSuggestionsMatchPayload(suggestions, payload)) {
           throw new Error("Hãy tạo lại và chọn một card trong đúng bộ gợi ý hiện tại trước khi tạo Motion Guide.");
         }
-        const account = base().account && typeof base().account === "object" ? base().account : {};
-        const expectedAccountId = String(account.id || "");
+        const expectedSessionToken = creativeMotionGuideSessionToken;
         const sessionEpoch = creativeMotionGuideSessionEpoch;
         const requestEpoch = ++creativeMotionGuideComposeRequestEpoch;
         creativeMotionGuideComposePendingRequestEpoch = requestEpoch;
-        if (!creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+        if (!creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedSessionToken, expectedPath)) {
           if (creativeMotionGuideComposePendingRequestEpoch === requestEpoch) creativeMotionGuideComposePendingRequestEpoch = 0;
           return;
         }
@@ -31168,15 +31168,15 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
-          if (!creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          if (!creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedSessionToken, expectedPath)) return;
           const data = result.data && typeof result.data === "object" ? result.data : {};
           if (result.status !== "draft" || !creativeMotionGuideResultMatchesPayload(data, payload, suggestions)) {
             throw new Error("Máy chủ chưa trả Creative Motion Guide an toàn hoặc không khớp lựa chọn hiện tại.");
           }
           const form = document.querySelector('form[data-creative-motion-guide-form]');
           if (!creativeMotionGuideFormMatchesPayload(form, payload)
-            || !creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
-            if (creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+            || !creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedSessionToken, expectedPath)) {
+            if (creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedSessionToken, expectedPath)) {
               merge({ pageStates: { ...(base().pageStates || {}), [expectedPath]: "ready" } });
             }
             return;
@@ -31188,7 +31188,7 @@
           });
           toast(result.message || "Đã tạo Creative Motion Guide dạng văn bản để review.");
         } catch (error) {
-          if (!creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          if (!creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedSessionToken, expectedPath)) return;
           const guarded = error && error.payload && typeof error.payload === "object" ? error.payload : null;
           if (guarded && guarded.status === "guarded") {
             const guardedData = guarded.data && typeof guarded.data === "object" ? guarded.data : {};
@@ -31209,7 +31209,7 @@
           throw error;
         } finally {
           if (creativeMotionGuideComposePendingRequestEpoch === requestEpoch) creativeMotionGuideComposePendingRequestEpoch = 0;
-          if (creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+          if (creativeMotionGuideRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedSessionToken, expectedPath)) {
             synchronizeCreativeMotionGuideBusyState(route);
           }
         }
