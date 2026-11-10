@@ -837,6 +837,10 @@
     const region = document.querySelector("[data-portal-toast]");
     const text = String(message || "").trim();
     if (!region || !text) return;
+    if (text === "Khả năng này đang được Core Bridge bảo vệ."
+      || text === "Không thể thực hiện thao tác này lúc này."
+      || text === "Cannot perform this action right now."
+      || text === "当前无法执行此操作。") return;
     const legacyStatusMap = {
       "Bản nháp canonical đã được cập nhật.": "draft",
       "Dữ liệu canonical đang chờ bước xác nhận phù hợp.": "awaiting_confirm",
