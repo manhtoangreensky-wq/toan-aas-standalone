@@ -18796,9 +18796,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 476,
-  "source_files_scanned": 476,
-  "source_fingerprint_sha256": "76ce346e30d152d465a22f66e48dd60a2e0523ac591201b8e5447229e05f308c",
+  "source_files_discovered": 478,
+  "source_files_scanned": 478,
+  "source_fingerprint_sha256": "83308074cb7e6fc8617087cd5aa1db8d604a41556fcba81cfc98032980ce8d99",
   "source_root": "repository-root",
   "ui_path_references": [
     {

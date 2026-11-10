@@ -2525,10 +2525,27 @@ dung: Image vi/en/zh từ mã ngôn ngữ định hướng ảnh; Reference gi�
 có, không thêm lựa chọn mới. Mã khác chỉ dùng chữ dự phòng VI, raw language
 và dữ liệu khách giữ nguyên. Tên/chủ đề/khán giả không bị dịch hoặc quét thay từ.
 1.392 pure cases, 36.000 kiểm chữ, 6 API regression và 6 UI flow tạo–lưu–đọc
-lại đạt; đúng 6 plan/18 scene. Chưa phát hành đợt này, không sửa kế hoạch cũ.
+lại đạt; đúng 6 plan/18 scene. PR715 đã phát hành: CI42883001206 và
+deploy42885207247 đạt; runtime7ef871e3, ba dịch vụ active, bốn HTTPSasset khớp
+được đối chiếu lại11/11. Không sửa kế hoạch cũ.
 [Báo cáo](../docs/reports/video-output-copy-20261111.md).
 
 Trướcpháthànhđãbổsungbiêntêndài:tiền tốVIđược rútgọn đểkhônglàmmấtkhả
 nănglưutừngđạt.4boundarytests+40BASEcomparisonsđạt0regressionmới;
 2VIUIflow150ký tựgiữđầytênkhách,lưu/readbackđúng,title168/172<=180.
 Khôngcắttênhoặctănglimit/schema;11maxcasecũvẫnghinhậntươngđươngBASE.
+
+## Chữ hệ thống trong kế hoạch đã lưu — thay đổi 11/11/2026
+
+Hai bộ chuyển kế hoạch mới dùng ngôn ngữ nội dung cho brief, mục tiêu và ghi
+chú cảnh, không tự đổi dữ liệu khách theo ngôn ngữ giao diện. Image dùng giá
+trị audience tùy chọn trống thay vì tự bịa đối tượng; Reference giữ audience
+khách nhập. Brief bỏ lời giới thiệu lặp, giữ tên nguồn/lựa chọn và một dòng
+nói rõ kế hoạch biên tập chưa tạo video. Ghi chú giữ thời gian/góc máy/âm thanh/
+biên tập. Không sửa kế hoạch cũ, schema/giới hạn hoặc cơ chế thực thi.
+
+18test local đạt theo15kết quả giữ+3affectedpass;40biên độ dài có0lỗi từ chối
+mới.6luồng lưu–đọc lại–mở đúng6plan18scene;6lượt xem tối chỉ-đọc dùng công
+tắc thật,282mẫu nhãn min5.522477721172796:1. Trạng thái CI/merge/deploy/runtime
+theo receipt cuối trên Issue689, không suy từ localPASS.
+[Báo cáo](../docs/reports/saved-plan-system-copy-20261111.md).

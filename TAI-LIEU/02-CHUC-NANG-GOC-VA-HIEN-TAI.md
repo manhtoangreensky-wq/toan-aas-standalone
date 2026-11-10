@@ -1766,3 +1766,19 @@ Nguồn gốc: hai pure composers và catalog hiển thị tại BASE1b76f75d.
 Không rewrite/migrate kế hoạch cũ. Detail labels/English shot-note headers,
 các planner khác, stale-session/current-input, auth/AX/device và motion cuối
 chưa được suy là hoàn tất từ đợt dịch hai hàm này.
+
+## Kế hoạch đã lưu — thay đổi 11/11/2026
+
+Nguồn đối chiếu: hai converter tại BASE7ef871e3, không phải tính năng engine.
+
+| Trước | Ứng viên hiện tại | Bằng chứng / giới hạn |
+|---|---|---|
+| Preview đã dịch nhưng brief/scene headers lưu bằng EN | Fixed saved prose chọn cùng content language | RED7/5pass ->18passed(15giữ+3affected);6actualflows đạt |
+| Reference EN objective ghép direction VI | Lookup direction từ bảng chữ đã duyệt theo language | Customer goal ID/audience không đổi |
+| Image audience tự điền Private Web editor | Optional empty audience, không bịa khách mục tiêu | Existing optional schema giữ nguyên |
+|4dòng giới thiệu/giới hạn và5dòng ghi chú lặp | Brief3dòng có nguồn/lựa chọn/ranh giới thật; scene4dòng giá trị | Không bỏ camera/audio/editorial/timing hoặc quyền sử dụng |
+|Nhãn dễ vô tình đụng guard URL | R1 file: bị từ chối; giữ guard, sửa đúng EN label |40BASEcases0newrejection;6darkreadonly đạt;CI/delivery receipt trên Issue689 |
+
+Không rewrite records cũ, không diễn giải việc lưu kế hoạch là đã tạo tệp.
+Detail UI labels/tags,11giới hạn title cũ, các planner khác và full-goal gates
+vẫn mở. Nguồn case chuẩn và phiên Tester SPC được thêm trước push.
