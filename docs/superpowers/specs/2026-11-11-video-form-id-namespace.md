@@ -35,7 +35,9 @@ may update. No productiondata/provider/financial writes; paidcalls0.
 - [x] Native3locales×320/1440 on actual savedplan with3scenes, plus listview;
   click labels and verify native .control/focus owninput, no productwrites.
 - [x] CopiedQA6plan18scene/hash/evidence unchanged, sourcebinding,30ownedJobprocesses->0.
-- [ ] Ops/original-feature/canonicalcases/Tester/filemetadata/provenance ready.
+- [x] Ops/original-feature/canonicalcases/Tester/filemetadata ready;metadata1pass.
+  Web-onlysourceprovenance14296e95c273ef33fb112b22cfb8f1bbca2f94d9,
+  fingerprintfd4adb0091d9116016e9c7b677477f12404013418e4a2c120ba33399c1b79f66.
 - [ ] ExactHEADCI/merge/exactSHAdeploy/runtime/assets receipt on Issue689.
 
 Acceptance keeps real labels and description associations, not invisible ARIA
