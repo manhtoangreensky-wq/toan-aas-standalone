@@ -1637,3 +1637,17 @@ Hai quan sát nhập liệu/che nút còn được giữ trong receipt; không d
 Các định nghĩa gốc trong renderer và contractprivate-route vẫn còn dùng; sai ở
 cách gắn chữ cố định/ownershipstatephíaUI, không phải đổi chức năng lập kế hoạch
 thành tạo video. Density, toàn ứng dụng, authlifecycle vàmotion cuối vẫn mở.
+
+## Đối chiếu tiêu đề tám trang video — 10/11/2026
+
+Nguồn khởi tạo của đơn vị này là tám định nghĩa route/tiêu đề/mô tả trong
+`static/portal/portal.js` tại BASE564467fb, không phải một chức năng tạo video mới.
+
+| Trước | Hiện trạng local | Giới hạn |
+|---|---|---|
+|8mô tả tiếng Anh thực tế là tiếng Việt;3tên VI tiếng Anh và1tên dùng prompt |16keycố định VI/EN/ZH;139focused+48native đạt |Chỉ header động, không server-first-paint |
+|Có thể hiểu sửa tên là đã sạch toàn trang |Ảnh mobile vẫn cho thấy badge và chữ trong form còn trộn |Giữ mục inner-form/result mở, không tuyên bố đã hoàn tất |
+|Các trang là công cụ lập kế hoạch |Giữ nguyên8route, kiểm tra quyền và dữ liệu/controls |Không tạo tệp video hoặc gọi provider |
+
+PR704/705/706 đã được phát hành theo receipt tương ứng; các đoạn candidate phía
+trên là mốc QA lịch sử, không thay thế SHA runtime trong receipt phát hành.

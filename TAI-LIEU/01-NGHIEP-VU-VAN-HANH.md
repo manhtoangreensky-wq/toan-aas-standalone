@@ -2405,7 +2405,7 @@ Node2256/2256 và focused332/332 đạt. Đây là candidate chờ CI/phát hàn
 phải bằng chứng production hoặc toàn ứng dụng đã hoàn tất.
 [Receipt và các quan sát còn mở](../docs/reports/video-plan-confirmation-options-20261110.md).
 
-## Chữ biểu mẫu video và gợi ý — candidate 10/11/2026
+## Chữ biểu mẫu video và gợi ý — đã phát hành 10/11/2026
 
 Hai biểu mẫu hướng dẫn chuyển động/kế hoạch video dài dùng thêm132khóa chữ cố
 định VI/EN/ZH, giữ9361bản dịch cũ mỗi ngôn ngữ, mã và nội dung khách/máy chủ.
@@ -2414,5 +2414,15 @@ RAM từ giá trị bảo vệ phiên đã có, không cần thêm mã tài kho�
 quyền đăng nhập. Phản hồi cũ và thiếu phiên vẫn bị chặn.
 
 Ma trận gộp24/24đạt theo18ca giữ lại+6ca sửa tương phản; roadmap mobile16px,
-chữ/cảnh báo sáng đạt4,5:1. Candidatechờ CI/phát hành; không tạo video, không
+chữ/cảnh báo sáng đạt4,5:1. PR706, CI42770940744, deploy42790145586 đạt;
+runtime564467fb và4assetHTTPS khớp. Không tạo video, không
 đổi backend, ví hoặc provider. [Bằng chứng và giới hạn](../docs/reports/video-outer-form-locale-20261110.md).
+
+## Tiêu đề tám trang lập kế hoạch video — local 10/11/2026
+
+Tám trang còn lại dùng16khóa tên/mô tả theoVI/EN/ZH;9493mục dịch cũ mỗi ngôn
+ngữ giữ nguyên. Chỉ H1, tên tab và mô tả động đổi; không thay biểu mẫu, dữ liệu,
+quyền hoặc xử lý video.139kiểm tra tập trung và48trạng thái trình duyệt đạt,
+dùng một lượt nghiệm thu gộp; không chạy lại mã không đổi. Chữ bên trong các
+biểu mẫu còn lẫn ngôn ngữ và là bước tiếp theo, chưa đóng toàn trang/toàn goal.
+Đợt này chờ CI/phát hành riêng. [Receipt](../docs/reports/video-planner-headers-20261110.md).

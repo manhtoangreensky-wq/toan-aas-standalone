@@ -10022,6 +10022,14 @@
   function localizedPageTitle(page, context) {
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
+    if (path === "/video-studio/reference-format-planner") return uiText("videoPlannerHeaderCUi.reference-format-planner.title", "Lập định dạng tham chiếu");
+    if (path === "/video-studio/storyboard-composer") return uiText("videoPlannerHeaderCUi.storyboard-composer.title", "Soạn bảng phân cảnh và mô tả");
+    if (path === "/video-studio/script-to-screen-planner") return uiText("videoPlannerHeaderBUi.script-to-screen-planner.title", "Từ kịch bản đến phân cảnh");
+    if (path === "/video-studio/cinematic-concept") return uiText("videoPlannerHeaderBUi.cinematic-concept.title", "Lập ý tưởng quảng cáo điện ảnh");
+    if (path === "/video-studio/image-motion-planner") return uiText("videoPlannerHeaderBUi.image-motion-planner.title", "Lập chuyển động từ ảnh");
+    if (path === "/video-studio/prompt-planner") return uiText("videoPlannerHeaderAUi.prompt-planner.title", "Lập mô tả tạo video");
+    if (path === "/video-studio/idea-planner") return uiText("videoPlannerHeaderAUi.idea-planner.title", "Lập ý tưởng video");
+    if (path === "/video-studio/self-shot-planner") return uiText("videoPlannerHeaderAUi.self-shot-planner.title", "Lập cảnh tự quay");
     if (path === "/video-studio/long-form-planner") return uiText("videoPlanningMetaUi.roadmap.title", "Kế hoạch video dài");
     if (path === "/media-workspace/music-prompt-composer") return musicPromptComposerUiText("page.routeTitle", fallback);
     if (path === "/media-workspace/music-directions") return musicDirectionUiText("page.routeTitle", fallback);
@@ -10140,6 +10148,14 @@
   function localizedPageDescription(page) {
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
+    if (path === "/video-studio/reference-format-planner") return uiText("videoPlannerHeaderCUi.reference-format-planner.description", "Từ định dạng video tham chiếu đã chọn, lập kế hoạch ba cảnh nguyên bản có mục tiêu kênh rõ ràng, rồi xác nhận lưu thành kế hoạch video riêng tư.");
+    if (path === "/video-studio/storyboard-composer") return uiText("videoPlannerHeaderCUi.storyboard-composer.description", "Từ chủ đề, lập ba định hướng sáng tạo, quy tắc hình ảnh nhất quán, trình tự cảnh và bộ mô tả để rà soát trước khi dùng trong quy trình khác.");
+    if (path === "/video-studio/script-to-screen-planner") return uiText("videoPlannerHeaderBUi.script-to-screen-planner.description", "Từ mô tả, lập kịch bản, bảng phân cảnh và mô tả tạo hình ảnh, video để rà soát; không tạo tệp đa phương tiện, bản dựng hoặc đầu ra.");
+    if (path === "/video-studio/cinematic-concept") return uiText("videoPlannerHeaderBUi.cinematic-concept.description", "Từ mô tả quảng cáo, lập định hướng sáng tạo, kịch bản, bảng phân cảnh và mô tả tạo nội dung để rà soát trước khi thực hiện trong quy trình khác.");
+    if (path === "/video-studio/image-motion-planner") return uiText("videoPlannerHeaderBUi.image-motion-planner.description", "Chọn định hướng hình ảnh có tham chiếu tới kho ảnh để lập chuyển động ba cảnh, rà soát và xác nhận lưu thành kế hoạch video riêng tư.");
+    if (path === "/video-studio/prompt-planner") return uiText("videoPlannerHeaderAUi.prompt-planner.description", "Từ mô tả sáng tạo, lập trình tự cảnh, mô tả tạo nội dung và điều cần tránh để rà soát trước khi dùng trong quy trình khác.");
+    if (path === "/video-studio/idea-planner") return uiText("videoPlannerHeaderAUi.idea-planner.description", "Từ ý tưởng quảng cáo, điện ảnh hoặc tùy chỉnh, lập ba phương án, bảng phân cảnh sáu cảnh và định hướng hình ảnh, video để rà soát.");
+    if (path === "/video-studio/self-shot-planner") return uiText("videoPlannerHeaderAUi.self-shot-planner.description", "Từ mô tả tự quay, lập định hướng đổi bối cảnh, khung hình chính, chuyển động và âm thanh để rà soát; công cụ này không nhận hoặc xử lý tệp đa phương tiện.");
     if (path === "/video-studio/motion-guide") return uiText("videoPlanningMetaUi.motion.description", "Chọn chủ đề, so sánh ba gợi ý, chọn phong cách và nhận hướng dẫn chuyển động bằng văn bản để rà soát — không tạo video.");
     if (path === "/video-studio/long-form-planner") return uiText("videoPlanningMetaUi.roadmap.description", "Từ chủ đề, thời lượng, phong cách và cấu trúc, lập dàn ý, hồ sơ nhân vật, kế hoạch từng chương và các phần mô tả tạo nội dung cho video dài.");
     if (path === "/media-workspace/music-prompt-composer") return musicPromptComposerUiText("page.routeDescription", fallback);
