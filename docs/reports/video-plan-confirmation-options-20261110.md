@@ -1,6 +1,7 @@
 # Video plan confirmation and motion options — acceptance, 10/11/2026
 
 BASE_SHA=b5410b5e587337f0d050e70d1a92fcaff85adc17.
+Reviewed content commit: `873fae6e9a2d2f9f030c917b5ac82c1ba3eac10b`.
 Tracker: [Issue #689](https://github.com/manhtoangreensky-wq/toan-aas-standalone/issues/689).
 Contract: [scope and ordered gates](../superpowers/specs/2026-11-10-video-plan-confirmation-options.md).
 
@@ -103,3 +104,8 @@ PROTECTED_COMPARATORS=backend/auth/Bot/route-engine/provider/wallet/PayOS/schema
 ENV/deployment workflow unchanged; option scalars/actions/guards/catalog retained.
 PROVIDER_CALLS=0; WALLET_MUTATIONS=0; PRODUCTION_DATA_MUTATIONS=0.
 DEPLOY=NO; signed production LIVE_PASS=NOT_TESTED; LESSON_CANDIDATE=NONE.
+HEAD_SHA=873fae6e9a2d2f9f030c917b5ac82c1ba3eac10b (reviewed content).
+FILES_CHANGED=4 application files;1 CI step extension;5 new focused test files
+and1 prior catalog-test scope update;9 scoped operational/tester/ledger documents.
+Final metadata HEAD and CI/runtime SHA are separate delivery evidence; the
+reviewed content commit is not itself a claim of deployment.
