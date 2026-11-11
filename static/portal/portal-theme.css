@@ -23817,3 +23817,41 @@ html[data-portal-theme="dark"] .portal-page.portal-account-page .portal-account-
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+.portal-membership-page > .portal-callout--info,
+.portal-membership-page > .portal-callout--info strong,
+.portal-membership-page > .portal-callout--info span:not([style*="20px"]) {
+  color: var(--portal-text) !important;
+}
+
+.portal-membership-page > .portal-callout--info a:not(.portal-button) {
+  color: var(--portal-text, var(--portal-teal-dark-ink)) !important;
+}
+
+.portal-membership-page > .portal-callout--info a:not(.portal-button):hover,
+.portal-membership-page > .portal-callout--info a:not(.portal-button):focus {
+  color: var(--portal-text, var(--portal-teal-dark-ink)) !important;
+}
+
+.portal-membership-page > .portal-callout--info .portal-button--primary {
+  background: var(--portal-action) !important;
+  color: var(--portal-on-action) !important;
+}
+
+.portal-membership-page > .portal-callout--info .portal-button--primary:hover,
+.portal-membership-page > .portal-callout--info .portal-button--primary:focus {
+  background: var(--portal-action-hover) !important;
+  color: var(--portal-on-action) !important;
+}
+
+html[data-portal-theme="dark"] .portal-membership-page > .portal-callout--info .portal-button--primary {
+  background: var(--portal-teal-dark-cta-action) !important;
+  color: var(--portal-teal-dark-ink) !important;
+}
+
+html[data-portal-theme="dark"] .portal-membership-page > .portal-callout--info .portal-button--primary:hover,
+html[data-portal-theme="dark"] .portal-membership-page > .portal-callout--info .portal-button--primary:focus {
+  background: var(--portal-teal-dark-cta-hover) !important;
+  color: var(--portal-teal-dark-ink) !important;
+  filter: none !important;
+}

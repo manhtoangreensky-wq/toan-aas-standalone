@@ -1456,3 +1456,26 @@ nghiệm thu một lượt trên mã ổn định, gom task hoàn tất; không 
 
 Đây không phải bằng chứng hoàn tất toàn goal. Toàn tuyến/trạng thái locale,
 auth/AX/device/Safari/signed production và M-FINAL-01..06 vẫn mở theo thứ tự.
+
+## Hội viên: chữ và khả năng đọc — 11/11/2026
+
+- [x] FEEDBACK-CLUTTER delivery: PR723, CI43019297619 cả hai jobs đạt;
+  merge/runtime e2afca85d96ed6a19c941924e5344ea40869cfac, deploy43020704488 đạt;
+  Web/Bot/nginx active/running, healthok, trackedsource/2backendhashes/4assets
+  khớp. PostmergeCI43020649770 cả hai jobs đạt; receipt6795890050/6798961276.
+- [x] MEMBERSHIP-PLAIN-LANGUAGE local: 14 khóa/4textnodes/nhãn công bố riêng,
+  40giátrị đổi/2giữ/15mới; dữ liệu khách,0Xu/giá/hrefs/states giữ.
+- [x] Ghi chú tĩnh: bỏ duy nhất renderNotes tại Hội viên, không sửa helper,
+  manifest hoặc trạng thái quyền/lỗi thật; nguyên tắc ngắn giữ.
+- [x] Callout/CTA readability: 12view/240mẫu thường,hover/focus nút+link,
+  sáng/tối390/1440; min5,216649621048673:1,0indeterminate/overflow/errors;
+  0productwrites, copiedQA DB/evidence giữ, ownedprocesses0.
+- [x] 556Node +67affectedreruns,5Python/metadata; snapshot19keys strict và
+  toàn bộ nguồn backend/auth/tiền/provider/integration/motion giữ nguyên.
+- [ ] MEMBERSHIP-PLAIN delivery: provenance/CIexactHEAD/merge/deploy/runtime/assets.
+- [ ] NEXT Q0 membership fallback family/missing-note: phân biệt nhãn hệ thống
+  với dữ liệu khách, không thay canonical normalizer dùng chung hoặc xóa chữ
+  khách chỉ vì trùng giá trị mặc định. Không suy từ 14keys sang toàn locale.
+
+Nguồn và giới hạn: `docs/reports/membership-plain-language-20261111.md`.
+Các cổng whole-route/auth/AX/device/Safari/signed LIVE và motion cuối vẫn mở.

@@ -1875,3 +1875,15 @@ change. SameAntigravitysession/fragmenthistory;no directappimplementationtakeove
 
 Không coi việc bỏ một khối là đã hoàn tất locale/clutter toàn app. Không có
 thay đổi dữ liệu khách hoặc xác nhận đầu ra dịch vụ trả phí trong phạm vi này.
+
+## Chữ Hội viên — đối chiếu 11/11/2026
+
+|Bản trước e2afca85|Thay đổi giới hạn|Bằng chứng|
+|---|---|---|
+|Hộp dẫn Bảng giá luôn tiếng Việt, lộ route|Bốn đoạn chữ theo locale, liên kết thật giữ nguyên|12 ca renderer so controls/HTML hữu hạn; không sửa API|
+|14 khóa dùng ngôn ngữ triển khai|Chữ dành cho khách; thiếu dữ liệu không bịa gói/quyền lợi|40 giá trị đổi/2 giữ; 15 giá trị mới, snapshot strict19keys|
+|Ghi chú tĩnh trộn ngôn ngữ dưới nguyên tắc|Chỉ bỏ render danh sách đó, giữ nguyên tắc/trạng thái thật|12 ca có missing/0/VIP/catalog và giữ dữ liệu khách|
+|Chữ trắng/cyan sáng, màu tối chưa đủ rõ|CSS riêng callout và CTA dùng vai trò màu đúng theme|12 view/240 mẫu, min5,216649621048673:1, 0 indeterminate|
+
+556 ca nguồn/hồi quy đạt, 67 ca ảnh hưởng chạy lại sau màu cuối; không cộng
+trùng số ca. Nhóm này không thay tiền, quyền hoặc nguồn dữ liệu danh mục.

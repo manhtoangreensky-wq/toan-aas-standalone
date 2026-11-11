@@ -1,0 +1,229 @@
+{
+  "base": "e2afca85d96ed6a19c941924e5344ea40869cfac",
+  "rows": [
+    {
+      "key": "billingCatalog.page.membership.description",
+      "before": {
+        "vi": "Xem quyền lợi và trạng thái gói do nguồn canonical xác minh; Web không tự cấp tier hoặc thay đổi Xu.",
+        "en": "Review membership benefits and plan status verified by the canonical source; the Web does not grant tiers or change credits.",
+        "zh": "查看由 canonical 来源验证的会员权益和套餐状态；Web 不会授予等级或更改积分。"
+      },
+      "approved": {
+        "vi": "Theo dõi gói hội viên hiện tại, quyền lợi và số dư Xu của bạn.",
+        "en": "View your current membership plan, benefits, and credit balance.",
+        "zh": "查看您当前的会员套餐、权益及积分余额。"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.defaultPlanName",
+      "before": {
+        "vi": "Chưa có gói canonical",
+        "en": "No canonical plan yet",
+        "zh": "尚无 canonical 套餐"
+      },
+      "approved": {
+        "vi": "Chưa nhận được thông tin gói",
+        "en": "Plan information not received",
+        "zh": "未收到套餐信息"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.defaultPlanStatus",
+      "before": {
+        "vi": "Chờ Core Bridge",
+        "en": "Waiting for Core Bridge",
+        "zh": "等待 Core Bridge"
+      },
+      "approved": {
+        "vi": "Chưa nhận được trạng thái",
+        "en": "Status not received",
+        "zh": "未收到状态信息"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.current.description",
+      "before": {
+        "vi": "Metadata từ ví/gói do Bot canonical cấp; Web không tự cấp VIP, trial hoặc referral reward.",
+        "en": "Wallet and plan metadata is supplied by the canonical Bot; the Web does not grant VIP, trials, or referral rewards.",
+        "zh": "钱包和套餐元数据由 canonical Bot 提供；Web 不会授予 VIP、试用或推荐奖励。"
+      },
+      "approved": {
+        "vi": "Xem thông tin gói hội viên và số dư Xu hiện tại của bạn.",
+        "en": "View your current membership plan details and credit balance.",
+        "zh": "查看您当前的会员套餐信息与积分余额。"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.label.canonicalCredit",
+      "before": {
+        "vi": "Xu canonical",
+        "en": "Canonical credits",
+        "zh": "canonical 积分"
+      },
+      "approved": {
+        "vi": "Số dư Xu",
+        "en": "Credit balance",
+        "zh": "积分余额"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.empty.title",
+      "before": {
+        "vi": "Chờ quyền lợi canonical",
+        "en": "Waiting for canonical benefits",
+        "zh": "等待 canonical 权益"
+      },
+      "approved": {
+        "vi": "Chưa nhận được thông tin quyền lợi",
+        "en": "Benefit information not received",
+        "zh": "未收到权益信息"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.empty.body",
+      "before": {
+        "vi": "Bot/Core Bridge phải cấp metadata gói thuộc signed session trước khi Web có thể hiển thị tier hoặc trial.",
+        "en": "The Bot/Core Bridge must supply plan metadata for this signed session before the Web can show a tier or trial.",
+        "zh": "Bot/Core Bridge 必须先为当前已签名会话提供套餐元数据，Web 才能显示等级或试用。"
+      },
+      "approved": {
+        "vi": "Chưa nhận được thông tin gói hội viên và quyền lợi của bạn. Vui lòng tải lại trang hoặc liên hệ hỗ trợ nếu tình trạng này vẫn tiếp diễn.",
+        "en": "Your membership plan and benefit information has not been received. Please reload the page or contact support if the issue persists.",
+        "zh": "尚未收到您的会员套餐与权益信息。请刷新页面，若问题持续请联系客服支持。"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.principle.body",
+      "before": {
+        "vi": "Bot là authority cho tier và mọi tác động Xu.",
+        "en": "The Bot is the authority for tiers and every credit effect.",
+        "zh": "Bot 是等级和所有积分影响的唯一 authority。"
+      },
+      "approved": {
+        "vi": "Quyền lợi áp dụng theo gói hiện tại của tài khoản.",
+        "en": "Benefits follow your account's current plan.",
+        "zh": "权益根据账户当前套餐确定。"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.catalog.title",
+      "before": {
+        "vi": "Gói được Bot công bố",
+        "en": "Packages published by the Bot",
+        "zh": "由 Bot 发布的套餐"
+      },
+      "approved": {
+        "vi": "Gói dịch vụ đã công bố",
+        "en": "Published packages",
+        "zh": "已发布的套餐"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.catalog.description",
+      "before": {
+        "vi": "Thông tin chỉ đọc; mua/nâng cấp tiếp tục qua luồng canonical.",
+        "en": "Read-only information; purchase and upgrade continue through the canonical flow.",
+        "zh": "信息仅供读取；购买和升级继续通过 canonical 流程完成。"
+      },
+      "approved": {
+        "vi": "Xem thông tin chi tiết các gói dịch vụ đã công bố.",
+        "en": "View details of published packages.",
+        "zh": "查看已发布套餐的详细信息。"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.catalog.emptyTitle",
+      "before": {
+        "vi": "Chờ catalog gói canonical",
+        "en": "Waiting for the canonical package catalog",
+        "zh": "等待 canonical 套餐目录"
+      },
+      "approved": {
+        "vi": "Chưa nhận được danh mục gói",
+        "en": "Package catalog not received",
+        "zh": "未收到套餐目录"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.catalog.emptyBody",
+      "before": {
+        "vi": "Không dùng danh mục feature để suy đoán gói, tier, giá hoặc khuyến mãi.",
+        "en": "Do not use the feature directory to infer packages, tiers, prices, or promotions.",
+        "zh": "不要使用功能目录来推测套餐、等级、价格或优惠。"
+      },
+      "approved": {
+        "vi": "Chưa nhận được danh sách gói dịch vụ đã công bố. Vui lòng tải lại trang hoặc liên hệ hỗ trợ nếu tình trạng này vẫn tiếp diễn.",
+        "en": "The list of published packages has not been received. Please reload the page or contact support if the issue persists.",
+        "zh": "尚未收到已发布的套餐列表。请刷新页面，若问题持续请联系客服支持。"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.action.packages",
+      "before": {
+        "vi": "Xem catalog đầy đủ",
+        "en": "View full catalog",
+        "zh": "查看完整目录"
+      },
+      "approved": {
+        "vi": "Xem danh mục đầy đủ",
+        "en": "View full catalog",
+        "zh": "查看完整目录"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.action.topup",
+      "before": {
+        "vi": "Nạp Xu canonical",
+        "en": "Top up canonical credits",
+        "zh": "充值 canonical 积分"
+      },
+      "approved": {
+        "vi": "Nạp Xu",
+        "en": "Top up credits",
+        "zh": "充值积分"
+      }
+    }
+  ],
+  "introduced": [
+    {
+      "key": "billingCatalog.page.membership.compatBanner.label",
+      "approved": {
+        "vi": "Trang tổng hợp:",
+        "en": "Consolidated page:",
+        "zh": "汇总页面："
+      }
+    },
+    {
+      "key": "billingCatalog.page.membership.compatBanner.desc",
+      "approved": {
+        "vi": "Bảng giá dịch vụ, gói nạp và toàn bộ quyền lợi hội viên hiện đã được hợp nhất tại",
+        "en": "Service pricing, top-up packages, and all membership benefits are now consolidated at",
+        "zh": "服务价格、充值套餐及所有会员权益现已整合至"
+      }
+    },
+    {
+      "key": "billingCatalog.page.membership.compatBanner.link",
+      "approved": {
+        "vi": "Bảng giá & Dịch vụ",
+        "en": "Pricing & Services",
+        "zh": "价格与服务"
+      }
+    },
+    {
+      "key": "billingCatalog.page.membership.compatBanner.button",
+      "approved": {
+        "vi": "Mở Bảng Giá Hợp Nhất →",
+        "en": "Open Consolidated Pricing →",
+        "zh": "打开整合价格表 →"
+      }
+    },
+    {
+      "key": "billingCatalog.membership.catalog.statusPublished",
+      "approved": {
+        "vi": "Đã công bố",
+        "en": "Published",
+        "zh": "已发布"
+      }
+    }
+  ]
+}
