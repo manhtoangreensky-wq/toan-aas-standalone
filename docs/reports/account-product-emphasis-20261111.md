@@ -1,0 +1,101 @@
+# Thành viên và điểm nhấn app/landing — nghiệm thu
+
+TASK=ACCOUNT-PRODUCT-EMPHASIS;LOCAL_ACCEPTANCE=PASS_SCOPED;DELIVERY=PENDING_RECEIPT.
+BASE_SHA=1c6eae018e8e110aeac7ebcb57c9a08bf90ff254;Issue689;
+branchcodex/account-product-emphasis-20261111. Fullgoalactive/motionlast.
+
+## Thay đổi
+
+Tênhạng/starởblockriêngdướilabel. Bỏ2unavailabletexts,internalverified/explanation/
+duplicatebenefitrow;missingbalancekhôngôtrống/dash,valid0vẫnlà0. Hạng/gói,
+canonicalprojection/accountIsVip/calculations,price/topuphrefs vàmọiform/guard giữ.
+Haiimplementationparagraphsoverview/sessionBodykhôngrender,cataloguesgiữ.
+
+Existingbrand/nền/bốtụcgiữ;7familycolorroles(light/darkpairs)trênSVGtoolicons+
+2pxedge,sharedhero/dashboard40×3accent,landing6familycolorsdistinct/titleemphasis
+underline. Actual6Studioarticlescovered,nofakecards/stat/claims/imagery/motion.
+Auxiliaryfinance/statecontrols khôngbịépnhậndiệnsảnphẩmhayđổithuộc tínhthực thi.
+
+RuntimeonlyrenderAccount4exactchange-records và100lineCSSsuffix/1fallbackselector
+amended.18protectedpathsunchanged:backend/auth/CSRF/session/DB/schema/ENV/provider/
+wallet/PayOS/Bot/route-engine/integration/i18nvalues/motion/SW/deployworkflow.
+Một dedicatedAntigravity3.8FlashHigh conversation(R1,R2,2scopedamendments)trả
+exacttargets;0workerimplementationfailures/no directapp takeover. Missingactual
+consumers/cascadecriteria làlỗiđiềuphối,khôngresetcounterthợ. Legacyprimarygradient
+important cầnscopedmemberlightimportant;global/darkbuttons giữ. :isfallbacka.class
+lấnmàumodifierlanding đượcđổichínhxác1selectorthành:where,khôngglobal!important.
+
+## Bằng chứng
+
+RED21failed/9passed ->R1combined42passed;R2paragraph3RED->GREEN,42retained=45
+acceptedcumulative. FinalCIchạytấtcả45fresh.24BASEviews allnonaccountHTML/account
+controltags/buttons/rawcontext exact,digest459d177eb07a5bce346648f73778662bdfc5a0a9c41d362d2afaceb96e71e984.
+Knownbalance0/VIPtestedpurefixtures,nofinancialseed/productionlookup.
+
+Native60uniqueaggregateviews=5routes(account/dashboard/studio/features/welcome)×
+3locale×390/1440×actualLight/Dark.12memberviews,84normaltextsamplesmin
+5.216649621048673:1;408determinateSVGpaintsmin4.667250066487073:1.0overflow/page/
+console/productwrites/egress/.env/media/provider/wallet/productionwrites.
+CopiedownedDB6plan18scene/hash/quickcheck/originalevidence/sourcebindings giữ,
+mọiownedJobactive0,cuốinhóm20processes->0. SixadminsamplesNOT_TESTED(nonadminQA),
+khôngescalaterole. StaticvisualauditexplicitreducedMotion,normalmotionnotclaimed.
+
+NativehistoryA/R2/R3/R4/R5/R6/R7retained;onlyaffectedreruns/unchangedcasesreused.
+Coordinatorharnessinitialassumptionscorrectedfromactualsource:Featuresstandalone
+khôngloadintegration;publiclandingkhôngauthhydrate/bodythemeflag,realrootpalette
+đượcđo;anonymouslinks/login?next=6approvedrouteskept,nobypassauth. Finitecolor
+transitionsđợiđúng;mobileoffscreenFeaturescardsphảicuộnthậttrướcsampling. Last3
+mobileviewsactualscrollthenpassed,nocssanimationoverride/thresholdrelaxation.
+FirstFAILkhôngđổitênPASS. CSStransportinitialhunkmatchedrepeatedtail9110;relocated
+exactworkerbytesvềuniqueEOF,sourcecomparatorpassed,khôngsửanội dungworker.
+
+R2toolinterruptionhandle/PIDmissing+nocompletion/0outputđượcxácminhtrướcgửilại
+cùngpacket/conversation. Egressreviewnhầmsourceprivate;anonymouspublicGitHub
+MAP/portal.js+OLDparagraphsexactcommitverified,thenallowed,nobypass/newlogin/
+settings/secrettransfer.
+
+## Fidelity / chưa nhận vơ
+
+Ownerimage vànativeVI390membershiplight/dark,landingVI1440light/390darkđãxem.
+5pointcompare:tiernewline;clutterremoved;truepackage/missingbalance;realhrefs;
+familyiconpalette/neutralcopy/edge. Smallchangeinsideexistingdesign,notfullpage
+redesign/ImageGenconcept. Noagency10/10claim. Normaltextmetricsnotclaimallhover/
+focuscolors;memberfocusstateđượckiểmthêmnhưgatebelow,separatefocusringproofkept.
+5routesnotallfunctional/admin/device/Safari/signedproductionproof.
+
+Focused-state gate opened beforepush:6account390light/darkviews afterfinite
+transition found3lightPASS/3darkFAIL,secondarypricingtext rgb11,124,114on38,58,90
+ratio2.2559425813278837. Same dedicatedAntigravitysessionAPE-MEMBER-FOCUSR1
+returnedexact7line scoped darkmemberquiet:hover/:focus-visible semanticroleCSS;
+allpriorpatcheskeep,no directtakeover. Rerunonly3faileddarkviews passed,42focused/
+hovertextsamplesmin5.216649621048673,19ownedJobprocesses->0.3lightpassesand60
+normalvisualviewsretained. No source/data/control/hrefchangeoutside exactsuffix;
+noall-app-hoverfocusclaim. FinalCSS172badc8435b85260836097989d772e0a25304774d6857a2a46c8c8b12433c3b.
+
+TechnicalcopykhácvẫnOPEN:catalog10500VIkeys/694technicalcandidates/146focused,
+KHÔNGlà694visiblebugs. Actualvisiblecandidatesđãghi theo route:accounteditor
+CSRF/metadata/linknotes vàdashboardprotocolparagraphs ởbướcdọnplain-language
+kếtiếp. Khôngblanketfiltererrors/customertext/consent/securitywarnings. Inventory
+TECHNICAL-COPY-CLEANUP-20261111.md. Rawtags/oldrecords/titlelimits/otherplanners/
+currentinput/stale/retry/auth/AX/device/signedLIVE/motionlastremainopen.
+Ops/originalfeature/Tester/filemetadata/provenance trướcpush;exactHEADCI/merge/
+deploy/runtime/assetsreceiptIssue689làdeliverytruth,khôngsuyLIVEsignedtừ200/service.
+PROVIDER_CALLS=0;WALLET_MUTATIONS=0;PRODUCTION_DATA_MUTATIONS=0;ENV_MUTATIONS=0;
+LIVE_PASS=NOT_TESTED(signedproduction/device/provider);LESSON_CANDIDATE=NONE.
+
+## CI primitive-owner amendment — tests unchanged
+
+FirstCI42964101943 atc2acc466:account/landingNode stagepassed;critical116pass/1fail
+atlegacysemantic-tokenmapguard. Localalsoexercisedroot-only-hexguard:2RED. House
+contractrequiresallrawhexprimitivesintheFIRSTcanonicalroot;newsemanticblocks
+werevalidrolesbuttheirhexdefinitionswerenotcentrallyowned. Missingcoordinator
+criterion,notworkerimplementationfailure. No test edited/skipped/thresholdchanged.
+
+SameAntigravityconversationAPE-TOKEN-OWNERR1 exact2CSSrecords:18uniqueprimitive
+definitionsinfirstroot,18family/memberlight/darkvaluesbecomevaraliases.2existing
+foundationtestsGREEN(exit0,2pass),18leafresolvedvaluesidentical/nooverrides,
+reversepatchrestoresallpriorCSSbytes. Oldcode/copy/DOM/data/60normal+focusednative/
+45Node/24parity evidence retained,noexpensivenative replay forcolor-identicalalias.
+Rootinsertion19lines+100linesuffix,allpriorbasebytesrestoredbyspecifiedreverse.
+FinalsourcecomparisonCSS62b69831b2cc5171ce83b4523a3c1bc52ccf982812327850e309d35ddf88717f.
+FinalCInewHEADsamePR719required,firstfailedCIhistorykept;nootherworkflowretries.

@@ -305,6 +305,25 @@
   --portal-mobile-page-padding: 16px;
   --portal-mobile-content-inset: 128px;
   --portal-section-gap: clamp(20px, 2.4vw, 30px);
+  /* Product emphasis primitive colors share the canonical root owner. */
+  --portal-emphasis-family-content-light: #0f766e;
+  --portal-emphasis-family-image-light: #0369a1;
+  --portal-emphasis-family-video-light: #6d28d9;
+  --portal-emphasis-family-voice-light: #0e7490;
+  --portal-emphasis-family-music-light: #92400e;
+  --portal-emphasis-family-subtitle-light: #be123c;
+  --portal-emphasis-family-document-light: #047857;
+  --portal-emphasis-member-standard-light: #0e7490;
+  --portal-emphasis-member-vip-light: #9d174d;
+  --portal-emphasis-family-content-dark: #5eead4;
+  --portal-emphasis-family-image-dark: #7dd3fc;
+  --portal-emphasis-family-video-dark: #c4b5fd;
+  --portal-emphasis-family-voice-dark: #67e8f9;
+  --portal-emphasis-family-music-dark: #fcd34d;
+  --portal-emphasis-family-subtitle-dark: #fda4af;
+  --portal-emphasis-family-document-dark: #6ee7b7;
+  --portal-emphasis-member-standard-dark: #22d3ee;
+  --portal-emphasis-member-vip-dark: #fbbf24;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 html { background: var(--portal-app-canvas); }
@@ -23663,4 +23682,104 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-video-studio-detail .po
   .portal-page:is(.portal-video-studio, .portal-video-studio-detail) :is(input:not([type="hidden"]), select, textarea) {
     font-size: 16px;
   }
+}
+
+/* Product identity accents: distinguish families without replacing state colors. */
+:root {
+  --portal-family-content: var(--portal-emphasis-family-content-light);
+  --portal-family-image: var(--portal-emphasis-family-image-light);
+  --portal-family-video: var(--portal-emphasis-family-video-light);
+  --portal-family-voice: var(--portal-emphasis-family-voice-light);
+  --portal-family-music: var(--portal-emphasis-family-music-light);
+  --portal-family-subtitle: var(--portal-emphasis-family-subtitle-light);
+  --portal-family-document: var(--portal-emphasis-family-document-light);
+  --portal-member-standard: var(--portal-emphasis-member-standard-light);
+  --portal-member-vip: var(--portal-emphasis-member-vip-light);
+}
+html[data-portal-theme="dark"] {
+  --portal-family-content: var(--portal-emphasis-family-content-dark);
+  --portal-family-image: var(--portal-emphasis-family-image-dark);
+  --portal-family-video: var(--portal-emphasis-family-video-dark);
+  --portal-family-voice: var(--portal-emphasis-family-voice-dark);
+  --portal-family-music: var(--portal-emphasis-family-music-dark);
+  --portal-family-subtitle: var(--portal-emphasis-family-subtitle-dark);
+  --portal-family-document: var(--portal-emphasis-family-document-dark);
+  --portal-member-standard: var(--portal-emphasis-member-standard-dark);
+  --portal-member-vip: var(--portal-emphasis-member-vip-dark);
+}
+.portal-page > .portal-hero .portal-title::after {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 3px;
+  margin-top: 12px;
+  border-radius: 3px;
+  background: var(--portal-brand);
+}
+:where(a.portal-module-card, a.portal-studio-card, .portal-product-launcher-card, .portal-landing-studio) {
+  --portal-product-accent: var(--portal-family-content);
+}
+:is(a.portal-module-card, .portal-product-launcher-card)[href^="/image"], :is(a.portal-module-card, .portal-product-launcher-card)[href^="/tools/image"], :is(a.portal-module-card, .portal-product-launcher-card)[href^="/features/image"], .portal-studio-card[data-studio="image"], .portal-landing-studio--blue { --portal-product-accent: var(--portal-family-image); }
+:is(a.portal-module-card, .portal-product-launcher-card)[href^="/video"], :is(a.portal-module-card, .portal-product-launcher-card)[href^="/features/video"], .portal-studio-card[data-studio="video"], .portal-landing-studio--violet { --portal-product-accent: var(--portal-family-video); }
+:is(a.portal-module-card, .portal-product-launcher-card)[href^="/voice"], :is(a.portal-module-card, .portal-product-launcher-card)[href^="/features/voice"], .portal-studio-card[data-studio="voice"], .portal-landing-studio--amber { --portal-product-accent: var(--portal-family-voice); }
+:is(a.portal-module-card, .portal-product-launcher-card)[href^="/music"], .portal-studio-card[data-studio="music"] { --portal-product-accent: var(--portal-family-music); }
+:is(a.portal-module-card, .portal-product-launcher-card)[href^="/subdub"], :is(a.portal-module-card, .portal-product-launcher-card)[href^="/features/subtitle"], .portal-landing-studio--rose { --portal-product-accent: var(--portal-family-subtitle); }
+:is(a.portal-module-card, .portal-product-launcher-card)[href^="/document"], :is(a.portal-module-card, .portal-product-launcher-card)[href^="/features/documents"], .portal-studio-card[data-studio="documents"], .portal-landing-studio--mint { --portal-product-accent: var(--portal-family-document); }
+.portal-page :is(a.portal-module-card, a.portal-studio-card, .portal-product-launcher-card), .portal-landing .portal-landing-studio {
+  border-top: 2px solid color-mix(in srgb, var(--portal-product-accent) 60%, var(--portal-border));
+}
+.portal-page :is(a.portal-module-card, a.portal-studio-card, .portal-product-launcher-card) :is(.portal-module-icon, .portal-studio-icon, .portal-product-launcher-icon), .portal-landing .portal-landing-studio .portal-landing-studio-icon {
+  color: var(--portal-product-accent);
+  background: color-mix(in srgb, var(--portal-product-accent) 10%, var(--portal-surface));
+}
+.portal-landing .portal-landing-title-emphasis {
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in srgb, var(--portal-brand) 35%, transparent);
+  text-decoration-thickness: .08em;
+  text-underline-offset: .14em;
+}
+.portal-account-membership { border-top: 3px solid var(--portal-membership-accent); }
+.portal-account-membership .portal-membership-tier {
+  display: block;
+  margin-top: 8px;
+  color: var(--portal-membership-accent);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.portal-membership-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 12px; margin: 0 0 16px; }
+.portal-membership-facts > div { min-width: 0; padding: 12px; border: 1px solid var(--portal-border); border-radius: 8px; background: var(--portal-surface); }
+.portal-membership-facts dt { color: var(--portal-muted); font-size: 12px; line-height: 1.5; }
+.portal-membership-facts dd { margin: 4px 0 0; color: var(--portal-ink); font-size: 16px; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
+
+/* Complete existing dashboard/studio consumers and scoped cascade roles. */
+.portal-dashboard-product-heading > h1::after {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 3px;
+  margin-top: 12px;
+  border-radius: 3px;
+  background: var(--portal-brand);
+}
+.portal-page .portal-media-studio-step { --portal-product-accent: var(--portal-family-content); border-top: 2px solid color-mix(in srgb, var(--portal-product-accent) 60%, var(--portal-border)); }
+.portal-page .portal-media-studio-step:nth-child(3) { --portal-product-accent: var(--portal-family-video); }
+.portal-page .portal-media-studio-step:nth-child(6) { --portal-product-accent: var(--portal-family-document); }
+.portal-page .portal-media-studio-step .portal-module-icon { color: var(--portal-product-accent); background: color-mix(in srgb, var(--portal-product-accent) 10%, var(--portal-surface)); }
+html[data-portal-theme="dark"] body.portal-body--features [data-catalog-group]:not([data-catalog-group="video"]) .portal-module-card .portal-module-icon { color: var(--portal-product-accent); }
+.portal-page.portal-account-page .portal-account-membership { border-top-color: var(--portal-membership-accent); }
+.portal-page.portal-account-page .portal-account-membership .portal-button--primary { background: var(--portal-action); color: var(--portal-on-action); }
+
+/* The legacy primary gradient is important; this readable membership pair is scoped. */
+html:not([data-portal-theme="dark"]) .portal-page.portal-account-page .portal-account-membership .portal-button--primary {
+  background: var(--portal-action) !important;
+  background-image: none !important;
+  color: var(--portal-on-action) !important;
+  filter: none !important;
+}
+
+/* Keep the membership secondary link readable during dark pointer/keyboard states. */
+html[data-portal-theme="dark"] .portal-page.portal-account-page .portal-account-membership .portal-button--quiet:is(:hover, :focus-visible) {
+  color: var(--portal-ink);
+  background: var(--portal-surface-soft);
+  border-color: var(--portal-border-strong);
 }

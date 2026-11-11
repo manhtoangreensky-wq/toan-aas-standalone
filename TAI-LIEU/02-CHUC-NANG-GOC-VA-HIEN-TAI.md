@@ -1810,3 +1810,15 @@ auth/device/signedLIVE/motion-last vẫn thuộcfullgoal,khôngđóng bởiđợ
 
 Không data migration hay productionrecords writes; actual clickfocus kiểm riêng,
 không coi renderPASS là toànappAX/providerLIVE/device. Otherfullgoalgates giữmở.
+
+## Membership/product emphasis — đối chiếu 11/11/2026
+
+|Trước|Code mới|Bằng chứng/giới hạn|
+|---|---|---|
+|Tierdínhlabel/2unavailable/internalverified/duplicatebenefit|Tierblock/missingbalancekhôngemptybox/protocolremoved|30membercases/3paragraphcases,valid0/VIP/customdata giữ|
+|6landingtoneclassesđềuépteal|6familycolors+edgeSVG/headingaccentshared|60uniqueactualviews,sáng/tối/390/1440;khôngfullfunctional/adminclaim|
+|DeadlaunchpadselectorskhôngđủchoStudio|Actualdashboardh1/6studioarticlescovered|NativeDOMthật,nofakecards/API|
+|Protocolcopyrảiráctoànapp|Exactmembership/2accountparagraphsremoved,actualcandidateinventoryopen|Khôngnói694catalogcandidateslà694visiblebugs;consent/errors/securitygates giữ|
+
+Noauth/CSRF/schema/DB/provider/wallet/payment/Bot/route-engine/motion/sourceAPI
+change. SameAntigravitysession/fragmenthistory;no directappimplementationtakeover.

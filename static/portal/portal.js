@@ -31459,40 +31459,17 @@ function renderAutoPostHub(page, context) {
     const accountPlanName = accountPlan.plan_name || (profile && profile.plan_name) || membershipCopy("standardPlan", "Tiêu chuẩn");
     const accountIsVip = Boolean(accountWallet && (accountWallet.is_vip || (profile && profile.vipTierOverride === "vip")));
     const tierBadge = accountIsVip ? membershipCopy("tierVip", "👑 VIP") : membershipCopy("tierStandard", "⭐ Thành viên tiêu chuẩn");
-    const tierColor = accountIsVip ? "#f43f5e" : "#00f2fe";
-    const accUnlinkedOrNoData = context.wallet && context.wallet.status_name === "unlinked"
-      ? membershipCopy("unlinkedTelegram", "Chưa liên kết Telegram")
-      : membershipCopy("unavailable", "Không khả dụng");
-
+    const tierColor = accountIsVip ? "var(--portal-member-vip)" : "var(--portal-member-standard)";
     const memberTierCard = `
-      <section class="portal-card portal-card-pad" style="border-top: 3px solid ${tierColor};">
-        <div class="portal-card-header">
-          <div>
-            <span class="portal-section-kicker">👑 ${safeText(membershipCopy("kicker", "Gói thành viên"))}</span>
-            <h2 class="portal-card-title">${safeText(membershipCopy("title", "Hạng thành viên"))}: <span style="color:${tierColor};">${safeText(tierBadge)}</span></h2>
-            <p class="portal-card-subtitle">${hasCanonicalWallet ? safeText(membershipCopy("verifiedBody", "Quyền lợi được đối soát từ phiên đã xác thực.")) : safeText(accUnlinkedOrNoData)}</p>
-          </div>
-          ${badge("read_only")}
-        </div>
-        <div style="margin-bottom:16px;">
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px; margin-top:8px;">
-            <div style="background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:8px; padding:12px;">
-              <div style="font-size:11px; color:var(--portal-text-secondary, #8fa3b7); margin-bottom:4px;">${safeText(membershipCopy("packageLabel", "Gói dịch vụ"))}</div>
-              <strong style="font-size:14px; color:#fff;">${safeText(accountPlanName)}</strong>
-            </div>
-            <div style="background:var(--portal-surface-card, #091a28); border:1px solid var(--portal-border, #2a3b4c); border-radius:8px; padding:12px;">
-              <div style="font-size:11px; color:var(--portal-text-secondary, #8fa3b7); margin-bottom:4px;">${safeText(membershipCopy("balanceLabel", "Số dư khả dụng"))}</div>
-              <strong style="font-size:14px; color:#00d26a;">${hasCanonicalWallet ? `${accountWallet.balance_xu.toLocaleString("vi-VN")} Xu` : '—'}</strong>
-            </div>
-          </div>
-          <div style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin-top:10px;">
-            ${hasCanonicalWallet ? safeText(membershipCopy("appliedBody", "Quyền lợi được áp dụng theo phiên đã xác thực. Hệ thống không dùng bảng xếp hạng tĩnh khi máy chủ chưa công bố danh mục cấp bậc chính thức.")) : safeText(accUnlinkedOrNoData)}
-          </div>
-        </div>
-        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
-          <span style="background:rgba(0, 242, 254, 0.1); color:#00f2fe; border:1px solid rgba(0, 242, 254, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">⭐ ${safeText(membershipCopy("benefitLabel", "Quyền lợi"))}: ${safeText(tierBadge)}</span>
-          <span style="background:rgba(0, 210, 106, 0.1); color:#00d26a; border:1px solid rgba(0, 210, 106, 0.25); font-size:11.5px; font-weight:700; padding:4px 8px; border-radius:6px;">🔒 ${safeText(membershipCopy("canonicalVerified", "Đã xác thực nguồn chuẩn"))}</span>
-        </div>
+      <section class="portal-card portal-card-pad portal-account-membership" style="--portal-membership-accent: ${tierColor};">
+        <div class="portal-card-header"><div>
+          <span class="portal-section-kicker">👑 ${safeText(membershipCopy("kicker", "Gói thành viên"))}</span>
+          <h2 class="portal-card-title">${safeText(membershipCopy("title", "Hạng thành viên"))}:<span class="portal-membership-tier">${safeText(tierBadge)}</span></h2>
+        </div></div>
+        <dl class="portal-membership-facts">
+          <div><dt>${safeText(membershipCopy("packageLabel", "Gói dịch vụ"))}</dt><dd>${safeText(accountPlanName)}</dd></div>
+          ${hasCanonicalWallet ? `<div><dt>${safeText(membershipCopy("balanceLabel", "Số dư khả dụng"))}</dt><dd>${accountWallet.balance_xu.toLocaleString("vi-VN")} Xu</dd></div>` : ""}
+        </dl>
         <div class="portal-form-footer">
           <a class="portal-button portal-button--quiet" href="/pricing">${safeText(membershipCopy("pricingAction", "Bảng giá & dịch vụ →"))}</a>
           <a class="portal-button portal-button--primary" href="/wallet/topup">${safeText(membershipCopy("topupAction", "⚡ Nạp Xu"))}</a>
@@ -31500,7 +31477,7 @@ function renderAutoPostHub(page, context) {
       </section>
     `;
 
-    return `<article class="portal-page portal-account-page">${renderHero(page, context)}${settingsNav}${accountQuickHealth}<div class="portal-account-overview"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("overviewTitle", "Hồ sơ & phương thức truy cập"))}</h2><p class="portal-card-subtitle">${safeText(copy("overviewBody", "Phương thức truy cập lấy từ phiên đã xác thực; trình duyệt không lưu Telegram ID, mật khẩu hay mã truy cập."))}</p></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/activity">${safeText(copy("activityLink", "Nhật ký hoạt động →"))}</a><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("securityLink", "Bảo mật tài khoản →"))}</a><a class="portal-button portal-button--quiet" href="/account/data-controls">${safeText(copy("dataControlsLink", "Kiểm soát dữ liệu Web →"))}</a><span class="portal-form-note">${safeText(linked ? copy("telegramLinkedBody", "Liên kết Telegram đã được xác minh qua Bot.") : copy("telegramUnlinkedBody", "Không gian Web vẫn dùng được độc lập. Liên kết Telegram là tùy chọn để mở dữ liệu ví, tác vụ và tài sản nguồn chuẩn của Bot."))}</span>${linked ? "" : `<a class="portal-button portal-button--quiet" href="${safeText(accountNextAction.href)}">${safeText(accountNextAction.label)}</a>`}</div></section><aside class="portal-card portal-card-pad portal-account-session"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("sessionSecurityTitle", "Bảo mật phiên"))}</h2><p class="portal-card-subtitle">${safeText(copy("sessionSecurityBody", "Đăng xuất luôn đi qua máy chủ để thu hồi phiên hiện tại."))}</p></div>${badge(session.authenticated ? "read_only" : "guarded")}</div><p class="portal-form-note">${safeText(copy("sessionSecurityHelp", "Mở Trung tâm bảo mật để xem, thu hồi phiên khác, thay đổi mật khẩu hoặc quản lý MFA theo quyền mà máy chủ đã cấp."))}</p><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("openSecurity", "Mở Trung tâm bảo mật"))}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="auth-logout" data-portal-confirm="${safeText(copy("logoutConfirm", "Bạn có chắc muốn đăng xuất khỏi phiên này?"))}"${logoutEnabled ? "" : " disabled"}>${safeText(copy("logout", "Đăng xuất"))}</button></div></aside></div>${accountAssurance}<div class="portal-account-settings-grid">${memberTierCard}${avatarStudio}${profileEditor}${telegramAccountUpgrade}${oauthMethods}${botPreferenceHandoff}</div></article>`;
+    return `<article class="portal-page portal-account-page">${renderHero(page, context)}${settingsNav}${accountQuickHealth}<div class="portal-account-overview"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("overviewTitle", "Hồ sơ & phương thức truy cập"))}</h2></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/activity">${safeText(copy("activityLink", "Nhật ký hoạt động →"))}</a><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("securityLink", "Bảo mật tài khoản →"))}</a><a class="portal-button portal-button--quiet" href="/account/data-controls">${safeText(copy("dataControlsLink", "Kiểm soát dữ liệu Web →"))}</a><span class="portal-form-note">${safeText(linked ? copy("telegramLinkedBody", "Liên kết Telegram đã được xác minh qua Bot.") : copy("telegramUnlinkedBody", "Không gian Web vẫn dùng được độc lập. Liên kết Telegram là tùy chọn để mở dữ liệu ví, tác vụ và tài sản nguồn chuẩn của Bot."))}</span>${linked ? "" : `<a class="portal-button portal-button--quiet" href="${safeText(accountNextAction.href)}">${safeText(accountNextAction.label)}</a>`}</div></section><aside class="portal-card portal-card-pad portal-account-session"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(copy("sessionSecurityTitle", "Bảo mật phiên"))}</h2></div>${badge(session.authenticated ? "read_only" : "guarded")}</div><p class="portal-form-note">${safeText(copy("sessionSecurityHelp", "Mở Trung tâm bảo mật để xem, thu hồi phiên khác, thay đổi mật khẩu hoặc quản lý MFA theo quyền mà máy chủ đã cấp."))}</p><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/security">${safeText(copy("openSecurity", "Mở Trung tâm bảo mật"))}</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="auth-logout" data-portal-confirm="${safeText(copy("logoutConfirm", "Bạn có chắc muốn đăng xuất khỏi phiên này?"))}"${logoutEnabled ? "" : " disabled"}>${safeText(copy("logout", "Đăng xuất"))}</button></div></aside></div>${accountAssurance}<div class="portal-account-settings-grid">${memberTierCard}${avatarStudio}${profileEditor}${telegramAccountUpgrade}${oauthMethods}${botPreferenceHandoff}</div></article>`;
   }
 
   function renderInterfaceLocaleNavigator(page, context) {
