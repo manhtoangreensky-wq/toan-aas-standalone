@@ -107,6 +107,7 @@ jobs:
           node --test tests/last-two-planner-outer.test.mjs
           node --test tests/generic-guard-toast-removal.test.mjs
           node --test tests/last-two-image-session-ownership.test.mjs tests/last-two-receipt-transport.test.mjs tests/last-two-planner-results.test.mjs tests/last-two-dynamic-feedback.test.mjs tests/last-two-operation-feedback.test.mjs
+          node --test tests/reference-format-currentness.test.mjs
           python -m pytest --noconftest -q tests/test_video_output_copy_locale.py tests/test_copyfast_image_motion_planner.py tests/test_copyfast_reference_format_planner.py
           python -m pytest --noconftest -q tests/test_saved_video_plan_system_copy.py
           python -m pytest --noconftest -q tests/test_navigation_optin_markup_regression.py tests/test_video_plan_mobile_font_contract.py

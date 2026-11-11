@@ -1,5 +1,18 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 11/11/2026 — Giữ nội dung hiện hành và thử lại đúng lần lưu
+
+Bản sửa ứng viên cho công cụ kế hoạch từ tham chiếu giữ nội dung đã có khi tạo
+lại thất bại; phản hồi cũ không thay nội dung mới sau đổi trang hoặc lựa chọn.
+Lưu đang chờ khóa lựa chọn và không gửi thêm một lần lưu khác. Nếu mất phản hồi,
+người dùng thử lại đúng lần lưu để nhận cùng kế hoạch, không tạo bản ghi trùng.
+Hai công cụ từ ảnh và từ tham chiếu đã được kiểm tra riêng bằng dữ liệu cô lập;
+việc lưu chỉ tạo dữ liệu trong môi trường kiểm tra, không chạm dữ liệu khách.
+Phần đăng nhập, quyền, thanh toán và bộ xử lý tạo nội dung giữ nguyên. Phát hành
+và bản chạy thực tế có receipt riêng; không suy kiểm tra cô lập thành signedLIVE.
+[Báo cáo](../docs/reports/reference-planner-currentness-20261111.md),
+[phiên kiểm tra](../KIEM-THU/PHIEN-REFERENCE-CURRENTNESS-20261111.md).
+
 ## 11/11/2026 — Nhãn loại tài khoản và thông báo Tổng quan
 
 Candidate chỉ định dạng3mode đăng nhập bằng nhãnVI/EN/ZH trên3ô hiển thị;

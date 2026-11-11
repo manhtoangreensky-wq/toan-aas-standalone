@@ -1,5 +1,45 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## Đối chiếu phát hành 11/11/2026 — không đóng toàn goal
+
+Các mục delivery cũ bên dưới giữ lịch sử; bằng chứng mới theo từng đơn vị:
+
+|Đơn vị|PR đã gộp|Bản phát hành|
+|---|---|---|
+|Ngôn ngữ nội dung kế hoạch sinh sẵn|[715](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/715)|7ef871e396a3f3c9d006b24397044ed68870c8cf|
+|Chữ hệ thống trong kế hoạch đã lưu|[716](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/716)|652af67d8ba4706718f458ee1b26ad62bcc0b8ef|
+|Chi tiết kế hoạch và chữ di động|[717](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/717)|b1a48e09f9f3aa5882f2861feaafdfef1d327e2d|
+|Nhãn gắn đúng ô biểu mẫu video|[718](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/718)|1c6eae018e8e110aeac7ebcb57c9a08bf90ff254|
+|Hạng thành viên và màu nhấn|[719](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/719)|8b13f094de39203771a7735e4d80d716134b63f1|
+|Câu chữ hồ sơ, đăng nhập và Tổng quan|[720](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/720)|d47e4911e204e8c8708150fc6bb06509ebe65fac|
+|Nhãn loại tài khoản, trạng thái Tổng quan|[721](https://github.com/manhtoangreensky-wq/toan-aas-standalone/pull/721)|2f297123a8c9e1f20bda231bc18f739438a248ff|
+
+- [x] Delivery từng đơn vị có receipt trên PR/Issue689; bản721 được đối chiếu
+  local/main/VPS và4tệp giao diện công khai khớp;3dịch vụ active/healthok.
+- [x] PR720 hậu merge42973995211 đạt cả2nhóm;PR721 trước merge42978168076
+  đạt cả2nhóm và deploy42979660200 thành công. Hậu merge72142979609924 đạt.
+- [ ] Phản hồi cũ/nội dung đang nhập và khôi phục của công cụ tham chiếu vẫn
+  cần đóng bằng kiểm tra đúng luồng; không lấy happyflow hoặc source xanh thay.
+- [ ] Rà phần chữ và nội dung hệ thống còn lại; không dịch lại dữ liệu khách
+  hoặc xóa thẻ nhập/lỗi thật chỉ để giao diện trông gọn.
+- [ ] Ma trận responsive/AX/bàn phím/lỗi/khôi phục/authfirstpaint còn mở theo
+  mục1170+ bên dưới; signedproduction/device/Safari chưa được suy là đã đạt.
+- [ ] MotionM-FINAL01..06 làm cuối, chưa đóng từ ảnh tĩnh hoặc CI.
+
+Giữ nguyên toàn phạm vi goal, các luồng đã có bằng chứng được khóa. Không mở
+Bot/route-engine/provider/ví/PayOS/ENV/dữ liệu production trong lượt giao diện.
+
+### Phản hồi hiện hành và khôi phục — ứng viên 11/11
+
+- [x] Công cụ từ ảnh: các bước sửa, tạo lại, chờ lưu và thử lại sau mất phản hồi
+  được kiểm tra riêng ở3ngôn ngữ; cùng kế hoạch, không bản ghi trùng.
+- [x] Công cụ từ tham chiếu: sửa phạm vi giao diện sau hai lượt worker chưa đạt;
+  giữ nội dung đang nhập, chặn phản hồi cũ, chờ lưu và thử lại không trùng đã đạt
+  trong môi trường cô lập. Không dùng một happyflow thay toàn bộ các bước này.
+- [ ] Phát hành và đối chiếu ứng viên này; receipt riêng trên Issue689/PR.
+- [ ] Các trạng thái và màn còn lại, ma trận responsive/AX/auth và motion cuối
+  vẫn theo checklist tổng; không đóng toàn nhóm từ ứng viên này.
+
 ## Focus và đối chiếu motion — 09/11/2026
 
 - [x] PR700 CI42575690454, merge/runtimea3ebcadf, deploy42586089352; hai asset

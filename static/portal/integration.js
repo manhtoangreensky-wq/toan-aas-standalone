@@ -480,6 +480,12 @@
   let videoStudioDetailHydrationEpoch = 0;
   let imageMotionPlannerReferencesHydrationEpoch = 0;
   let referenceFormatPlannerReferencesHydrationEpoch = 0;
+  let referenceFormatPlannerComposeRequestEpoch = 0;
+  let referenceFormatPlannerSaveRequestEpoch = 0;
+  let referenceFormatPlannerComposePendingRequestEpoch = 0;
+  let referenceFormatPlannerSavePendingRequestEpoch = 0;
+  let referenceFormatPlannerSaveRecoveryRequestEpoch = 0;
+  let referenceFormatPlannerSessionToken = "";
   // Image Motion Planner creates a reviewable plan and may later persist a
   // private Video Plan. Its compose/save replies must stay in the same signed
   // account, route and native form; a durable save locks the whole form until
@@ -13322,6 +13328,12 @@
     scriptToScreenPlannerSessionToken = "";
     storyboardComposerSessionToken = "";
     imageMotionPlannerSessionToken = "";
+    referenceFormatPlannerSessionToken = "";
+    ++referenceFormatPlannerComposeRequestEpoch;
+    ++referenceFormatPlannerSaveRequestEpoch;
+    referenceFormatPlannerComposePendingRequestEpoch = 0;
+    referenceFormatPlannerSavePendingRequestEpoch = 0;
+    referenceFormatPlannerSaveRecoveryRequestEpoch = 0;
     const initialContext = base();
     const publicAuthEligible = loginChallengeRoute()
       && !(initialContext.session && initialContext.session.authenticated === true)
@@ -14592,6 +14604,7 @@
     scriptToScreenPlannerSessionToken = account && scriptToScreenPlannerEnabled && initialPortalPath === "/video-studio/script-to-screen-planner" ? String(me.csrf_token || "") : "";
     storyboardComposerSessionToken = account && storyboardComposerEnabled && initialPortalPath === "/video-studio/storyboard-composer" ? String(me.csrf_token || "") : "";
     imageMotionPlannerSessionToken = account && imageMotionPlannerEnabled && initialPortalPath === "/video-studio/image-motion-planner" ? String(me.csrf_token || "") : "";
+    referenceFormatPlannerSessionToken = account && referenceFormatPlannerEnabled && initialPortalPath === "/video-studio/reference-format-planner" ? String(me.csrf_token || "") : "";
     merge({
       ...context,
       catalog,
@@ -18655,6 +18668,102 @@
       && videoStudioRequestIsCurrent(requestEpoch, imageMotionPlannerReferencesHydrationEpoch, sessionEpoch, expectedPath)
       && expectedPath === "/video-studio/image-motion-planner"
       && base().imageMotionPlannerEnabled === true;
+  }
+
+  function referenceFormatPlannerOwnedReferences() {
+    return (Array.isArray(base().referenceFormatPlannerReferences) ? base().referenceFormatPlannerReferences : []).map(referenceFormatReference).filter(Boolean);
+  }
+  function referenceFormatPlannerFields() {
+    const form = document.querySelector('form[data-portal-action="reference-format-planner-compose"]');
+    if (!(form instanceof HTMLFormElement)) return {};
+    const fields = {};
+    form.querySelectorAll("input, select, textarea").forEach((control) => {
+      if (control.name && !Object.prototype.hasOwnProperty.call(fields, control.name)) fields[control.name] = String(control.value || "");
+    });
+    return fields;
+  }
+  function referenceFormatPlannerFieldsMatch(source, fields) {
+    const references = referenceFormatPlannerOwnedReferences();
+    const expected = referenceFormatPlanSaveSource(source, references);
+    const current = referenceFormatPlanSaveSource(fields || referenceFormatPlannerFields(), references);
+    return Boolean(expected && current && Object.keys(expected).every((key) => expected[key] === current[key]));
+  }
+  function referenceFormatPlannerRequestIsCurrent(kind, requestEpoch, bootstrapEpoch, token) {
+    const session = base().session || {};
+    const capabilities = base().capabilities || {};
+    return requestEpoch === (kind === "compose" ? referenceFormatPlannerComposeRequestEpoch : kind === "save" ? referenceFormatPlannerSaveRequestEpoch : -1)
+      && bootstrapEpoch === portalHydrationEpoch && Boolean(token) && referenceFormatPlannerSessionToken === token && session.csrfToken === token && session.authenticated === true
+      && currentPortalPath() === "/video-studio/reference-format-planner" && base().referenceFormatPlannerEnabled === true
+      && capabilities["reference-format-planner-view"] === true && capabilities["reference-format-planner-compose"] === true
+      && (kind !== "save" || (capabilities["reference-format-planner-save-plan"] === true && capabilities["video-plan-create"] === true));
+  }
+  function referenceFormatPlannerFeedback(key, fallback) {
+    const i18n = window.TOANAASI18n;
+    const value = i18n && typeof i18n.t === "function" ? i18n.t("lastTwoFeedbackUi." + key) : "";
+    return typeof value === "string" && value && value !== "lastTwoFeedbackUi." + key ? value : fallback;
+  }
+  function reconcileReferenceFormatPlannerControls() {
+    const route = "/video-studio/reference-format-planner";
+    if (currentPortalPath() !== route) return;
+    const form = document.querySelector('form[data-portal-action="reference-format-planner-compose"]');
+    const references = referenceFormatPlannerOwnedReferences();
+    const source = referenceFormatPlanSaveSource(base().referenceFormatPlannerSaveSource, references);
+    const receipt = referenceFormatPlanSaveReceipt(base().referenceFormatPlannerSaveReceipt);
+    const validResult = source && referenceFormatPlanSaveSourceMatchesResult(source, base().referenceFormatPlannerResult, references);
+    const fresh = Boolean(validResult && referenceFormatPlannerFieldsMatch(source));
+    const writeLocked = Boolean(referenceFormatPlannerSavePendingRequestEpoch || referenceFormatPlannerSaveRecoveryRequestEpoch);
+    const capabilities = base().capabilities || {};
+    const canInteract = Boolean(referenceFormatPlannerSessionToken && base().session && base().session.authenticated === true && base().session.csrfToken === referenceFormatPlannerSessionToken && base().referenceFormatPlannerEnabled === true);
+    if (form) {
+      form.setAttribute("aria-busy", String(writeLocked));
+      form.querySelectorAll("input, select, textarea, button").forEach((control) => {
+        if (writeLocked) {
+          if (!Object.prototype.hasOwnProperty.call(control.dataset, "referenceFormatWasDisabled")) control.dataset.referenceFormatWasDisabled = String(control.disabled);
+          control.disabled = true;
+        } else if (Object.prototype.hasOwnProperty.call(control.dataset, "referenceFormatWasDisabled")) {
+          control.disabled = control.dataset.referenceFormatWasDisabled === "true";
+          delete control.dataset.referenceFormatWasDisabled;
+        }
+      });
+      const submit = form.querySelector('button[type="submit"]');
+      if (submit) submit.disabled = !canInteract || writeLocked || Boolean(referenceFormatPlannerComposePendingRequestEpoch) || capabilities["reference-format-planner-compose"] !== true || base().referenceFormatPlannerReadState !== "ready" || !references.length;
+      let note = form.querySelector("[data-reference-format-planner-stale-note]");
+      const footer = form.querySelector(".portal-form-footer");
+      if (!note && footer) {
+        note = document.createElement("span");
+        note.className = "portal-form-note";
+        note.setAttribute("data-reference-format-planner-stale-note", "");
+        note.setAttribute("role", "status");
+        note.setAttribute("aria-live", "polite");
+        footer.insertBefore(note, footer.firstChild);
+      }
+      if (note) {
+        note.hidden = !referenceFormatPlannerSaveRecoveryRequestEpoch && (!validResult || fresh || Boolean(receipt));
+        note.textContent = referenceFormatPlannerSaveRecoveryRequestEpoch
+          ? referenceFormatPlannerFeedback("recoveryNote", "Chưa xác nhận được lần lưu trước. Các lựa chọn được giữ nguyên; hãy bấm lưu để thử lại đúng lần lưu đó.")
+          : !note.hidden ? referenceFormatPlannerFeedback("staleNote", "Lựa chọn đã thay đổi. Hãy tạo lại kế hoạch trước khi lưu.") : "";
+      }
+    }
+    document.querySelectorAll('[data-portal-action="reference-format-planner-save-plan"]').forEach((control) => {
+      control.disabled = !canInteract || !fresh || Boolean(receipt) || Boolean(referenceFormatPlannerComposePendingRequestEpoch) || Boolean(referenceFormatPlannerSavePendingRequestEpoch)
+        || capabilities["reference-format-planner-save-plan"] !== true || capabilities["video-plan-create"] !== true;
+      control.setAttribute("aria-disabled", String(control.disabled));
+      if (referenceFormatPlannerSavePendingRequestEpoch) control.setAttribute("title", referenceFormatPlannerFeedback("savingTitle", "Đang lưu kế hoạch. Vui lòng chờ xác nhận."));
+      else if (referenceFormatPlannerSaveRecoveryRequestEpoch) control.setAttribute("title", referenceFormatPlannerFeedback("retryTitle", "Thử lại đúng lần lưu trước với các lựa chọn đã giữ nguyên."));
+      else if (!fresh) control.setAttribute("title", referenceFormatPlannerFeedback("staleTitle", "Hãy tạo lại kế hoạch từ lựa chọn hiện tại trước khi lưu."));
+      else control.removeAttribute("title");
+    });
+  }
+  function markReferenceFormatPlannerDraftEdited(event) {
+    const route = "/video-studio/reference-format-planner";
+    const target = event && event.target;
+    const form = target && typeof target.closest === "function" ? target.closest('form[data-portal-action="reference-format-planner-compose"]') : null;
+    if (!form || currentPortalPath() !== route || referenceFormatPlannerSavePendingRequestEpoch || referenceFormatPlannerSaveRecoveryRequestEpoch) return;
+    ++referenceFormatPlannerComposeRequestEpoch;
+    ++referenceFormatPlannerSaveRequestEpoch;
+    referenceFormatPlannerComposePendingRequestEpoch = 0;
+    setActionBusy("reference-format-planner-compose", route, false);
+    reconcileReferenceFormatPlannerControls();
   }
 
   function referenceFormatPlannerReferencesRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
@@ -31653,89 +31762,98 @@
         return;
       }
       if (action === "reference-format-planner-compose") {
-        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
-        if (!(capabilities["reference-format-planner-view"] === true && capabilities["reference-format-planner-compose"] === true)) {
-          throw new Error("Chỉ signed Web session có CSRF và Video Studio đang sẵn sàng mới có thể lập Reference Format Plan.");
-        }
-        const references = (Array.isArray(base().referenceFormatPlannerReferences) ? base().referenceFormatPlannerReferences : [])
-          .map(referenceFormatReference).filter(Boolean);
+        const expectedPath = "/video-studio/reference-format-planner";
+        if (route !== expectedPath || currentPortalPath() !== expectedPath) return;
+        const capabilities = base().capabilities || {};
+        if (!(capabilities["reference-format-planner-view"] === true && capabilities["reference-format-planner-compose"] === true)) throw new Error("Chỉ signed Web session có CSRF và Video Studio đang sẵn sàng mới có thể lập Reference Format Plan.");
+        if (referenceFormatPlannerSavePendingRequestEpoch || referenceFormatPlannerSaveRecoveryRequestEpoch) throw new Error("Reference Format Plan đang được Video Production Studio xác nhận. Vui lòng chờ.");
+        const references = referenceFormatPlannerOwnedReferences();
         const payload = referenceFormatPlannerPayload(fields, references);
-        // The only later write input is this exact original bounded selection.
-        // Never let browser-rendered scenes, link text, source media, Bot state
-        // or an external execution handle become part of a save request.
-        merge({
-          referenceFormatPlannerResult: {}, referenceFormatPlannerSaveSource: {}, referenceFormatPlannerSaveReceipt: {},
-          pageStates: { ...(base().pageStates || {}), "/video-studio/reference-format-planner": "processing" }
-        });
+        const bootstrapEpoch = portalHydrationEpoch;
+        const token = referenceFormatPlannerSessionToken;
+        const requestEpoch = ++referenceFormatPlannerComposeRequestEpoch;
+        ++referenceFormatPlannerSaveRequestEpoch;
+        if (!referenceFormatPlannerRequestIsCurrent("compose", requestEpoch, bootstrapEpoch, token)) return;
+        referenceFormatPlannerComposePendingRequestEpoch = requestEpoch;
+        reconcileReferenceFormatPlannerControls();
         setActionBusy(action, route, true);
         try {
           const result = await api("/video-studio/tools/reference-format-planner", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
           });
+          if (!referenceFormatPlannerRequestIsCurrent("compose", requestEpoch, bootstrapEpoch, token)) return;
           const data = result.data && typeof result.data === "object" ? result.data : {};
-          if (!referenceFormatPlannerResultIsSafe(data)) {
-            throw new Error("Máy chủ chưa trả Reference Format Plan Web-native an toàn.");
-          }
-          const saveSource = referenceFormatPlanSaveSource(payload, references);
-          if (!saveSource || !referenceFormatPlanSaveSourceMatchesResult(saveSource, data, references)) {
-            throw new Error("Reference Format Plan trả về không khớp video Asset Vault và lựa chọn đang có trong phiên này.");
-          }
-          merge({
-            referenceFormatPlannerResult: data, referenceFormatPlannerSaveSource: saveSource, referenceFormatPlannerSaveReceipt: {},
-            pageStates: { ...(base().pageStates || {}), "/video-studio/reference-format-planner": "ready" }
-          });
+          if (!referenceFormatPlannerResultIsSafe(data)) throw new Error("Máy chủ chưa trả Reference Format Plan Web-native an toàn.");
+          const saveSource = referenceFormatPlanSaveSource(payload, referenceFormatPlannerOwnedReferences());
+          if (!saveSource || !referenceFormatPlanSaveSourceMatchesResult(saveSource, data, referenceFormatPlannerOwnedReferences()) || !referenceFormatPlannerFieldsMatch(saveSource)) throw new Error("Reference Format Plan trả về không khớp video Asset Vault và lựa chọn đang có trong phiên này.");
+          merge({ referenceFormatPlannerResult: data, referenceFormatPlannerSaveSource: saveSource, referenceFormatPlannerSaveReceipt: {}, pageStates: { ...(base().pageStates || {}), [expectedPath]: "ready" } });
           toast(result.message || "Đã tạo Reference Format Plan để review. Không có phân tích video, render, provider, job, payment hoặc output.");
+        } catch (error) {
+          if (!referenceFormatPlannerRequestIsCurrent("compose", requestEpoch, bootstrapEpoch, token)) return;
+          throw error;
         } finally {
-          setActionBusy(action, route, false);
+          if (referenceFormatPlannerComposePendingRequestEpoch === requestEpoch) {
+            referenceFormatPlannerComposePendingRequestEpoch = 0;
+            if (referenceFormatPlannerRequestIsCurrent("compose", requestEpoch, bootstrapEpoch, token)) {
+              setActionBusy(action, route, false);
+              reconcileReferenceFormatPlannerControls();
+            }
+          }
         }
         return;
       }
       if (action === "reference-format-planner-save-plan") {
-        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
-        if (!(capabilities["reference-format-planner-view"] === true
-          && capabilities["reference-format-planner-compose"] === true
-          && capabilities["reference-format-planner-save-plan"] === true
-          && capabilities["video-plan-create"] === true)) {
-          throw new Error("Chỉ signed Web session có CSRF và Video Studio đang sẵn sàng mới có thể lưu Reference Format Plan thành Video Plan.");
+        const expectedPath = "/video-studio/reference-format-planner";
+        if (route !== expectedPath || currentPortalPath() !== expectedPath) return;
+        const capabilities = base().capabilities || {};
+        if (!(capabilities["reference-format-planner-view"] === true && capabilities["reference-format-planner-compose"] === true && capabilities["reference-format-planner-save-plan"] === true && capabilities["video-plan-create"] === true)) throw new Error("Chỉ signed Web session có CSRF và Video Studio đang sẵn sàng mới có thể lưu Reference Format Plan thành Video Plan.");
+        if (referenceFormatPlannerComposePendingRequestEpoch || referenceFormatPlannerSavePendingRequestEpoch) {
+          toast("Reference Format Plan đang được Video Production Studio xác nhận. Vui lòng chờ.", "error"); return;
         }
-        const references = (Array.isArray(base().referenceFormatPlannerReferences) ? base().referenceFormatPlannerReferences : [])
-          .map(referenceFormatReference).filter(Boolean);
+        if (referenceFormatPlanSaveReceipt(base().referenceFormatPlannerSaveReceipt)) return;
+        const references = referenceFormatPlannerOwnedReferences();
         const source = referenceFormatPlanSaveSource(base().referenceFormatPlannerSaveSource, references);
-        const currentResult = base().referenceFormatPlannerResult;
-        if (!source || !referenceFormatPlanSaveSourceMatchesResult(source, currentResult, references)) {
-          throw new Error("Bản Reference Format hiện tại không còn khớp video Asset Vault đang hoạt động. Hãy tạo lại trước khi lưu.");
-        }
+        if (!source || !referenceFormatPlanSaveSourceMatchesResult(source, base().referenceFormatPlannerResult, references) || !referenceFormatPlannerFieldsMatch(source)) throw new Error("Bản Reference Format hiện tại không còn khớp video Asset Vault đang hoạt động. Hãy tạo lại trước khi lưu.");
+        const bootstrapEpoch = portalHydrationEpoch;
+        const token = referenceFormatPlannerSessionToken;
+        const requestEpoch = ++referenceFormatPlannerSaveRequestEpoch;
+        if (!referenceFormatPlannerRequestIsCurrent("save", requestEpoch, bootstrapEpoch, token)) return;
         const payload = { ...source, destination: "video_plan" };
         const scope = "video-studio:reference-format-planner:save-plan";
         const submission = acquireSubmission(scope, JSON.stringify(payload));
-        if (!submission) {
-          toast("Reference Format Plan đang được Video Production Studio xác nhận. Vui lòng chờ.", "error");
-          return;
-        }
+        if (!submission) { toast("Reference Format Plan đang được Video Production Studio xác nhận. Vui lòng chờ.", "error"); return; }
         let acknowledged = false;
+        referenceFormatPlannerSavePendingRequestEpoch = requestEpoch;
+        reconcileReferenceFormatPlannerControls();
         setActionBusy(action, route, true);
         try {
           const result = await api("/video-studio/tools/reference-format-planner/save", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, idempotency_key: submission.key })
           });
           acknowledged = true;
+          if (!referenceFormatPlannerRequestIsCurrent("save", requestEpoch, bootstrapEpoch, token)) return;
           if (result.status !== "draft") throw new Error("Máy chủ chưa xác nhận Video Plan Draft từ Reference Format Planner.");
           const receipt = referenceFormatPlanSaveReceipt(result.data);
           if (!receipt) throw new Error("Máy chủ chưa trả receipt Reference Format Video Plan content-free và đúng ranh giới an toàn.");
+          referenceFormatPlannerSaveRecoveryRequestEpoch = 0;
           merge({ referenceFormatPlannerSaveReceipt: receipt });
           toast(result.message || "Đã lưu Reference Format Plan thành Video Plan Draft riêng tư.");
         } catch (error) {
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
-          merge({ referenceFormatPlannerSaveReceipt: {} });
+          if (!referenceFormatPlannerRequestIsCurrent("save", requestEpoch, bootstrapEpoch, token)) return;
+          referenceFormatPlannerSaveRecoveryRequestEpoch = acknowledged ? 0 : requestEpoch;
+          if (!acknowledged && error && typeof error === "object") error.message = referenceFormatPlannerFeedback("recoveryNote", "Chưa xác nhận được lần lưu trước. Các lựa chọn được giữ nguyên; hãy bấm lưu để thử lại đúng lần lưu đó.");
           throw error;
         } finally {
           releaseSubmission(submission);
           if (acknowledged) discardSubmission(scope, submission);
-          setActionBusy(action, route, false);
+          if (referenceFormatPlannerSavePendingRequestEpoch === requestEpoch) {
+            referenceFormatPlannerSavePendingRequestEpoch = 0;
+            if (referenceFormatPlannerRequestIsCurrent("save", requestEpoch, bootstrapEpoch, token)) {
+              setActionBusy(action, route, false);
+              reconcileReferenceFormatPlannerControls();
+            }
+          }
         }
         return;
       }
@@ -39222,6 +39340,9 @@
       setActionBusy("sfx-cue-sheet-compose", "/media-workspace/sfx-cue-sheet", false);
     }
   });
+  document.addEventListener("input", markReferenceFormatPlannerDraftEdited);
+  document.addEventListener("change", markReferenceFormatPlannerDraftEdited);
+  window.addEventListener("toanaas:reference-format-planner-mounted", reconcileReferenceFormatPlannerControls);
   window.addEventListener("toanaas:portal-action", handleAction);
   window.addEventListener("toanaas:voice-workspace-navigation", () => {
     if (["/voice/tts", "/voice/stt", "/voice/saved", "/voice/clone"].includes(currentPortalPath())) {
