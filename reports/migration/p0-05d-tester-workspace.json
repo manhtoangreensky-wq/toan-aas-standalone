@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-11",
-  "local_files_refresh_scope": "Video form ID namespace: canonical case source1045lines/121084bytes after4VFIDcase rows; local file metadata only. Historical remote/P0/48case/safety fields preserved; no remote revalidation or application change.",
+  "local_files_refresh_scope": "Account/product emphasis: canonical case source1055lines/122161bytes after5APEcase rows; local file metadata only. Historical remote/P0/48case/safety fields preserved; no remote revalidation or application change.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1045,
-      "bytes": 121084,
-      "sha256": "6cae806d081dd042ec212498a2a5981114c171000c2eea348b1a9a2ba5c2e59f"
+      "lines": 1055,
+      "bytes": 122161,
+      "sha256": "13912d62798a87ce961b526cd324fb11fc8612fd8c94148a434a3218d77d6615"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

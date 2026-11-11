@@ -1043,3 +1043,13 @@ vẫn chờ exact-SHA CI/deploy/live trong PR. Hồ sơ: `R218-LOCALE-183-RELEAS
 |VFID-PROTOCOL|nặng|So24BASE/candidateviews|Chỉid/for/aria-describedby khác;names/values/actions/labels/state/records exact|27NodeGREEN;sourceonly4calls|
 |VFID-NATIVE|nặng|Bấm thật mọienabledlabel tại320/1440 ở3locale,list/detail|Native.control vàfocus đúngowninput,khôngfocusJSbù,khôngthaygiátrị|Phiên VFID;12view gate|
 |VFID-SAFETY|nặng|GET/reopenedtrêncopiedQA6plan18scene|Hash/count/evidence/source giữ,0compose/save/provider/wallet/egress/.env/media,Job0|Phiên VFID;production/device riêng|
+
+## Membership/product emphasis — 11/11/2026
+
+|Case|Mức|Bước|Kết quả bắt buộc|Bằng chứng|
+|---|---|---|---|---|
+|APE-MEMBER|vừa|3locale,missing/unlinked/zero/standard/VIP|Tierblocknewlinenofiller/noblankbalance,true0/realpackage/hrefskeep|[Phiên APE](PHIEN-ACCOUNT-EMPHASIS-20261111.md)|
+|APE-COLOR|vừa|Account/dashboard/studio/features/welcome,390/1440,Light/Dark|PurposefulfamilySVG/edge/headline,6distinctlandingcolors,neutralcopy/nocontrolchange|60uniqueaggregateviews|
+|APE-READABILITY|nặng|Đotext/thẻthànhviênvàSVGroles thực|Ordinarytext>=4.5/iconsknown>=3,unknowntextblocks,overflow0|84membernormaltextsmin5.2166/408knownSVGmin4.6673|
+|APE-PROTOCOL|nặng|SoBASEmarkup/rawrecords,GETcácmànthật|24viewsnonaccountHTML/accountcontrolsdatasame,realanonymousloginhandoffkeep|18protectedpaths/sourcebinding,0productwrites|
+|APE-TECHNICAL|vừa|Ràchữprotocoltheoactualsource/render|Scopemembership+2paragraphsremoved;otheractualtechnicalcandidatesqueued,notblanketfilter|[Inventory](../docs/reports/TECHNICAL-COPY-CLEANUP-20261111.md)|

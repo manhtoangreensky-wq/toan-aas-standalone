@@ -2573,3 +2573,15 @@ dùngchung giữ nguyên, chỉ4điểm gọi nhận thêm tiền tố theoformr
 336actualclickfocus,0valuechanges/compose/save;6plan18scene/evidencehash giữ.
 Trạng thái giao hàng theo receiptCI/merge/deploy/runtime trênIssue689.
 [Báo cáo](../docs/reports/video-form-id-namespace-20261111.md).
+
+## Thẻ thành viên và điểm nhấn — thay đổi 11/11/2026
+
+Tênhạngxuốngdòngriêng,sao/màugiữnhậndiện;khôngcòn2dòngkhôngkhảdụnghoặc
+verified/protocol/benefitrowlặp. Sốdưchỉhiệnkhirealprojectionvalid,0vẫnlà0;
+missingkhôngcóôtrống. Phânloạihạng/tínhví/links/thanh toánkhôngđổi.
+Sharedheadings/toolicons/edges thêmvaitròmàunhóm;landing6nhómphânbiệt,sáng/tối
+cópairdễđọc,khôngthêmclaim/cards/motion.45Nodecumulative/24markupdataparities,
+60representativevisualviews,84membernormaltextsmin5.2166,408SVGmin4.6673.
+Admin/nativefinancialfixture/device/signedLIVE/normalmotionnotclaimed;global
+technicalcopyinventorycònOPENtheotừngfragment. Trạngtháigiao hàngtheoreceiptCI/
+merge/deploy/runtimeIssue689. [Báo cáo](../docs/reports/account-product-emphasis-20261111.md).
