@@ -1,5 +1,16 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 11/11/2026 — Nội dung đang nhập và lưu kế hoạch không trùng
+
+|Chức năng đang có|Hành vi ứng viên đã kiểm tra|Ranh giới giữ nguyên|
+|---|---|---|
+|Lập kế hoạch từ tham chiếu|Giữ nội dung cũ khi tạo lại lỗi, chặn phản hồi không còn hiện hành|Không đổi lựa chọn hợp lệ, bộ kiểm tra dữ liệu hoặc đầu ra|
+|Lưu kế hoạch|Không gửi thêm khi đang chờ; mất phản hồi chỉ thử lại đúng lần lưu|Không tự gửi lại, không coi phản hồi lỗi là chưa lưu ở máy chủ|
+|Lập kế hoạch từ ảnh|Luồng sửa, chờ lưu và khôi phục được kiểm tra riêng|Giữ nguyên mã đã đạt và dữ liệu gốc|
+
+Việc xem kết quả bằng giao diện khác với thực thi tạo media. Phiên kiểm tra này
+không mở quyền mới, không tạo đầu ra có phí và không thay dữ liệu production.
+
 ## 11/11/2026 — Không hiện mã mode hoặc giải thích triển khai
 
 Nguồn:designDashboard26/07 vàAccount03/08. Quy tắc giữ dữ liệu vẫn nguyên;

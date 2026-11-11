@@ -42566,6 +42566,9 @@ function renderAutoPostHub(page, context) {
       main.querySelectorAll('[data-portal-action="image-motion-planner-compose"]').forEach((form) => {
         synchronizeImageMotionPlannerDraftFreshness(form);
       });
+      if (main.querySelector('form[data-portal-action="reference-format-planner-compose"]')) {
+        window.dispatchEvent(new CustomEvent("toanaas:reference-format-planner-mounted"));
+      }
       main.querySelectorAll('[data-portal-action="creative-motion-guide-compose"]').forEach((form) => {
         synchronizeCreativeMotionGuideForm(form);
       });

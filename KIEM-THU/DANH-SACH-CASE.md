@@ -1,5 +1,17 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## REFERENCE-CURRENTNESS-20261111 — phản hồi hiện hành và khôi phục
+
+Phiên: [REFERENCE-CURRENTNESS](PHIEN-REFERENCE-CURRENTNESS-20261111.md).
+
+|Case|Mức|Thao tác|Điều kiện đạt|
+|---|---|---|---|
+|RF-CURRENT|nặng|Đổi trang, lựa chọn hoặc tài khoản khi đang chờ|Phản hồi cũ không thay nội dung hoặc mở khóa thao tác mới|
+|RF-RECOMPOSE|nặng|Tạo lại gặp lỗi|Giữ nội dung đã có, có cách thử lại hợp lệ|
+|RF-PENDING|nặng|Bấm lưu khi đang chờ|Không tạo thêm lần lưu khác|
+|RF-RECOVERY|nặng|Mất phản hồi rồi thử lại|Cùng kế hoạch, không thêm bản ghi trùng|
+|IM-RECOVERY|nặng|Các bước trên ở công cụ từ ảnh|Chỉ đóng riêng khi có bằng chứng tương ứng|
+
 ## DASHBOARD-CUSTOMER-20261111 — chữ và loại tài khoản
 
 Phiên: [DASHBOARD-CUSTOMER-COPY](PHIEN-DASHBOARD-CUSTOMER-20261111.md).
