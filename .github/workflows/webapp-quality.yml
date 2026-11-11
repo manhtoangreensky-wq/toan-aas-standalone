@@ -89,6 +89,8 @@ jobs:
           node --test tests/video-studio-vi-locale.test.mjs tests/video-uiux-locale-presentation.test.mjs tests/saved-video-detail-ui.test.mjs
           node --test tests/video-form-id-namespace.test.mjs
           node --test tests/account-product-emphasis.test.mjs tests/account-profile-locale-purity.test.mjs tests/account-support-locale-r1-red.test.mjs tests/landing-hero-emphasis-locale.test.mjs
+          node --test tests/account-dashboard-plain-language.test.mjs tests/customer-dashboard-locale-purity.test.mjs tests/account-plain-language-snapshot.test.mjs
+          python -m pytest --noconftest -q tests/test_account_center_locale_contracts.py tests/test_dashboard_workspace_command_center_contracts.py
           node --test tests/video-planning-result-locale.test.mjs
           node --test tests/video-motion-options-locale.test.mjs tests/video-roadmap-save-receipt.test.mjs tests/video-plan-confirmation-flow.test.mjs tests/video-long-form-compose-guard.test.mjs
           node --test tests/video-motion-selected-name.test.mjs

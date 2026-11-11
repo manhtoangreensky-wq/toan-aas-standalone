@@ -1,5 +1,19 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 11/11/2026 — Câu chữ hồ sơ và Tổng quan dễ hiểu
+
+Candidate thay33khóa VI/EN/ZH tại hồ sơ,đăng nhập,hướng dẫn Bot và Tổng quan;
+bỏ một ghi chú audit lặp và khối giải thích triển khai cuối Tổng quan. Không đổi
+form,quyền,liên kết,lệnh,trạng thái tải/lỗi hay dữ liệu. Cảnh báo cùng tài khoản
+Telegram,không tự gộp theo email,xác nhận và chính sách xóa dữ liệu riêng vẫn giữ.
+145Node/138Python/48renderercomparators/24nativeviews đạt;12lượt nhậpDOM rồi Tab
+và khôi phục không lưu. QA chỉ localhost3tài khoản giả,6kế hoạch18cảnh giữ nguyên,
+0ghi sản phẩm/provider/ví/egress/.env/media;42tiến trình sở hữu đã dọn về0.
+Không suy từ bộ này rằng toàn ứng dụng hết chữ kỹ thuật hoặc motion hết giật.
+Deploy/exact runtime và signed LIVE có receipt riêng;ở mốc tài liệu này chờ ship.
+[Bằng chứng/giới hạn](../docs/reports/account-dashboard-plain-language-20261111.md),
+[phiên Tester](../KIEM-THU/PHIEN-PLAIN-LANGUAGE-20261111.md).
+
 ## 09/11/2026 — Focus chỉ thuộc lượt dựng hiện hành
 
 Candidate focus thêm token mount trong RAM; completion cũ không lấy focus trên

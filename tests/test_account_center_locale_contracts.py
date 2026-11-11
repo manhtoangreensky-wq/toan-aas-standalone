@@ -131,6 +131,14 @@ PROFILE_FIELD_ONLY_KEYS = (
     "upgradePasswordConfirmPlaceholder",
 )
 
+# Historical translations stay complete but implementation-only paragraphs are
+# deliberately absent from the customer renderer (PR719 plus plain-language UI).
+PROFILE_HIDDEN_EXPLANATION_KEYS = (
+    "overviewBody",
+    "sessionSecurityBody",
+    "editorAuditNote",
+)
+
 ACTIVITY_KEYS = (
     "headerTime",
     "headerCategory",
@@ -178,7 +186,9 @@ def test_account_profile_and_activity_copy_have_reviewed_vi_en_zh_catalogues() -
     for key in METADATA_KEYS:
         assert I18N.count(f'"{key}"') == 3
 
-    assert set(re.findall(r'\bcopy\("([^"]+)"', account)) == set(PROFILE_KEYS) - set(PROFILE_FIELD_ONLY_KEYS)
+    assert set(re.findall(r'\bcopy\("([^"]+)"', account)) == (
+        set(PROFILE_KEYS) - set(PROFILE_FIELD_ONLY_KEYS) - set(PROFILE_HIDDEN_EXPLANATION_KEYS)
+    )
     assert set(re.findall(r'\bcopy\("([^"]+)"', activity)) == set(ACTIVITY_KEYS) - set(ACTIVITY_INTEGRATION_ONLY_KEYS)
     assert 'function accountCenterText(key, fallback, params)' in PORTAL
     assert 'return uiText(`accountCenter.${key}`, fallback, params);' in PORTAL

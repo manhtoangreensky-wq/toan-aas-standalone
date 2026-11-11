@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {accountPlainLanguageHistoricalSnapshot} from './helpers/account-plain-language-snapshot.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import test from 'node:test';
@@ -29,6 +30,6 @@ for(const locale of['vi','en','zh'])for(const f of fixture.rows)for(const mode o
 }
 for(const locale of['vi','en','zh']){
  const messages=renderChild(locale,'/studio',{}).messages[locale],isNew=k=>['lastTwoResultUi.','lastTwoSaveUi.','lastTwoFeedbackUi.','lastTwoOperationFeedbackUi.'].some(p=>k.startsWith(p));
- test(locale+': all 10424 released catalog values remain unchanged',()=>{const entries=Object.entries(messages).filter(([k])=>!isNew(k)).sort(([a],[b])=>a<b?-1:a>b?1:0);assert.equal(entries.length,10424);assert.equal(crypto.createHash('sha256').update(JSON.stringify(entries)).digest('hex'),fixture.catalog[locale]);});
+ test(locale+': all 10424 released catalog values remain unchanged',()=>{const entries=accountPlainLanguageHistoricalSnapshot(Object.entries(messages),locale).filter(([k])=>!isNew(k)).sort(([a],[b])=>a<b?-1:a>b?1:0);assert.equal(entries.length,10424);assert.equal(crypto.createHash('sha256').update(JSON.stringify(entries)).digest('hex'),fixture.catalog[locale]);});
  test(locale+': result and save catalog has exactly 60 used keys',()=>assert.equal(Object.keys(messages).filter(k=>k.startsWith('lastTwoResultUi.')||k.startsWith('lastTwoSaveUi.')).length,60));
 }

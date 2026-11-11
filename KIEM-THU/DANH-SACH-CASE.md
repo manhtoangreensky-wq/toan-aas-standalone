@@ -1,5 +1,18 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## PLAIN-LANGUAGE-20261111 — Tài khoản và Tổng quan
+
+Phiên: [ACCOUNT-DASHBOARD-PLAIN-LANGUAGE](PHIEN-PLAIN-LANGUAGE-20261111.md).
+Sửa ca tại đây trước khi cập nhật Issue689; không dùng UI PASS suy ra provider LIVE.
+
+|Case|Mức|Thao tác|PASS bắt buộc / canh lỗi cũ|
+|---|---|---|---|
+|PL-ACCOUNT|vừa|3locale,hồ sơ enabled/disabled,link/success/already/denied|Chữ dễ hiểu;giữ form/quyền/correctaccount/confirm/codeprivacy|
+|PL-BOT|vừa|Bot có/thiếu link,5lệnh|Lệnh/href/disabled giữ;chủ động gửi,giữ chính sách dữ liệu riêng|
+|PL-DASHBOARD|vừa|guarded/loading/failed/ready|Không assurance lặp;không che lỗi/retry hoặc tạo trạng thái giả|
+|PL-PARITY|nặng|BASE/branch48renderer+toàn catalogue|Không đổi dữ liệu/action/route/controls/ngoài33key|
+|PL-NATIVE|vừa|2route×3locale×390/1440×2theme|24view+nhậpTabDOMkhôi phục,khôngghi;nguồn/DB/evidencegiữ,Job0|
+
 ## MOTION-NOV09-FOCUS — callback focus hiện hành
 
 Phiên: [MOTION-NOV09-FOCUS-CONTINUATION](PHIEN-MOTION-FOCUS-20261109.md).

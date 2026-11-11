@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {accountPlainLanguageHistoricalSnapshot} from './account-plain-language-snapshot.mjs';
 
 const keys=['autopostHub.page.title','autopostHub.page.description','shellNav.autoPostHub'];
 const before={
@@ -15,7 +16,7 @@ const approved={
 // Compare every historical value while permitting only the three explicitly
 // approved metadata changes and new, separately verified copy namespaces.
 export function customerCopyHistoricalSnapshot(entries,locale){
- return entries.filter(([key])=>!key.startsWith('customerPublishingUi.')&&!key.startsWith('customerBridgeFeedback.')&&!key.startsWith('videoNextFieldsUi.')&&!key.startsWith('remainingPlannerUi.')&&!key.startsWith('lastTwoPlannerUi.')&&!key.startsWith('lastTwoResultUi.')&&!key.startsWith('lastTwoSaveUi.')&&!key.startsWith('lastTwoFeedbackUi.')&&!key.startsWith('lastTwoOperationFeedbackUi.')).map(([key,value])=>{
+ return accountPlainLanguageHistoricalSnapshot(entries,locale).filter(([key])=>!key.startsWith('customerPublishingUi.')&&!key.startsWith('customerBridgeFeedback.')&&!key.startsWith('videoNextFieldsUi.')&&!key.startsWith('remainingPlannerUi.')&&!key.startsWith('lastTwoPlannerUi.')&&!key.startsWith('lastTwoResultUi.')&&!key.startsWith('lastTwoSaveUi.')&&!key.startsWith('lastTwoFeedbackUi.')&&!key.startsWith('lastTwoOperationFeedbackUi.')).map(([key,value])=>{
   const index=keys.indexOf(key);
   if(index<0)return[key,value];
   assert.equal(value,approved[locale][index],'only the reviewed publishing metadata may replace its historical value: '+key);

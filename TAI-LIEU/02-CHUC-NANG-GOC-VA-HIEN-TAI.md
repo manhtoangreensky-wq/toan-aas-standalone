@@ -1,5 +1,22 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 11/11/2026 — Hồ sơ và Tổng quan không cần thuật ngữ triển khai
+
+Nguồn gốc: specs2026-08-03-account-center-locale-clarity-design và
+2026-07-26-dashboard-reviewed-locales-design,renderAccount/Account catalogue,
+renderDashboard. Catalogue đủ khóa không đồng nghĩa câu chữ phù hợp khách dùng.
+
+|Chức năng gốc|Candidate đã đo|Ranh giới giữ|
+|---|---|---|
+|Hồ sơ4trường,phương thức đăng nhập,xác nhận liên kết|33khóa×3locale viết dễ hiểu;36renderer tests|Tên/giá trị/quyền/correctaccount/noemailmerge/codesecrecy giữ|
+|Bot5lệnh và hướng dẫn dữ liệu|Lệnh và handoff tự gửi,disabled/href đúng|Không gửi Bot,không xóa/sửa tài chính/dữ liệu|
+|Tổng quan trạng thái riêng|Bỏ assurance nội bộ lặp,hướng dẫn hữu ích|loading/failed/ready/guarded/retry giữ|
+|Locale và thao tác khách|48BASE/branchparity,24nativeviews/12DOMedits|Ngoài33keys,các control/data và18otherrouteHTML giữ|
+
+145Node/138Python đều đạt;3motion source assertions thất bại giống BASE,để đúng
+đợt motion sau. Không xóa catalogue lịch sử,chức năng hay nội dung khách để làm
+test xanh. [Báo cáo](../docs/reports/account-dashboard-plain-language-20261111.md).
+
 ## 09/11/2026 — Focus continuation
 
 R217-10 cấm stale callback; restoreFocus cũ vẫn chạy sau mọi replace promise.
