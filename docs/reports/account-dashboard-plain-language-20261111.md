@@ -69,6 +69,20 @@ separate finite enum-presentation and exact paragraph work; do not translate raw
 customer records or use a blanket message filter. This unit never claims all
 Account/Dashboard/whole-site technical copy gone. Other goal scopes stay open.
 
+## First CI / finite historical-catalog correction
+
+CI42970854202 on b7f93c0a failed3historical catalogue hashes after the new
+presentation checks. Whole-catalog guards still intentionally protect old literal
+values. Added a test-only33key before/approved adapter, verifying each current
+approved string before normalizing only that key back to historical text. Original
+gold hashes/counts/filters unchanged; unknown edits pass through to fail oldhash.
+Three older tests reuse existing customer snapshot helper; three newer tests now
+reuse the finite adapter.9newmutation guards cover99approved pairs and unknown
+keys. Affected450/450tests now pass, including all six historical-catalog consumer
+suites.145initialNode/138Python/metadata1/native24/sourceparity retained unchanged.
+No application changes after accepted native run. Coordinator missed-test scope,
+not worker failure;samePR720,newexactHEADCI required before merge/deploy.
+
 ## Limits / safety
 
 ProviderCalls=0; WalletMutations=0. No ENV/settings/auth authority/schema/production

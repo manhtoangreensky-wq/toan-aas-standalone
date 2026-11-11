@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {accountPlainLanguageHistoricalSnapshot} from './helpers/account-plain-language-snapshot.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import test from 'node:test';
@@ -52,7 +53,7 @@ for(const locale of['vi','en','zh'])for(const row of rows)for(const mode of['emp
 for(const locale of['vi','en','zh']){
  const messages=renderChild(locale,'/studio',{}).messages[locale];
  test(locale+': all 9951 previously released catalog entries remain unchanged',()=>{
-  const entries=Object.entries(messages).filter(([k])=>!k.startsWith('videoNextFieldsUi.')&&!k.startsWith('remainingPlannerUi.')&&!k.startsWith('lastTwoPlannerUi.')&&!k.startsWith('lastTwoResultUi.')&&!k.startsWith('lastTwoSaveUi.')&&!k.startsWith('lastTwoFeedbackUi.')&&!k.startsWith('lastTwoOperationFeedbackUi.')).sort(([a],[b])=>a.localeCompare(b));
+  const entries=accountPlainLanguageHistoricalSnapshot(Object.entries(messages),locale).filter(([k])=>!k.startsWith('videoNextFieldsUi.')&&!k.startsWith('remainingPlannerUi.')&&!k.startsWith('lastTwoPlannerUi.')&&!k.startsWith('lastTwoResultUi.')&&!k.startsWith('lastTwoSaveUi.')&&!k.startsWith('lastTwoFeedbackUi.')&&!k.startsWith('lastTwoOperationFeedbackUi.')).sort(([a],[b])=>a.localeCompare(b));
   assert.equal(entries.length,9951);assert.equal(crypto.createHash('sha256').update(JSON.stringify(entries)).digest('hex'),catalog[locale]);
  });
  test(locale+': new scoped catalog has every actual worker field/result key',()=>assert.equal(Object.keys(messages).filter(k=>k.startsWith('videoNextFieldsUi.')||k.startsWith('remainingPlannerUi.')).length,398));

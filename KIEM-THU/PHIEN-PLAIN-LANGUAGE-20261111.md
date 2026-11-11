@@ -25,3 +25,10 @@ and12DOMedits accepted with24screenshots+12profilecrops.3BASEmotionfailures rema
 sameIDs,4othermotiontests pass. Database6plans18scenes/quickcheck and source/
 originalevidencehashes unchanged;0productwrites/egress/.env/media/provider/wallet,
 42ownedprocesses->0. Fullreport documents limits and exact nextcopy inventory.
+
+CI42970854202 revealed3historical fullcataloghash failures. Finite33key test
+adapter validates exactapproved then restores literalbefore for historicalhash;
+originalgold/counts/filters remain.9newmutation tests plus affected sixconsumer
+suites=450/450GREEN.145initialNode/138Python/metadata1/native24unchanged evidence
+retained,notreplayed. App source byte-unchanged since native acceptance. Final
+HEADCI/merge/deploy/runtime still pending separate receipts.

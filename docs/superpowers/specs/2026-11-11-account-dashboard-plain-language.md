@@ -122,3 +122,24 @@ retains101profilekeys x3. Tester canonicalsource1068lines123130LFbytes,metadata
 hashab5a9b2e4858e8e775e2a7665cba0b66e300cf96e62d38a5e4f253dc212ee08b.
 This contract freezes before provenance; exact CI/merge/deploy/runtime receipts
 published on existing Issue689/PR, not guessed in source documents.
+
+## CI historical-catalog prerequisite amendment
+
+CI42970854202 failed three locale hashes in video-planning-result-locale after
+the new39Node/24Python presentation checks passed. The historical whole-catalog
+snapshot helper permits prior publishing copy changes but not these33approved
+keys. Finite test-only amendment: add a literal before/approved33key fixture and
+test snapshot adapter, asserting each current approved value before restoring
+only that key's historical value for old hash comparisons. No golden hashes,
+counts,filters or production files change. Reuse in existing customer-copy helper
+and three newer direct whole-catalog snapshot tests (remaining/last-two outer/
+last-two results). Test wrong approved value must still throw; unknown values pass
+unchanged into original golden hash. Existing exact worker/protected/native
+evidence remains valid; only affected catalog tests rerun. Coordinator harness
+omission,WorkerFailures0;not authorization for runtime scope expansion.
+
+Affected local evidence after amendment:450/450Node tests across adapter mutation
+guards9 and all six legacy consumers; original golden constants/counts unchanged.
+App source untouched;145initialNode/138Python/native24/48parity retained rather
+than repeated. CI command also includes9adapter tests. Update exactsource/evidence
+commits before finalCI; firstfailedrun preserved,not relabeled success.
