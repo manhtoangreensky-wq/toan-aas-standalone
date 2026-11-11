@@ -59,7 +59,9 @@ fragments,notblindreplacement orclaimallcopycleanfrommembershiponly.
   .env/media/provider/wallet/productionwrites,ownedJob->0.
 - [x] Exacttechnicalcopyinventory/backlog,catalog694candidatesnotvisiblebugs;
   actualrenderedroutefragmentsqueuedinTECHNICAL-COPY-CLEANUP-20261111.md.
-- [ ] Ops/originalfeature/Tester/cases/filemetadata/provenance beforepush.
+- [x] Ops/originalfeature/Tester/cases/filemetadata beforepush;metadata1pass.
+  FinalWeb-onlysource86270a1f150001d4f7e1b2384c451efa1afb2b07,
+  fingerprint4cce688659fceacfd8b0d66b0784b362d3ff3b7881a74cbef5c1dfbf92e73824.
 - [ ] FinalCI/exactHEADmerge/exactSHAdeploy/runtime/assets receiptIssue689.
 
 Worker initialsourcepublic466269df andactualBASE1c6eae01 treeequal;check anchors
