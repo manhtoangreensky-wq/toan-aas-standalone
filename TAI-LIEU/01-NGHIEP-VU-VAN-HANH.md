@@ -1,5 +1,15 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 11/11/2026 — Nhãn loại tài khoản và thông báo Tổng quan
+
+Candidate chỉ định dạng3mode đăng nhập bằng nhãnVI/EN/ZH trên3ô hiển thị;
+`standard` không phải hội viên/VIP hay quyền,tránh hứa có mật khẩu khi thiếumode.
+13đoạn chữ và2lời giải thích đầu thẻ được dọn;loading/error/guarded/empty/ready,
+nút thử lại/liên kết và dữ liệu vẫn giữ.612Node/51Python/72comparators đạt;
+nativeR2 và exactdeploy có receipt riêng,không suy local thành signedLIVE.
+[Báo cáo](../docs/reports/dashboard-customer-copy-20261111.md),
+[Tester](../KIEM-THU/PHIEN-DASHBOARD-CUSTOMER-20261111.md).
+
 ## 11/11/2026 — Câu chữ hồ sơ và Tổng quan dễ hiểu
 
 Candidate thay33khóa VI/EN/ZH tại hồ sơ,đăng nhập,hướng dẫn Bot và Tổng quan;

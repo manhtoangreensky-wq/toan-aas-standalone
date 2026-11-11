@@ -1,5 +1,18 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 11/11/2026 — Không hiện mã mode hoặc giải thích triển khai
+
+Nguồn:designDashboard26/07 vàAccount03/08. Quy tắc giữ dữ liệu vẫn nguyên;
+chỉ3enum mode công khai có nhãn ở3ô giao diện,không đổi điều kiện hoặc giátrị.
+
+|Chức năng gốc|Đổi có phạm vi|Bằng chứng|
+|---|---|---|
+|Account metadata nguồnchuẩn|3nhãn mode theo locale,unknownescaped/rawkeep|36renderer mode cases+72parity|
+|Thư viện dự án/bản nháp|Bỏ2lời lặp,loading/error/empty có hướng dẫn gọn|13keys×3locale,realreadstatechecks|
+|Dashboard dữ liệu tài khoản|Chữ dễ hiểu,không ẩn lỗi hoặc tạo trạng thái|612Node/51Pythonpass;nativeR2separateevidence|
+
+Không đụng nguồn dữ liệu,quyền,provider/ví/PayOS,flow hoặc motion.
+
 ## 11/11/2026 — Hồ sơ và Tổng quan không cần thuật ngữ triển khai
 
 Nguồn gốc: specs2026-08-03-account-center-locale-clarity-design và

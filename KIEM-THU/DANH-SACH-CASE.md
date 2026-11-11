@@ -1,5 +1,17 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## DASHBOARD-CUSTOMER-20261111 — chữ và loại tài khoản
+
+Phiên: [DASHBOARD-CUSTOMER-COPY](PHIEN-DASHBOARD-CUSTOMER-20261111.md).
+
+|Case|Mức|Thao tác|PASS bắt buộc / canh lỗi cũ|
+|---|---|---|---|
+|DC-TYPE|vừa|3mode3locale3consumer,unknown/missing|Nhãn theo mode thật,unknownescape;không suy tier/quyền|
+|DC-COPY|vừa|5readstates,2libraryheaders|Bỏ lời lặp,giữ loading/error/empty/actions/dữ liệu|
+|DC-PARITY|nặng|72BASE/branchviews+catalogue|Control/role/money/rawdata/ngoài13key giữ;oldgold giữ|
+|DC-NATIVE|vừa|12Dashboardviews3locale390/1440LightDark|Nhãn thật,card/headings/href/Tab/overflow/console đúng|
+|DC-SAFETY|nặng|DB/evidence/source/Job|6plan18scenequickcheck/hashgiữ;0productwrite/provider/wallet/egress;Job0|
+
 ## PLAIN-LANGUAGE-20261111 — Tài khoản và Tổng quan
 
 Phiên: [ACCOUNT-DASHBOARD-PLAIN-LANGUAGE](PHIEN-PLAIN-LANGUAGE-20261111.md).

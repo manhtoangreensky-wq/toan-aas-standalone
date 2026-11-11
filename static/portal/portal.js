@@ -236,6 +236,14 @@
     return uiText(`accountCenter.${key}`, fallback, params);
   }
 
+  function accountTypeDisplayLabel(value, fallback) {
+    const code = String(value || fallback || "");
+    if (code === "standard") return uiText("accountTypeUi.standard", "Tài khoản ứng dụng");
+    if (code === "telegram") return uiText("accountTypeUi.telegram", "Telegram");
+    if (code === "oauth_only") return uiText("accountTypeUi.oauthOnly", "Đăng nhập qua tài khoản liên kết");
+    return code;
+  }
+
   // Data Controls copies only fixed Web UI chrome. Canonical privacy scope,
   // request identifiers, timestamps, revisions, and server messages remain
   // server projections and are never translated as browser-owned state.
@@ -22418,7 +22426,7 @@ function renderAutoPostHub(page, context) {
         : drafts.length
           ? `<div class="portal-dashboard-draft-list">${drafts.map((item) => `<a class="portal-dashboard-draft" href="/projects"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.prompt)}</span><span><strong>${safeText(String(item.title || item.feature_title || dashboardText("drafts.defaultTitle")))}</strong><small>${safeText(String(item.feature_title || dashboardText("drafts.defaultFeature")))} · ${dashboardText("drafts.updated", { date: String(item.updated_at || item.created_at || "—") })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
           : renderEmpty(dashboardText("drafts.emptyTitle"), dashboardText("drafts.emptyBody"), ICONS.prompt);
-    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("drafts.kicker")}</span><h3 class="portal-card-title">${dashboardText("drafts.title")}</h3><p class="portal-card-subtitle">${dashboardText("drafts.body")}</p></div><a class="portal-button portal-button--quiet" href="/projects"><span>${dashboardText("drafts.viewAll")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
+    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("drafts.kicker")}</span><h3 class="portal-card-title">${dashboardText("drafts.title")}</h3></div><a class="portal-button portal-button--quiet" href="/projects"><span>${dashboardText("drafts.viewAll")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
   }
 
   function renderDashboardRecentProjects(context) {
@@ -22431,7 +22439,7 @@ function renderAutoPostHub(page, context) {
         : projects.length
           ? `<div class="portal-dashboard-draft-list">${projects.map((project) => `<a class="portal-dashboard-draft" href="/projects/${encodeURIComponent(String(project.id))}"><span class="portal-dashboard-draft-icon" aria-hidden="true">${portalIcon(ICONS.dashboard)}</span><span><strong>${safeText(String(project.title || dashboardText("projects.defaultTitle")))}</strong><small>${safeText(String(project.objective || dashboardText("projects.defaultObjective")))} · ${dashboardText("projects.documents", { count: String(Number(project.document_count || 0)) })}</small></span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>`).join("")}</div>`
           : renderEmpty(dashboardText("projects.emptyTitle"), dashboardText("projects.emptyBody"), ICONS.dashboard);
-    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("projects.kicker")}</span><h3 class="portal-card-title">${dashboardText("projects.title")}</h3><p class="portal-card-subtitle">${dashboardText("projects.body")}</p></div><a class="portal-button portal-button--quiet" href="/projects"><span>${dashboardText("projects.open")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
+    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">${dashboardText("projects.kicker")}</span><h3 class="portal-card-title">${dashboardText("projects.title")}</h3></div><a class="portal-button portal-button--quiet" href="/projects"><span>${dashboardText("projects.open")}</span><span aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a></div>${body}</section>`;
   }
 
   function renderDashboardStartGuide(context) {
@@ -22483,7 +22491,7 @@ function renderAutoPostHub(page, context) {
 
   function renderDashboardAccountLane(context) {
     const linked = telegramIdentityLinked(context);
-    const accountType = String(context.profile && context.profile.accountType || dashboardText("account.defaultType"));
+    const accountType = accountTypeDisplayLabel(context.profile && context.profile.accountType, dashboardText("account.defaultType"));
     const linkLabel = linked ? dashboardText("account.linkedLabel") : dashboardText("account.unlinkedLabel");
     const linkBody = linked
       ? dashboardText("account.linkedBody")
@@ -23165,7 +23173,7 @@ function renderAutoPostHub(page, context) {
     `;
 
     const current = wallet
-      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.current.title", "Quyền lợi hiện tại")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.current.description", "Metadata từ ví/gói do Bot canonical cấp; Web không tự cấp VIP, trial hoặc referral reward.")}</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.currentPlan", "Gói hiện tại")}</span><span class="portal-summary-value">${safeText(planName)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.planStatus", "Trạng thái gói")}</span><span class="portal-summary-value">${safeText(planStatus)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.webAccount", "Tài khoản Web")}</span><span class="portal-summary-value">${safeText(String(profile.accountType || "standard"))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.canonicalCredit", "Xu canonical")}</span><span class="portal-summary-value">${safeText(String(wallet.balance_xu))} Xu</span></div></div></section>`
+      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.current.title", "Quyền lợi hiện tại")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.current.description", "Metadata từ ví/gói do Bot canonical cấp; Web không tự cấp VIP, trial hoặc referral reward.")}</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.currentPlan", "Gói hiện tại")}</span><span class="portal-summary-value">${safeText(planName)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.planStatus", "Trạng thái gói")}</span><span class="portal-summary-value">${safeText(planStatus)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.webAccount", "Tài khoản Web")}</span><span class="portal-summary-value">${safeText(accountTypeDisplayLabel(profile.accountType || "standard"))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.canonicalCredit", "Xu canonical")}</span><span class="portal-summary-value">${safeText(String(wallet.balance_xu))} Xu</span></div></div></section>`
       : `<section class="portal-card portal-card-pad">${renderEmpty(billingCatalogText("membership.empty.title", "Chờ quyền lợi canonical"), billingCatalogText("membership.empty.body", "Bot/Core Bridge phải cấp metadata gói thuộc signed session trước khi Web có thể hiển thị tier hoặc trial."), ICONS.package)}</section>`;
 
     const tierOverview = `
@@ -24090,7 +24098,7 @@ function renderAutoPostHub(page, context) {
       ? (walletData.is_vip ? "Hội viên VIP" : "Hội viên Tiêu chuẩn")
       : "Không khả dụng";
     const currentAccountType = profileData && profileData.accountType
-      ? safeText(profileData.accountType)
+      ? safeText(accountTypeDisplayLabel(profileData.accountType))
       : "Không khả dụng";
     const balanceDisplay = walletData && typeof walletData.balance_xu === "number" && !isNaN(walletData.balance_xu)
       ? `${walletData.balance_xu} Xu`
