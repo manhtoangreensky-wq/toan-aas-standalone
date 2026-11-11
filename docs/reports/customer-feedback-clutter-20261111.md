@@ -38,3 +38,11 @@ Theo dõi và bằng chứng giao hàng: Issue #689 của kho WebApp standalone.
 Đợt này không đóng toàn bộ giao diện đa ngôn ngữ, thiết bị thật, Safari, phiên
 khách trên production hoặc motion. Kiểm tra hiển thị và giao hàng tiếp tục ghi
 trong phiên kiểm tra cùng ngày; merge, deploy và LIVE là các bằng chứng riêng.
+
+## Điều chỉnh kiểm tra lịch sử trước phát hành
+
+CI đầu bị chặn ở ba đối chiếu toàn danh mục do câu landing đã được duyệt đổi.
+Không đổi mã ứng dụng hay hash lịch sử để vượt cổng. Adapter kiểm tra chỉ chấp
+nhận đúng ba câu mới đã duyệt rồi ánh xạ về ba câu cũ cho snapshot; sửa ngoài
+phạm vi hoặc câu khác vẫn thất bại. 453 ca thuộc nhóm chịu ảnh hưởng đạt sau
+điều chỉnh. Các bằng chứng hiển thị trên mã ứng dụng không đổi được giữ lại.

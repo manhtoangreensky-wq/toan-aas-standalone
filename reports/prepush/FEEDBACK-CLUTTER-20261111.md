@@ -41,3 +41,11 @@ không coi merge/deploy là bằng chứng LIVE của phiên khách hoặc đầ
 
 Siêu dữ liệu nguồn ca kiểm tra được đo theo UTF-8/LF, giữ nguyên các trường lịch
 sử 48 ca/P0/remote và an toàn. Không dùng số ca lịch sử làm số ca hiện tại.
+
+## CI amendment — chỉ phụ thuộc kiểm tra
+
+CI 43018346716 có 3 snapshot không nhận câu landing mới. Chỉ bổ sung adapter
+ba câu literal được duyệt, giữ hash cũ và khẳng định mutation ngoài allowlist
+vẫn bị chặn. Scan test-only: helper historical có 7 tệp consumer trực tiếp;
+nhóm chịu ảnh hưởng được chạy 453/453 đạt. Không sửa ứng dụng hoặc nhận lại
+worker; không coi lỗi phụ thuộc kiểm tra là một lỗi triển khai mới của worker.

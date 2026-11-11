@@ -5,6 +5,7 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {renderChild} from './helpers/publishing-child-render.mjs';
+import {landingWorkflowHistoricalSnapshot} from './helpers/landing-workflow-snapshot.mjs';
 
 // Catch technical implementation prose returning to the customer workflow.
 // Execute the real landing renderer and prove every other message/HTML unchanged.
@@ -33,4 +34,9 @@ for(const locale of ['vi','en','zh'])test(locale+': customer workflow uses natur
   assert.equal(before.html.split(oldHtml).length-1,1,'the real workflow intro is rendered exactly once');
   assert.equal(after.html.split(newHtml).length-1,1);
   assert.equal(after.html,before.html.replace(oldHtml,newHtml),'steps, controls and all other markup remain exact');
+  const entries=[[key,text],['unknown.customer.key','UNCHANGED_CUSTOMER_VALUE']],snapshot=JSON.stringify(entries);
+  assert.deepEqual(landingWorkflowHistoricalSnapshot(entries,locale),[[key,old],['unknown.customer.key','UNCHANGED_CUSTOMER_VALUE']]);
+  assert.equal(JSON.stringify(entries),snapshot);
+  assert.throws(()=>landingWorkflowHistoricalSnapshot([[key,'UNREVIEWED_MUTATION']],locale),/Unreviewed landing workflow copy/);
+  assert.deepEqual(landingWorkflowHistoricalSnapshot([['unlisted.key','UNREVIEWED_MUTATION']],locale),[['unlisted.key','UNREVIEWED_MUTATION']]);
 });

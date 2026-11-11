@@ -12,5 +12,9 @@ Nguồn: `8371c43d147b0074c71c00dc4d3f7f9927894d5c`. Issue #689.
 |Hiển thị hai trang dọn chữ|Việt/Anh/Trung, 390/1440, không lỗi trang hoặc mất nút|12 lượt xem đạt; 3 lượt rời trang giữ nguyên vùng thông báo; không ghi kế hoạch|
 |Giao hàng|Kiểm tra đúng HEAD, merge đúng bản, deploy và đối chiếu runtime/asset|Chưa thực hiện|
 
+CI đầu chặn ba snapshot lịch sử của câu landing. Adapter giới hạn đúng ba câu
+đã duyệt; test cố tình đổi câu khác vẫn bị từ chối. Nhóm chịu ảnh hưởng 453 ca
+đạt; không thay mã ứng dụng hoặc nhận bằng chứng hiển thị từ source khác.
+
 Không xác nhận đầu ra provider, thanh toán, thiết bị thật hoặc toàn goal.
 Không thay thông báo thật bằng dữ liệu giả hay trì hoãn để che lỗi.
