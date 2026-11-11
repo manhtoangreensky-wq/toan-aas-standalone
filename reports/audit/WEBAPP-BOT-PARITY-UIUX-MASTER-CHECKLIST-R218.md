@@ -1469,7 +1469,7 @@ auth/AX/device/Safari/signed production và M-FINAL-01..06 vẫn mở theo thứ
   manifest hoặc trạng thái quyền/lỗi thật; nguyên tắc ngắn giữ.
 - [x] Callout/CTA readability: 12view/240mẫu thường,hover/focus nút+link,
   sáng/tối390/1440; min5,216649621048673:1,0indeterminate/overflow/errors;
-  0productwrites, copiedQA DB/evidence giữ, ownedprocesses0.
+  0productwrites, copiedQA plan/scene/versionrows và evidencegốc giữ, ownedprocesses0.
 - [x] 556Node +67affectedreruns,5Python/metadata; snapshot19keys strict và
   toàn bộ nguồn backend/auth/tiền/provider/integration/motion giữ nguyên.
 - [ ] MEMBERSHIP-PLAIN delivery: provenance/CIexactHEAD/merge/deploy/runtime/assets.

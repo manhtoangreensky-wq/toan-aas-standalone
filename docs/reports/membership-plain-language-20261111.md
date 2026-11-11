@@ -34,7 +34,9 @@ khả năng đọc. Bản sửa tiếp theo đạt 12 giao diện Việt/Anh/Tru
 sáng/tối. Đo 240 mẫu ở thường, hover/focus của cả nút và liên kết: thấp nhất
 5,216649621048673:1, không mẫu không xác định. Ba lượt rời trang giữ đúng vùng
 thông báo; không lỗi trang/console/tràn ngang, không ghi kế hoạch và DB QA cũ
-giữ nguyên. Toàn bộ tiến trình QA sở hữu đã dừng.
+giữ nguyên các bản ghi kế hoạch/cảnh và lịch sử tương ứng. Phiên đăng nhập QA
+giả được tạo riêng; không khẳng định byte của DB sao chép không đổi sau đăng
+nhập. Bằng chứng DB gốc không bị ghi. Toàn bộ tiến trình QA sở hữu đã dừng.
 
 Mã ứng dụng chỉ do các phiếu trả kết quả trong phạm vi: 14 khóa dịch (40 giá trị
 thực sự đổi, 2 giá trị đã phù hợp giữ nguyên), 15 giá trị mới của năm khóa,

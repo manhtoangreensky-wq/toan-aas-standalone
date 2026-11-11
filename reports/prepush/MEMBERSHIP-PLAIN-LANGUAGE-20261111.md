@@ -30,7 +30,7 @@ Builder chỉ trả đề xuất; nghiệm thu dựa vào renderer thật, UI na
 - 5 ca Python/metadata đạt; siêu dữ liệu ca kiểm tra đo lại theo UTF-8/LF.
 - 12 view sáng/tối390/1440, ba locale, 240 mẫu màu trên năm trạng thái;
   min5,216649621048673:1, không mẫu không xác định, không lỗi/tràn ngang.
-- Ba lượt rời trang giữ layout cũ; copied QA DB/evidence/source không đổi trong
+- Ba lượt rời trang giữ layout cũ; bản ghi kế hoạch/cảnh sao chép, bằng chứng gốc và source không đổi trong
   chạy, không product/wallet/production write, provider call hoặc tiến trình sót.
 
 Các lượt thiếu tương phản bị từ chối trước phát hành; sửa đúng phần tối và giữ
