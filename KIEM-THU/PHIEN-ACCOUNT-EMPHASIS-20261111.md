@@ -24,3 +24,8 @@ orderednextunit,notclaimedcompletefrommembership. PrivatecampaignYAMLoutsideGit.
 Extra6memberfocusviews:3lightpass/3darkfailratio2.2559. Sameworkerfocused7line
 darkmemberquietstatefix;3affectedrerunPASS/42focusedhovertextsmin5.216649621048673,
 19Jobprocesses->0,allsource/data/hrefsbindingskeep. Retain3lightand60normalcases.
+
+FirstCI42964101943 failedprimitive-ownerhouseguard(critical116pass/1fail);local
+2foundationtestsRED. Sameworker18leafrootnormalization,2existingtestsunchanged
+nowGREEN. ReversewholeCSS+resolvedvalues/nooverridecomparatorspassed. Retain
+allnative/colors/45Node/24parityproofs;finalnewHEADCIonsamePR719beforemerge.

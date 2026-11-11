@@ -305,6 +305,25 @@
   --portal-mobile-page-padding: 16px;
   --portal-mobile-content-inset: 128px;
   --portal-section-gap: clamp(20px, 2.4vw, 30px);
+  /* Product emphasis primitive colors share the canonical root owner. */
+  --portal-emphasis-family-content-light: #0f766e;
+  --portal-emphasis-family-image-light: #0369a1;
+  --portal-emphasis-family-video-light: #6d28d9;
+  --portal-emphasis-family-voice-light: #0e7490;
+  --portal-emphasis-family-music-light: #92400e;
+  --portal-emphasis-family-subtitle-light: #be123c;
+  --portal-emphasis-family-document-light: #047857;
+  --portal-emphasis-member-standard-light: #0e7490;
+  --portal-emphasis-member-vip-light: #9d174d;
+  --portal-emphasis-family-content-dark: #5eead4;
+  --portal-emphasis-family-image-dark: #7dd3fc;
+  --portal-emphasis-family-video-dark: #c4b5fd;
+  --portal-emphasis-family-voice-dark: #67e8f9;
+  --portal-emphasis-family-music-dark: #fcd34d;
+  --portal-emphasis-family-subtitle-dark: #fda4af;
+  --portal-emphasis-family-document-dark: #6ee7b7;
+  --portal-emphasis-member-standard-dark: #22d3ee;
+  --portal-emphasis-member-vip-dark: #fbbf24;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 html { background: var(--portal-app-canvas); }
@@ -23667,26 +23686,26 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-video-studio-detail .po
 
 /* Product identity accents: distinguish families without replacing state colors. */
 :root {
-  --portal-family-content: #0f766e;
-  --portal-family-image: #0369a1;
-  --portal-family-video: #6d28d9;
-  --portal-family-voice: #0e7490;
-  --portal-family-music: #92400e;
-  --portal-family-subtitle: #be123c;
-  --portal-family-document: #047857;
-  --portal-member-standard: #0e7490;
-  --portal-member-vip: #9d174d;
+  --portal-family-content: var(--portal-emphasis-family-content-light);
+  --portal-family-image: var(--portal-emphasis-family-image-light);
+  --portal-family-video: var(--portal-emphasis-family-video-light);
+  --portal-family-voice: var(--portal-emphasis-family-voice-light);
+  --portal-family-music: var(--portal-emphasis-family-music-light);
+  --portal-family-subtitle: var(--portal-emphasis-family-subtitle-light);
+  --portal-family-document: var(--portal-emphasis-family-document-light);
+  --portal-member-standard: var(--portal-emphasis-member-standard-light);
+  --portal-member-vip: var(--portal-emphasis-member-vip-light);
 }
 html[data-portal-theme="dark"] {
-  --portal-family-content: #5eead4;
-  --portal-family-image: #7dd3fc;
-  --portal-family-video: #c4b5fd;
-  --portal-family-voice: #67e8f9;
-  --portal-family-music: #fcd34d;
-  --portal-family-subtitle: #fda4af;
-  --portal-family-document: #6ee7b7;
-  --portal-member-standard: #22d3ee;
-  --portal-member-vip: #fbbf24;
+  --portal-family-content: var(--portal-emphasis-family-content-dark);
+  --portal-family-image: var(--portal-emphasis-family-image-dark);
+  --portal-family-video: var(--portal-emphasis-family-video-dark);
+  --portal-family-voice: var(--portal-emphasis-family-voice-dark);
+  --portal-family-music: var(--portal-emphasis-family-music-dark);
+  --portal-family-subtitle: var(--portal-emphasis-family-subtitle-dark);
+  --portal-family-document: var(--portal-emphasis-family-document-dark);
+  --portal-member-standard: var(--portal-emphasis-member-standard-dark);
+  --portal-member-vip: var(--portal-emphasis-member-vip-dark);
 }
 .portal-page > .portal-hero .portal-title::after {
   content: "";

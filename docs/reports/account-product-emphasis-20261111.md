@@ -82,3 +82,20 @@ Ops/originalfeature/Tester/filemetadata/provenance trướcpush;exactHEADCI/merg
 deploy/runtime/assetsreceiptIssue689làdeliverytruth,khôngsuyLIVEsignedtừ200/service.
 PROVIDER_CALLS=0;WALLET_MUTATIONS=0;PRODUCTION_DATA_MUTATIONS=0;ENV_MUTATIONS=0;
 LIVE_PASS=NOT_TESTED(signedproduction/device/provider);LESSON_CANDIDATE=NONE.
+
+## CI primitive-owner amendment — tests unchanged
+
+FirstCI42964101943 atc2acc466:account/landingNode stagepassed;critical116pass/1fail
+atlegacysemantic-tokenmapguard. Localalsoexercisedroot-only-hexguard:2RED. House
+contractrequiresallrawhexprimitivesintheFIRSTcanonicalroot;newsemanticblocks
+werevalidrolesbuttheirhexdefinitionswerenotcentrallyowned. Missingcoordinator
+criterion,notworkerimplementationfailure. No test edited/skipped/thresholdchanged.
+
+SameAntigravityconversationAPE-TOKEN-OWNERR1 exact2CSSrecords:18uniqueprimitive
+definitionsinfirstroot,18family/memberlight/darkvaluesbecomevaraliases.2existing
+foundationtestsGREEN(exit0,2pass),18leafresolvedvaluesidentical/nooverrides,
+reversepatchrestoresallpriorCSSbytes. Oldcode/copy/DOM/data/60normal+focusednative/
+45Node/24parity evidence retained,noexpensivenative replay forcolor-identicalalias.
+Rootinsertion19lines+100linesuffix,allpriorbasebytesrestoredbyspecifiedreverse.
+FinalsourcecomparisonCSS62b69831b2cc5171ce83b4523a3c1bc52ccf982812327850e309d35ddf88717f.
+FinalCInewHEADsamePR719required,firstfailedCIhistorykept;nootherworkflowretries.

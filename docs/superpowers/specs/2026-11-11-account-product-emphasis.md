@@ -97,3 +97,11 @@ passed. Exact7lineAPE-MEMBER-FOCUSR1fromsameconversation fixesonlydarkmemberquie
 hover/focus-visible with existingink/surface/border.3affectedpass/42focusedhover
 textsmin5.216649621048673,19Job->0;3light+60normalcasesretained,allotherbyteskeep.
 RuntimeCSSsuffixnow100lines;noall-app-hoverfocus/wholegoalcompletionclaim.
+
+CI42964101943 openedprimitive-ownerACbeforemerge:116criticalpass/1fail;2local
+foundationtestsRED. ExistingtestsPROTECTED/UNCHANGED. SameconversationAPE-TOKEN-
+OWNERR1 relocates18hexprimitives(firstroot19lineinsertion),semantic18leafaliases
+only,allvaluesidentical/nooverrides/reversepatchrestorespriorCSS.2testsnowGREEN;
+sourcecomparatorpassed,retain60normal/focus/45Node/24parity. No testmaintenance
+orblanketliteralallowance,noactualpalette/layoutchanged. Finalsourcecommit/audit/
+newHEADCIonsame719required;doNOTediteligibleMDafterthatrefresh.
