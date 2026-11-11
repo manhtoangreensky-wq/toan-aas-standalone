@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import './landing-workflow-plain-language.test.mjs';
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";

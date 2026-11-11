@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {dashboardCustomerHistoricalSnapshot} from './dashboard-customer-snapshot.mjs';
+import {landingWorkflowHistoricalSnapshot} from './landing-workflow-snapshot.mjs';
 
 // Historical whole-catalog guards retain their original hashes. Only these
 // reviewed copy edits may normalize to their literal pre-change values.
@@ -10,7 +11,7 @@ const approved=new Map(rows.map(row=>[row.key,row]));
 assert.equal(approved.size,33);
 export function accountPlainLanguageHistoricalSnapshot(entries,locale){
   assert.ok(['vi','en','zh'].includes(locale));
-  return dashboardCustomerHistoricalSnapshot(entries,locale).map(([key,value])=>{
+  return dashboardCustomerHistoricalSnapshot(landingWorkflowHistoricalSnapshot(entries,locale),locale).map(([key,value])=>{
     const row=approved.get(key);
     if(!row)return[key,value];
     assert.equal(value,row.approved[locale],'Unreviewed Account/Dashboard copy must still fail: '+key);

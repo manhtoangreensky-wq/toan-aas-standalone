@@ -1437,3 +1437,22 @@ Nhóm responsive/keyboard/auth signed và M-FINAL-01..06 ở trên vẫn mở.
 Evidence đơn vị kế tiếp: `docs/reports/video-plan-confirmation-options-20261110.md`
 và `KIEM-THU/PHIEN-VIDEO-PLAN-CONFIRMATION-20261110.md`. Áp dụng quy tắc Owner
 nghiệm thu một lượt trên mã ổn định, gom task hoàn tất; không lặp trên mã không đổi.
+
+## Bổ sung thông báo và nội dung thừa — 11/11/2026
+
+- [x] RECOVERY-FEEDBACK-VISIBILITY local: 24 trạng thái có thông báo thật ở
+  Việt/Anh/Trung, 390/768/1440 sáng/tối; không che vùng nội dung/nút/dock/header.
+  Cùng node/ARIA/timers/producers giữ nguyên; empty không chiếm hàng; 10 ca
+  vòng đời, 3 lượt rời trang, không đổi cách lưu/thử lại. Hai đề xuất chưa đạt
+  bị loại trước khi sửa trực tiếp đúng bố cục; không có lần giao thứ ba.
+- [x] MEMBERSHIP-STATIC-CLUTTER local: bỏ đúng khối tĩnh luôn báo không khả
+  dụng, giữ quyền lợi/số dư 0/gói/thiếu dữ liệu và các nút thật; 12 ca renderer.
+- [x] LANDING-WORKFLOW-PLAIN-LANGUAGE local: đúng ba giá trị Việt/Anh/Trung,
+  mọi khóa khác và HTML ngoài câu giới thiệu giữ nguyên; 3 ca renderer.
+- [x] Nhóm hồi quy local 94 Node +12 Python; 12 lượt xem Hội viên/landing và
+  3 lượt rời trang chỉ đọc đạt, không ghi kế hoạch/khách/ví/provider/production.
+- [ ] FEEDBACK-CLUTTER delivery: provenance, CI đúng HEAD, merge, deploy và
+  runtime/assets. [Báo cáo](../../docs/reports/customer-feedback-clutter-20261111.md).
+
+Đây không phải bằng chứng hoàn tất toàn goal. Toàn tuyến/trạng thái locale,
+auth/AX/device/Safari/signed production và M-FINAL-01..06 vẫn mở theo thứ tự.
