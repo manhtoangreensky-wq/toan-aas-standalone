@@ -6,6 +6,7 @@ import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {renderChild} from './helpers/publishing-child-render.mjs';
 import {landingWorkflowHistoricalSnapshot} from './helpers/landing-workflow-snapshot.mjs';
+import {membershipPlainLanguageHistoricalSnapshot} from './helpers/membership-plain-language-snapshot.mjs';
 
 // Catch technical implementation prose returning to the customer workflow.
 // Execute the real landing renderer and prove every other message/HTML unchanged.
@@ -27,7 +28,7 @@ for(const locale of ['vi','en','zh'])test(locale+': customer workflow uses natur
   assert.doesNotMatch(text,/signed|canonical|ledger|audit|provider|browser|ownership|nhà cung cấp|trình duyệt|sổ Xu|nhật ký|quyền sở hữu|已验证|所有权|操作记录|外部服务|浏览器|账本/i);
   for(const concept of concepts[locale])assert.match(text,concept);
   for(const language of ['vi','en','zh']){
-    const a={...before.messages[language]},b={...after.messages[language]};delete a[key];delete b[key];
+    const a={...before.messages[language]},b=Object.fromEntries(membershipPlainLanguageHistoricalSnapshot(Object.entries(after.messages[language]),language));delete a[key];delete b[key];
     assert.equal(JSON.stringify(b),JSON.stringify(a),'all other message values and keys are preserved for '+language);
   }
   const oldHtml=escape(old),newHtml=escape(text);

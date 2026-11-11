@@ -1102,3 +1102,15 @@ vẫn chờ exact-SHA CI/deploy/live trong PR. Hồ sơ: `R218-LOCALE-183-RELEAS
 |FC-PROTECTED|nặng|Chạy hồi quy và đối chiếu nguồn|Không đổi xử lý lưu/khôi phục, auth, API, tiền, provider, motion|94 ca Node, 12 ca Python; các tệp bảo vệ không đổi|
 
 Phiên và giới hạn: [FEEDBACK-CLUTTER-20261111](PHIEN-FEEDBACK-CLUTTER-20261111.md).
+
+## MEMBERSHIP-PLAIN-LANGUAGE-20261111 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|MPL-COPY|nặng|Mở Hội viên ở VI/EN/ZH, missing/0/VIP/catalog|Đúng 14 khóa và bốn đoạn hộp dẫn; thông tin thiếu không bịa gói|12 ca renderer, exact raw-data/control parity|
+|MPL-DATA|nặng|Dữ liệu có các từ kỹ thuật, giá và số dư 0|Dữ liệu khách giữ nguyên, không lọc/dịch toàn trang|12 ca, giá425/875 và 0Xu giữ|
+|MPL-NOTES|vừa|Xem nguyên tắc quyền lợi|Không còn hai đoạn triển khai tĩnh; tiêu đề/nguyên tắc/nút giữ|12 ca RED->GREEN|
+|MPL-READ|nặng|Xem callout/nút/link thường, hover, focus|Sáng/tối390/1440, >=4,5:1, không tràn|12view/240mẫu, min5,216649621048673:1|
+|MPL-REGRESSION|nặng|Đối chiếu snapshot/source và rời trang|Ngoài 19khóa strict và UI đã duyệt giữ nguyên; không ví/provider/production|556Node/67rerun/5Python,3rời trang/0write|
+
+Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-20261111.md).

@@ -2640,3 +2640,20 @@ triển khai. Không thay các bước, chức năng hay cảnh báo khác.
 Đây là phạm vi cục bộ, không tuyên bố toàn app sạch chữ kỹ thuật hoặc motion
 đã hoàn tất. Giao hàng theo receipt Issue689.
 [Báo cáo](../docs/reports/customer-feedback-clutter-20261111.md).
+
+## Chữ và khả năng đọc trên Hội viên — 11/11/2026
+
+Hộp dẫn Bảng giá theo đúng ngôn ngữ, không hiện đường dẫn kỹ thuật trong nhãn.
+14 khóa mô tả/trạng thái được diễn đạt cho khách hàng; thiếu thông tin gói vẫn
+là chưa nhận thông tin, không tự kết luận khách không có gói. Nhãn gói công bố
+chỉ đổi tại Hội viên, không đổi nguồn giá hoặc trạng thái xác minh.
+
+Bỏ đúng danh sách giải thích triển khai tĩnh, giữ nguyên tắc ngắn và mọi trạng
+thái/dữ liệu thật. Chỉ hộp dẫn Bảng giá có màu chữ/nút riêng để đọc rõ; không
+đổi layout hoặc nút ở nơi khác. Tên/trạng thái/ghi chú khách, số dư 0 và giá
+không bị dịch hoặc thay thế. 12 ca renderer, 12 cấu hình native và 240 mẫu màu
+đạt; min 5,216649621048673:1. Các lượt native không ghi kế hoạch/ví/production.
+
+Đây không phải hoàn tất locale toàn app hoặc mọi nhãn/dữ liệu hệ thống phát
+sinh. Nhãn họ gói mặc định và nội dung khi thiếu ghi chú còn cổng bảo toàn dữ
+liệu riêng. [Báo cáo](../docs/reports/membership-plain-language-20261111.md).
