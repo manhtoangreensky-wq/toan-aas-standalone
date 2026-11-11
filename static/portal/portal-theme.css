@@ -23783,3 +23783,37 @@ html[data-portal-theme="dark"] .portal-page.portal-account-page .portal-account-
   background: var(--portal-surface-soft);
   border-color: var(--portal-border-strong);
 }
+
+/* Keep Reference feedback in its own row, outside the scrollable editor. */
+.portal-shell--reference-feedback .portal-workspace {
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-bottom: var(--portal-feedback-dock-inset, 0px);
+}
+.portal-shell--reference-feedback .portal-main {
+  min-height: 0;
+  flex: 1 1 0;
+  overflow: auto;
+  scroll-padding-block: 12px;
+  padding-bottom: var(--portal-mobile-page-padding, 22px);
+}
+.portal-shell--reference-feedback .portal-workspace > .portal-toast-region {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  flex: 0 0 auto;
+  width: 100%;
+  max-height: min(35dvh, 260px);
+  box-sizing: border-box;
+  padding: 12px calc(18px + var(--portal-safe-right)) 18px calc(18px + var(--portal-safe-left));
+  overflow: auto;
+  pointer-events: auto;
+}
+.portal-shell--reference-feedback .portal-workspace > .portal-toast-region:empty {
+  display: none;
+  padding: 0;
+}
+.portal-shell--reference-feedback .portal-workspace > .portal-toast-region .portal-toast {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

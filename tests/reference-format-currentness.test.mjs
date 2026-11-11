@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';import test from 'node:test';
+import './reference-feedback-layout-lifecycle.test.mjs';
 import {createReferenceRuntime,original,resultFor,route} from './helpers/reference-format-currentness-runtime.mjs';
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 for(const scenario of ['route-away','new-session','unsigned','clear-refresh'])for(const outcome of ['success','error'])test(`compose ${scenario} late ${outcome} never paints or reports into newer UI`,async()=>{

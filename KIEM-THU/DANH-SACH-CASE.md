@@ -1090,3 +1090,15 @@ vẫn chờ exact-SHA CI/deploy/live trong PR. Hồ sơ: `R218-LOCALE-183-RELEAS
 |APE-READABILITY|nặng|Đotext/thẻthànhviênvàSVGroles thực|Ordinarytext>=4.5/iconsknown>=3,unknowntextblocks,overflow0|84membernormaltextsmin5.2166/408knownSVGmin4.6673|
 |APE-PROTOCOL|nặng|SoBASEmarkup/rawrecords,GETcácmànthật|24viewsnonaccountHTML/accountcontrolsdatasame,realanonymousloginhandoffkeep|18protectedpaths/sourcebinding,0productwrites|
 |APE-TECHNICAL|vừa|Ràchữprotocoltheoactualsource/render|Scopemembership+2paragraphsremoved;otheractualtechnicalcandidatesqueued,notblanketfilter|[Inventory](../docs/reports/TECHNICAL-COPY-CLEANUP-20261111.md)|
+
+## FEEDBACK-CLUTTER-20261111 — phạm vi kế tiếp, Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|FC-RECOVERY|nặng|Tạo và lưu kế hoạch tham chiếu, làm mất phản hồi lưu trong QA|Thông báo thật và nút khôi phục cùng hiện, không che nội dung hoặc điều hướng|24 trạng thái Việt/Anh/Trung, 390/768/1440 sáng/tối|
+|FC-LIFECYCLE|nặng|Đổi chiều cao dock, remount, focus, rời trang|Cùng node thông báo; observer được dọn; không mất focus hoặc nội dung|10 ca chạy helper thật; 3 lượt mount rời trang|
+|FC-MEMBERSHIP|vừa|Mở Hội viên khi thiếu ví/0/VIP/có gói|Chỉ bỏ khối giải thích tĩnh, giữ dữ liệu và hành động thật; không ô trống|12 ca renderer thật, 6 lượt xem|
+|FC-LANDING|vừa|Xem phần quy trình ở Việt/Anh/Trung|Câu hướng dẫn dễ hiểu, mọi bước và liên kết khác giữ nguyên|3 ca renderer thật, 6 lượt xem|
+|FC-PROTECTED|nặng|Chạy hồi quy và đối chiếu nguồn|Không đổi xử lý lưu/khôi phục, auth, API, tiền, provider, motion|94 ca Node, 12 ca Python; các tệp bảo vệ không đổi|
+
+Phiên và giới hạn: [FEEDBACK-CLUTTER-20261111](PHIEN-FEEDBACK-CLUTTER-20261111.md).

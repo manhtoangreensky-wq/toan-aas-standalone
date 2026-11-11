@@ -23176,28 +23176,11 @@ function renderAutoPostHub(page, context) {
       ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.current.title", "Quyền lợi hiện tại")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.current.description", "Metadata từ ví/gói do Bot canonical cấp; Web không tự cấp VIP, trial hoặc referral reward.")}</p></div>${badge("read_only")}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.currentPlan", "Gói hiện tại")}</span><span class="portal-summary-value">${safeText(planName)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.planStatus", "Trạng thái gói")}</span><span class="portal-summary-value">${safeText(planStatus)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.webAccount", "Tài khoản Web")}</span><span class="portal-summary-value">${safeText(accountTypeDisplayLabel(profile.accountType || "standard"))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${billingCatalogText("membership.label.canonicalCredit", "Xu canonical")}</span><span class="portal-summary-value">${safeText(String(wallet.balance_xu))} Xu</span></div></div></section>`
       : `<section class="portal-card portal-card-pad">${renderEmpty(billingCatalogText("membership.empty.title", "Chờ quyền lợi canonical"), billingCatalogText("membership.empty.body", "Bot/Core Bridge phải cấp metadata gói thuộc signed session trước khi Web có thể hiển thị tier hoặc trial."), ICONS.package)}</section>`;
 
-    const tierOverview = `
-      <section class="portal-card portal-card-pad portal-pricing-membership">
-        <div class="portal-card-header">
-          <div>
-            <span class="portal-section-kicker">👑 Cấp bậc hội viên</span>
-            <h2 class="portal-card-title">Chính Sách Cấp Bậc Hội Viên</h2>
-            <p class="portal-card-subtitle">Quyền lợi và đặc quyền nâng cao được đối soát từ phiên signed session do Core Bridge cấp.</p>
-          </div>
-          ${badge("read_only")}
-        </div>
-        <div style="background:var(--portal-surface-card, #091a28); border:1px dashed var(--portal-border, #2a3b4c); border-radius:10px; padding:18px; margin-top:16px;">
-          <p style="font-size:13px; color:var(--portal-text-secondary, #8fa3b7); margin:0 0 6px;">Danh mục cấp bậc hội viên thương mại: <strong>Không khả dụng</strong></p>
-          <p style="font-size:12px; color:var(--portal-text-secondary, #8fa3b7); margin:0;">Hệ thống áp dụng chính sách quyền lợi trực tiếp theo dữ liệu phiên tài khoản signed session. Không sử dụng thang bậc tĩnh giả lập khi chưa có catalog cấp bậc chính thức từ máy chủ.</p>
-        </div>
-      </section>
-    `;
-
     const catalogCards = entries.length
       ? `<div class="portal-module-grid">${entries.map((item) => `<article class="portal-module-card portal-billing-catalog-card"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span>${badge(item.status)}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.label)}</h3><p>${safeText(item.note)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || missingPrice)}</span><span>${item.status === "read_only" ? billingCatalogText("catalog.statusCanonical", "Catalog canonical") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh")}</span></span></article>`).join("")}</div>`
       : renderEmpty(billingCatalogText("membership.catalog.emptyTitle", "Chờ catalog gói canonical"), billingCatalogText("membership.catalog.emptyBody", "Không dùng danh mục feature để suy đoán gói, tier, giá hoặc khuyến mãi."), ICONS.package);
 
-    return `<article class="portal-page portal-membership-page" style="width:100%; max-width:100%; display:grid; gap:22px;">${renderHero(page, context)}${compatBanner}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-work-grid"><div class="portal-stack">${current}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.principle.title", "Nguyên tắc quyền lợi")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.principle.body", "Bot là authority cho tier và mọi tác động Xu.")}</p></div></div>${renderNotes(page)}</aside></div>${tierOverview}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.catalog.title", "Gói được Bot công bố")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.catalog.description", "Thông tin chỉ đọc; mua/nâng cấp tiếp tục qua luồng canonical.")}</p></div>${badge(catalog ? "read_only" : "guarded")}</div>${catalogCards}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/packages">${billingCatalogText("membership.action.packages", "Xem catalog đầy đủ")}</a><a class="portal-button portal-button--quiet" href="/pricing">${billingCatalogText("membership.action.pricing", "Xem bảng giá")}</a><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("membership.action.topup", "Nạp Xu canonical")}</a></div></section></article>`;
+    return `<article class="portal-page portal-membership-page" style="width:100%; max-width:100%; display:grid; gap:22px;">${renderHero(page, context)}${compatBanner}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-work-grid"><div class="portal-stack">${current}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.principle.title", "Nguyên tắc quyền lợi")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.principle.body", "Bot là authority cho tier và mọi tác động Xu.")}</p></div></div>${renderNotes(page)}</aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.catalog.title", "Gói được Bot công bố")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.catalog.description", "Thông tin chỉ đọc; mua/nâng cấp tiếp tục qua luồng canonical.")}</p></div>${badge(catalog ? "read_only" : "guarded")}</div>${catalogCards}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/packages">${billingCatalogText("membership.action.packages", "Xem catalog đầy đủ")}</a><a class="portal-button portal-button--quiet" href="/pricing">${billingCatalogText("membership.action.pricing", "Xem bảng giá")}</a><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("membership.action.topup", "Nạp Xu canonical")}</a></div></section></article>`;
   }
 
   function renderServiceStatus(page, context) {
@@ -42409,6 +42392,53 @@ function renderAutoPostHub(page, context) {
   let lastCustomerHeaderMarkup = null;
   let lastCustomerSidebarMarkup = null;
   let lastCustomerHeaderSessionToken = null;
+  let referenceFeedbackObserver = null;
+  function syncReferenceFeedbackLayout(shell, main, mobileNav, enabled) {
+    if (referenceFeedbackObserver) referenceFeedbackObserver.disconnect();
+    referenceFeedbackObserver = null;
+    shell.classList.toggle("portal-shell--reference-feedback", enabled);
+    const region = document.querySelector("[data-portal-toast]");
+    const workspace = main.parentElement;
+    if (!region || !workspace) return;
+    if (!enabled) {
+      if (region.parentElement === workspace) shell.insertAdjacentElement("afterend", region);
+      workspace.style.removeProperty("--portal-feedback-dock-inset");
+      region.removeAttribute("tabindex");
+      return;
+    }
+    if (region.parentElement !== workspace) workspace.appendChild(region);
+    const update = () => {
+      if (!shell.classList.contains("portal-shell--reference-feedback")) return;
+      const dockHeight = mobileNav && !mobileNav.hidden ? mobileNav.getBoundingClientRect().height : 0;
+      const inset = `${dockHeight}px`;
+      if (workspace.style.getPropertyValue("--portal-feedback-dock-inset") !== inset) {
+        workspace.style.setProperty("--portal-feedback-dock-inset", inset);
+      }
+      if (region.scrollHeight > region.clientHeight + 1) region.setAttribute("tabindex", "0");
+      else region.removeAttribute("tabindex");
+      const focused = document.activeElement;
+      const retry = main.querySelector('button[data-portal-action="reference-format-planner-save-plan"]');
+      const recovering = main.querySelector('form[data-portal-action="reference-format-planner-compose"][aria-busy="true"]');
+      const anchor = focused && main.contains(focused) ? focused
+        : focused === document.body && recovering && retry && !retry.disabled ? retry : null;
+      if (anchor && typeof anchor.scrollIntoView === "function") {
+        const control = anchor.getBoundingClientRect();
+        const viewport = main.getBoundingClientRect();
+        if (control.top < viewport.top || control.bottom > viewport.bottom) {
+          anchor.scrollIntoView({ block: "nearest", inline: "nearest" });
+        }
+      }
+    };
+    update();
+    if (typeof window.ResizeObserver === "function") {
+      referenceFeedbackObserver = new window.ResizeObserver(update);
+      referenceFeedbackObserver.observe(region);
+      if (mobileNav) referenceFeedbackObserver.observe(mobileNav);
+      const header = workspace.querySelector("[data-portal-header]");
+      if (header) referenceFeedbackObserver.observe(header);
+    }
+  }
+
   function mountPortal(override) {
     const options = arguments[1] || {};
     const mountId = ++mountGeneration;
@@ -42528,6 +42558,8 @@ function renderAutoPostHub(page, context) {
     main.dataset.portalMotionSkipEnter = landingMotionRoute || dashboardMotionRoute || publishingMotionRoute || featureCatalogRoute || isCustomerDirectoryRoute || isAdminPortalSurface(page) ? "true" : "false";
     if (isAuth) main.dataset.portalMotionSkipEnter = "true";
     main.dataset.portalPresentationRoute = featureCatalogRoute ? "features" : "default";
+    const isReferenceFeedbackRoute = actualPath === "/video-studio/reference-format-planner" && !minimalShell;
+    syncReferenceFeedbackLayout(shell, main, mobileNav, isReferenceFeedbackRoute);
     document.documentElement.setAttribute("data-portal-motion-route", dashboardMotionRoute || isCustomerDirectoryRoute ? "dashboard" : "default");
     lastNormalizedRoute = actualPath;
     const phase = isHydration ? "settled" : "entry";
@@ -42544,6 +42576,7 @@ function renderAutoPostHub(page, context) {
       if (!isHydration) {
         const workspace = document.querySelector(".portal-workspace") || main;
         if (workspace && "scrollTop" in workspace) workspace.scrollTop = 0;
+        if (isReferenceFeedbackRoute) main.scrollTop = 0;
         if (typeof window.scrollTo === "function") window.scrollTo(0, 0);
       }
       syncAdminDataViewRows(main);

@@ -2622,3 +2622,21 @@ cópairdễđọc,khôngthêmclaim/cards/motion.45Nodecumulative/24markupdatapar
 Admin/nativefinancialfixture/device/signedLIVE/normalmotionnotclaimed;global
 technicalcopyinventorycònOPENtheotừngfragment. Trạngtháigiao hàngtheoreceiptCI/
 merge/deploy/runtimeIssue689. [Báo cáo](../docs/reports/account-product-emphasis-20261111.md).
+
+## Thông báo khôi phục và nội dung thừa — 11/11/2026
+
+Trang Lập định dạng tham chiếu dành hàng riêng cho thông báo thật, tách khỏi
+vùng nội dung cuộn và thanh điều hướng. Không có thông báo thì hàng không
+chiếm khoảng trống. Khi lưu chưa xác nhận, nút thử lại vẫn nhìn thấy; không
+đổi payload, quyền, dữ liệu hoặc cách khôi phục lần lưu.
+
+Trang Hội viên bỏ riêng khối giải thích tĩnh luôn báo danh mục không khả dụng;
+quyền lợi, số dư 0 hợp lệ, gói thật và các trạng thái thiếu dữ liệu vẫn giữ.
+Landing dùng một câu hướng dẫn quy trình đúng Việt/Anh/Trung thay vì giải thích
+triển khai. Không thay các bước, chức năng hay cảnh báo khác.
+
+94 ca Node, 12 ca Python, 24 trạng thái thông báo và 12 lượt xem hai trang đạt;
+3 lượt rời trang giữ đúng vùng thông báo, không ghi dữ liệu ở nhóm chỉ đọc.
+Đây là phạm vi cục bộ, không tuyên bố toàn app sạch chữ kỹ thuật hoặc motion
+đã hoàn tất. Giao hàng theo receipt Issue689.
+[Báo cáo](../docs/reports/customer-feedback-clutter-20261111.md).

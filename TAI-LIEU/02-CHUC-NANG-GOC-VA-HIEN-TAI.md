@@ -1863,3 +1863,15 @@ không coi renderPASS là toànappAX/providerLIVE/device. Otherfullgoalgates gi�
 
 Noauth/CSRF/schema/DB/provider/wallet/payment/Bot/route-engine/motion/sourceAPI
 change. SameAntigravitysession/fragmenthistory;no directappimplementationtakeover.
+
+## Thông báo và khối giải thích tĩnh — đối chiếu 11/11/2026
+
+|Trước ở bản đối chiếu 8371c43d|Hành vi mới|Bằng chứng và giới hạn|
+|---|---|---|
+|Thông báo nổi che chữ trên nút lưu|Hàng thông báo riêng, nội dung cuộn trong phần còn lại|24 trạng thái có thông báo thật; không dùng hit-through thay bằng chứng thị giác|
+|Hội viên luôn thêm ô danh mục không khả dụng|Bỏ đúng khối tĩnh, không thêm ô thay thế|12 ca ba ngôn ngữ/bốn trạng thái giữ nguyên phần còn lại, kể cả giá trị 0|
+|Câu giới thiệu landing giải thích cơ chế bên trong|Một câu hướng dẫn khách hàng tương đương Việt/Anh/Trung|3 ca giữ nguyên mọi khóa khác và toàn bộ HTML ngoài câu này|
+|Nguy cơ thay luồng đang chạy khi dọn UI|Không đổi API/auth/handlers/tiền/provider/motion|94 ca Node, 12 ca Python; 12 lượt xem chỉ đọc và 3 lượt rời trang|
+
+Không coi việc bỏ một khối là đã hoàn tất locale/clutter toàn app. Không có
+thay đổi dữ liệu khách hoặc xác nhận đầu ra dịch vụ trả phí trong phạm vi này.
