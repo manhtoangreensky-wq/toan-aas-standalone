@@ -2563,3 +2563,13 @@ Local54aggregateviews(15giữ+39kiểmlại),1332fieldmatches;2718mẫu chữ mi
 productionwrite. CI/merge/deploy/runtime theo receipt cuối Issue689.
 Lỗi labelIDlặp có sẵn được ghi để namespace ở bước tiếp; không nhận đã hoàn tất
 toàn bộ accessibility/thiết bị/phiênkhách. [Báo cáo](../docs/reports/saved-plan-detail-ui-20261111.md).
+
+## Liên kết nhãn–ô nhập video — thay đổi 11/11/2026
+
+Mỗi form tạo/sửa kế hoạch/cảnh dùng namespace có sẵn, để bấm nhãn cảnh không
+trỏ nhầm sang form khác. Không đổi tênfield/name,value hay APIactions; helper
+dùngchung giữ nguyên, chỉ4điểm gọi nhận thêm tiền tố theoformrole/UUID.
+27Nodecaseslocalđạt,24viewsHTML ngoàiIDrefs giữ;12nativeviews đạt336association+
+336actualclickfocus,0valuechanges/compose/save;6plan18scene/evidencehash giữ.
+Trạng thái giao hàng theo receiptCI/merge/deploy/runtime trênIssue689.
+[Báo cáo](../docs/reports/video-form-id-namespace-20261111.md).

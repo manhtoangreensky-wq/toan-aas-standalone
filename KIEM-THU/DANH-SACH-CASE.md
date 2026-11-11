@@ -1034,3 +1034,12 @@ vẫn chờ exact-SHA CI/deploy/live trong PR. Hồ sơ: `R218-LOCALE-183-RELEAS
 |VDUI-PROTOCOL|nặng|SoBASEcontrolcontracts vàcopiedDBactualGET/reopened|1392attrs/48views và1332fieldvalues khôngđổi,6plan18scene/hash/quickcheckgiữ|0compose/save;source/evidencebinding|
 |VDUI-SECTION|vừa|MởUUIDdetail tại320/1440 ở3locale|Nhómnavigation đúnglocale,khôngrawVideoProductionStudio;h1/route/overflow giữ|3RED->GREEN+6headernative|
 |VDUI-ID-FOLLOWUP|nặng|Kiểmlabel.control của scene-title vàduplicateIDs|NEXT:namespace5forms,khôngđổi name/actions/data;chưađạt ởBASE|9duplicateIDgroups,sceneLabel.control=false;fullgoalopen|
+
+## Video form ID namespace — 11/11/2026
+
+|Case|Mức|Bước|Kết quả bắt buộc|Bằng chứng|
+|---|---|---|---|---|
+|VFID-UNIQUE|nặng|Mở5forms/3scenes ở3locale/draft/readonly/approved/archived|Control/helpIDs unique,label.for trỏ đúng ownformcontrol,describedby tồn tại|[Phiên VFID](PHIEN-VIDEO-FORM-ID-20261111.md)|
+|VFID-PROTOCOL|nặng|So24BASE/candidateviews|Chỉid/for/aria-describedby khác;names/values/actions/labels/state/records exact|27NodeGREEN;sourceonly4calls|
+|VFID-NATIVE|nặng|Bấm thật mọienabledlabel tại320/1440 ở3locale,list/detail|Native.control vàfocus đúngowninput,khôngfocusJSbù,khôngthaygiátrị|Phiên VFID;12view gate|
+|VFID-SAFETY|nặng|GET/reopenedtrêncopiedQA6plan18scene|Hash/count/evidence/source giữ,0compose/save/provider/wallet/egress/.env/media,Job0|Phiên VFID;production/device riêng|
