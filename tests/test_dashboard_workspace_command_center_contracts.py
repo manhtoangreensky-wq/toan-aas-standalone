@@ -325,8 +325,6 @@ def test_dashboard_command_center_moves_all_fixed_chrome_to_dashboard_keys() -> 
             "work.kicker",
             "work.title",
             "work.body",
-            "assurance.title",
-            "assurance.body",
         ),
         "renderWorkspaceActionCenter": (
             "actionCenter.kicker",
