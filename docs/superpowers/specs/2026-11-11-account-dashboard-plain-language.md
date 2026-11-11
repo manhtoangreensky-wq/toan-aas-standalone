@@ -143,3 +143,9 @@ guards9 and all six legacy consumers; original golden constants/counts unchanged
 App source untouched;145initialNode/138Python/native24/48parity retained rather
 than repeated. CI command also includes9adapter tests. Update exactsource/evidence
 commits before finalCI; firstfailedrun preserved,not relabeled success.
+
+CI42971816972 passed functional/source/browser gates but final whitespace check
+blocked one blank EOF line in the new JSON test fixture. Remove that blank line
+only; semantic JSON/application/native evidence unchanged. Verify full BASE..HEAD
+diff whitespace rather than only unstaged diff. Tests excluded from runtime source
+fingerprint; existing provenance still applies if finalSHA verification confirms.

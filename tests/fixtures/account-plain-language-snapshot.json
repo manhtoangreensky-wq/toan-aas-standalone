@@ -33,4 +33,3 @@
   {"key":"accountCenter.profile.localeHelp","before":{"vi":"Lưu tùy chọn hồ sơ; nội dung quy trình vẫn theo quy ước nguồn chuẩn.","en":"Saves a profile preference; workflow content retains its canonical contract.","zh":"保存个人资料偏好；内容工作流保留其 canonical 契约。"},"approved":{"vi":"Chọn ngôn ngữ giao diện bạn muốn dùng.","en":"Choose the language you want to use for the interface.","zh":"选择您希望使用的界面语言。"}},
   {"key":"accountCenter.profile.timezoneHelp","before":{"vi":"Dùng cho tùy chọn hiển thị Web, không thay đổi múi giờ khi chạy của Bot.","en":"Used only for Web display preferences and never changes the Bot runtime time zone.","zh":"仅用于 Web 显示偏好，不会更改 Bot 运行时的时区。"},"approved":{"vi":"Dùng để hiển thị thời gian trong ứng dụng; không thay đổi múi giờ của Bot.","en":"Used to display times in the app; this does not change the Bot time zone.","zh":"用于显示应用内的时间；不会更改 Bot 的时区。"}}
 ]
-
