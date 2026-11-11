@@ -14,9 +14,13 @@ TESTER_PROJECT_STATUS=READY;LOCAL_ACCEPTANCE=PASS_SCOPED;PUSH_GATE=AWAITING_PROV
 |APE-READABLE|12memberviews,84normaltextsmin5.216649621048673;408knownSVGpaintsmin4.667250066487073|
 |APE-LINKS|Anonymouslandinglogin?next6approvedrouteskept,nobypass;price/topuphrefs/focusringkeep|
 |APE-SAFETY|0productwrites/provider/wallet/production/egress/.env/media;6plan18scene/hash/quickcheck/evidence/sourcekeep;Jobs0|
-|APE-LIMITS|Admin6samplesNOT_TESTED(nonadmin);normalmotion/device/signedLIVE/allhoverfocuscolor/fullappfunctionalNOT_TESTED|
+|APE-LIMITS|Admin6samplesNOT_TESTED(nonadmin);normalmotion/device/signedLIVE/all-app-hoverfocuscolor/fullappfunctionalNOT_TESTED|
 |APE-DELIVERY|Metadata/provenance/exactHEADCI/merge/deploy/runtime/assetsseparatereceipt|
 
 45Nodecumulative=42retained+3affected,CIrunsall45fresh. Nativehistorykept,
 affected-onlyreruns,noduplicatedacceptedgroup. Globaltechnicalcopycleanupremains
 orderednextunit,notclaimedcompletefrommembership. PrivatecampaignYAMLoutsideGit.
+
+Extra6memberfocusviews:3lightpass/3darkfailratio2.2559. Sameworkerfocused7line
+darkmemberquietstatefix;3affectedrerunPASS/42focusedhovertextsmin5.216649621048673,
+19Jobprocesses->0,allsource/data/hrefsbindingskeep. Retain3lightand60normalcases.

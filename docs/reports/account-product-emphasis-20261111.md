@@ -16,7 +16,7 @@ Existingbrand/nền/bốtụcgiữ;7familycolorroles(light/darkpairs)trênSVGtoo
 underline. Actual6Studioarticlescovered,nofakecards/stat/claims/imagery/motion.
 Auxiliaryfinance/statecontrols khôngbịépnhậndiệnsảnphẩmhayđổithuộc tínhthực thi.
 
-RuntimeonlyrenderAccount4exactchange-records và93lineCSSsuffix/1fallbackselector
+RuntimeonlyrenderAccount4exactchange-records và100lineCSSsuffix/1fallbackselector
 amended.18protectedpathsunchanged:backend/auth/CSRF/session/DB/schema/ENV/provider/
 wallet/PayOS/Bot/route-engine/integration/i18nvalues/motion/SW/deployworkflow.
 Một dedicatedAntigravity3.8FlashHigh conversation(R1,R2,2scopedamendments)trả
@@ -60,8 +60,17 @@ Ownerimage vànativeVI390membershiplight/dark,landingVI1440light/390darkđãxem.
 5pointcompare:tiernewline;clutterremoved;truepackage/missingbalance;realhrefs;
 familyiconpalette/neutralcopy/edge. Smallchangeinsideexistingdesign,notfullpage
 redesign/ImageGenconcept. Noagency10/10claim. Normaltextmetricsnotclaimallhover/
-focuscolors;quietlinkfocusduringtransitionneedslaterreview,separatefocusring
-proofkept.5routesnotallfunctional/admin/device/Safari/signedproductionproof.
+focuscolors;memberfocusstateđượckiểmthêmnhưgatebelow,separatefocusringproofkept.
+5routesnotallfunctional/admin/device/Safari/signedproductionproof.
+
+Focused-state gate opened beforepush:6account390light/darkviews afterfinite
+transition found3lightPASS/3darkFAIL,secondarypricingtext rgb11,124,114on38,58,90
+ratio2.2559425813278837. Same dedicatedAntigravitysessionAPE-MEMBER-FOCUSR1
+returnedexact7line scoped darkmemberquiet:hover/:focus-visible semanticroleCSS;
+allpriorpatcheskeep,no directtakeover. Rerunonly3faileddarkviews passed,42focused/
+hovertextsamplesmin5.216649621048673,19ownedJobprocesses->0.3lightpassesand60
+normalvisualviewsretained. No source/data/control/hrefchangeoutside exactsuffix;
+noall-app-hoverfocusclaim. FinalCSS172badc8435b85260836097989d772e0a25304774d6857a2a46c8c8b12433c3b.
 
 TechnicalcopykhácvẫnOPEN:catalog10500VIkeys/694technicalcandidates/146focused,
 KHÔNGlà694visiblebugs. Actualvisiblecandidatesđãghi theo route:accounteditor

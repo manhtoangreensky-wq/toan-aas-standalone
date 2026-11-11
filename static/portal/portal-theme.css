@@ -23757,3 +23757,10 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-account-page .portal-ac
   color: var(--portal-on-action) !important;
   filter: none !important;
 }
+
+/* Keep the membership secondary link readable during dark pointer/keyboard states. */
+html[data-portal-theme="dark"] .portal-page.portal-account-page .portal-account-membership .portal-button--quiet:is(:hover, :focus-visible) {
+  color: var(--portal-ink);
+  background: var(--portal-surface-soft);
+  border-color: var(--portal-border-strong);
+}

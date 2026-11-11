@@ -88,3 +88,10 @@ not treatedasworkerfailure. Sameauthorizedpacket re-dispatched onlyafter stopped
 state proven. Egressreview initiallymisclassifiedsourceprivate; anonymous public
 GitHubMAP+portal.js exactcommit1c6eae01 andbothOLDparagraphs verified public,
 then sameactionallowed. No permissionbypass,privateinput,login/settingschange.
+
+Additionalfocused-stateACbeforepush:6member390light/darkcases,realTab/hover and
+finitecolortransition. Found3darksecondarylinkfail(2.2559425813278837)whilelight3
+passed. Exact7lineAPE-MEMBER-FOCUSR1fromsameconversation fixesonlydarkmemberquiet
+hover/focus-visible with existingink/surface/border.3affectedpass/42focusedhover
+textsmin5.216649621048673,19Job->0;3light+60normalcasesretained,allotherbyteskeep.
+RuntimeCSSsuffixnow100lines;noall-app-hoverfocus/wholegoalcompletionclaim.
