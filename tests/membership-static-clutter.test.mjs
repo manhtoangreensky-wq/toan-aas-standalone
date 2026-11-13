@@ -136,6 +136,9 @@ function controls(html) {
 // original deletion guard still compares every other markup byte and control.
 function withoutLaterFixedCopy(html) {
   html=withoutMembershipStaticNotes(html).html;
+  // Origin-aware tests assert the locale; preserve strict historical parity
+  // for every byte except these exact approved family labels.
+  html=html.replace(/(<span class="portal-billing-catalog-family">)(?:Gói dịch vụ|Service packages|服务套餐)(<\/span>)/g,'$1__MEMBERSHIP_FAMILY__$2');
   const start=html.indexOf('<div class="portal-callout portal-callout--info" style="margin-bottom:16px;');
   const end=html.indexOf('<div class="portal-status-grid">',start);
   assert.ok(start>=0&&end>start);

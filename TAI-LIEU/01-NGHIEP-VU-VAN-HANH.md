@@ -2657,3 +2657,17 @@ không bị dịch hoặc thay thế. 12 ca renderer, 12 cấu hình native và 
 Đây không phải hoàn tất locale toàn app hoặc mọi nhãn/dữ liệu hệ thống phát
 sinh. Nhãn họ gói mặc định và nội dung khi thiếu ghi chú còn cổng bảo toàn dữ
 liệu riêng. [Báo cáo](../docs/reports/membership-plain-language-20261111.md).
+
+## Nguồn ghi chú gói Hội viên — 13/11/2026
+
+Loại gói mặc định theo ngôn ngữ Việt/Anh/Trung. Nếu dòng nguồn không có ghi
+chú hợp lệ, thẻ không tạo mô tả thay thế hoặc ô chữ rỗng. Ghi chú có thật
+giữ nguyên cách chuẩn hóa/escape, kể cả trùng nguyên văn câu mặc định cũ.
+Dòng trùng không được bổ sung ghi chú cho dòng đầu; giá/quyền/nguồn danh mục
+và bộ chuẩn hóa dùng chung không đổi.
+
+60 ca renderer và nhóm hồi quy 240 ca (đã gồm 60 ca) đạt. 12 component dùng
+nguồn tổng hợp và 12 lượt xem có đăng nhập QA, 3 lượt rời trang đạt; không
+ghi kế hoạch/ví/production. Không suy danh mục production từ nguồn tổng hợp.
+Giao hàng và phạm vi còn mở theo Issue #689.
+[Báo cáo](../docs/reports/membership-fallback-origin-20261113.md).

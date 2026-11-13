@@ -56,6 +56,9 @@ function catalogLabels(html){
 }
 function finiteCopyParity(html,messages){
   html=withoutMembershipStaticNotes(html).html;
+  // Later fallback-origin coverage checks the real locale; historical parity
+  // accepts only these three reviewed family labels, never arbitrary text.
+  html=html.replace(/(<span class="portal-billing-catalog-family">)(?:Gói dịch vụ|Service packages|服务套餐)(<\/span>)/g,'$1__MEMBERSHIP_FAMILY__$2');
   const b=banner(html);let index=0;
   const bannerHTML=b.fragment.split(/(<[^>]*>)/g).map((token,position)=>position%2===0&&b.nodes.includes(token.trim())?'__BANNER_'+index+++'__':token).join('');
   assert.equal(index,4);let result=html.slice(0,b.start)+bannerHTML+html.slice(b.end);

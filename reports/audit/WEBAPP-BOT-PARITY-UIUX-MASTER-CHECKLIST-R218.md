@@ -1479,3 +1479,26 @@ auth/AX/device/Safari/signed production và M-FINAL-01..06 vẫn mở theo thứ
 
 Nguồn và giới hạn: `docs/reports/membership-plain-language-20261111.md`.
 Các cổng whole-route/auth/AX/device/Safari/signed LIVE và motion cuối vẫn mở.
+
+## Đối chiếu giao hàng và nguồn ghi chú — 13/11/2026
+
+- [x] MEMBERSHIP-PLAIN delivery: PR724, CI43049622687 cả hai jobs đạt;
+  merge/runtime78dc73c847a8bcf28a76bc34f00b1ae32003ac9a,
+  deploy43051527247 đạt. PostmergeCI43051477742 completed/success.
+  Receipt6800396897/6800397578 là bằng chứng giao hàng; dòng chờ ở trên
+  được thay thế bởi xác nhận này, không mở lại phần đã đạt.
+- [x] MEMBERSHIP-FALLBACK-ORIGIN local: hai đoạn formatter/paragraph riêng;
+  category theo locale, không ghi chú tự sinh hoặc paragraph rỗng. Ghi chú
+  thật/legacy/escape/trùng câu cũ,0Xu/giá/status/rights/controls giữ.
+- [x] 60rendererRED12đạt/48lỗi→60đạt;240Nodegồm60ca;51Pythonđạt và
+  1ca quyền tệp Windows tái hiện trênBASE, giữ nguyên test cho LinuxCI.
+  Ngoài đúng2replacement, mọi byteportalgiữ;18tệpbảovệ không đổi.
+- [x] Component nguồn tổng hợp12view390/1440sáng/tối; app có đăng nhập QA
+  12view/3rời trang/240mẫumàumin5,216649621048673:1;0productwrite,
+  6plan18scene/versions/evidencegốc giữ,19tiếntrìnhsởhữu→0.
+- [ ] MEMBERSHIP-FALLBACK-ORIGIN delivery: provenance, CIexactHEAD, merge,
+  deploy, runtime/assets và receipt trong cùngIssue689/PR.
+
+Báo cáo: `docs/reports/membership-fallback-origin-20261113.md`.
+Không đóng toàn tuyến/trạng thái locale, AX/auth/device/Safari/signedLIVE hoặc
+provider output. M-FINAL-01..06 vẫn cuối, không thêm motion trong đợt này.

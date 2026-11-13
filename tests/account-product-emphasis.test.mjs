@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import './membership-static-clutter.test.mjs';
 import './membership-plain-language.test.mjs';
+import './membership-fallback-origin.test.mjs';
 import {renderChild} from './helpers/publishing-child-render.mjs';
 const wallets={missing:undefined,unlinked:{status_name:'unlinked'},zero:{balance_xu:0,total_spent_xu:0,is_vip:false,plan:{plan_name:'CUSTOMER_PLAN'}},standard:{balance_xu:1250,total_spent_xu:50,is_vip:false,plan:{plan_name:'CUSTOMER_PLAN'}},vip:{balance_xu:2500,total_spent_xu:50,is_vip:true,plan:{plan_name:'CUSTOMER_VIP_PLAN'}}};
 function card(result,locale){const title=result.messages[locale]['accountCenter.membership.title'],index=result.html.indexOf(title),a=result.html.lastIndexOf('<section',index),b=result.html.indexOf('</section>',index)+10;assert.ok(a>=0&&b>a,'Actualmembershipsectionfound');return result.html.slice(a,b);}
