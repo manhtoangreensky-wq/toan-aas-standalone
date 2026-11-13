@@ -1114,3 +1114,14 @@ Phiên và giới hạn: [FEEDBACK-CLUTTER-20261111](PHIEN-FEEDBACK-CLUTTER-2026
 |MPL-REGRESSION|nặng|Đối chiếu snapshot/source và rời trang|Ngoài 19khóa strict và UI đã duyệt giữ nguyên; không ví/provider/production|556Node/67rerun/5Python,3rời trang/0write|
 
 Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-20261111.md).
+
+## MEMBERSHIP-FALLBACK-ORIGIN-20261113 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|MFO-LOCALE|vừa|Xem gói ở VI/EN/ZH|Loại gói mặc định theo locale, giữ nhãn và giá thật|60 ca renderer|
+|MFO-ABSENT|nặng|Nguồn ghi chú thiếu/rỗng/sai/qua giới hạn|Không mô tả tự sinh hoặc paragraph rỗng|Baseline12đạt/48lỗi; sau60đạt|
+|MFO-PROVIDED|nặng|Ghi chú thật trùng câu mặc định, chữ kỹ thuật, legacy, giống script|Giữ đúng normalized/escaped text, không lọc chữ khách|So raw/context/HTML/control|
+|MFO-IDENTITY|nặng|Duplicate, invalid predecessor, combo, code+label và100dòng|Dòng hợp lệ đầu tiên, không cho mượn ghi chú|20tìnhhuống×3locale|
+|MFO-VISUAL|vừa|390/1440 sáng/tối, component và trang đăng nhập QA|12component/12native/3rời trang, khôngtràn/lỗi/ghi sản phẩm|[Phiên MFO](PHIEN-MEMBERSHIP-FALLBACK-ORIGIN-20261113.md)|
+|MFO-DELIVERY|nặng|Kiểm nguồn và phát hành|240Node/51Pythonđạt,1Windowsbaseline; CI/runtime/assets riêng|18tệpbảovệ,receiptIssue689/PR|

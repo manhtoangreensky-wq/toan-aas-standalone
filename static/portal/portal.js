@@ -22984,6 +22984,24 @@ function renderAutoPostHub(page, context) {
   function membershipCatalogEntries(context) {
     const catalog = canonicalPackageCatalog(context.packageCatalog);
     if (!catalog) return [];
+    const rawCatalog = context && context.packageCatalog;
+    const rawSources = rawCatalog && typeof rawCatalog === "object" ? [rawCatalog.monthly, rawCatalog.combos] : [];
+    const validNoteKeys = new Set();
+    const rawSeen = new Set();
+    rawSources.forEach((source) => {
+      if (!Array.isArray(source)) return;
+      source.slice(0, 100).forEach((item) => {
+        if (!item || typeof item !== "object" || Array.isArray(item)) return;
+        const code = canonicalCatalogCode(item.code);
+        if (!code) return;
+        const label = canonicalShortText(item.label, 120) || code;
+        if (!label || rawSeen.has(`${code}:${label}`)) return;
+        rawSeen.add(`${code}:${label}`);
+        if (canonicalShortText(item.note, 240)) {
+          validNoteKeys.add(`${code}:${label}`);
+        }
+      });
+    });
     const publicSalePricing = canonicalPublicSalePricingCatalog(context.pricingCatalog);
     const approvedSalePrices = approvedPublicSalePriceIndex(publicSalePricing);
     const sources = [catalog.monthly, catalog.combos];
@@ -22998,7 +23016,8 @@ function renderAutoPostHub(page, context) {
         if (!label || seen.has(`${code}:${label}`)) return;
         seen.add(`${code}:${label}`);
         const priceLabel = item.priceLabel || approvedSalePrices.get(code) || billingCatalogText("catalog.publicSale.priceMissing", "Giá chưa được Core Bridge cấp");
-        entries.push({ code, label, note: canonicalShortText(item.note, 240) || billingCatalogText("membership.defaultCatalogNote", "Quyền lợi thành viên do TOAN AAS bảo chứng."), priceLabel, family: item.family || "Gói dịch vụ", status: "read_only" });
+        const note = validNoteKeys.has(`${code}:${label}`) ? (canonicalShortText(item.note, 240) || "") : "";
+        entries.push({ code, label, note, priceLabel, family: item.family || uiText("workspaceMenu.card.packages.title", "Gói dịch vụ"), status: "read_only" });
       });
     });
     return entries.slice(0, 12);
@@ -23177,7 +23196,7 @@ function renderAutoPostHub(page, context) {
       : `<section class="portal-card portal-card-pad">${renderEmpty(billingCatalogText("membership.empty.title", "Chờ quyền lợi canonical"), billingCatalogText("membership.empty.body", "Bot/Core Bridge phải cấp metadata gói thuộc signed session trước khi Web có thể hiển thị tier hoặc trial."), ICONS.package)}</section>`;
 
     const catalogCards = entries.length
-      ? `<div class="portal-module-grid">${entries.map((item) => `<article class="portal-module-card portal-billing-catalog-card"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span>${badge(item.status)}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.label)}</h3><p>${safeText(item.note)}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || missingPrice)}</span><span>${item.status === "read_only" ? billingCatalogText("membership.catalog.statusPublished", "Đã công bố") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh")}</span></span></article>`).join("")}</div>`
+      ? `<div class="portal-module-grid">${entries.map((item) => `<article class="portal-module-card portal-billing-catalog-card"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.package)}</span>${badge(item.status)}</div><div><span class="portal-billing-catalog-family">${safeText(item.family)}</span><h3>${safeText(item.label)}</h3>${item.note ? `<p>${safeText(item.note)}</p>` : ""}</div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || missingPrice)}</span><span>${item.status === "read_only" ? billingCatalogText("membership.catalog.statusPublished", "Đã công bố") : billingCatalogText("catalog.statusWaiting", "Chờ xác minh")}</span></span></article>`).join("")}</div>`
       : renderEmpty(billingCatalogText("membership.catalog.emptyTitle", "Chờ catalog gói canonical"), billingCatalogText("membership.catalog.emptyBody", "Không dùng danh mục feature để suy đoán gói, tier, giá hoặc khuyến mãi."), ICONS.package);
 
     return `<article class="portal-page portal-membership-page" style="width:100%; max-width:100%; display:grid; gap:22px;">${renderHero(page, context)}${compatBanner}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><div class="portal-work-grid"><div class="portal-stack">${current}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.principle.title", "Nguyên tắc quyền lợi")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.principle.body", "Bot là authority cho tier và mọi tác động Xu.")}</p></div></div></aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${billingCatalogText("membership.catalog.title", "Gói được Bot công bố")}</h2><p class="portal-card-subtitle">${billingCatalogText("membership.catalog.description", "Thông tin chỉ đọc; mua/nâng cấp tiếp tục qua luồng canonical.")}</p></div>${badge(catalog ? "read_only" : "guarded")}</div>${catalogCards}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/packages">${billingCatalogText("membership.action.packages", "Xem catalog đầy đủ")}</a><a class="portal-button portal-button--quiet" href="/pricing">${billingCatalogText("membership.action.pricing", "Xem bảng giá")}</a><a class="portal-button portal-button--primary" href="/wallet/topup">${billingCatalogText("membership.action.topup", "Nạp Xu canonical")}</a></div></section></article>`;

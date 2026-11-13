@@ -1887,3 +1887,16 @@ thay đổi dữ liệu khách hoặc xác nhận đầu ra dịch vụ trả ph
 
 556 ca nguồn/hồi quy đạt, 67 ca ảnh hưởng chạy lại sau màu cuối; không cộng
 trùng số ca. Nhóm này không thay tiền, quyền hoặc nguồn dữ liệu danh mục.
+
+## Ghi chú và loại gói Hội viên — đối chiếu 13/11/2026
+
+|Trước ở BASE78dc73c8|Hành vi mới|Bằng chứng và giới hạn|
+|---|---|---|
+|Loại gói mặc định luôn tiếng Việt|Dùng khóa dịch gói hiện có ở VI/EN/ZH|60 ca renderer thật, không thêm khóa|
+|Nguồn thiếu ghi chú nhưng bộ chuẩn hóa tự thêm câu triển khai|Formatter riêng kiểm nguồn rồi bỏ paragraph khi thiếu|Không đổi canonicalPackageCatalog hoặc xóa chuỗi khách|
+|Ghi chú thật có thể trùng câu thay thế cũ|Giữ nguyên ghi chú đã chuẩn hóa/escape|Có case trùng nguyên văn, chữ kỹ thuật và script-looking|
+|Duplicate/nguồn sai có thể cho mượn ghi chú|Lấy dòng hợp lệ đầu tiên theo code+label và giới hạn nguồn|240 ca hồi quy, 18 tệp bảo vệ giữ nguyên|
+
+12 component có nguồn tổng hợp không thay bằng chứng API. 12 lượt xem thật
+có đăng nhập QA/3 rời trang chỉ đọc không chứng minh signed production hoặc
+provider output. Các cổng toàn goal và motion cuối vẫn mở.
