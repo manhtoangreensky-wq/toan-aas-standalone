@@ -5,6 +5,7 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {withoutLegacyDecorativeWorkbench} from './helpers/legacy-decorative-workbench.mjs';
+import {chatDocHistoricalMarkup} from './helpers/chat-doc-access-snapshot.mjs';
 
 // Catch fabricated success/price/readiness/output panels returning before real
 // forms, and catch accidentally deleting anything outside those exact panels.
@@ -48,7 +49,7 @@ for(const locale of ['vi','en','zh'])for(const route of [...affected,...protecte
     const expected=withoutLegacyDecorativeWorkbench(old.html);
     assert.equal(expected.count,affected.includes(route)?1:0,'BASE witness classification is explicit, not inferred from current output');
     assert.deepEqual(controls(current.html),controls(expected.html),'all real controls outside the known fake panel remain exact');
-    assert.equal(current.html,withAcceptedAlias(expected.html,locale),'every unrelated markup byte remains exact, aside from independently accepted alias');
+    assert.equal(chatDocHistoricalMarkup(current.html,locale),withAcceptedAlias(expected.html,locale),'every unrelated markup byte remains exact, aside from independently accepted alias and finite root-access copy');
     assert.doesNotMatch(current.html,/portal-interactive-feature-workbench|\bonclick\s*=/i);
   });
 }

@@ -1136,3 +1136,14 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |LWR-NATIVE|nặng|18view390/1440,3locale và18click video|0panelgiả/CSP/console/pageerror/overflow|[Phiên NAL/LWR](PHIEN-NAV-LEGACY-WORKBENCH-20261113.md)|
 |LWR-SAFETY|nặng|Đối chiếu copiedQA và cleanup|6plan18scene/versions/evidencegiữ,0provider/ví/productwrite,21process→0|Guard thật,không sửaCSP|
 |LWR-DELIVERY|nặng|CIexactHEAD và deploy/runtime/assets|Một tracker/PR,khôngđóngwholegoal/motion|ReceiptIssue689/PR|
+
+## CHAT-DOC-ROOT-ACCESS-20261114 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CDH-ROOT|vừa|Hai rootVI/EN/ZH|Title/description theo4keycũ,khôngdịchtênkhách|72finalcases|
+|CCA-GUARD|nặng|Chat!canView enabledfalse/true|Hai lýdo thật khác nhau,3keymới khôngjargon/claimAI|57baseline18PASS/39RED→57PASS|
+|DCA-GUARD|nặng|Documents!canView vàloading/failed/ready|2keymới,bỏ3tag,khôngđổiquyền/controls/realstate|EntireHTML/data/contextparity|
+|CDA-KEYS|nặng|Khởi tạoi18n vàmutation|5key15value,trướcverify/freeze,oldvaluesexact,unknownkhôngbịbỏ|Strictsnapshot/mutationcases|
+|CDA-NATIVE|nặng|24rootview+12cardview/12click390/1440,3locale|Đúngroot/entryưu tiên,theme thật,0error/overflow/productwrite|[PhiênCDA](PHIEN-CHAT-DOC-ROOT-ACCESS-20261114.md)|
+|CDA-DELIVERY|nặng|Hồiquy/provenance/CI/merge/deploy/runtime|358affected/72targetoverlap,32Python/1BASEfailure,cổnggiao riêng|ReceiptIssue689/PR|

@@ -1536,3 +1536,36 @@ cũ không chứng minh UI root hiện tại. Native của alias phải vào nh�
 - [ ] NAV/LEGACY-WORKBENCH delivery: provenance,CIexactHEAD,merge/deploy/
   runtime/assets và receipt riêng. Báo cáo nav-legacy-workbench-20261113.md;
   toàn route/auth/AX/device/Safari/provider/signedLIVE và motioncuối còn mở.
+
+## Trò chuyện/Tài liệu: đúng entry và ngôn ngữ truy cập — 14/11/2026
+
+- [x] NAV/LEGACY-WORKBENCH delivery: PR726/finalHEAD10c9a2be,
+  CI43551105720 cả hai jobs đạt; merge/runtime7ef5e3c6,
+  deploy43552075181 đạt. Web/Bot/nginxactive/running,trackedsource sạch,
+  healthok/2backendhashes/4HTTPSassets exact;receipt6871069694/6871070088.
+  PostmergeCI43552033997 cũng đạt cả hai jobs; dòng chờ trước được thay thế.
+- [x] Hai root Chat/Documents thực dùng portal/integration;12source/render
+  diagnostics bảo toàn tên khách, lộ tiêu đề/guard chữ Anh trongVI.
+- [x]57casebaseline18PASS/39RED trước sửa; nguồnpublic/fullMAP/3phiếu độc lập,
+  không chạm nhánh có quyền/quyền thật/controls/engine/auth/API/tiền.
+- [ ] CHAT-DOC-ROOT-ACCESS: bốn roottext dùng existingkeys,3Chat/2Docs newkeys
+  và bỏ3tag triển khai. Spec insertiontrướcapi saufreeze sai do coordinator,
+  đã rút assignments lỗi và giao catalogR2trướcverify/freeze, khôngworkerfault.
+- [ ] Group native/hồi quy/Tester/provenance/CI/delivery vẫn riêng. Không
+  dùng guard/header để đóng canViewtrue/whole-route/AX/auth/device/motion.
+
+Spec: `docs/superpowers/specs/2026-11-14-chat-doc-root-access-locale.md`.
+
+- [x] CHAT-DOC-ROOT-ACCESS local:4roottext+5newkey15value,72finalcases/
+  358affectedNodeđạt; oldkeys,data/controls/HTML canViewtrue/loading/error/
+  ready và tên khách trùng sản phẩm giữ.6workerchangesinverse/18protected exact.
+- [x]24rootnativeview sáng/tối và12cardview/12realclick390/1440VI/EN/ZH,
+  0page/console/overflow/egress/product/provider/walletwrite;copiedQA6plan
+  18scene/versions/evidencegốc giữ,mỗilượtcuối19ownedprocesses→0.
+- [x]32Python/1CSS-tailBASE-equivalent,compile/independent review; không sửa
+  CSS/motion hoặc verify/freeze đểxanh. Cấu hình chỉchildQA,không.env/máy.
+- [x]303historicalplanner/catalogcađạt,9keycountRED→GREEN quaexact-five
+  adapter; mọi goldenhash/literalcũgiữ,khôngprefix-filter ẩnunknownkeys.
+- [ ] CHAT-DOC-ROOT-ACCESS delivery: metadata/provenance/CIexactHEAD/merge/
+  deploy/runtime/assets+receiptIssue689/PR. Toàn canViewtruecopy/detail/
+  AX/auth/device/Safari/signedLIVE/provider và motioncuối vẫn còn.

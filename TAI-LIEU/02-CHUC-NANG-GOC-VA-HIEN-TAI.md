@@ -1914,3 +1914,16 @@ provider output. Các cổng toàn goal và motion cuối vẫn mở.
 30caPythonđạt/1CSS-tail lỗi y hệt BASE; không sửa theme/motion trong đợt này.
 Danh mục root nhẹ riêng, thiết bị/Safari/signed production và provider output
 không được suy ra từ các ca renderer/native nhóm.
+
+## Chat/Documents root-access — đối chiếu 14/11/2026
+
+|Trước ở BASE7ef5e3c6|Hành vi mới|Bằng chứng/giới hạn|
+|---|---|---|
+|Tiêu đề root luôn tên Anh, mô tả lẫn kỹ thuật|Bốn roottext dùng4khóa dịch cũ|Rootonly; tên khách trùng tên sản phẩm giữ nguyên|
+|GuardChat có signed-session/thread/server/guarded|3khóaVI/EN/ZH,giữ2tìnhhuống truy cập|72finalcases,không đổi canView/canCreate|
+|Documentguard lặp3tag triển khai|2khóa mới+khôngtagrowrỗng|Dữ liệu/loading/failed/ready/controls exact|
+|Modulecard cần giữ ưu tiênentrylabel|Fallback dùng root khi thiếuentrykey,APIentry cósẵn ưu tiên|12view/12click thật,href/data unchanged|
+|Phiếu chènkhóa trướcapi saufreeze làm VMlỗi|Worker catalogR2 chèn trướcverify/freeze|SPEC SAI của người giao,khôngworkerfault hoặc trực tiếp sửalogic|
+
+358affected/72target có chồng lấn;32Pythonđạt/1CSS-tailBASEfailure;24rootview
+sáng/tối. Không claimwholelocale/AX/auth/device/provider/signedproduction/motion.

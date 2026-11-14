@@ -6,6 +6,7 @@ import {execFileSync} from 'node:child_process';
 import {pathToFileURL,fileURLToPath} from 'node:url';
 import {membershipPlainLanguageHistoricalSnapshot} from './helpers/membership-plain-language-snapshot.mjs';
 import {withoutMembershipStaticNotes} from './helpers/membership-static-notes.mjs';
+import {chatDocAccessHistoricalSnapshot} from './helpers/chat-doc-access-snapshot.mjs';
 
 // Catches fixed-copy leaks while preserving technical words in customer data,
 // truthful missing information, real offers, controls, and every unrelated byte.
@@ -97,7 +98,7 @@ for(const locale of ['vi','en','zh'])for(const [state,fixture]of Object.entries(
   const b=banner(current.html);for(const value of b.nodes)assert.ok(language(value,locale),'banner node must follow '+locale+': '+value);
   assert.doesNotMatch(b.nodes.join(' '),/\/pricing/,'customer labels must not expose an internal route');
   for(const [index,value]of b.nodes.entries())assert.notEqual(value,banner(renderCurrent(locale==='vi'?'en':'vi','/membership',raw).html).nodes[index],'banner nodes must actually follow locale, not hardcoded Vietnamese');
-  const introduced=Object.keys(messages).filter(key=>!Object.hasOwn(previous,key));assert.ok(introduced.length>=4,'localized banner must use real new locale entries');
+  const introduced=chatDocAccessHistoricalSnapshot(Object.entries(messages),locale).map(([key])=>key).filter(key=>!Object.hasOwn(previous,key));assert.ok(introduced.length>=4,'localized banner must use real new locale entries');
   for(const key of introduced){assert.ok(language(messages[key],locale),key+' new copy follows locale');assert.equal(technical.test(messages[key]),false,key+' no internal fixed-copy jargon');
     if(state==='populatedapprovedcatalog')assert.ok(current.html.includes(escape(messages[key]))||current.html.includes(messages[key]),key+' new member-only label must actually render');}
   for(const value of b.nodes)assert.ok(introduced.some(key=>escape(messages[key]).trim()===value||messages[key].trim()===value),'each banner text is a real new localized value');

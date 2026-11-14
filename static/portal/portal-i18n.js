@@ -21090,6 +21090,34 @@
   Object.assign(MESSAGES.vi, {"lastTwoFeedbackUi.staleNote":"Lựa chọn đã thay đổi. Hãy tạo lại kế hoạch trước khi lưu.","lastTwoFeedbackUi.staleTitle":"Hãy tạo lại kế hoạch từ lựa chọn hiện tại trước khi lưu.","lastTwoFeedbackUi.savedTitle":"Kế hoạch này đã được lưu. Hãy tạo lại nếu cần lưu kế hoạch khác.","lastTwoFeedbackUi.savingTitle":"Đang lưu kế hoạch. Vui lòng chờ xác nhận.","lastTwoFeedbackUi.recoveryNote":"Chưa xác nhận được lần lưu trước. Các lựa chọn được giữ nguyên; hãy bấm lưu để thử lại đúng lần lưu đó.","lastTwoFeedbackUi.retryTitle":"Thử lại đúng lần lưu trước với các lựa chọn đã giữ nguyên.","lastTwoFeedbackUi.recoveryLockedTitle":"Các lựa chọn được khóa cho đến khi thử lại lần lưu trước hoặc tải lại phiên.","lastTwoOperationFeedbackUi.created":"Đã tạo kế hoạch. Bạn có thể rà soát và lưu.","lastTwoOperationFeedbackUi.saved":"Đã lưu kế hoạch riêng tư.","lastTwoOperationFeedbackUi.alreadySaved":"Kế hoạch đã được lưu. Hãy mở kế hoạch để tiếp tục.","lastTwoOperationFeedbackUi.waiting":"Đang xử lý lựa chọn hiện tại. Vui lòng chờ.","lastTwoOperationFeedbackUi.unavailable":"Không thể thực hiện thao tác lúc này. Hãy tải lại trang rồi thử lại.","lastTwoOperationFeedbackUi.invalidResult":"Không thể xác nhận kết quả. Hãy tạo lại kế hoạch.","lastTwoOperationFeedbackUi.stale":"Lựa chọn đã thay đổi. Hãy tạo lại kế hoạch trước khi lưu.","lastTwoOperationFeedbackUi.invalidReceipt":"Chưa xác nhận được việc lưu. Hãy kiểm tra danh sách kế hoạch trước khi thử lại.","lastTwoOperationFeedbackUi.recovery":"Chưa xác nhận lần lưu trước. Các lựa chọn đã khóa; bấm lưu để thử lại đúng lần lưu đó."});
   Object.assign(MESSAGES.en, {"lastTwoFeedbackUi.staleNote":"Your choices changed. Generate the plan again before saving.","lastTwoFeedbackUi.staleTitle":"Generate a plan from your current choices before saving.","lastTwoFeedbackUi.savedTitle":"This plan is already saved. Generate a new plan to save another.","lastTwoFeedbackUi.savingTitle":"Saving the plan. Please wait for confirmation.","lastTwoFeedbackUi.recoveryNote":"The previous save is not confirmed. Your choices remain locked; select Save to retry that same save.","lastTwoFeedbackUi.retryTitle":"Retry the previous save with the same locked choices.","lastTwoFeedbackUi.recoveryLockedTitle":"Choices stay locked until you retry the previous save or reload the session.","lastTwoOperationFeedbackUi.created":"Plan created. You can review and save it.","lastTwoOperationFeedbackUi.saved":"Private plan saved.","lastTwoOperationFeedbackUi.alreadySaved":"The plan is already saved. Open it to continue.","lastTwoOperationFeedbackUi.waiting":"Processing your current choices. Please wait.","lastTwoOperationFeedbackUi.unavailable":"This action is unavailable. Reload the page and try again.","lastTwoOperationFeedbackUi.invalidResult":"The result could not be verified. Generate the plan again.","lastTwoOperationFeedbackUi.stale":"Your choices changed. Generate the plan again before saving.","lastTwoOperationFeedbackUi.invalidReceipt":"Saving could not be confirmed. Check your plans before trying again.","lastTwoOperationFeedbackUi.recovery":"The previous save is not confirmed. Your choices are locked; select Save to retry that same save."});
   Object.assign(MESSAGES.zh, {"lastTwoFeedbackUi.staleNote":"选项已更改。请重新生成计划后再保存。","lastTwoFeedbackUi.staleTitle":"请根据当前选项重新生成计划后再保存。","lastTwoFeedbackUi.savedTitle":"此计划已保存。如需保存其他计划，请重新生成。","lastTwoFeedbackUi.savingTitle":"正在保存计划。请等待确认。","lastTwoFeedbackUi.recoveryNote":"尚未确认上一次保存。当前选项保持锁定；请选择保存以重试同一次操作。","lastTwoFeedbackUi.retryTitle":"使用保持锁定的相同选项重试上一次保存。","lastTwoFeedbackUi.recoveryLockedTitle":"选项将保持锁定，直到重试上一次保存或重新加载会话。","lastTwoOperationFeedbackUi.created":"计划已生成。您可以检查并保存。","lastTwoOperationFeedbackUi.saved":"私有计划已保存。","lastTwoOperationFeedbackUi.alreadySaved":"计划已保存。请打开计划继续。","lastTwoOperationFeedbackUi.waiting":"正在处理当前选项。请稍候。","lastTwoOperationFeedbackUi.unavailable":"暂时无法执行此操作。请刷新页面后重试。","lastTwoOperationFeedbackUi.invalidResult":"无法验证结果。请重新生成计划。","lastTwoOperationFeedbackUi.stale":"选项已更改。请重新生成计划后再保存。","lastTwoOperationFeedbackUi.invalidReceipt":"尚无法确认保存结果。请先检查计划列表，再决定是否重试。","lastTwoOperationFeedbackUi.recovery":"尚未确认上一次保存。选项已锁定；请选择保存以重试同一次操作。"});
+  Object.assign(MESSAGES.vi, {
+    chatAccessUiHeading: "Khu vực trò chuyện hiện chưa thể mở",
+    chatAccessUiEnabledBody: "Đăng nhập để xem các cuộc trò chuyện thuộc tài khoản hiện tại.",
+    chatAccessUiUnavailableBody: "Tính năng trò chuyện chưa được bật cho phiên này."
+  });
+  Object.assign(MESSAGES.en, {
+    chatAccessUiHeading: "Conversation area cannot currently be opened",
+    chatAccessUiEnabledBody: "Sign in to view conversations belonging to the current account.",
+    chatAccessUiUnavailableBody: "Conversation feature has not been enabled for this session."
+  });
+  Object.assign(MESSAGES.zh, {
+    chatAccessUiHeading: "当前无法打开对话区域",
+    chatAccessUiEnabledBody: "登录以查看属于当前账户的对话。",
+    chatAccessUiUnavailableBody: "当前会话尚未启用对话功能。"
+  });
+  Object.assign(MESSAGES.vi, {
+    documentAccessUiHeading: "Tài liệu hiện chưa thể mở",
+    documentAccessUiBody: "Tài khoản hoặc phiên làm việc hiện chưa được phép xem công cụ và lịch sử tài liệu."
+  });
+  Object.assign(MESSAGES.en, {
+    documentAccessUiHeading: "Documents cannot currently be opened",
+    documentAccessUiBody: "The account or session is not yet allowed to view document tools and history."
+  });
+  Object.assign(MESSAGES.zh, {
+    documentAccessUiHeading: "当前无法打开文档",
+    documentAccessUiBody: "当前账户或会话暂未获准查看文档工具与历史记录。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {
