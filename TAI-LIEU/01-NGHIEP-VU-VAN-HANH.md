@@ -2827,3 +2827,14 @@ disabled/quyền/state/route và dữ liệu lưu giữ. Không đổi generic r
 trả lại/khôngsubmit; source/data/evidence giữ/ownedJobs0.
 PR735 đã triển khai d124b867, receipts6879820281/6879820732.
 [Báo cáo](../docs/reports/chat-context-section-copy-20261114.md).
+
+## Danh sách ghi chú/nội dung — 14/11/2026
+
+16khóa/48giá trịVI/EN/ZH cho thẻ ghi chú,lựa chọn loại,danh sách nội dung,
+trạng thái/nút/xác nhận và hướng dẫn rỗng. Nội dung khách và dữ liệu/route/
+quyền/ID/disabled/rawtimestamps giữ.147target/286affected/9PythonPASS.
+Native24unique states3locale,QA15threads24contexts18turns,selectđổi rồi
+trả lại/khôngsubmit;8Chat tables/schema/evidence/6plans18scenes giữ/Jobs0.
+ReviewC0/I0/M0/exact5workerchanges;17protectedpaths LF-content giữ.
+PR736 đã triển khai6a519756,receipts6880380587/6880380973.
+[Báo cáo](../docs/reports/chat-context-cards-turn-list-20261114.md).

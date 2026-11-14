@@ -1811,3 +1811,28 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
   phi tài chính/canonicalquoteprojection,không sửa money/authhelper/ENV.
 - [ ] ContextCards/turnList/history/execution/toast/Docothercopy,wholeAX/
   auth/device/Safari/signedproduction/finalaudio vàM-FINAL01..06 vẫn mở.
+
+## Thẻ ghi chú/danh sách nội dung — sau PR736
+
+- [x] CCS deliveryPR736HEAD5771c98c,CI43612650806bothPASS,
+  merged/runtime6a519756,deploy43613796270PASS,tree590998e4exact;
+  services/health/4assets/TTS+2videohashes giữ,receipts6880380587/6880380973.
+- [x] CCT5exactworkerchanges/2appfiles16keys48values;BASE11=1PASS10RED,
+  permanentactualVMgroup147/147PASS/affected286/286PASS/Python9/syntax/
+  compilePASS. Không candidate GREEN trùng;reviewnguồn C0/I0/M0.
+- [x] Customerdata/rawkind/state/ordinal/revision/date/action/rights/
+  disabled/optionsorder/selectedfallback giữ;oldcatalog/hash/freeze giữ,
+  missing/unknown/mutation/reorderkhôngbịlọc;17protectedLFcontent/allPython giữ.
+- [x] Native24unique3locale375sáng1440tối4states có15threads/24contexts/
+ 18turnsQA/13ảnh;8Chat tables/schema/evidence/6plans18scenes giữ/Jobs0.
+  Không suy empty/unknown/deniedVM thànhnative.
+- [ ] CCTdocs/Tester/cases/metadata/provenance/exactCI/merge/deploy/
+  runtime/assets/receipt cùngIssue689/PR.
+- [x] TTS bindinghelperR2provider-free34PASS (R1genuinefailure1),client
+  finiteactualsource10PASS;khôngappapply/paidcall. Backendphiếudependent
+  đang giao output-only,không financial/authhelper/schema/ENVchange.
+- [ ] History2phiếuriêng đang chạy;execution/toast/Docothercopy,wholeAX/
+  auth/device/Safari/readiness/finalaudio/signedproduction/M-FINAL vẫn mở.
+- [ ] Nhãn loại ghi chú context-edit375sáng nhạt (BASErule chỉ >label,
+  actualspan):phiếu1selectorlight riêng đang giao,kếsauwordrelease;
+  không đổi CSS nguồn đã khóa/nativebinding hoặc ẩn nhãn để báo đạt.

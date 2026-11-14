@@ -21803,6 +21803,68 @@
     chatDetailSectionUiTurnSubtitle: "回顾您撰写的问题、笔记和决定。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    chatContextCardsUiTitleFallback: "Ghi chú",
+    chatContextCardsUiStateActive: "Đang dùng",
+    chatContextCardsUiSaveButton: "Lưu ghi chú",
+    chatContextCardsUiArchiveConfirm: "Lưu trữ ghi chú này? Nội dung vẫn được giữ.",
+    chatContextCardsUiRestoreConfirm: "Khôi phục ghi chú này?",
+    chatContextCardsUiRestoreButton: "Khôi phục",
+    chatContextCardsUiEmptyTitle: "Chưa có ghi chú",
+    chatContextCardsUiEmptyBody: "Thêm thông tin tham khảo, giới hạn hoặc hướng dẫn cần lưu cho cuộc trò chuyện này."
+  });
+  Object.assign(MESSAGES.en, {
+    chatContextCardsUiTitleFallback: "Note",
+    chatContextCardsUiStateActive: "In use",
+    chatContextCardsUiSaveButton: "Save note",
+    chatContextCardsUiArchiveConfirm: "Archive this note? Its content will be kept.",
+    chatContextCardsUiRestoreConfirm: "Restore this note?",
+    chatContextCardsUiRestoreButton: "Restore",
+    chatContextCardsUiEmptyTitle: "No notes yet",
+    chatContextCardsUiEmptyBody: "Add reference information, limits, or instructions to keep with this conversation."
+  });
+  Object.assign(MESSAGES.zh, {
+    chatContextCardsUiTitleFallback: "笔记",
+    chatContextCardsUiStateActive: "使用中",
+    chatContextCardsUiSaveButton: "保存笔记",
+    chatContextCardsUiArchiveConfirm: "归档此笔记？内容仍会保留。",
+    chatContextCardsUiRestoreConfirm: "恢复此笔记？",
+    chatContextCardsUiRestoreButton: "恢复",
+    chatContextCardsUiEmptyTitle: "暂无笔记",
+    chatContextCardsUiEmptyBody: "添加需要为此对话保存的参考信息、限制或说明。"
+  });
+
+  Object.assign(MESSAGES.vi, {
+    chatTurnListUiOrdinal: "Lượt",
+    chatTurnListUiUpdate: "Lần cập nhật",
+    chatTurnListUiUpdatedAt: "Cập nhật lúc",
+    chatTurnListUiArchiveConfirm: "Lưu trữ nội dung này? Nội dung vẫn được giữ.",
+    chatTurnListUiRestoreConfirm: "Khôi phục nội dung này?",
+    chatTurnListUiRestoreButton: "Khôi phục",
+    chatTurnListUiEmptyTitle: "Chưa có nội dung đã lưu",
+    chatTurnListUiEmptyBody: "Thêm câu hỏi, ghi chú hoặc quyết định do bạn viết để xem lại sau."
+  });
+  Object.assign(MESSAGES.en, {
+    chatTurnListUiOrdinal: "Entry",
+    chatTurnListUiUpdate: "Update",
+    chatTurnListUiUpdatedAt: "Updated",
+    chatTurnListUiArchiveConfirm: "Archive this content? It will be kept.",
+    chatTurnListUiRestoreConfirm: "Restore this content?",
+    chatTurnListUiRestoreButton: "Restore",
+    chatTurnListUiEmptyTitle: "No saved content yet",
+    chatTurnListUiEmptyBody: "Add questions, notes, or decisions you write to review later."
+  });
+  Object.assign(MESSAGES.zh, {
+    chatTurnListUiOrdinal: "条目",
+    chatTurnListUiUpdate: "更新次数",
+    chatTurnListUiUpdatedAt: "更新时间",
+    chatTurnListUiArchiveConfirm: "归档此内容？内容仍会保留。",
+    chatTurnListUiRestoreConfirm: "恢复此内容？",
+    chatTurnListUiRestoreButton: "恢复",
+    chatTurnListUiEmptyTitle: "暂无已保存的内容",
+    chatTurnListUiEmptyBody: "添加您撰写的问题、笔记或决定，方便日后查看。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

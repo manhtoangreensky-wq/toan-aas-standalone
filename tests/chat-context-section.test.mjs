@@ -1,12 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {cardsTurnHistoricalSnapshot,cardsTurnHistoricalPortalSource} from './helpers/chat-context-cards-turn-snapshot.mjs';
 import {contextSectionRenderer,contextSectionSources} from './helpers/chat-context-section-runtime.mjs';
 import {contextSectionHistoricalSnapshot,contextSectionHistoricalPortalSource} from './helpers/chat-context-section-snapshot.mjs';
 import {summaryHistoricalPortalSource} from './helpers/chat-detail-summary-editor-snapshot.mjs';
 
-const source=contextSectionSources(),oldSource=contextSectionSources(true);
-const current=await contextSectionRenderer(source),before=await contextSectionRenderer(oldSource);
+const live=contextSectionSources(),source={...live,portal:cardsTurnHistoricalPortalSource(live.portal)},oldSource=contextSectionSources(true);
+const actual=await contextSectionRenderer(source),before=await contextSectionRenderer(oldSource);
+const current=(...args)=>{
+  const result=actual(...args);
+  return {...result,catalogFrozen:Object.fromEntries(['vi','en','zh'].map(locale=>[locale,Object.isFrozen(result.messages[locale])])),messages:Object.fromEntries(['vi','en','zh'].map(locale=>[
+    locale,Object.fromEntries(cardsTurnHistoricalSnapshot(Object.entries(result.messages[locale]),locale))
+  ]))};
+};
 const copy=JSON.parse(fs.readFileSync(new URL('./fixtures/chat-context-section-reviewed.json',import.meta.url),'utf8'));
 const id='11111111-1111-4111-8111-111111111111',route='/chat/'+id;
 const literal='CUSTOMER media studio OpenAI TOAN AAS <script>alert("Bot")</script>&';
@@ -62,7 +69,7 @@ for(const locale of ['vi','en','zh']){
   });
   test(`${locale}: runtime locale, escaping and exact frozen catalog/strict historical values remain`,()=>{
     const a=Object.entries(now.messages[locale]),b=Object.entries(old.messages[locale]);
-    assert.ok(Object.isFrozen(now.messages[locale]));assert.deepEqual(JSON.parse(JSON.stringify(a.slice(0,b.length))),JSON.parse(JSON.stringify(b)));
+    assert.equal(now.catalogFrozen[locale],true);assert.deepEqual(JSON.parse(JSON.stringify(a.slice(0,b.length))),JSON.parse(JSON.stringify(b)));
     assert.deepEqual(JSON.parse(JSON.stringify(a.slice(b.length))),Object.entries(e));
     const next=locale==='vi'?'en':locale==='en'?'zh':'vi';
     try{
