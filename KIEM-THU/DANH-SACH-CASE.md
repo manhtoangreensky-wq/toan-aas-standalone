@@ -1223,3 +1223,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CDP-DATA|nặng|SoIDs/order/owner/rawdata/dateIntl|165validQArows/3owner/6plan18scenegiữ|0fakeAPI/boot/external/productwrite|
 |CDP-SCOPE|nặng|Replayworker/protectedsource/process|3changes2files/17protected,22owned→0|ReviewC0I0M0,0provider/ví|
 |CDP-DELIVERY|nặng|ExactCI/merge/deploy/runtimeassets|ReceiptcùngIssue/PR,khônggoalcomplete|MotionM-FINALvẫncòncuối|
+
+## CHAT-DETAIL-CONTROLS-20261114 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CDC-FIELDS|vừa|19fieldcopy4context3turnkinds3locale|Names/type/constraints/optionsorder/namespacegiữ|34new0PASS34RED→34PASS|
+|CDC-LIFECYCLE|nặng|4state/default×captruefalseother|10copyđúng,targets/actions/order/disabled giữ|Actualrenderedbuttons/confirmescape|
+|CDC-CUSTOMER|nặng|Hostileliteral/selectedvalues/detailconsumer|Kháchkhôngdịch/filtered,escapeđúng|103new+priorPASS|
+|CDC-STRICT|nặng|29key/2spanhashmutation|Oldkeys/order/frozen/unknowngiữ|286affected,17protectedpaths|
+|CDC-NATIVE|nặng|24uniquestate3locale375light1440dark|Realhref/detailGET/forms/lifecycleattrsđúng|[PhiênCDC](PHIEN-CHAT-DETAIL-CONTROLS-20261114.md)|
+|CDC-QUOTA|nặng|13prefix+3ENtail+8ZH|0repeat/rateguardunchanged/r1FAILgiữ|2actual429excludednextphaseonly|
+|CDC-SAFETY|nặng|FakeQAidentity/15rows/6plan18scene/evidence|Noexposedid/authchange,owned22+13+15→0|0provider/ví/product/prodwrite|
+|CDC-DELIVERY|nặng|ExactCI/merge/deploy/runtimeassets|ReceiptcùngIssue/PR,khôngactualaudio/goalclaim|Otherdetail/motionvẫnmở|

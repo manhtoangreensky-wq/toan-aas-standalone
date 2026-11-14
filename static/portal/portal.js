@@ -19445,21 +19445,32 @@ function renderAutoPostHub(page, context) {
     };
   }
   function chatContextFields() {
+    const localLabels = {
+      brief: uiText("chatDetailFieldUiKindBrief", "Thông tin chính"),
+      constraint: uiText("chatDetailFieldUiKindConstraint", "Giới hạn"),
+      reference: uiText("chatDetailFieldUiKindReference", "Thông tin tham khảo"),
+      instruction: uiText("chatDetailFieldUiKindInstruction", "Hướng dẫn")
+    };
     return [
-      { name: "kind", label: "Loại context", control: "select", required: true, options: CHAT_CONTEXT_KINDS },
-      { name: "title", label: "Tiêu đề context", placeholder: "Ví dụ: Điều không được khẳng định", required: true, minLength: 2, maxLength: 180 },
-      { name: "body", label: "Nội dung do bạn soạn", control: "textarea", placeholder: "Viết constraint, reference note hoặc chỉ dẫn biên tập…", required: true, maxLength: 12000, wide: true },
-      { name: "tags", label: "Tags", placeholder: "policy, factual", maxLength: 1000 }
+      { name: "kind", label: uiText("chatDetailFieldUiContextKindLabel", "Loại ghi chú"), control: "select", required: true, options: CHAT_CONTEXT_KINDS.map(([value]) => [value, localLabels[value]]) },
+      { name: "title", label: uiText("chatDetailFieldUiContextTitleLabel", "Tiêu đề ghi chú"), placeholder: uiText("chatDetailFieldUiContextTitlePlaceholder", "Ví dụ: Thông tin cần kiểm tra"), required: true, minLength: 2, maxLength: 180 },
+      { name: "body", label: uiText("chatDetailFieldUiContextBodyLabel", "Nội dung ghi chú"), control: "textarea", placeholder: uiText("chatDetailFieldUiContextBodyPlaceholder", "Viết thông tin tham khảo, giới hạn hoặc hướng dẫn cần ghi nhớ…"), required: true, maxLength: 12000, wide: true },
+      { name: "tags", label: uiText("chatDetailFieldUiContextTagsLabel", "Từ khóa"), placeholder: uiText("chatDetailFieldUiContextTagsPlaceholder", "thương hiệu, nội dung, cần kiểm tra"), maxLength: 1000 }
     ];
   }
   function chatTurnFields() {
+    const localLabels = {
+      prompt: uiText("chatDetailFieldUiTurnPrompt", "Câu hỏi"),
+      note: uiText("chatDetailFieldUiTurnNote", "Ghi chú"),
+      decision: uiText("chatDetailFieldUiTurnDecision", "Quyết định")
+    };
     return [
-      { name: "kind", label: "Loại lượt", control: "select", required: true, options: CHAT_TURN_KINDS },
-      { name: "body", label: "Prompt / ghi chú do bạn soạn", control: "textarea", placeholder: "Ghi prompt, câu hỏi cần tự rà soát hoặc quyết định của bạn…", required: true, maxLength: 16000, wide: true }
+      { name: "kind", label: uiText("chatDetailFieldUiTurnKindLabel", "Loại nội dung"), control: "select", required: true, options: CHAT_TURN_KINDS.map(([value]) => [value, localLabels[value]]) },
+      { name: "body", label: uiText("chatDetailFieldUiTurnBodyLabel", "Nội dung của bạn"), control: "textarea", placeholder: uiText("chatDetailFieldUiTurnBodyPlaceholder", "Viết câu hỏi, ghi chú hoặc quyết định cần lưu…"), required: true, maxLength: 16000, wide: true }
     ];
   }
   function chatRunFields() {
-    return [{ name: "client_message", label: "Tin nhắn gửi cho Chat Run", control: "textarea", placeholder: "Viết yêu cầu rõ ràng. Máy chủ sẽ ghi một Chat Run Web-native và trả trạng thái thực tế; không tạo câu trả lời giả.", required: true, minLength: 1, maxLength: 16000, wide: true }];
+    return [{ name: "client_message", label: uiText("chatDetailFieldUiRunLabel", "Nội dung yêu cầu"), control: "textarea", placeholder: uiText("chatDetailFieldUiRunPlaceholder", "Viết yêu cầu bạn muốn gửi. Bạn có thể xem lại trạng thái sau khi gửi."), required: true, minLength: 1, maxLength: 16000, wide: true }];
   }
   function chatRunState(value) {
     const state = String(value || "").toLowerCase();
@@ -19566,10 +19577,10 @@ function renderAutoPostHub(page, context) {
   function chatWorkspaceLifecycleActions(thread, state, context, route) {
     const canLifecycle = Boolean(context.capabilities && context.capabilities["chat-thread-lifecycle"] === true);
     const attrs = ' data-chat-thread-id="' + safeText(String(thread.id)) + '" data-chat-thread-revision="' + safeText(String(thread.revision)) + '" data-portal-route="' + safeText(route) + '"';
-    if (state === "archived") return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="draft"' + attrs + ' data-portal-confirm="Khôi phục thread về Draft để tiếp tục biên tập?"' + (canLifecycle ? "" : " disabled") + '>Khôi phục về Draft</button>';
-    if (state === "draft") return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="review"' + attrs + ' data-portal-confirm="Bắt đầu self-review thread này?"' + (canLifecycle ? "" : " disabled") + '>Bắt đầu self-review</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="archived"' + attrs + ' data-portal-confirm="Archive thread? Context, ghi chú và history riêng tư vẫn được giữ."' + (canLifecycle ? "" : " disabled") + '>Archive thread</button>';
-    if (state === "review") return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="draft"' + attrs + ' data-portal-confirm="Trả thread về Draft để tiếp tục biên tập?"' + (canLifecycle ? "" : " disabled") + '>Trả về Draft</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="ready"' + attrs + ' data-portal-confirm="Đánh dấu sẵn sàng handoff? AI execution vẫn không được gọi."' + (canLifecycle ? "" : " disabled") + '>Đánh dấu sẵn sàng</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="archived"' + attrs + ' data-portal-confirm="Archive thread? Context, ghi chú và history riêng tư vẫn được giữ."' + (canLifecycle ? "" : " disabled") + '>Archive thread</button>';
-    return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="draft"' + attrs + ' data-portal-confirm="Trả thread về Draft để tiếp tục biên tập?"' + (canLifecycle ? "" : " disabled") + '>Trả về Draft</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="archived"' + attrs + ' data-portal-confirm="Archive thread? Context, ghi chú và history riêng tư vẫn được giữ."' + (canLifecycle ? "" : " disabled") + '>Archive thread</button>';
+    if (state === "archived") return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="draft"' + attrs + ' data-portal-confirm="' + safeText(uiText("chatLifecycleUiRestoreConfirm", "Khôi phục cuộc trò chuyện để tiếp tục chỉnh sửa?")) + '"' + (canLifecycle ? "" : " disabled") + '>' + safeText(uiText("chatLifecycleUiRestoreButton", "Khôi phục bản nháp")) + '</button>';
+    if (state === "draft") return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="review"' + attrs + ' data-portal-confirm="' + safeText(uiText("chatLifecycleUiReviewConfirm", "Bắt đầu xem lại nội dung cuộc trò chuyện này?")) + '"' + (canLifecycle ? "" : " disabled") + '>' + safeText(uiText("chatLifecycleUiReviewButton", "Bắt đầu xem lại")) + '</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="archived"' + attrs + ' data-portal-confirm="' + safeText(uiText("chatLifecycleUiArchiveConfirm", "Lưu trữ cuộc trò chuyện này? Ghi chú và lịch sử vẫn được giữ.")) + '"' + (canLifecycle ? "" : " disabled") + '>' + safeText(uiText("chatLifecycleUiArchiveButton", "Lưu trữ")) + '</button>';
+    if (state === "review") return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="draft"' + attrs + ' data-portal-confirm="' + safeText(uiText("chatLifecycleUiDraftConfirm", "Chuyển cuộc trò chuyện về bản nháp để chỉnh sửa?")) + '"' + (canLifecycle ? "" : " disabled") + '>' + safeText(uiText("chatLifecycleUiDraftButton", "Về bản nháp")) + '</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="ready"' + attrs + ' data-portal-confirm="' + safeText(uiText("chatLifecycleUiReadyConfirm", "Đánh dấu nội dung đã chuẩn bị xong? Thao tác này chỉ cập nhật trạng thái nội dung.")) + '"' + (canLifecycle ? "" : " disabled") + '>' + safeText(uiText("chatLifecycleUiReadyButton", "Đánh dấu đã chuẩn bị")) + '</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="archived"' + attrs + ' data-portal-confirm="' + safeText(uiText("chatLifecycleUiArchiveConfirm", "Lưu trữ cuộc trò chuyện này? Ghi chú và lịch sử vẫn được giữ.")) + '"' + (canLifecycle ? "" : " disabled") + '>' + safeText(uiText("chatLifecycleUiArchiveButton", "Lưu trữ")) + '</button>';
+    return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="draft"' + attrs + ' data-portal-confirm="' + safeText(uiText("chatLifecycleUiDraftConfirm", "Chuyển cuộc trò chuyện về bản nháp để chỉnh sửa?")) + '"' + (canLifecycle ? "" : " disabled") + '>' + safeText(uiText("chatLifecycleUiDraftButton", "Về bản nháp")) + '</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="archived"' + attrs + ' data-portal-confirm="' + safeText(uiText("chatLifecycleUiArchiveConfirm", "Lưu trữ cuộc trò chuyện này? Ghi chú và lịch sử vẫn được giữ.")) + '"' + (canLifecycle ? "" : " disabled") + '>' + safeText(uiText("chatLifecycleUiArchiveButton", "Lưu trữ")) + '</button>';
   }
   function renderChatWorkspaceDetail(page, context) {
     const canView = Boolean(context.capabilities && context.capabilities["chat-workspace-view"] === true);

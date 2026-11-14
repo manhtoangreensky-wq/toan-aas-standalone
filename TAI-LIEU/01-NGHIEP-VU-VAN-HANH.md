@@ -2787,3 +2787,14 @@ ngày soIntl native,tên/dữliệu/ID/ordergiữ.0tràn/lỗitrang/ghi sảnph�
 165QAtmpmetadata/6plan18scene/evidencegiữ,22ownedprocess→0.
 Khôngprovider/ví/ENV/Bot/auth/API/CSS/motionchange;detail/luồngkháccònmở.
 [Báo cáo](../docs/reports/chat-dates-pages-20261114.md).
+
+## Biểu mẫu/nút Hội thoại chi tiết — 14/11/2026
+
+19nhãn/gợiý/lựachọn và10chữnút/xácnhậntheoVI/EN/ZH. Rawcodes/order/
+constraint/ID/quyền/targetstates vànộidungkháchgiữ. Lựachọnđổi ởtrìnhduyệt
+khôngtựsubmit. KhôngbậtxửlýAI/thayBot/auth/API/tiền/ENV.
+34new+69prior=103PASS,286affectedPASS,Python8PASS+1affectedPASS.
+24nativestatesduynhất(13+3+8),giữ429phađọckếkhôngđạt,táchserverQA/
+khôngtắtrateguard/khôngrerunVI.15metadataQA/6plan18scene/evidencegiữ,
+owned22+13+15→0. Otherdetailtext/AX/auth/device/Safari/motionvẫnmở.
+[Báo cáo](../docs/reports/chat-detail-controls-20261114.md).

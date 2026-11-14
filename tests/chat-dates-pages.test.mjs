@@ -2,8 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {datePagesRenderer,datePagesSources} from './helpers/chat-dates-pages-runtime.mjs';
 import {datePagesHistoricalSnapshot,datePagesHistoricalPortalSource} from './helpers/chat-dates-pages-snapshot.mjs';
-const sources=datePagesSources(),priorSources=datePagesSources(true);
-const render=await datePagesRenderer(sources),before=await datePagesRenderer(priorSources);
+import {detailHistoricalSnapshot,detailHistoricalPortalSource} from './helpers/chat-detail-controls-snapshot.mjs';
+const live=datePagesSources(),sources={...live,portal:detailHistoricalPortalSource(live.portal)},priorSources=datePagesSources(true);
+const actual=await datePagesRenderer(sources),before=await datePagesRenderer(priorSources);
+const render=(...args)=>{
+  const result=actual(...args);
+  return {...result,catalogFrozen:Object.fromEntries(['vi','en','zh'].map(locale=>[locale,Object.isFrozen(result.messages[locale])])),messages:Object.fromEntries(['vi','en','zh'].map(locale=>[
+    locale,Object.fromEntries(detailHistoricalSnapshot(Object.entries(result.messages[locale]),locale))
+  ]))};
+};
 const id='11111111-1111-4111-8111-111111111111',tags={vi:'vi-VN',en:'en-US',zh:'zh-CN'};
 const copy={
   vi:{chatPagesUiAria:'Chuyển trang hội thoại',chatPagesUiSummary:'Hiển thị {from}–{to} / {total} cuộc trò chuyện',chatPagesUiPrevious:'← Trước',chatPagesUiNext:'Sau →'},
@@ -76,7 +83,7 @@ for(const locale of ['vi','en','zh']){
     const a=Object.entries(now.messages[locale]),b=Object.entries(old.messages[locale]);
     assert.deepEqual(JSON.parse(JSON.stringify(a.slice(0,b.length))),JSON.parse(JSON.stringify(b)));
     assert.deepEqual(JSON.parse(JSON.stringify(a.slice(b.length))),Object.entries(copy[locale]));
-    assert.ok(Object.isFrozen(now.messages[locale]));
+    assert.equal(now.catalogFrozen[locale],true);
   });
   test(`${locale}: historical adapter rejects partial/mutated/reordered copy and retains unknown keys`,()=>{
     const entries=Object.entries(now.messages[locale]),normalized=datePagesHistoricalSnapshot(entries,locale);
@@ -100,7 +107,7 @@ test('reviewed full-span source normalization never hides unknown edits or the s
     const a=sources.portal.indexOf(start),b=sources.portal.indexOf(end,a),span=sources.portal.slice(a,b);
     assert.ok(a>=0&&b>a);assert.equal(span.split(before).length-1,1);
     const mutated=sources.portal.slice(0,a)+span.replace(before,after)+sources.portal.slice(b);
-    assert.throws(()=>datePagesHistoricalPortalSource(mutated),/Unreviewed Chat dates\/pages source/);
+    assert.throws(()=>datePagesHistoricalPortalSource(mutated),/Unreviewed Chat (?:dates\/pages|detail) source/);
   }
   assert.ok(datePagesHistoricalPortalSource(sources.portal+'\n// UNKNOWN_SOURCE').endsWith('// UNKNOWN_SOURCE'));
   assert.equal(sources.portal.split('safeText(String(item.updated_at || "—"))').length-1,1);

@@ -1998,3 +1998,13 @@ native detail/device/Safari/toàn app và đầu ra provider không được suy
 |PhântranghọithoạiluônViệt|4keys12valuesVI/EN/ZH|SafeText/uiText,dynamicfallbackgiữmath|
 |Trangđầu/sau/chuyểnngược|Cùngoffset0→50→0 và50→5→50thẻ|18nativeactualGETstates,khôngfakeAPI|
 |Adaptercũđoobjectclonefrozen|ĐoVMcatalogthậttrướcprojection|4harnesscases sửa,khôngclonefreezefakePASS|
+
+## Biểu mẫu/nút chi tiết — đối chiếu 14/11/2026
+
+|TrướcBASEd71c68c9|Trong phiếu hiện tại|Bằng chứng/giới hạn|
+|---|---|---|
+|Loạicontext/Tags/PromptlẫnAnh|19nhãn/gợiý/lựachọn3locale|Raw4context3turncodes/constraints giữ|
+|Self-review/Archive/Drafttrênnút|10nhãn/xácnhận3locale|State/rights/actions/targets/disabledgiữ|
+|Assertcứngcâu“không tạo câu trả lời giả”|ActualrunfieldcontractkhônghứaAI|1affectedPythonPASS,cácguardkhácgiữ|
+|QAđòiidnộibộtrongpublicme|Kiểmknownfakeidentity+exactownerIDs+GETscope|KhônglộID/thayprojection/auth|
+|Mộtservernhiềuviewgặp429|Giữ13states,xửlý11statesthiếuserverriêng|24unique,khôngtắtguard/khônglặpVI|
