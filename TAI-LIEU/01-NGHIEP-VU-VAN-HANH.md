@@ -2760,3 +2760,17 @@ Không coi trang sẵn sàng là engine đã trả đầu ra. Hai phiếu chữ 
 và một phiếu rà Web–TTS được giao các phiên riêng; chưa sửa engine hoặc
 quan sát tệp âm thanh thực. Các chữ/điều khiển ngoài phiếu và motion cuối
 vẫn trong sổ công việc. [Báo cáo](../docs/reports/document-refresh-chat-labels-20261114.md).
+
+## Thẻ Hội thoại và khoảng trống bố cục — 14/11/2026
+
+Thẻ dùng20 nhãn/thông báo ba ngôn ngữ cho trạng thái/cách soạn/số ghi chú/
+lượt/lần cập nhật/ghim/nút mở và hướng dẫn rỗng. Tên/nội dung khách vẫn giữ.
+Bỏ aside chỉ giải thích triển khai,không bỏ vùng gửi yêu cầu hoặc chốt quyền.
+Desktop biểu mẫu còn một mình nay rộng1088/1088px,không còn cột trống;
+mobile343/343px giữ,detail không đổi. Không đổi engine/API/auth/tiền/ENV.
+
+39target và309affectedNode/9ChatPython đạt,24root/detailnative3locale đạt.
+Geometry riêng4root+1detail đạt,không lặp24view.16protectedpaths giữ,
+15metadatafakeQA/6plan18scene giữ,owned19+13→0,0provider/ví/productwrite.
+Timestampthẻ/phântrang/chi tiết khác vàmotioncuối vẫn mở.
+[Báo cáo](../docs/reports/chat-cards-customer-copy-20261114.md).

@@ -1676,8 +1676,10 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
   dark11.52797:1giữ. Doc12states/6failed+6GETrecoveredVI/EN/ZH;24abort
   chủđộng/24console tươngứng,0unexpectederror/overflow/productwrite.
   6plan18scene/evidencegốcgiữ,13Chat+20Docownedprocess→0.
-- [ ] DCL-DELIVERY:docs/Tester/case/provenance/exactHEADCI/merge/deploy/
-  runtime/assets/receipt. Spec2026-11-14-document-refresh-chat-labels.
+- [x] DCL-DELIVERY:PR731HEAD799b08e2,CI43584766006bothPASS;
+  merge/runtime398cea1c,deploy43585904925PASS,tree d307b2ba exact.
+  Trackedclean/servicesactive-running/health/4assets/TTS+2video hashesexact.
+  ReceiptIssue6896876023868/PR7316876024174;khôngclaimsignedproduction/audio.
 - [ ] CHAT-BOUNDARY-PANEL:AntigravityR1 output-only đã trả;chưaRED/apply.
 - [ ] CHAT-CARDS-CUSTOMER-COPY:AntigravityR1 output-only bịprint-timeout,
   giữsameconversation,khôngCODEfailure;chưacópatchnghiệmthu/ápdụng.
@@ -1689,3 +1691,27 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
 - [ ] Ngoàiphiếu:Chatcard/detail/run/feedback,Docotherhistory/tools/copy,
   helpertextcontrast/toànAX/auth/device/Safari/signedproduction vẫn mở.
   M-FINAL-01..06 vẫn cuối;khôngmở rộng bản CSS nhãn sang motion.
+
+## Kế tiếp sau PR731 — thẻ và khối giải thích Hội thoại
+
+- [x] Hai phiên Antigravity riêng đã trả3OLD/NEW;B nối cùng phiên sau timeout,
+  amendment3wording không tính CODEfailure. Publicsource+fullMAP only.
+- [x] Candidate gộp35case:BASE4PASS/31RED→35PASS,inmemoryonly,
+  giữ attribute/links/permissions/counts/names/helpers/execution panel.
+- [x] Permanent38case3PASS35RED→38PASS+consumer1PASS;309affectedNode/
+  9ChatPythonPASS.20keys60value,exact3A+Bchanges;CSSprerequisite1change.
+- [x] Native12root+12detail3locale375/1440lightdarkPASS,realGET/click,
+  noaside/overflow/errors,15validQArows/3owner/6plan18scene/evidencegiữ,
+  19ownedprocess→0. InvalidfixtureenumrunlàSPEC_SAI,khôngbypassguard.
+- [x] ReviewI1desktopgap604.546875/1088:AntigravityA1CSSprerequisite,
+  geometry4root+1detailPASS1088/1088,343/343giữ;13ownedprocess→0.
+  CSS2PASS+oldlabelcomparatorPASS,sourceexact4workerchanges/16protected,
+  reviewextensionC0I0M0. Khôngrerun24copyview.
+- [ ] Docs/Tester/cases/metadata/provenance/exactCI/merge/deploy/receipt theo
+  `docs/superpowers/specs/2026-11-14-chat-cards-customer-copy.md`,BASE398cea1c.
+- [x] WEB-TTS-READ-VPS:4readinessbooleansonly,0secretoutput/change/call;
+  voice_ttsAdapterListedfalse. Khôngtựbật quyền thực thi hoặc fakeaudio.
+- [ ] CHAT-CARD-DATE:nativescreenshotcònISO;phiếu1expressiondisplay
+  localizedDateTimescopeonly,chưaáp/publicsourceonlysessionđanggiao.
+- [ ] CHAT-PAGINATION:4keys×3locale/onefunction,chỉlabels/aria,
+  offset/rights/GET/data giữ;phiếuriêngđanggiao,khônglẫnvớireleasethẻ.
