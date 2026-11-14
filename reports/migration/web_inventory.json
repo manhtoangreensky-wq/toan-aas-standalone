@@ -1630,7 +1630,7 @@
     {
       "file": "copyfast_voice_tts_job_bridge.py",
       "kind": "function",
-      "line": 836,
+      "line": 838,
       "target": "reconcile_voice_tts_job_status"
     },
     {
@@ -1744,7 +1744,7 @@
     {
       "file": "copyfast_voice_tts_job_bridge.py",
       "kind": "function",
-      "line": 946,
+      "line": 948,
       "target": "voice_tts_job_to_native_compat"
     },
     {
@@ -8195,31 +8195,31 @@
     },
     {
       "file": "copyfast_voice_tts_job_bridge.py",
-      "line": 825,
+      "line": 827,
       "operation": "UPDATE",
       "table": "web_voice_tts_jobs"
     },
     {
       "file": "copyfast_voice_tts_job_bridge.py",
-      "line": 894,
+      "line": 896,
       "operation": "UPDATE",
       "table": "web_voice_tts_jobs"
     },
     {
       "file": "copyfast_voice_tts_job_bridge.py",
-      "line": 909,
+      "line": 911,
       "operation": "UPDATE",
       "table": "web_voice_tts_jobs"
     },
     {
       "file": "copyfast_voice_tts_job_bridge.py",
-      "line": 922,
+      "line": 924,
       "operation": "UPDATE",
       "table": "web_voice_tts_jobs"
     },
     {
       "file": "copyfast_voice_tts_job_bridge.py",
-      "line": 934,
+      "line": 936,
       "operation": "UPDATE",
       "table": "web_voice_tts_jobs"
     },
@@ -18796,9 +18796,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 505,
-  "source_files_scanned": 505,
-  "source_fingerprint_sha256": "7e5e1b63f39080dea03271438ffdd9c723a8af6ecf2b878bfcb1ddb1f8574d7c",
+  "source_files_discovered": 507,
+  "source_files_scanned": 507,
+  "source_fingerprint_sha256": "07976d109a0b3dad33a7a6702ba2e96cd6eb991261863963b7684282f3988eec",
   "source_root": "repository-root",
   "ui_path_references": [
     {
