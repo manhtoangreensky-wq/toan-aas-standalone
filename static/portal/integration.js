@@ -36875,17 +36875,37 @@
         return;
       }
       if (action === "document-operation-refresh") {
+        const t = (key, fallback) => {
+          const i18n = typeof window !== "undefined" ? window.TOANAASI18n : null;
+          const text = i18n && typeof i18n.t === "function" ? i18n.t(key) : null;
+          return text && text !== key ? text : fallback;
+        };
         const documentPath = currentPortalPath();
         const isDocumentBoard = documentPath === "/documents" || documentPath === "/documents/pdf";
         if (route !== documentPath || (!isDocumentBoard && !documentOperationKindForCurrentRoute())) {
-          throw new Error("Chỉ có thể làm mới Document Operations từ workspace tài liệu đang mở.");
+          throw new Error(t("docRefreshUiRouteMismatch", "Hãy mở trang tài liệu cần làm mới rồi thử lại."));
         }
         if (!(base().capabilities && base().capabilities["document-operation-refresh"] === true)) {
-          throw new Error("Cần signed Web session, Asset Vault và Document Operations để làm mới dữ liệu private.");
+          throw new Error(t("docRefreshUiPermission", "Chưa thể làm mới tài liệu từ tài khoản này."));
         }
-        if (isDocumentBoard) await hydrateDocumentOperations();
-        else await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
-        toast("Đã làm mới Document Operations.");
+        const sessionEpoch = operationHistorySessionEpoch;
+        const readPromise = hydrateDocumentOperations();
+        const requestEpoch = documentOperationHistoryHydrationEpoch;
+        const result = isDocumentBoard
+          ? await readPromise
+          : (await Promise.all([readPromise, hydrateAssetVault()]))[0];
+        if (
+          sessionEpoch !== operationHistorySessionEpoch ||
+          requestEpoch !== documentOperationHistoryHydrationEpoch ||
+          currentPortalPath() !== documentPath ||
+          !(base().session && base().session.authenticated === true)
+        ) {
+          return;
+        }
+        if (!Array.isArray(result) || base().documentOperationsReadState !== "ready") {
+          throw new Error(t("docRefreshUiReadFailed", "Chưa tải được lịch sử tài liệu. Vui lòng thử lại."));
+        }
+        toast(t("docRefreshUiSuccess", "Đã cập nhật lịch sử tài liệu."));
         return;
       }
       if (action === "document-operation-page") {

@@ -21469,6 +21469,25 @@
     "docBoardUi.workflowsUnreadyLinkText": "查看要求"
   });
 
+  Object.assign(MESSAGES.vi, {
+    docRefreshUiRouteMismatch: "Hãy mở trang tài liệu cần làm mới rồi thử lại.",
+    docRefreshUiPermission: "Chưa thể làm mới tài liệu từ tài khoản này.",
+    docRefreshUiReadFailed: "Chưa tải được lịch sử tài liệu. Vui lòng thử lại.",
+    docRefreshUiSuccess: "Đã cập nhật lịch sử tài liệu."
+  });
+  Object.assign(MESSAGES.en, {
+    docRefreshUiRouteMismatch: "Please open the document page to refresh and try again.",
+    docRefreshUiPermission: "Cannot refresh documents from this account yet.",
+    docRefreshUiReadFailed: "Could not load document history. Please try again.",
+    docRefreshUiSuccess: "Document history updated."
+  });
+  Object.assign(MESSAGES.zh, {
+    docRefreshUiRouteMismatch: "请打开需要刷新的文档页面后再试。",
+    docRefreshUiPermission: "此账户暂无法刷新文档。",
+    docRefreshUiReadFailed: "无法加载文档历史记录，请重试。",
+    docRefreshUiSuccess: "已更新文档历史记录。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

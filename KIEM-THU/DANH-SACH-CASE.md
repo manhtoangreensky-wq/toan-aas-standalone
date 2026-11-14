@@ -1184,3 +1184,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CDU-NATIVE|nặng|48view3locale390/1440lightdark|24field24filter12retry12nav,0overflow/error|[PhiênCDU](PHIEN-CHAT-DOCUMENT-USABLE-20261114.md)|
 |CDU-SAFETY|nặng|Soappsource/QA/process|8workerchanges/15protected,6plan18scene/evidencegiữ|14process×3→0,0provider/ví|
 |CDU-DELIVERY|nặng|CIexactHEAD→VPS|Giao hàngriêng,sameIssue/PR|Khôngđóngfullgoal/motion|
+
+## DOCUMENT-REFRESH / CHAT-LABELS-20261114 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|DCL-READ|nặng|Làm mới lỗi/rỗng hợp lệ ở bảng và công cụ|Chỉ current array+ready báo cập nhật|42 handler/loader cases|
+|DCL-CURRENT|nặng|Đổi trang/phiên/yêu cầu/đăng xuất khi chờ|Không thông báo cũ,không request thừa|24 stale cases trong42|
+|DCL-GUARD|nặng|Sai trang/thiếu quyền|Không gửi yêu cầu,thông báo đúng locale|6 guard cases trong42|
+|DCL-KEYS|nặng|4 khóa/12 giá trị và mutation|Giữ oldkeys/order/hash,không ẩn khóa lạ|3 exact adapter cases|
+|DCL-LABEL|vừa|375dọc/812ngang/1440 sáng/tối|66nhãn,8.64385:1sáng,tối11.52797:1giữ|[PhiênDCL](PHIEN-DOCUMENT-REFRESH-CHAT-LABELS-20261114.md)|
+|DCL-NATIVE|nặng|VI/EN/ZH,Docroot375light/child1440dark|6lỗi+6phục hồi đúng phản hồi,0tràn/lỗi bất ngờ|12states/24controlledabort|
+|DCL-SAFETY|nặng|So nguồn/QA/process|3workerchanges/16protected,6plan18scene giữ|13Chat+20Doc owned→0,0provider/ví|
+|DCL-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|EvidencecùngIssue689/PR,khôngđóngwholegoal|Không suy source thành audio thật|

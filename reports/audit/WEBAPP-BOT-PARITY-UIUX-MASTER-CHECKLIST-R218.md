@@ -1652,11 +1652,40 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
   12toolnav;0unexpectedconsole/pageerror/overflow/product/provider/ví/prod.
   48deliberatereadabortghiđủ;QA6plan18scene/evidencecùngsourcehash,
   14ownedprocess×3→0. VItestracewaitprojectionđãsửariêng,ENZHkhôngchạylại.
-- [ ] CDUdelivery:docs/Tester/case/provenance/review/CIexactHEAD/merge/
-  deploy/runtime/assets/receiptIssue689. Spec2026-11-14-chat-document-usable-copy.
+- [x] CDUdelivery:PR730HEAD654e5400,CI43568028172bothPASS,
+  merge/runtime3477d0d8,deploy43569017364PASS;tree971cf93db1exact.
+  Trackedclean/WebBotnginxrunning/health/4assets/TTS+2videohashesexact.
+  Receipts6875476040/6875476356;khôngđóngwholegoal.
 - [ ] CDUngoàiphiếu:Chatcards/boundary/run/feedback/otherdetail,Docother
   operations/historycards/toast/rootdescription;Chatlightfieldlabelnhạt
   ghiAXfollowup. KhôngđổiCSSởdịchcopy;wholeAX/auth/device/Safari/motioncuối.
 - [ ] UI-TTS-ENTRY-PATH:sourceauditcógenericentrykhácdedicatedjobs,
   publiccapabilityhiệnkhôngadvertisevoice_tts;exactestimate/receipt/receiver
   contractDRAFT. Khôngtựbậtflag/ENV/auth/providerđểvượtchốt.
+
+## Làm mới tài liệu/chữ Hội thoại và ba phiên song song — 14/11/2026
+
+- [x] DCL-RED:43 test RED trước áp dụng; đúng3 thay đổi từ2 worker/3 appfiles.
+  Refresh R1 thiếu đặc tả lỗi trả[]; R2 giữ cùng phiên,không tính workerfault.
+- [x] DCL-CURRENT:42 realhandler/loader cases đạt, gồm current success/failure/
+  validempty,24stale và6guard;1CSSscope case đạt.4key/12value đúng locale.
+- [x] DCL-REGRESSION:224affected và41historicalPASS;exact3workerreplay,
+  16protectedpaths giữ;review độc lập C0/I0/M0. Python45PASS/1CSS-tailBASE,
+  3locale/authPASS;dừng riêng lượt auth giới hạn chưa kết thúc,khôngđổi auth.
+- [x] DCL-NATIVE:Chat6view/66labels375/812ngang/1440;light8.64385:1,
+  dark11.52797:1giữ. Doc12states/6failed+6GETrecoveredVI/EN/ZH;24abort
+  chủđộng/24console tươngứng,0unexpectederror/overflow/productwrite.
+  6plan18scene/evidencegốcgiữ,13Chat+20Docownedprocess→0.
+- [ ] DCL-DELIVERY:docs/Tester/case/provenance/exactHEADCI/merge/deploy/
+  runtime/assets/receipt. Spec2026-11-14-document-refresh-chat-labels.
+- [ ] CHAT-BOUNDARY-PANEL:AntigravityR1 output-only đã trả;chưaRED/apply.
+- [ ] CHAT-CARDS-CUSTOMER-COPY:AntigravityR1 output-only bịprint-timeout,
+  giữsameconversation,khôngCODEfailure;chưacópatchnghiệmthu/ápdụng.
+- [x] WEB-TTS-ENTRY-READ:phiênAntigravity riêng3.8FlashHigh đãtrả;
+  page ready có thể chỉdraftReady,khôngchứng minhexecution. Dedicatedconfirm
+  cầnprepare receipt+runtimejob vàcanonicalquote;completedcầnstrictaudioflag.
+- [ ] WEB-TTS-ENTRY-CONNECT:genericentry→dedicatedcontract/realreceiver/
+  finalaudio chưađủbằngchứng;khôngđổiENV/tiền/auth/provider/Bot đểvượtchốt.
+- [ ] Ngoàiphiếu:Chatcard/detail/run/feedback,Docotherhistory/tools/copy,
+  helpertextcontrast/toànAX/auth/device/Safari/signedproduction vẫn mở.
+  M-FINAL-01..06 vẫn cuối;khôngmở rộng bản CSS nhãn sang motion.

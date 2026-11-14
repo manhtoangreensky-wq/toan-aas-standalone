@@ -121,12 +121,17 @@ def test_document_board_refresh_and_pagination_are_route_scoped_and_do_not_need_
         "const isDocumentBoard = documentPath === \"/documents\" || documentPath === \"/documents/pdf\";",
         "route !== documentPath",
         '"document-operation-refresh"',
-        "if (isDocumentBoard) await hydrateDocumentOperations();",
-        "else await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);",
         'if (action === "document-operation-page")',
     ):
         assert token in actions
     assert "api(\"/document-operations" not in actions
+    # Execute the real action/hydrators: root refresh must not read the vault,
+    # child refresh must, failed reads cannot report success, stale reads quiet.
+    result = subprocess.run(
+        ["node", "--test", str(ROOT / "tests/document-refresh-feedback.test.mjs")],
+        cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_document_board_is_explicitly_private_in_pwa_and_app_first_responsive() -> None:

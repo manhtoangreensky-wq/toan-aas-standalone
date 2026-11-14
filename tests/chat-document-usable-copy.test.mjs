@@ -5,6 +5,7 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {usableCopyHistoricalSnapshot,usableCopyHistoricalPortalSource} from './helpers/chat-document-usable-snapshot.mjs';
+import {documentRefreshHistoricalSnapshot} from './helpers/document-refresh-copy-snapshot.mjs';
 
 // Exercise actual renderers: wrong language, lost fields/data/rights, fabricated
 // tool readiness/counts/download, or an empty replacement must fail.
@@ -20,7 +21,13 @@ async function load(base=false){
   const old='normalizePublishReviewPackResult,customerMobileNavGroupForPath};';assert.equal(source.split(old).length-1,1);
   source=source.replace(old,'normalizePublishReviewPackResult,customerMobileNavGroupForPath,chatThreadFields};');
   source=source.replace('return {html,text:plain(html),','return {editorFields:window.__childLocale.chatThreadFields(context),html,text:plain(html),');
-  return(await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'))).renderChild;
+  const {renderChild}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+  return(...args)=>{
+    const result=renderChild(...args);
+    return {...result,messages:Object.fromEntries(['vi','en','zh'].map(locale=>[
+      locale,Object.fromEntries(documentRefreshHistoricalSnapshot(Object.entries(result.messages[locale]),locale))
+    ]))};
+  };
 }
 const current=await load(),base=await load(true),locales=['vi','en','zh'];
 const approved=JSON.parse(fs.readFileSync(new URL('./fixtures/chat-document-usable-copy-reviewed.json',import.meta.url),'utf8'));
