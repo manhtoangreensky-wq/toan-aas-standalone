@@ -2848,3 +2848,13 @@ observations mỗi lượt,19other-sourcepaths/dữ liệu/schema/evidence giữ
 Hai loại lỗi bộ đo được ghi và sửa riêng;không chỉnh app để làm xanh,
 không lặp24wordviews/không nhận toànAXPASS.
 [Báo cáo](../docs/reports/chat-context-label-contrast-20261115.md).
+
+## Lịch sử thay đổi/hoạt động hội thoại — 15/11/2026
+
+22khóa/66giá trịVI/EN/ZH dùng cho các lần lưu/khôi phục/15hoạt động đã ghi;
+giữcustomerdata/quyền/ID/revision/order/rawtime/attrs/disabled. Unknownaction
+có nhãn chung vẫn giữ hàng. Khôi phục chỉ tạo bản nháp cập nhật mới.
+158target/286affected/9PythonPASS;native24unique/13ảnh/24versions45events
+QA,cùng15threads24contexts18turns/8tables/schema/evidencegiữ/Jobs0.
+ActivityR1thiếuVIfallback được trả đúngfragmentR2,khôngrootapprepair.
+[Báo cáo](../docs/reports/chat-history-copy-20261115.md).

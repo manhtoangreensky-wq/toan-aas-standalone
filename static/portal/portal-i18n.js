@@ -21865,6 +21865,90 @@
     chatTurnListUiEmptyBody: "添加您撰写的问题、笔记或决定，方便日后查看。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    chatHistoryVersionUiKicker: "Các lần lưu",
+    chatHistoryVersionUiTitle: "Lịch sử thay đổi",
+    chatHistoryVersionUiBody: "Khôi phục thông tin cuộc trò chuyện tạo một lần cập nhật mới; ghi chú và nội dung đã lưu vẫn được giữ.",
+    chatHistoryVersionUiCurrent: "Đang mở",
+    chatHistoryVersionUiRestoreConfirm: "Khôi phục lần lưu {revision} để tiếp tục chỉnh sửa? Thao tác này tạo một lần cập nhật mới.",
+    chatHistoryVersionUiEmpty: "Chưa có lịch sử thay đổi.",
+  });
+
+  Object.assign(MESSAGES.en, {
+    chatHistoryVersionUiKicker: "Saved changes",
+    chatHistoryVersionUiTitle: "Change history",
+    chatHistoryVersionUiBody: "Restoring conversation information creates a new saved change; existing notes and saved content are kept.",
+    chatHistoryVersionUiCurrent: "Currently open",
+    chatHistoryVersionUiRestoreConfirm: "Restore saved change {revision} to continue editing? This creates a new saved change.",
+    chatHistoryVersionUiEmpty: "No change history yet.",
+  });
+
+  Object.assign(MESSAGES.zh, {
+    chatHistoryVersionUiKicker: "保存记录",
+    chatHistoryVersionUiTitle: "更改记录",
+    chatHistoryVersionUiBody: "恢复对话信息会生成新的保存记录；现有笔记和已保存内容会保留。",
+    chatHistoryVersionUiCurrent: "当前打开",
+    chatHistoryVersionUiRestoreConfirm: "恢复第 {revision} 次保存以继续编辑？此操作会生成新的保存记录。",
+    chatHistoryVersionUiEmpty: "暂无更改记录。",
+  });
+
+  Object.assign(MESSAGES.vi, {
+    chatHistoryActivityUiKicker: "Thay đổi đã ghi nhận",
+    chatHistoryActivityUiTitle: "Hoạt động gần đây",
+    chatHistoryActivityUiBody: "Xem các thay đổi đã được ghi nhận cho cuộc trò chuyện này.",
+    chatHistoryActivityUiEmpty: "Chưa có hoạt động được ghi nhận.",
+    chatHistoryActivityUiUnknown: "Hoạt động của cuộc trò chuyện",
+    chatHistoryActivityUiThreadCreated: "Đã tạo cuộc trò chuyện",
+    chatHistoryActivityUiThreadUpdated: "Đã cập nhật cuộc trò chuyện",
+    chatHistoryActivityUiThreadRestored: "Đã khôi phục bản nháp",
+    chatHistoryActivityUiContextCreated: "Đã thêm ghi chú",
+    chatHistoryActivityUiContextUpdated: "Đã cập nhật ghi chú",
+    chatHistoryActivityUiContextActive: "Đã khôi phục ghi chú",
+    chatHistoryActivityUiContextArchived: "Đã lưu trữ ghi chú",
+    chatHistoryActivityUiTurnCreated: "Đã thêm nội dung",
+    chatHistoryActivityUiTurnActive: "Đã khôi phục nội dung",
+    chatHistoryActivityUiTurnArchived: "Đã lưu trữ nội dung",
+    chatHistoryActivityUiRequestNotExecuted: "Yêu cầu chưa được thực hiện"
+  });
+
+  Object.assign(MESSAGES.en, {
+    chatHistoryActivityUiKicker: "Recorded changes",
+    chatHistoryActivityUiTitle: "Recent activity",
+    chatHistoryActivityUiBody: "Review changes recorded for this conversation.",
+    chatHistoryActivityUiEmpty: "No activity recorded yet.",
+    chatHistoryActivityUiUnknown: "Conversation activity",
+    chatHistoryActivityUiThreadCreated: "Conversation created",
+    chatHistoryActivityUiThreadUpdated: "Conversation updated",
+    chatHistoryActivityUiThreadRestored: "Draft restored",
+    chatHistoryActivityUiContextCreated: "Note added",
+    chatHistoryActivityUiContextUpdated: "Note updated",
+    chatHistoryActivityUiContextActive: "Note restored",
+    chatHistoryActivityUiContextArchived: "Note archived",
+    chatHistoryActivityUiTurnCreated: "Content added",
+    chatHistoryActivityUiTurnActive: "Content restored",
+    chatHistoryActivityUiTurnArchived: "Content archived",
+    chatHistoryActivityUiRequestNotExecuted: "Request not executed"
+  });
+
+  Object.assign(MESSAGES.zh, {
+    chatHistoryActivityUiKicker: "已记录的更改",
+    chatHistoryActivityUiTitle: "最近活动",
+    chatHistoryActivityUiBody: "查看此对话已记录的更改。",
+    chatHistoryActivityUiEmpty: "暂无活动记录。",
+    chatHistoryActivityUiUnknown: "对话活动",
+    chatHistoryActivityUiThreadCreated: "已创建对话",
+    chatHistoryActivityUiThreadUpdated: "已更新对话",
+    chatHistoryActivityUiThreadRestored: "已恢复草稿",
+    chatHistoryActivityUiContextCreated: "已添加笔记",
+    chatHistoryActivityUiContextUpdated: "已更新笔记",
+    chatHistoryActivityUiContextActive: "已恢复笔记",
+    chatHistoryActivityUiContextArchived: "已归档笔记",
+    chatHistoryActivityUiTurnCreated: "已添加内容",
+    chatHistoryActivityUiTurnActive: "已恢复内容",
+    chatHistoryActivityUiTurnArchived: "已归档内容",
+    chatHistoryActivityUiRequestNotExecuted: "请求尚未执行"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

@@ -86,6 +86,7 @@ jobs:
 
       - name: Video Studio locale and navigation presentation regressions
         run: |
+          node --test tests/chat-history.test.mjs
           node --test tests/chat-context-label-contrast.test.mjs
           node --test tests/chat-context-cards-turn.test.mjs
           node --test tests/chat-context-section.test.mjs

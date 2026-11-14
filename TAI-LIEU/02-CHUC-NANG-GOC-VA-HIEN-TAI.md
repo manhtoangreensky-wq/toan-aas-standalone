@@ -2047,3 +2047,13 @@ native detail/device/Safari/toàn app và đầu ra provider không được suy
 |Màu nhạt1.26533:1|Màu semanticink12.35155:1|ComputedRGBA,khôngguesshex|
 |RawDOMkhác do empty-style attrs|Giữraw,semanticclone bỏexactemptycontrolstyle|Mọi name/value/disabled/nonempty CSS giữ|
 |JSundefined keys khácJSONlưu|Presenceguards+samewirecomparison|Không bỏ meaningfuldata/màu/nền/layout|
+
+## Lịch sử hội thoại — đối chiếu15/11/2026
+
+|TrướcBASE344e0310|Trong phiếu hiện tại|Bằng chứng/giới hạn|
+|---|---|---|
+|Versionhistory/thread/revision/feed/metadata trongfixedcopy|6version+16activitykeys3locale|4exactworkerchanges,rawdata/attrs giữ|
+|Hoạt động hiển thị enum nộibộ|15finiteactionlabels/unknownchung|Không bỏ hàng/Number/String/time expressions|
+|ActivityR1thiếuVIfallback|SamefragmentR2đúngmọi fallback|ActualVMfallbacktest,onecoderfailuregiữ|
+|QAtrước chưa có versions/events|Ownedcopy24versions45events|ActualGET/DOM/order,8tablesexact|
+|RawISOtime cònhiển thị|Giữngoàiphiếu ngàygiờ kếtiếp|Không nhận toànmàn sạch mọi định dạng|

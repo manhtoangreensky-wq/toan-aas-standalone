@@ -1,10 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {historyHistoricalSnapshot,historyHistoricalPortalSource} from './helpers/chat-history-snapshot.mjs';
 import {cardsTurnRenderer,cardsTurnSources} from './helpers/chat-context-cards-turn-runtime.mjs';
 import {cardsTurnHistoricalSnapshot,cardsTurnHistoricalPortalSource} from './helpers/chat-context-cards-turn-snapshot.mjs';
 import {contextSectionHistoricalPortalSource} from './helpers/chat-context-section-snapshot.mjs';
-const source=cardsTurnSources(),oldSource=cardsTurnSources(true),current=await cardsTurnRenderer(source),before=await cardsTurnRenderer(oldSource);
+const live=cardsTurnSources(),source={...live,portal:historyHistoricalPortalSource(live.portal)},oldSource=cardsTurnSources(true);
+const actual=await cardsTurnRenderer(source),before=await cardsTurnRenderer(oldSource);
+const current=(...args)=>{
+  const result=actual(...args);
+  return {...result,catalogFrozen:Object.fromEntries(['vi','en','zh'].map(locale=>[locale,Object.isFrozen(result.messages[locale])])),messages:Object.fromEntries(['vi','en','zh'].map(locale=>[
+    locale,Object.fromEntries(historyHistoricalSnapshot(Object.entries(result.messages[locale]),locale))
+  ]))};
+};
 const approved=JSON.parse(fs.readFileSync(new URL('./fixtures/chat-context-cards-turn-reviewed.json',import.meta.url),'utf8'));
 const uuid=k=>'22222222-2222-4222-8222-'+String(k).padStart(12,'0'),id=uuid(1),route='/chat/'+id;
 const literal='CUSTOMER media studio Facebook TikTok <script>alert("Bot")</script>&';
@@ -85,7 +93,7 @@ for(const locale of ['vi','en','zh']){
     }
   });
   test(`${locale}: exactly sixteen approved ordered keys and real frozen old dictionary survive strict mutations`,()=>{
-    const a=Object.entries(now.messages[locale]),b=Object.entries(old.messages[locale]);assert.ok(Object.isFrozen(now.messages[locale]));
+    const a=Object.entries(now.messages[locale]),b=Object.entries(old.messages[locale]);assert.equal(now.catalogFrozen[locale],true);
     assert.deepEqual(JSON.parse(JSON.stringify(a.slice(0,b.length))),JSON.parse(JSON.stringify(b)));assert.deepEqual(JSON.parse(JSON.stringify(a.slice(b.length))),Object.entries(copy));
     const normalized=cardsTurnHistoricalSnapshot(a,locale);assert.equal(normalized.length,a.length-16);
     for(const key of Object.keys(copy)){
