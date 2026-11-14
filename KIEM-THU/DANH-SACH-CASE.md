@@ -1160,3 +1160,14 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CRD-ACTIONS|nặng|24lọc/12thửlạithật|GET200/giữgiátrị/chuyểnlỗisàngmới|Khôngfake successfulresponse|
 |CRD-SAFETY|nặng|QA/evidence/process|6plan18scene giữ,0provider/ví/productwrite,process→0|429phaZHgiữriêng,khôngtắtguard|
 |CRD-DELIVERY|nặng|CIexactHEAD vàVPS|Merge/deploy/runtime/assets/receipt táchbiệt|Khôngđóngwholegoal/motion|
+
+## TTS-OUTPUT-STATE-20261114 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|TOS-CONFIRM|nặng|ok:true nhưngpending/noaudio/wrongflag|Khôngcompleted/output/time/moneyupdate|8newcases|
+|TOS-READ|nặng|GEToldcompletedthiếutệp|Cóđọclạivànhậncanonicalartifact|10read/repaircases|
+|TOS-MONOTONIC|nặng|Validcompletedvàphản hồitrễ|Khôngconfirmlại/hạvalidoutput|5cases+28regressions|
+|TOS-SCOPE|nặng|SoAST/sourcephầnkhóa|Auth/prepare/tiền/route/schemaBotgiữ|3workerchanges,16protectedpaths|
+|TOS-DELIVERY|nặng|CI/merge/deploy/runtime|EvidencecùngIssue689/PR,khôngfakeaudio|[PhiênTOS](PHIEN-TTS-OUTPUT-STATE-20261114.md)|
+|TOS-REAL|nặng|Webjobthật→Bot→âmthanh|Tệpcóbytes/giảimãđược|NOT_OBSERVED,quyềnprovider riêng|

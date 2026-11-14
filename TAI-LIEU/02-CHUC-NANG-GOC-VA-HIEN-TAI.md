@@ -1940,3 +1940,13 @@ sáng/tối. Không claimwholelocale/AX/auth/device/provider/signedproduction/mo
 
 55target/72prior/186affected/288historical cóchồnglấn;45Python/1BASEfailure.
 ĐườngengineTTS mới ởsourceaudit+RED,khôngđượcghi đã nhậnâmthanhthật.
+
+## TTS completion — đối chiếu 14/11/2026
+
+|TrướcBASE52f3b4a5|Hiện tại|Bằng chứng/giới hạn|
+|---|---|---|
+|ok:true bịghi completed dùchưaâmthanh|Đòicompleted+booleanTrue|23newcaseBASE19RED→GREEN|
+|Localcompletedthiếutệp làmGETbỏqua|Chođọclạichỉbảnthiếuđầura|Oldrecordrepair/51finaltests|
+|Phản hồitrễcóthểghi đècanonicalcompletedthiếutệp|SQLguard bảo vệbảncóâmthanhđãxong|4concurrentlatecases|
+|SourceauditnghiIDruntimekhácWebID|Bot804e23da lưuWebjobIDlàmprimarykey|Chỉđọcnguồn,khôngsửaID/auth|
+|Source/readinessđượcnhầmlàđầurathật|GiữactualfinaloutputNOT_OBSERVED|0realprovidercalls,khôngfakeaudio|
