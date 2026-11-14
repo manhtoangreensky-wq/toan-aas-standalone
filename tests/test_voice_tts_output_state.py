@@ -2,18 +2,21 @@
 from __future__ import annotations
 
 import asyncio
+import importlib
 import uuid
 from typing import Any
 
 import pytest
 
-import copyfast_bridge as bridge
 import copyfast_db as db
 import copyfast_voice_tts_job_bridge as tts
 
 
 @pytest.fixture
 def owned_tts(tmp_path, monkeypatch):
+    # Earlier auth tests reload this module after collection. Match the
+    # production function's dynamic import instead of patching a stale object.
+    bridge = importlib.import_module("copyfast_bridge")
     monkeypatch.setattr(db, "session_database_path", lambda: str(tmp_path / "tts.db"))
     tts.ensure_voice_tts_schema()
     owner = "owned-" + uuid.uuid4().hex

@@ -59,3 +59,20 @@ Chưa gọi tạo giọng thật hoặc kiểm tệp âm thanh giải mã đư�
 cònNOT_OBSERVED; HTTP200/serviceactive/sourcepresence không thay bằng chứng.
 Merge/deploy/runtimehash vàactualfinaloutput là các mức riêng. Các phầnUI/
 locale/AX/auth/device/Safari/motioncuối của goal vẫn mở.
+
+## CI preparation correction, same implementation
+
+ExactHEAD838c61eb run43562729318 failed at the new fixture after310priorPASS.
+Earlier auth tests replace `sys.modules["copyfast_bridge"]`; the new test held
+a collection-time module reference, while production dynamically imports the
+current module. Its mock patched the old object, so the real fail-closed
+configuration gate correctly returned503. No production configuration problem
+or worker implementation failure is inferred.
+
+Owned reproduction replacing the module after collection:23/23newcasesRED.
+Test-only repair resolves the current module inside the fixture, matching the
+production import. No application/auth/config gate or assertion is changed;
+all expected state/route/financial checks remain. Local affected rerun and new
+exactHEADCI are required. The first failed run is retained, not relabeledPASS.
+Affected reload reproduction now23/23PASS; previous28unchangedtests retain
+their51combined evidence. No repeated broad suite to conceal the order failure.

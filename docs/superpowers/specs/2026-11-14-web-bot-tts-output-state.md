@@ -48,3 +48,8 @@ three worker changes/two functions; bridge calls/money expressions/confirm
 gates/payment branches exactAST,16otherapplicationpaths exactBASE. Independent
 read-only reviewC0/I0/M0, no repeated suites. Bot source804e23da stores Web
 jobID asprimarykey; dedicated GET/confirm/artifact routes exist. No IDfix.
+
+CI43562729318 on838c61eb failed newfixture503 after310priorPASS because auth
+fixtures reloadcopyfast_bridge aftercollection;test patched a staleobject.
+Local23RED confirmed. Test-onlyamendment resolvescurrentmoduleinsidefixture;
+worker/app/gates unchanged. Newaffectedverification/provenance/exactHEADrequired.
