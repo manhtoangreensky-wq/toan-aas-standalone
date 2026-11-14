@@ -1900,3 +1900,17 @@ trùng số ca. Nhóm này không thay tiền, quyền hoặc nguồn dữ liệ
 12 component có nguồn tổng hợp không thay bằng chứng API. 12 lượt xem thật
 có đăng nhập QA/3 rời trang chỉ đọc không chứng minh signed production hoặc
 provider output. Các cổng toàn goal và motion cuối vẫn mở.
+
+## Nhãn và panel điền sẵn — đối chiếu 13/11/2026
+
+|Trước ở BASEc4da5f4a|Hành vi mới|Bằng chứng/giới hạn|
+|---|---|---|
+|Alias AI Studio thiếu dù khóa dịch đã có|Thêm một alias cố định, không thay manifest/khách|27ca3đạt/24lỗi→27đạt|
+|Ba panel hứa phần cứng, giá, độ chính xác và kết quả nhưng chỉ gọi alert|Helper trả chuỗi rỗng; giữ chữ ký/callers/real forms|138ca62đạt/76lỗi→138đạt|
+|Native click sang video tạo36CSP inline-handler errors|Bỏ nguồn nút giả, không nới CSP/logs|18view/18click cuối0lỗi/overflow|
+|Nguy cơ dọn nhầm phần đang chạy|So mọi HTML/controls/context ngoài panel và nguồn bảo vệ|421Node,3consumer/18files exact,0ghi sản phẩm|
+|Status-grid tưởng còn hiện dựa vào renderer source|Rút phiếu sau đối chiếu CSS đã ẩn|Không áp dụng mã hoặc chấm lỗi worker|
+
+30caPythonđạt/1CSS-tail lỗi y hệt BASE; không sửa theme/motion trong đợt này.
+Danh mục root nhẹ riêng, thiết bị/Safari/signed production và provider output
+không được suy ra từ các ca renderer/native nhóm.

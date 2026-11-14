@@ -2671,3 +2671,19 @@ nguồn tổng hợp và 12 lượt xem có đăng nhập QA, 3 lượt rời tr
 ghi kế hoạch/ví/production. Không suy danh mục production từ nguồn tổng hợp.
 Giao hàng và phạm vi còn mở theo Issue #689.
 [Báo cáo](../docs/reports/membership-fallback-origin-20261113.md).
+
+## Nhóm công cụ: nhãn và kết quả điền sẵn — 13/11/2026
+
+Nhãn nhóm cố định “AI Studio” dùng khóa ngôn ngữ hiện có; tên/dữ liệu khách
+không bị dịch. Entry danh mục root dùng bundle riêng, không bị thay trong đợt này.
+
+Bỏ ba panel video/tài liệu/nội dung chỉ có nút alert, giá/sẵn sàng/phần cứng
+và kết quả viết sẵn. Helper nay trả rỗng, không tạo ô thay thế. Các form, luồng
+ước tính/xác nhận/theo dõi và đầu ra thật bên ngoài giữ nguyên; không nối thêm
+provider hoặc đổi ví/giá/auth/backend/CSP/motion. Nhóm Image/Music vốn không
+hiện panel vẫn giữ như vậy.
+
+421caNodeđạt,18view/18click trên nhóm thật390/1440 ba ngôn ngữ không còn
+panel giả/CSP/console/pageerror/tràn ngang. 0ghi sản phẩm/ví/provider/production;
+21tiến trình QA được dọn về0. Giao hàng theo receipt riêng trênIssue689/PR.
+[Báo cáo](../docs/reports/nav-legacy-workbench-20261113.md).
