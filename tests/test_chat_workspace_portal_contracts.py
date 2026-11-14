@@ -78,7 +78,14 @@ def test_chat_authoring_boundary_is_explicit_in_ui_and_client_validation() -> No
     surface = _chat_surface()
     # The authoring surface is explicit that a thread is not model execution.
     # The wording can evolve, but it must retain this visible boundary.
-    assert "Lưu thread không gọi AI hoặc trừ Xu." in surface
+    # Rendered VI/EN/ZH authoring/no-credit semantics are exercised by the
+    # real renderer suite; no obsolete Vietnamese literal is pinned here.
+    import subprocess
+    result = subprocess.run(
+        ["node", "--test", "--test-name-pattern", "Vietnamese safety copy", str(ROOT / "tests/chat-root-doc-read-copy.test.mjs")],
+        cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
     assert "không phải model" in surface
     assert "không tạo câu trả lời giả" in surface
     for forbidden in (

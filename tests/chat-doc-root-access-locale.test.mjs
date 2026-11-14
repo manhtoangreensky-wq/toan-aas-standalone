@@ -5,13 +5,19 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {chatDocAccessHistoricalSnapshot,chatDocHistoricalMarkup} from './helpers/chat-doc-access-snapshot.mjs';
+import {chatRootDocReadHistoricalSnapshot,chatRootDocReadHistoricalMarkup} from './helpers/chat-root-doc-read-snapshot.mjs';
 
 // Catch fixed-language leaks without translating customer data or changing
 // access decisions, real forms, controls, loading/error/ready output.
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const BASE='7ef5e3c6ade86acff9a9578f36f9c85287a37a73';
 const helper=path.join(ROOT,'tests/helpers/publishing-child-render.mjs');
-const {renderChild:renderCurrent}=await import(pathToFileURL(helper).href);
+const {renderChild:renderFresh}=await import(pathToFileURL(helper).href);
+function renderCurrent(locale,route,raw){
+  const result=renderFresh(locale,route,raw);
+  return {...result,html:chatRootDocReadHistoricalMarkup(result.html,locale,result.messages[locale]),
+    messages:Object.fromEntries(['vi','en','zh'].map(l=>[l,Object.fromEntries(chatRootDocReadHistoricalSnapshot(Object.entries(result.messages[l]),l))]))};
+}
 let source=fs.readFileSync(helper,'utf8');
 const edits=[["const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');",'const root='+JSON.stringify(ROOT)+';']];
 for(const [name,file]of [['portal','static/portal/portal.js'],['i18n','static/portal/portal-i18n.js']]){

@@ -19348,9 +19348,26 @@ function renderAutoPostHub(page, context) {
     return { state, q, pagination: { total, limit, offset, returned, has_more: raw.has_more === true && next !== -1, next_offset: next === -1 ? null : next, previous_offset: previous === -1 ? null : previous } };
   }
   function chatWorkspaceFilterFields() {
+    const filterLabels = {
+      all: uiText("chatFilterUiAll", "Tất cả trạng thái"),
+      draft: uiText("chatFilterUiDraft", "Bản nháp"),
+      review: uiText("chatFilterUiReview", "Đang xem xét"),
+      ready: uiText("chatFilterUiReady", "Sẵn sàng"),
+      archived: uiText("chatFilterUiArchived", "Đã lưu trữ")
+    };
     return [
-      { name: "state", label: "Trạng thái", control: "select", options: CHAT_WORKSPACE_FILTERS },
-      { name: "q", label: "Tìm trong thread", placeholder: "Tìm theo tên, mục tiêu hoặc tag", maxLength: 100 }
+      {
+        name: "state",
+        label: uiText("chatFilterUiState", "Trạng thái"),
+        control: "select",
+        options: CHAT_WORKSPACE_FILTERS.map(([value]) => [value, filterLabels[value] || value])
+      },
+      {
+        name: "q",
+        label: uiText("chatFilterUiSearch", "Tìm trong cuộc trò chuyện"),
+        placeholder: uiText("chatFilterUiSearchPlaceholder", "Tìm theo tên, mục tiêu hoặc thẻ"),
+        maxLength: 100
+      }
     ];
   }
   function renderChatWorkspacePagination(listing, enabled) {
@@ -19498,7 +19515,7 @@ function renderAutoPostHub(page, context) {
   }
   function renderChatWorkspaceCards(items, context) {
     const canView = Boolean(context.capabilities && context.capabilities["chat-workspace-view"] === true);
-    if (!items.length) return renderEmpty("Chưa có hội thoại", "Tạo thread đầu tiên để gom mục tiêu, context và các ghi chú do bạn tự soạn. Workspace không tạo câu trả lời AI thay bạn.", ICONS.chat);
+    if (!items.length) return renderEmpty(uiText("chatRootUiEmptyTitle", "Chưa có hội thoại"), uiText("chatRootUiEmptyBody", "Tạo hội thoại để lưu mục tiêu, thông tin tham khảo và ghi chú do bạn viết."), ICONS.chat);
     return '<div class="portal-chat-workspace-grid">' + items.map((item) => {
       const id = String(item.id || "");
       const state = chatWorkspaceState(item.state);
@@ -19521,9 +19538,9 @@ function renderAutoPostHub(page, context) {
     const listing = chatWorkspaceListing(context);
     const threads = Array.isArray(context.chatThreads) ? context.chatThreads.filter((item) => item && validChatThreadId(item.id)).slice(0, 50) : [];
     const values = chatThreadValues(transientFormValues(page.routePath || page.path));
-    const intro = '<section class="portal-chat-workspace-intro"><div><span class="portal-section-kicker">Web-native conversation vault</span><h2>Giữ bối cảnh rõ ràng trước khi bất kỳ engine nào được cấp riêng.</h2><p>Soạn thread, context card, prompt và quyết định bằng signed Web account. Mọi nội dung là private authoring, không phải output AI.</p></div><dl><div><dt>' + safeText(String(Number(counts.total || threads.length))) + '</dt><dd>Threads</dd></div><div><dt>' + safeText(String(Number(counts.review || 0))) + '</dt><dd>Đang review</dd></div><div><dt>' + safeText(String(Number(counts.ready || 0))) + '</dt><dd>Sẵn sàng handoff</dd></div></dl></section>';
-    const form = '<section class="portal-card portal-card-pad portal-chat-workspace-create"><div class="portal-card-header"><div><span class="portal-section-kicker">New conversation</span><h2 class="portal-card-title">Tạo thread riêng tư</h2><p class="portal-card-subtitle">Server kiểm tra session, CSRF, owner reference, idempotency và revision. Lưu thread không gọi AI hoặc trừ Xu.</p></div>' + badge(canCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="chat-thread-create" data-portal-route="' + safeText(page.routePath || page.path) + '" novalidate>' + renderFields(chatThreadFields(context), canCreate, context, values, "chat-thread-create") + '<div class="portal-form-footer"><span class="portal-form-note">Không nhập URL/path/blob, secret, OTP/CVV, payment reference, Bot/provider/job handle.</span><button class="portal-button portal-button--primary" type="submit"' + (canCreate ? "" : " disabled") + '>Tạo thread</button></div></form></section>';
-    const library = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Conversation library</span><h2 class="portal-card-title">Threads của bạn</h2><p class="portal-card-subtitle">Danh sách chỉ có metadata/excerpt thuộc signed Web account. Tìm, lọc hoặc chuyển trang để mở mọi thread trong giới hạn lưu trữ của account.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-workspace-refresh" data-portal-route="/chat">Làm mới</button></div><form class="portal-form portal-chat-workspace-filters" data-portal-form data-portal-no-transient data-portal-action="chat-workspace-filter" data-portal-route="/chat" novalidate>' + renderFields(chatWorkspaceFilterFields(), canView, context, { state: listing.state, q: listing.q }, "chat-thread-filter") + '<div class="portal-form-footer"><span class="portal-form-note">Tìm kiếm không lưu vào browser, không nhận URL/path/secret hoặc handle external.</span><button class="portal-button portal-button--quiet" type="submit"' + (canView ? "" : " disabled") + '>Áp dụng bộ lọc</button></div></form>' + renderChatWorkspaceCards(threads, context) + renderChatWorkspacePagination(listing, canView) + '</section>';
+    const intro = '<section class="portal-chat-workspace-intro"><div><span class="portal-section-kicker">' + uiText("chatRootUiIntroKicker", "Hội thoại riêng tư") + '</span><h2>' + uiText("chatRootUiIntroTitle", "Lưu mục tiêu, thông tin tham khảo và ghi chú cùng một nơi.") + '</h2><p>' + uiText("chatRootUiIntroBody", "Bạn tự viết và lưu nội dung để xem lại khi cần. Lưu hội thoại không tạo câu trả lời tự động và không trừ Xu.") + '</p></div><dl><div><dt>' + safeText(String(Number(counts.total || threads.length))) + '</dt><dd>' + uiText("chatRootUiCountTotal", "Hội thoại") + '</dd></div><div><dt>' + safeText(String(Number(counts.review || 0))) + '</dt><dd>' + uiText("chatRootUiCountReview", "Đang xem lại") + '</dd></div><div><dt>' + safeText(String(Number(counts.ready || 0))) + '</dt><dd>' + uiText("chatRootUiCountReady", "Đã chuẩn bị xong") + '</dd></div></dl></section>';
+    const form = '<section class="portal-card portal-card-pad portal-chat-workspace-create"><div class="portal-card-header"><div><span class="portal-section-kicker">' + uiText("chatRootUiCreateKicker", "Hội thoại mới") + '</span><h2 class="portal-card-title">' + uiText("chatRootUiCreateTitle", "Tạo hội thoại mới") + '</h2><p class="portal-card-subtitle">' + uiText("chatRootUiCreateSubtitle", "Lưu mục tiêu, thông tin tham khảo và ghi chú do bạn viết. Nội dung được lưu, không được tạo tự động và không trừ Xu.") + '</p></div>' + badge(canCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="chat-thread-create" data-portal-route="' + safeText(page.routePath || page.path) + '" novalidate>' + renderFields(chatThreadFields(context), canCreate, context, values, "chat-thread-create") + '<div class="portal-form-footer"><span class="portal-form-note">' + uiText("chatRootUiCreateSafetyHint", "Không nhập liên kết, đường dẫn, toàn bộ nội dung tệp, mật khẩu, mã đăng nhập, mã bảo mật thẻ, mã giao dịch hoặc mã yêu cầu từ dịch vụ khác.") + '</span><button class="portal-button portal-button--primary" type="submit"' + (canCreate ? "" : " disabled") + '>' + uiText("chatRootUiCreateSubmit", "Tạo hội thoại") + '</button></div></form></section>';
+    const library = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">' + uiText("chatRootUiLibraryKicker", "Thư viện hội thoại") + '</span><h2 class="portal-card-title">' + uiText("chatRootUiLibraryTitle", "Hội thoại của bạn") + '</h2><p class="portal-card-subtitle">' + uiText("chatRootUiLibrarySubtitle", "Xem lại và quản lý các cuộc hội thoại của bạn. Tìm kiếm, lọc hoặc chuyển trang để mở nội dung đã lưu.") + '</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-workspace-refresh" data-portal-route="/chat">' + uiText("chatRootUiLibraryRefresh", "Làm mới") + '</button></div><form class="portal-form portal-chat-workspace-filters" data-portal-form data-portal-no-transient data-portal-action="chat-workspace-filter" data-portal-route="/chat" novalidate>' + renderFields(chatWorkspaceFilterFields(), canView, context, { state: listing.state, q: listing.q }, "chat-thread-filter") + '<div class="portal-form-footer"><span class="portal-form-note">' + uiText("chatRootUiLibraryFilterHint", "Nội dung tìm kiếm không được lưu trong trình duyệt. Không nhập liên kết, đường dẫn, mật khẩu hoặc mã yêu cầu từ dịch vụ khác.") + '</span><button class="portal-button portal-button--quiet" type="submit"' + (canView ? "" : " disabled") + '>' + uiText("chatRootUiLibraryApply", "Áp dụng bộ lọc") + '</button></div></form>' + renderChatWorkspaceCards(threads, context) + renderChatWorkspacePagination(listing, canView) + '</section>';
     return '<article class="portal-page portal-chat-workspace">' + renderHero(page, context) + intro + '<div class="portal-chat-workspace-layout">' + form + renderChatWorkspaceBoundary(context) + '</div>' + library + '</article>';
   }
   function chatWorkspaceLifecycleActions(thread, state, context, route) {
@@ -28384,13 +28401,13 @@ function renderAutoPostHub(page, context) {
       return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText("documentAccessUiHeading", "Tài liệu hiện chưa thể mở"))}</h2><p>${safeText(uiText("documentAccessUiBody", "Tài khoản hoặc phiên làm việc hiện chưa được phép xem công cụ và lịch sử tài liệu."))}</p></div></div></section></article>`;
     }
     if (readState === "loading") {
-      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>Đang xác minh lịch sử tài liệu private</h2><p>Web Workspace đang tải metadata Document Operations thuộc signed account hiện tại. Không hiển thị route trước, PWA cache, Asset Vault hay danh sách Bot trong khi chờ dữ liệu owner-scoped.</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>${uiText("docReadUiLoadingHeading", "Đang tải lịch sử tài liệu")}</h2><p>${uiText("docReadUiLoadingBody", "Đang tải lịch sử tài liệu cho tài khoản hiện tại. Vui lòng chờ trong giây lát.")}</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div></div></div></section></article>`;
     }
     if (readState !== "ready") {
       const retry = canRefresh
-        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="document-operation-refresh" data-portal-route="${safeText(activePath)}">Thử lại dữ liệu private</button></div>`
+        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="document-operation-refresh" data-portal-route="${safeText(activePath)}">${uiText("docReadUiRetryButton", "Thử lại")}</button></div>`
         : "";
-      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>Chưa thể tải lịch sử tài liệu private</h2><p>Projection owner-scoped chưa trả dữ liệu an toàn. Web đã xóa dữ liệu cũ và không thay bằng Asset Vault, Bot, provider, file preview hay URL công khai.</p><div class="portal-state-meta"><span>Không có cache</span><span>Không có Bot fallback</span><span>Không có URL công khai</span></div>${retry}</div></div></section></article>`;
+      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>${uiText("docReadUiFailedHeading", "Chưa thể tải lịch sử tài liệu")}</h2><p>${uiText("docReadUiFailedBody", "Không thể tải lịch sử tài liệu. Nội dung hiển thị trước đó đã được xóa, vui lòng thử lại.")}</p><div class="portal-state-meta"><span>Không có cache</span><span>Không có Bot fallback</span><span>Không có URL công khai</span></div>${retry}</div></div></section></article>`;
     }
     const cards = [
       { group: "pdf", href: "/documents/split", icon: "PDF", title: "Tách PDF", text: "Tạo một PDF mới từ một trang hoặc dải liên tiếp trong Asset Vault.", ready: true },

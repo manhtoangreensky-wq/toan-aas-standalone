@@ -1569,3 +1569,47 @@ Spec: `docs/superpowers/specs/2026-11-14-chat-doc-root-access-locale.md`.
 - [ ] CHAT-DOC-ROOT-ACCESS delivery: metadata/provenance/CIexactHEAD/merge/
   deploy/runtime/assets+receiptIssue689/PR. Toàn canViewtruecopy/detail/
   AX/auth/device/Safari/signedLIVE/provider và motioncuối vẫn còn.
+
+## Hội thoại/Tài liệu có quyền và đường nhận tệp — 14/11/2026
+
+- [x] CHAT-DOC-ROOT-ACCESS delivery: PR727/finalHEAD1370471c,
+  CI43555474520 hai jobsđạt; merge/runtimed14c6f0e,
+  deploy43556780461đạt. Merge/testtreeexact,trackedsource sạch,
+  Web/Bot/nginxactive/running,health/2backendhashes/4HTTPSassets exact.
+  CIartifacts14098446321/14098895865. Dòng chờ deliverytrước được thay thế.
+- [ ] CHAT-ROOT-AUTHORING-COPY:19chữ cố định; R1 thiếu cấm nội dung tệp
+  trongVI và còn từkhóhiểu. R2 cùngphiếu/cùngphiên,sourcepublicgốc+MAP,
+  lời nhắcđủnghĩa,khôngtựsửalogic.
+- [ ] CHAT-ROOT-FILTER-COPY:8nhãn; workerR1đãtrả,đợiRED/nghiệmthu gộp.
+- [ ] DOCUMENTS-READ-FEEDBACK-COPY:5chữ tải/chờ/lỗi/thửlại; workerR1
+  đãtrả,giữ6tagCSSẩn vàquyền/núttrạngtháithật.
+- [ ] WEB-BOT-TTS-PATH-20261114:phiênAntigravityđộc lậpđối chiếu
+  đúngđườnggửi/xácnhận/đọctrạngthái/nhậntệpTTS. Khônglặp lại broad
+  auditNov10; khônggọi dịchvụtrảphí/đổiENV/quyền/tiền/dữliệukhách.
+  Nguồnmãkhôngchứngminhđầurathật; finaloutputvẫnNOT_OBSERVED.
+- [ ] Gộpkiểmthử32key/mỗi locale,ngoàichữhữu hạnexactBASE;native
+  nhậplọc/chọntùychọn/thửlạithật,provenance/CI/merge/deploy/receipt.
+
+Spec:`docs/superpowers/specs/2026-11-14-chat-root-doc-read-copy.md`.
+Owner yêu cầu UI rõ nghĩa và Web–Bot song song; đây là mở thêm đường
+kiểm tra kết nối, không mở quyền provider/ENV/tiền hoặc sửaBotngoàiphạmvi.
+Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
+
+- [x] CRDlocal:19+8+5key/96value;52RED12PASS40FAIL→52PASS,55final
+  cùng72prior=127PASS;186affected/288historicalPASS,giữgoldenhashcũ.
+  9workerchanges dựnglạiexactBASELF,15protectedpaths unchanged;không
+  tựviếtlogicứngdụng.45Python/1CSS-tailBASEfailure,syntaxđạt.
+- [x] CRDnative48viewduynhất:32VIEN+16ZH,24filterGET/12retryGET200,
+  12lỗireadchủđộng/48abortrequestcóghi;0lỗitrang/tràn/lỗi consolekhác
+  trong48viewnhận.10quotaerrorởphaZHđầu giữriêng;khôngtắtguard,
+  khôngchạylạiVIEN. Cùngsourcehash,6plan18scene/evidencegiữ,process→0.
+- [ ] CRDdelivery:docs/Tester/case/provenance/CIexactHEAD/merge/deploy/
+  runtime/assets/receipt. Reportchat-root-doc-read-copy-20261114.md.
+- [x] WEB-BOT-TTS-PATH:phiênriêngđãtrả,lọcfindingsmộtlần;realadapter
+  vớiSQLite/transporttổnghợp1PASS3RED,0realprovider/wallet/production.
+- [ ] WEB-BOT-TTS-OUTPUT-STATE:AntigravityR1riêngđanggiao,mãWebadapter
+  vàfullpublicMAP;chỉcompletion/artifact/readonlyrepair,khóa tiền/auth/
+  routes/ENV/Bot. ChưaápdụngtrênnhánhUI;actualfinaloutputNOT_OBSERVED.
+- [ ] SauCRD:trườngnhập/nhãntùychọnChat dùngchungroot/detail;card/
+  pagination/boundary,Docreadytools/toasts cònngoài32chữ. Ảnhmobile
+  lộ3thốngkê0chiếmchiềucao:giaophiếuthu gọnriêng,khôngsửa kéđợtnày.
