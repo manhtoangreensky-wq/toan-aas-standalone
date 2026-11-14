@@ -1857,3 +1857,26 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
   đãtrả/chờgate;othercopy/wholeAX/auth/device/Safari/signed/M-FINAL vẫn mở.
 - [ ] ActiveobjectiveWebApp-only:mọiđềxuấtBot/route-engine/provider/
   wallet/PayOS/productiondata giữngoàiscopemutation,khôngápvàkhônggiao tiếp.
+
+## Lịch sử hội thoại — sauPR738
+
+- [x] CCLdeliveryPR738HEAD6f82d1fd,CI43640964359bothPASS,
+  merge/runtime344e0310,deploy43642197295PASS,treea5de43c8exact,
+  services/health/4assets/protectedWebsourcesgiữ,receipts6884406351/6884406660.
+- [x] CHVersionsR1+ActivityR2,4exactchanges/2files22keys66values;
+  ActivityR1missingVI fallbackgenuinefailure1giữ,R2cùngphiênsửađúng.
+- [x] Permanent11BASE1PASS10RED→new+prior158PASS,affected286PASS/
+  Python9/syntax/compilePASS;realcatalogfreeze/oldhash/strictkey/source giữ.
+- [x] Native24unique3locale375sáng1440tối4states/13ảnh/3freshservers,
+  24versions45events thêmQAownedcopy,15threads24context18turngiữ;
+  8tables/schema/fingerprints/source/evidence/6plans18scenesgiữ/Jobs0.
+  Mỗi locale15knownactions/8versions4threads;khôngrestore/submitclick.
+- [x] ReviewC0/I0/M0,19protectedLFpaths/allPython giữ;unknown/proto/
+  fallback/empty/deniedVM-only,khôngclaimnativecoverage.
+- [ ] CHdocs/Tester/cases/metadata/provenance/exactCI/merge/deploy/
+  runtime/assets/receiptcùngIssue689/PR.
+- [ ] RawdateISOturn/history/timeline cần phiếu displayformat riêng,
+  không đổi storedtime/copyguard; xếp saurequestpanel/timeline.
+- [ ] Requestpanel17keys+timeline12keysoutputready,chờgate;Docpending/
+  pagination7+6keysđãtrảoutput-only. ToànAX/auth/responsive/device/Safari/
+  signedUI/M-FINAL01..06 vẫn mở,motioncuối;noBot/routeenginefinancialscope.

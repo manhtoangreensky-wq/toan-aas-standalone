@@ -1284,3 +1284,15 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CCL-LIGHT|nặng|375sángactualcomputedlabel|1.26533→12.35155:1,nhãn cònhiện|[Phiên CCL](PHIEN-CHAT-CONTEXT-LABEL-20261115.md)|
 |CCL-DARK|nặng|Cùngtrang1440tối/sentinel|11.52797:1exact,font/layout/data/attrs giữ|BASEr3/GREENr2nativeaccepted|
 |CCL-SAFETY|nặng|19sourcepaths/8tables/schema/evidence|6plans18scenes giữ,Jobs0/0productwrites|Giữfailedharnessreports,khôngwholeAXclaim|
+
+## CHAT-HISTORY-COPY-20261115 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CH-VERSIONS|nặng|Revision7/'7'/0/invalid×4state×caps|Current/restoreattrs/rights/title/time giữ|BASE11=1PASS10RED→158PASS|
+|CH-ACTIVITY|nặng|15known+unknown/prototype/rỗng|22keys đúnglocale/VI fallback,không mất hàng|ActualVM3locale|
+|CH-STRICT|nặng|22orderedkeys/hash/mutation/frozen|Oldhash/order/unknown guards giữ|286affectedPASS|
+|CH-NATIVE|nặng|3locale375sáng1440tối4states|24uniqueGET/13ảnh/15actionsperlocale|[Phiên CH](PHIEN-CHAT-HISTORY-20261115.md)|
+|CH-DATA|nặng|15threads24context18turn24version45event|8tables allrows/schema/evidencegiữ|6plans18scenes/Jobs0|
+|CH-SAFETY|nặng|19protectedLF/allPython/khôngrestoreclick|C0/I0/M0/Python9PASS/0productwrites|KhôngwholeAX/signedUIclaim|
+|CH-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt cùngIssue/PR,wholegoalactive|Rawdates/requestpanel/timeline/motionmở|
