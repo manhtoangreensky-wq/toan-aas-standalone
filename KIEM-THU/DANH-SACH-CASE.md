@@ -1262,3 +1262,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CCS-HARNESS|vừa|Lỗi historical mutation/no-op|Giữ failedreports, chỉ rerunaffected|286affected285+1finalPASS|
 |CCS-SAFETY|nặng|15QArows6plans18scenesschema/evidence|17protected paths/ownedJobs0|0provider/ví/productwrite|
 |CCS-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt cùng Issue/PR,khôngwholegoalclaim|History/run/motion vẫn mở|
+
+## CHAT-CARDS-TURN-20261114 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CCT-CARDS|nặng|4kind+unknown/activearchived4threadstates×caps|Nhãn đúng,rawdata/rights/controls giữ|11BASE1PASS10RED→147PASS|
+|CCT-TURNS|nặng|3kind+unknown/ordinal0/rev0/literaldate|Chỉ đổi chữ,khách không bị lọc|FullVM3locale/escaping|
+|CCT-OPTIONS|nặng|4options/null/empty/unknownselection|Order/value/selectedfallback giữ|Helper hash/select change restore|
+|CCT-STRICT|nặng|16keys/fullDetail+optionshashmutation|Oldorder/freeze/unknown giữ|286affectedPASS|
+|CCT-NATIVE|nặng|3locale375sáng1440tối4states|24uniqueGETstates13ảnh|[Phiên CCT](PHIEN-CHAT-CARDS-TURN-20261114.md)|
+|CCT-DATA|nặng|15threads24contexts18turns/8tables|Allrows/schema/evidence/6plans18scenes giữ|OwnedJobs0/0productwrites|
+|CCT-SAFETY|nặng|Exact5workerchanges/protectedpaths|17LFcontentpaths/allPython giữ|ReviewC0/I0/M0/9PythonPASS|
+|CCT-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt cùngIssue/PR,khôngwholegoalclaim|History/run/motion vẫn mở|

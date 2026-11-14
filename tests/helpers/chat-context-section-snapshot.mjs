@@ -4,6 +4,7 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {cardsTurnHistoricalSnapshot,cardsTurnHistoricalPortalSource} from './chat-context-cards-turn-snapshot.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const reviewed=JSON.parse(fs.readFileSync(new URL('../fixtures/chat-context-section-reviewed.json',import.meta.url),'utf8'));
@@ -12,6 +13,7 @@ const hash=value=>createHash('sha256').update(value).digest('hex');
 const hashes={vi:'84ed8ebd7a04b1e4d2afd4291a1755fe8ec1fa8ea3937b657a1366a23067c9ca',en:'50f71dc0f6a82bfb9e97585cd4e0b17b3a3ad11655529cf71b86674b613d8889',zh:'20320be8ccf8472b41e96f2241825b646dd4248fbe127ebcf6fefd3606b9288e'};
 assert.equal(keys.size,17);
 export function contextSectionHistoricalSnapshot(entries,locale){
+  entries=cardsTurnHistoricalSnapshot(entries,locale);
   assert.ok(hashes[locale]);
   const scoped=entries.filter(([key])=>/^chatDetail(?:Context|Section)Ui/.test(key));
   if(!scoped.length)return entries;
@@ -28,7 +30,7 @@ assert.ok(oa>=0&&ob>oa);
 const pinnedPrefix='      { name: "pinned", label: uiText("chatFieldUiPinnedLabel"';
 const oldPinned=original.split('\n').find(line=>line.startsWith(pinnedPrefix));assert.ok(oldPinned);
 export function contextSectionHistoricalPortalSource(value){
-  let source=value.replace(/\r\n/g,'\n');
+  let source=cardsTurnHistoricalPortalSource(value).replace(/\r\n/g,'\n');
   assert.equal(source.split(start).length-1,1,'Unreviewed Chat context/section source boundary');
   const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>=0&&b>a,'Unreviewed Chat context/section source boundary');
   const part=source.slice(a,b),old=original.slice(oa,ob);

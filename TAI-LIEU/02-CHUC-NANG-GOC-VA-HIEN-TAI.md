@@ -2028,3 +2028,13 @@ native detail/device/Safari/toàn app và đầu ra provider không được suy
 |Checkbox EN/ZH rơi về “Tôi xác nhận”|Field riêng “Ghim hội thoại” theo locale|Root/detail value/checked/ID giữ|
 |Mutation19field dùng replacement đã không khớp|Chiếu accepted scope,assert target1 trước mutate|285+1affectedPASS, không no-op giả|
 |Adapter mới chặn nhầm nguồn lịch sử trước gate cũ|Nguồn không khóa mới chuyển nguyên vẹn|Old hash gate vẫn bắt writablemutation|
+
+## Danh sách ghi chú/nội dung — đối chiếu 14/11/2026
+
+|Trước BASE6a519756|Trong phiếu hiện tại|Bằng chứng/giới hạn|
+|---|---|---|
+|Context/Active/Archived/Archive còn lẫn ngôn ngữ|Thẻ và bốn option dùng locale|Giữ raw kind/state/caps/selected/disabled|
+|Turnlist có v/lượt và loại cố định|Nhãn lượt/cập nhật/nút/xác nhận theo locale|Ordinal/revision/rawdate expressions giữ|
+|Chỉ QA metadata/arrays rỗng|QA có24contexts18turns ở15threads|ActualGET/DOM,8tables exact trước/sau|
+|Hàm options dùng global label cũ|Local labels theo mỗi lần render|Không đổi sharedmap/helper signature|
+|Nguy cơ kiểm lặp candidate/permanent|MộtactualVM RED→GREEN147/147|Không thêm candidate GREEN trùng|
