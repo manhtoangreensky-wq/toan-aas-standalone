@@ -1964,3 +1964,16 @@ sáng/tối. Không claimwholelocale/AX/auth/device/provider/signedproduction/mo
 
 Khôngđóngtoànroute/auth/AX/device/Safari/provider/signedproduction/motion;
 chữngoàiphiếu/toast vànhãnsángnhạtphảilàmriêng.
+
+## Làm mới tài liệu/chữ Hội thoại — đối chiếu 14/11/2026
+
+|Trước BASE3477d0d8|Trong phiếu hiện tại|Bằng chứng/giới hạn|
+|---|---|---|
+|Đọc lỗi trả[] vẫn báo đã làm mới|Chỉ mảng+ready hiện tại được báo cập nhật|42 ca thực thi handler/loader; không đổi loader|
+|Phản hồi làm mới cũ có thể báo thành công|Chặn đổi trang/phiên/yêu cầu/đăng xuất|Không thêm yêu cầu hoặc đổi auth|
+|Thông báo làm mới lẫn tên triển khai|4 khóa/12 giá trị VI/EN/ZH|Chữ cũ giữ, adapter chỉ4 khóa theo hash|
+|Nhãn Chat sáng1.26533:1|Dùng màu chữ chính,8.64385:1|6 native view/66 labels; tối không đổi|
+|Chỉ source/HTTP được hiểu là chạy engine|Tách bản nháp, confirm và file âm thanh thực|Phiên Web–TTS chỉ đọc; chưa xác nhận audio thật|
+
+Không thay công cụ/đường xử lý/tiền/ENV/Bot/motion. Giao hàng có receipt riêng;
+native detail/device/Safari/toàn app và đầu ra provider không được suy từ phiếu này.

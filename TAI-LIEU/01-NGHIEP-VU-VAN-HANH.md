@@ -2742,3 +2742,21 @@ rerunriêng. Native48view,24field/24filter/12retry/12toolclick0productwrite,
 cùngsourcehash.0provider/ví/production;6plan18scene/evidencegốcgiữ.
 Chatlabelcontrastsángvàcácchữngoàiphiếu/engineUIentry/finalmotionvẫnmở.
 [Báo cáo](../docs/reports/chat-document-usable-copy-20261114.md).
+
+## Làm mới tài liệu và chữ Hội thoại — 14/11/2026
+
+Làm mới chỉ báo cập nhật sau lượt đọc hiện tại thành công; danh sách rỗng
+hợp lệ vẫn được chấp nhận. Lượt đọc lỗi báo lỗi dễ hiểu theo VI/EN/ZH;
+đổi trang/phiên/yêu cầu hoặc đăng xuất không nhận thông báo cũ. Không đổi
+quyền, cách đọc, đường API hay dữ liệu.
+
+Nhãn trường Hội thoại sáng dùng màu chữ chính có sẵn: nhỏ nhất8.64385:1
+trong6 màn hình375/812ngang/1440 sáng/tối; tối11.52797:1 không đổi.
+12 trạng thái tài liệu lỗi/phục hồi ba ngôn ngữ đạt,0 lỗi bất ngờ/tràn.
+43 target,224 affected,41 historical đạt; Python45 đạt/1 lỗi CSS-tail BASE,
+3 locale/auth đạt riêng. Không provider/ví/sản phẩm/production writes.
+
+Không coi trang sẵn sàng là engine đã trả đầu ra. Hai phiếu chữ Hội thoại
+và một phiếu rà Web–TTS được giao các phiên riêng; chưa sửa engine hoặc
+quan sát tệp âm thanh thực. Các chữ/điều khiển ngoài phiếu và motion cuối
+vẫn trong sổ công việc. [Báo cáo](../docs/reports/document-refresh-chat-labels-20261114.md).

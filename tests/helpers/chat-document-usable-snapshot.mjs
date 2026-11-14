@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
+import {documentRefreshHistoricalSnapshot} from './document-refresh-copy-snapshot.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const reviewed=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/chat-document-usable-copy-reviewed.json'),'utf8'));
@@ -12,6 +13,7 @@ assert.equal(keys.size,67);
 // No prefix filter: every approved value/order must match and unknown keys
 // remain visible to older golden catalog checks.
 export function usableCopyHistoricalSnapshot(entries,locale){
+  entries=documentRefreshHistoricalSnapshot(entries,locale);
   assert.ok(reviewed.added[locale]);
   const added=entries.filter(([key])=>keys.has(key));if(!added.length)return entries;
   assert.equal(added.length,67,'Unreviewed usable copy: missing keys');
