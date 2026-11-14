@@ -2798,3 +2798,19 @@ khôngtựsubmit. KhôngbậtxửlýAI/thayBot/auth/API/tiền/ENV.
 khôngtắtrateguard/khôngrerunVI.15metadataQA/6plan18scene/evidencegiữ,
 owned22+13+15→0. Otherdetailtext/AX/auth/device/Safari/motionvẫnmở.
 [Báo cáo](../docs/reports/chat-detail-controls-20261114.md).
+
+## Thông tin/chỉnh sửa hội thoại chi tiết — 14/11/2026
+
+Sáu nhãn/thông báo thông tin và năm chữ trong phần chỉnh sửa theo VI/EN/ZH,
+tái dùng trạng thái/cách soạn/ghim hiện có. Giữ tên và nội dung khách, quyền,
+tám trường, lifecycle calls, số đếm/ID/revision/routes và dữ liệu lưu.
+22 permanent RED trước áp dụng →125 target+prior PASS,286 affected Node/
+9 Python PASS. Native24 trạng thái duy nhất qua ba server riêng,13 ảnh,
+không lỗi/tràn/request ngoài/ghi sản phẩm; owned processes về0.
+
+Review C0/I0/M1: M1 chỉ ba dòng trống điều phối thêm, được ghi amendment,
+không đổi hành vi/nguồn sau native. PR734 đã triển khai20c3e6fd, receipts
+6879247049/6879247351; release mới có cổng giao hàng riêng.
+Checkbox mặc định bản EN còn Việt và các phần ngoài phiếu vẫn cần sửa;
+không nhận toàn trang/ngôn ngữ/engine/motion đã xong.
+[Báo cáo](../docs/reports/chat-detail-summary-editor-20261114.md).
