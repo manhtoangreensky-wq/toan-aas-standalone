@@ -40,6 +40,11 @@ các consumer test/helper cũ bị đúng hai đoạn và20 khóa này ảnh hư
 Thêm hai tệp test/helper CSS only-child và adapter comparator màu chữ PR731;
 không sửa expectation/goldenhash ngoài đúng phần đã duyệt.
 Chỉ thêm lệnh test vào bước CI có sẵn; không đổi quyền hoặc deploy workflow.
+CI amendment:cho phép sửa đúng assertion SP-02 trong
+tests/p5-p6-shared-contracts.test.mjs đòi aside cũ thành consumer thật giữ
+execution status vàdisabled capability. Không đổi các13case khác/test expectation
+quyền/historicalledger. Run43588773451HEAD3f6883e6 là13PASS/1stale-sourceFAIL,
+không tính workerfault;không đổi app/native evidence.
 
 PROTECTED=helper/signature/global mode/state maps; route/ID/permissions/
 API/loader/auth/schema/ENV/provider/Bot/wallet/PayOS/motion/CSS/cache;

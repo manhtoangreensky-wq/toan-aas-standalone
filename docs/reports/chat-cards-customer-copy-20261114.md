@@ -98,3 +98,13 @@ không suy từsource/merge/health raâmthanhthật. Actual audio NOT_OBSERVED.
 
 `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`, `PRODUCTION_DATA_WRITES=0`.
 Goal không hoàn tất;M-FINAL-01..06 vẫn ở cuối checklist.
+
+## Phụ lục exact CI đầu
+
+Run43588773451 trênHEAD3f6883e6 dừng ở sharedcontracts:13PASS/1FAIL,
+test SP-02 còn đòi chuỗi `portal-chat-workspace-guard-list` của aside đã bỏ.
+Đây thiếu sót inventory test của điều phối,không phải lỗi worker/app.
+Sửa đúng assertion cũ thành actualrenderer:boundary không tạo khung,execution
+status vẫn hiện và không quyền gửi vẫn disabled. Ba chốt Support và hàm
+boundary giữ,không skip/xóa test. Không đổi app hay chạy lại native đã đạt.
+Sau test-only amendment cần source/provenance/exactHEADCI mới trước merge.

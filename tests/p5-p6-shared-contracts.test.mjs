@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import {chatCardsRenderer} from './helpers/chat-cards-customer-runtime.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const portalSource = fs.readFileSync(path.join(repoRoot, "static/portal/portal.js"), "utf8");
@@ -107,12 +108,18 @@ test("SP-01: Support Center provides owner-scoped tickets, pagination, attachmen
   assert.match(portalSource, /function renderSupportCasePagination\(/);
 });
 
-test("SP-02: Support Advisor, Consultation Brief, and Community Trust Center enforce verified channel boundaries and truthful help", () => {
+test("SP-02: Support Advisor, Consultation Brief, and Community Trust Center enforce verified channel boundaries and truthful help", async () => {
   assert.match(portalSource, /function renderSupportAdvisor\(/);
   assert.match(portalSource, /function renderSupportConsultationBrief\(/);
   assert.match(portalSource, /function renderCommunityTrustCenter\(/);
   assert.match(portalSource, /function renderChatWorkspaceBoundary\(/);
-  assert.match(portalSource, /portal-chat-workspace-guard-list/);
+  const render=await chatCardsRenderer(),id='11111111-1111-4111-8111-111111111111';
+  const result=render('vi','/chat/'+id,{chatWorkspaceEnabled:true,
+    capabilities:{'chat-workspace-view':true,'chat-run-submit':false,'chat-run-refresh':false},
+    chatThreadDetail:{thread:{id,title:'CUSTOMER_TITLE',state:'draft',revision:1},contexts:[],turns:[],versions:[],events:[]}});
+  assert.equal(result.qa.renderChatWorkspaceBoundary(result.context),'');
+  assert.ok(result.html.includes('portal-chat-execution-status'),'actual execution state is still visible');
+  assert.match(result.html,/<button\b[^>]*type="submit"[^>]* disabled>/,'no submit capability remains disabled');
 });
 
 test("P5/P6: Master Ledger accounting enforces exact 13 closed P5/P6 rows and 78 remaining open rows", () => {
