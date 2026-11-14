@@ -814,21 +814,23 @@ async def confirm_voice_tts_job(
             raise HTTPException(status_code=422, detail=msg)
 
     bot_job = (res.get("data") or {}).get("job") or res.get("job") or {}
-    charged_xu = int(bot_job.get("charged_xu") or 0)
-    has_artifact = bool(bot_job.get("has_artifact"))
-    safe_output_url = f"/api/v1/features/voice_tts/jobs/{clean_job_id}/artifact" if has_artifact else None
-    now_ts = utc_now()
+    rt_status = str(bot_job.get("status") or "").strip().lower()
+    has_artifact = bot_job.get("has_artifact") is True
+    if rt_status == "completed" and has_artifact is True:
+        charged_xu = int(bot_job.get("charged_xu") or 0)
+        safe_output_url = f"/api/v1/features/voice_tts/jobs/{clean_job_id}/artifact"
+        now_ts = utc_now()
 
-    with transaction() as conn:
-        conn.execute(
-            """
-            UPDATE web_voice_tts_jobs
-            SET status = 'completed', status_reason = 'COMPLETED',
-                charged_xu = ?, output_url = ?, completed_at = COALESCE(completed_at, ?), updated_at = ?
-            WHERE id = ?
-            """,
-            (charged_xu, safe_output_url, now_ts, now_ts, clean_job_id),
-        )
+        with transaction() as conn:
+            conn.execute(
+                """
+                UPDATE web_voice_tts_jobs
+                SET status = 'completed', status_reason = 'COMPLETED',
+                    charged_xu = ?, output_url = ?, completed_at = COALESCE(completed_at, ?), updated_at = ?
+                WHERE id = ?
+                """,
+                (charged_xu, safe_output_url, now_ts, now_ts, clean_job_id),
+            )
 
     return get_voice_tts_job(account_id, clean_job_id) or {}
 
@@ -856,7 +858,7 @@ async def reconcile_voice_tts_job_status(
         return None
 
     # Completed jobs are monotonic and cannot be downgraded
-    if job.get("status") == STATUS_COMPLETED:
+    if job.get("status") == STATUS_COMPLETED and job.get("has_artifact") is True:
         return job
 
     from copyfast_bridge import bridge_configured, bridge_request
@@ -884,9 +886,9 @@ async def reconcile_voice_tts_job_status(
         return job
 
     now_ts = utc_now()
-    if rt_status == "completed":
-        has_artifact = bool(bot_job.get("has_artifact"))
-        safe_output_url = f"/api/v1/features/voice_tts/jobs/{clean_job_id}/artifact" if has_artifact else None
+    has_artifact = bot_job.get("has_artifact") is True
+    if rt_status == "completed" and has_artifact is True:
+        safe_output_url = f"/api/v1/features/voice_tts/jobs/{clean_job_id}/artifact"
         charged_xu = int(bot_job.get("charged_xu") or 0)
         with transaction() as conn:
             conn.execute(
@@ -902,7 +904,7 @@ async def reconcile_voice_tts_job_status(
                 """,
                 (charged_xu, safe_output_url, now_ts, now_ts, clean_job_id),
             )
-    elif rt_status == "processing":
+    elif rt_status == "processing" or (rt_status == "completed" and has_artifact is not True):
         with transaction() as conn:
             conn.execute(
                 """
@@ -910,7 +912,7 @@ async def reconcile_voice_tts_job_status(
                 SET status = 'processing',
                     status_reason = ?,
                     updated_at = ?
-                WHERE id = ? AND status != 'completed'
+                WHERE id = ? AND (status != 'completed' OR output_url IS NULL OR output_url = '')
                 """,
                 (bot_job.get("status_reason") or "CANONICAL_PROCESSING", now_ts, clean_job_id),
             )
@@ -923,7 +925,7 @@ async def reconcile_voice_tts_job_status(
                 SET status = 'failed',
                     status_reason = ?,
                     updated_at = ?
-                WHERE id = ? AND status != 'completed'
+                WHERE id = ? AND (status != 'completed' OR output_url IS NULL OR output_url = '')
                 """,
                 (bot_reason, now_ts, clean_job_id),
             )

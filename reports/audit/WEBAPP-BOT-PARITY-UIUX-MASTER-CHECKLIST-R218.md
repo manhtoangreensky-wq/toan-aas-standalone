@@ -1613,3 +1613,24 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
 - [ ] SauCRD:trườngnhập/nhãntùychọnChat dùngchungroot/detail;card/
   pagination/boundary,Docreadytools/toasts cònngoài32chữ. Ảnhmobile
   lộ3thốngkê0chiếmchiềucao:giaophiếuthu gọnriêng,khôngsửa kéđợtnày.
+
+## Giao hàng chữ và trạng thái tạo giọng — 14/11/2026
+
+- [x] CRDdelivery:PR728HEAD817c7561,CI43560501517hai jobsđạt;
+  merge/runtime52f3b4a5,deploy43561626070đạt. Test/mergetreeexact,
+  trackedclean/WebBotnginxactive-running/health/2backendhashes/4assets
+  exact. Receipts6872421421/6872421759; dòngchờdeliverytrướcđượcthaythế.
+- [x] TTSoutputstateR1candidate5PASS3FAIL trong8case:truthinesskhôngđạt
+  strictboolean. R2cùngphiên8PASS,khôngtựsửalogic. Permanent23case
+  BASE4PASS19RED→23PASS,cùng28existing=51PASS.0realprovider/ví/prod.
+- [x] Exact3workerchanges/2functions;bridgecalls/moneyexpression/confirm
+  gates/paymentbranchASTgiữ,16appfileskhác exactBASE52f3b4a5;
+  independentreviewC0I0M0. CIthêm2testpathchứkhôngđổiworkflowquyền.
+- [x] Botsource804e23da chỉđọc:WebjobIDlàprimarykey,đủdedicatedroute;
+  khôngsửaID/nonce/authtừphỏngđoán. ActualfinaloutputvẫnNOT_OBSERVED.
+- [ ] TOSdelivery:docs/Tester/provenance/exactHEADCI/merge/deploy/runtime
+  hash/receipt;âmthanhthậtcầncổngriêngkhôngđượcfixturethaythế.
+- [ ] CHAT-THREAD-FIELD-COPY workerR1đãtrả,12realrenderercandidatePASS,
+  appchưaápdụng/REDnative/19newkeysregressionreleasecònđợi.
+- [ ] CHAT-EMPTY-COUNTS workerR1đãtrả,inlineconditionaldlđểbỏ3zero
+  cards,khi>0giữsố/nhãn;chưaRED/ápdụng/native/giao hàng.

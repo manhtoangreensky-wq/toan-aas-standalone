@@ -213,6 +213,8 @@ jobs:
             tests/test_motion_webapp_surfaces_live_reopen_contracts.py \
             tests/test_p0_05d_tester_workspace.py \
             tests/test_copyfast_bridge_loopback_base_url.py \
+            tests/test_voice_tts_output_state.py \
+            tests/test_p0_webapp_v3_customer_voice_tts_job_bridge.py \
             tests/test_p0_webapp_spec02_customer_wallet_truth.py \
             tests/test_p0_media_operational_hubs_contracts.py \
             tests/test_portal_service_worker_lifecycle.py \

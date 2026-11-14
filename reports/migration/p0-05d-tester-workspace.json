@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-14",
-  "local_files_refresh_scope": "Chat root authoring/filter and Document read copy: canonical case source1162lines/131456bytes after8scoped case rows; local file metadata only. Historical remote/P0/48case/safety fields preserved; no remote revalidation or application change.",
+  "local_files_refresh_scope": "Web TTS output-state: canonical case source1173lines/132282bytes after6scoped case rows; local file metadata only. Historical remote/P0/48case/safety fields preserved; no remote revalidation or application change.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1162,
-      "bytes": 131456,
-      "sha256": "2060492347f6abebca401bac2464ec35f24941644e040abaef56ca368d1290b7"
+      "lines": 1173,
+      "bytes": 132282,
+      "sha256": "fb465800a4e7f849e94380a7aba921014d27cac25fbb1c19187fa3162ae92920"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

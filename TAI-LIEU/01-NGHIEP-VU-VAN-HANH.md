@@ -2717,3 +2717,15 @@ chỉđọcQA;VI/EN32view đượcgiữ,ZH16view serverriêng sau429,khôngtắt
 ba ô thống kê0, toànroute/AX/auth/device/Safari/motioncuối cònngoàiphiếu.
 EngineTTS cóphiếusửariêng,khônglẫnvớicodeUI.
 [Báo cáo](../docs/reports/chat-root-doc-read-copy-20261114.md).
+
+## Tạo giọng: chờ âm thanh trước khi báo hoàn tất — 14/11/2026
+
+Web chỉ ghi hoàn tất khi nguồn chuẩn trảcompleted vàhas_artifactbooleanTrue.
+Nếu còn chờ/thiếuâmthanh,giữxửlý;đọclạicóthểnhậntệpvềsau. Bản ghi cũ
+completedthiếutệp khôngbịbỏqua;phản hồitrễkhônghạ bản cóđầurahoàntất.
+Khôngthayquote/charge,quyền,đườnggửi,ID,enginehayBot;không gọi thật khiQA.
+
+23newBASE4PASS19RED→23PASS,cùng28old=51PASS;16protectedpaths/ASTgatesgiữ.
+Bot sourceđangchạy804e23da dùngWebjobIDlàmkhóa,nênkhôngsửaIDtheophỏngđoán.
+Actualâmthanh từyêucầuthậtchưađo;giao hàngvàđầurathật ghi riêngIssue689.
+[Báo cáo](../docs/reports/web-bot-tts-output-state-20261114.md).
