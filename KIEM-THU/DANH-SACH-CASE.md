@@ -1147,3 +1147,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CDA-KEYS|nặng|Khởi tạoi18n vàmutation|5key15value,trướcverify/freeze,oldvaluesexact,unknownkhôngbịbỏ|Strictsnapshot/mutationcases|
 |CDA-NATIVE|nặng|24rootview+12cardview/12click390/1440,3locale|Đúngroot/entryưu tiên,theme thật,0error/overflow/productwrite|[PhiênCDA](PHIEN-CHAT-DOC-ROOT-ACCESS-20261114.md)|
 |CDA-DELIVERY|nặng|Hồiquy/provenance/CI/merge/deploy/runtime|358affected/72targetoverlap,32Python/1BASEfailure,cổnggiao riêng|ReceiptIssue689/PR|
+
+## CHAT-ROOT-DOC-READ-20261114 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CRD-COPY|vừa|RootChat vàDocread3locale|19+8+5chữ theo locale,khôngthuậtngữ trongphiếu|55ca mới|
+|CRD-FORM|nặng|CanCreatefalse/true,danh sáchnháp/rỗng|Controls/data/counts/rights/tênkháchexact|Whole-nonfiniteHTMLparity|
+|CRD-KEYS|nặng|Khởi tạo32key/96value vàmutation|Oldkeys/hash/freeze giữ,unknownkhôngẩn|Strict32adapter|
+|CRD-READ|nặng|Loading/failed/ready,retryfalse/true|Chỉ5chữđổi,ready/hiddentag/quyềngiữ|36rendererstatecases|
+|CRD-NATIVE|nặng|48view390/1440VI/EN/ZHsáng/tối|Cóảnh/cùngsourcehash,khôngtràn/lỗitrang|[PhiênCRD](PHIEN-CHAT-ROOT-DOC-READ-20261114.md)|
+|CRD-ACTIONS|nặng|24lọc/12thửlạithật|GET200/giữgiátrị/chuyểnlỗisàngmới|Khôngfake successfulresponse|
+|CRD-SAFETY|nặng|QA/evidence/process|6plan18scene giữ,0provider/ví/productwrite,process→0|429phaZHgiữriêng,khôngtắtguard|
+|CRD-DELIVERY|nặng|CIexactHEAD vàVPS|Merge/deploy/runtime/assets/receipt táchbiệt|Khôngđóngwholegoal/motion|

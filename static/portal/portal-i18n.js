@@ -21118,6 +21118,129 @@
     documentAccessUiBody: "当前账户或会话暂未获准查看文档工具与历史记录。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    chatRootUiIntroKicker: "Hội thoại riêng tư",
+    chatRootUiIntroTitle: "Lưu mục tiêu, thông tin tham khảo và ghi chú cùng một nơi.",
+    chatRootUiIntroBody: "Bạn tự viết và lưu nội dung để xem lại khi cần. Lưu hội thoại không tạo câu trả lời tự động và không trừ Xu.",
+    chatRootUiCountTotal: "Hội thoại",
+    chatRootUiCountReview: "Đang xem lại",
+    chatRootUiCountReady: "Đã chuẩn bị xong",
+    chatRootUiCreateKicker: "Hội thoại mới",
+    chatRootUiCreateTitle: "Tạo hội thoại mới",
+    chatRootUiCreateSubtitle: "Lưu mục tiêu, thông tin tham khảo và ghi chú do bạn viết. Nội dung được lưu, không được tạo tự động và không trừ Xu.",
+    chatRootUiCreateSafetyHint: "Không nhập liên kết, đường dẫn, toàn bộ nội dung tệp, mật khẩu, mã đăng nhập, mã bảo mật thẻ, mã giao dịch hoặc mã yêu cầu từ dịch vụ khác.",
+    chatRootUiCreateSubmit: "Tạo hội thoại",
+    chatRootUiLibraryKicker: "Thư viện hội thoại",
+    chatRootUiLibraryTitle: "Hội thoại của bạn",
+    chatRootUiLibrarySubtitle: "Xem lại và quản lý các cuộc hội thoại của bạn. Tìm kiếm, lọc hoặc chuyển trang để mở nội dung đã lưu.",
+    chatRootUiLibraryRefresh: "Làm mới",
+    chatRootUiLibraryFilterHint: "Nội dung tìm kiếm không được lưu trong trình duyệt. Không nhập liên kết, đường dẫn, mật khẩu hoặc mã yêu cầu từ dịch vụ khác.",
+    chatRootUiLibraryApply: "Áp dụng bộ lọc",
+    chatRootUiEmptyTitle: "Chưa có hội thoại",
+    chatRootUiEmptyBody: "Tạo hội thoại để lưu mục tiêu, thông tin tham khảo và ghi chú do bạn viết."
+  });
+
+  Object.assign(MESSAGES.en, {
+    chatRootUiIntroKicker: "Private conversations",
+    chatRootUiIntroTitle: "Keep your goals, reference information, and notes in one place.",
+    chatRootUiIntroBody: "Write and save your own content to review whenever needed. Saving a conversation does not create automated responses and no credits are deducted.",
+    chatRootUiCountTotal: "Conversations",
+    chatRootUiCountReview: "Under review",
+    chatRootUiCountReady: "Ready to use",
+    chatRootUiCreateKicker: "New conversation",
+    chatRootUiCreateTitle: "Create a new conversation",
+    chatRootUiCreateSubtitle: "Save goals, reference information, and notes written by you. Content is saved, not automatically generated, and no credits are deducted.",
+    chatRootUiCreateSafetyHint: "Do not enter links, file paths, full file contents, passwords, sign-in codes, card security codes, transaction codes, or request numbers from other services.",
+    chatRootUiCreateSubmit: "Create conversation",
+    chatRootUiLibraryKicker: "Conversation library",
+    chatRootUiLibraryTitle: "Your conversations",
+    chatRootUiLibrarySubtitle: "Review and manage your conversations. Search, filter, or move between pages to open saved content.",
+    chatRootUiLibraryRefresh: "Refresh",
+    chatRootUiLibraryFilterHint: "Search content is not saved in your browser. Do not enter links, file paths, passwords, or request numbers from other services.",
+    chatRootUiLibraryApply: "Apply filter",
+    chatRootUiEmptyTitle: "No conversations yet",
+    chatRootUiEmptyBody: "Create a conversation to save goals, reference information, and notes written by you."
+  });
+
+  Object.assign(MESSAGES.zh, {
+    chatRootUiIntroKicker: "私密对话",
+    chatRootUiIntroTitle: "将目标、参考信息与笔记集中保存在一处。",
+    chatRootUiIntroBody: "由您亲自撰写并保存内容以便随时查阅。保存对话不会生成自动回复，也不会扣除点数。",
+    chatRootUiCountTotal: "对话",
+    chatRootUiCountReview: "审核中",
+    chatRootUiCountReady: "已准备就绪",
+    chatRootUiCreateKicker: "新建对话",
+    chatRootUiCreateTitle: "创建新对话",
+    chatRootUiCreateSubtitle: "保存由您亲自编写的目标、参考信息与笔记。内容仅供保存，不会自动生成，也不会扣除点数。",
+    chatRootUiCreateSafetyHint: "请勿输入链接、路径、文件全文、密码、登录验证码、银行卡安全码、交易单号或其他服务的请求编号。",
+    chatRootUiCreateSubmit: "创建对话",
+    chatRootUiLibraryKicker: "对话库",
+    chatRootUiLibraryTitle: "您的对话",
+    chatRootUiLibrarySubtitle: "查看并管理您的对话。搜索、筛选或翻页以打开已保存的内容。",
+    chatRootUiLibraryRefresh: "刷新",
+    chatRootUiLibraryFilterHint: "搜索内容不会保存在浏览器中。请勿输入链接、路径、密码或其他服务的请求编号。",
+    chatRootUiLibraryApply: "应用筛选",
+    chatRootUiEmptyTitle: "暂无对话",
+    chatRootUiEmptyBody: "创建对话以保存由您亲自编写的目标、参考信息与笔记。"
+  });
+
+  Object.assign(MESSAGES.vi, {
+    chatFilterUiState: "Trạng thái",
+    chatFilterUiSearch: "Tìm trong cuộc trò chuyện",
+    chatFilterUiSearchPlaceholder: "Tìm theo tên, mục tiêu hoặc thẻ",
+    chatFilterUiAll: "Tất cả trạng thái",
+    chatFilterUiDraft: "Bản nháp",
+    chatFilterUiReview: "Đang xem xét",
+    chatFilterUiReady: "Sẵn sàng",
+    chatFilterUiArchived: "Đã lưu trữ"
+  });
+
+  Object.assign(MESSAGES.en, {
+    chatFilterUiState: "Status",
+    chatFilterUiSearch: "Search conversations",
+    chatFilterUiSearchPlaceholder: "Search by name, objective, or tag",
+    chatFilterUiAll: "All statuses",
+    chatFilterUiDraft: "Draft",
+    chatFilterUiReview: "In review",
+    chatFilterUiReady: "Ready",
+    chatFilterUiArchived: "Archived"
+  });
+
+  Object.assign(MESSAGES.zh, {
+    chatFilterUiState: "状态",
+    chatFilterUiSearch: "搜索对话",
+    chatFilterUiSearchPlaceholder: "按名称、目标或标签搜索",
+    chatFilterUiAll: "所有状态",
+    chatFilterUiDraft: "草稿",
+    chatFilterUiReview: "审核中",
+    chatFilterUiReady: "就绪",
+    chatFilterUiArchived: "已归档"
+  });
+
+  Object.assign(MESSAGES.vi, {
+    docReadUiLoadingHeading: "Đang tải lịch sử tài liệu",
+    docReadUiLoadingBody: "Đang tải lịch sử tài liệu cho tài khoản hiện tại. Vui lòng chờ trong giây lát.",
+    docReadUiFailedHeading: "Chưa thể tải lịch sử tài liệu",
+    docReadUiFailedBody: "Không thể tải lịch sử tài liệu. Nội dung hiển thị trước đó đã được xóa, vui lòng thử lại.",
+    docReadUiRetryButton: "Thử lại",
+  });
+
+  Object.assign(MESSAGES.en, {
+    docReadUiLoadingHeading: "Loading document history",
+    docReadUiLoadingBody: "Loading document history for the current account. Please wait a moment.",
+    docReadUiFailedHeading: "Could not load document history",
+    docReadUiFailedBody: "Could not load document history. The previous display has been cleared, please try again.",
+    docReadUiRetryButton: "Try again",
+  });
+
+  Object.assign(MESSAGES.zh, {
+    docReadUiLoadingHeading: "正在加载文档历史",
+    docReadUiLoadingBody: "正在为当前账户加载文档历史，请稍候。",
+    docReadUiFailedHeading: "无法加载文档历史",
+    docReadUiFailedBody: "无法加载文档历史。先前的显示内容已清除，请重试。",
+    docReadUiRetryButton: "重试",
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

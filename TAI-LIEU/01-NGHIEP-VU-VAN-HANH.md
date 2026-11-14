@@ -2702,3 +2702,18 @@ không lỗi/tràn/ghi sản phẩm/provider/ví/production. Chỉ cấu hình c
 không sửaENVmáy. Quyền/backend/engine/CSP/motion không đổi; không coi đã
 dịch toàn authoring/detail. Giao hàng theo receiptIssue689/PR.
 [Báo cáo](../docs/reports/chat-doc-root-access-20261114.md).
+
+## Hội thoại có quyền và lịch sử Tài liệu — 14/11/2026
+
+19 câu/nhãn phần mở đầu/tạo/danh sách rỗng Hội thoại,8 nhãn lọc và5 thông báo
+tải/lỗi/thử lại của Tài liệu theo VI/EN/ZH;32key/96value mới, không đổi dữ
+liệu/điều khiển/quyền. Lưu nội dung thủ công không được gọi là tạo câu trả lời.
+Không dịch tên khách hoặc bỏ ý cảnh báo dữ liệu nhạy cảm.
+
+55ca mới/72ca trước chạy gộp127đạt;186affected và288historicalđạt (không cộng
+tổng).45Pythonđạt/1CSS-tailBASEfailuregiữ. Native48view,24lọc và12thửlạithật,
+chỉđọcQA;VI/EN32view đượcgiữ,ZH16view serverriêng sau429,khôngtắtguard.
+0ghi sản phẩm/provider/ví/production. Trường nhập/chi tiết/readytools/toasts/
+ba ô thống kê0, toànroute/AX/auth/device/Safari/motioncuối cònngoàiphiếu.
+EngineTTS cóphiếusửariêng,khônglẫnvớicodeUI.
+[Báo cáo](../docs/reports/chat-root-doc-read-copy-20261114.md).

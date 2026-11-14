@@ -1927,3 +1927,16 @@ không được suy ra từ các ca renderer/native nhóm.
 
 358affected/72target có chồng lấn;32Pythonđạt/1CSS-tailBASEfailure;24rootview
 sáng/tối. Không claimwholelocale/AX/auth/device/provider/signedproduction/motion.
+
+## Chat authoring/Document read — đối chiếu 14/11/2026
+
+|Trước ở BASEd14c6f0e|Hiện tại trong phiếu|Bằng chứng/giới hạn|
+|---|---|---|
+|19chữ rootChat lẫn thuật ngữ vàAnh|Câu do người dùng hiểu theoVI/EN/ZH|Không biến lưu thủ công thành AIoutput|
+|8nhãnfilter hardcodedVI,review/handoff/archive|Nhãnđộng theo locale,nămvalue/ordercũ|Form/GET/quyền/khách giữ|
+|5thôngbáotài liệu lẫn private/metadata/projection|Tải/lỗi/thửlại dễ hiểu|Readytools/hiddentags giữ;retrythật|
+|Keyset snapshots chặn tất cả key mới|Chỉ32key/96value đã duyệt được chuẩn hóa|Hash/thứtựcũ giữ,mutation/unknown thấtbại|
+|Run nhiều request gặp429 ởlocale3|Giữ32viewhợp lệ,serverriêng16ZH|Không tắt rate guard hoặc gọi lại VI/EN|
+
+55target/72prior/186affected/288historical cóchồnglấn;45Python/1BASEfailure.
+ĐườngengineTTS mới ởsourceaudit+RED,khôngđượcghi đã nhậnâmthanhthật.
