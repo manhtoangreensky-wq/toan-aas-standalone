@@ -2774,3 +2774,16 @@ Geometry riêng4root+1detail đạt,không lặp24view.16protectedpaths giữ,
 15metadatafakeQA/6plan18scene giữ,owned19+13→0,0provider/ví/productwrite.
 Timestampthẻ/phântrang/chi tiết khác vàmotioncuối vẫn mở.
 [Báo cáo](../docs/reports/chat-cards-customer-copy-20261114.md).
+
+## Ngày giờ và chuyển trang Hội thoại — 14/11/2026
+
+Ngày trênthẻ theo ngôn ngữ/múigiờ trình duyệt,dạng ngàygiờ dễđọc;giátrị
+thiếu/sai hiện—,khôngđổi dữliệulưu. Bốn nhãnphântrangtheoVI/EN/ZH,
+giữrange/offset/quyền/nút vànguồnGETthật. 31newPASS/286affectedNode/
+9PythonPASS;4lỗiharnesscũsửa riêngvà4affectedPASS,khôngđổiapp đểchạygate.
+
+6view/18state3locale375sáng/1440tối:thực0→50→0,50→5→50thẻ;
+ngày soIntl native,tên/dữliệu/ID/ordergiữ.0tràn/lỗitrang/ghi sảnphẩm,
+165QAtmpmetadata/6plan18scene/evidencegiữ,22ownedprocess→0.
+Khôngprovider/ví/ENV/Bot/auth/API/CSS/motionchange;detail/luồngkháccònmở.
+[Báo cáo](../docs/reports/chat-dates-pages-20261114.md).
