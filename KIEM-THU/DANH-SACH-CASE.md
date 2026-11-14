@@ -1275,3 +1275,12 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CCT-DATA|nặng|15threads24contexts18turns/8tables|Allrows/schema/evidence/6plans18scenes giữ|OwnedJobs0/0productwrites|
 |CCT-SAFETY|nặng|Exact5workerchanges/protectedpaths|17LFcontentpaths/allPython giữ|ReviewC0/I0/M0/9PythonPASS|
 |CCT-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt cùngIssue/PR,khôngwholegoalclaim|History/run/motion vẫn mở|
+
+## CHAT-CONTEXT-LABEL-CONTRAST-20261115 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CCL-SOURCE|vừa|EOFone-rule/historicalCSSprojection|OutsideCSS/JS/Python giữ,unknown khônglọc|2BASE1PASS1RED→5CSSPASS|
+|CCL-LIGHT|nặng|375sángactualcomputedlabel|1.26533→12.35155:1,nhãn cònhiện|[Phiên CCL](PHIEN-CHAT-CONTEXT-LABEL-20261115.md)|
+|CCL-DARK|nặng|Cùngtrang1440tối/sentinel|11.52797:1exact,font/layout/data/attrs giữ|BASEr3/GREENr2nativeaccepted|
+|CCL-SAFETY|nặng|19sourcepaths/8tables/schema/evidence|6plans18scenes giữ,Jobs0/0productwrites|Giữfailedharnessreports,khôngwholeAXclaim|

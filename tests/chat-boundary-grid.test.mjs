@@ -3,10 +3,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {CHAT_BOUNDARY_GRID_ADDITION,chatBoundaryGridHistoricalCss} from './helpers/chat-boundary-grid-snapshot.mjs';
+import {chatContextLabelHistoricalCss} from './helpers/chat-context-label-contrast-snapshot.mjs';
 
 const file='static/portal/portal-theme.css';
 const base=execFileSync('git',['show','398cea1c4f6f6f256c646fa382a78563e66b8939:'+file],{encoding:'utf8',maxBuffer:30e6}).replace(/\r\n/g,'\n');
-const source=fs.readFileSync(file,'utf8').replace(/\r\n/g,'\n');
+const source=chatContextLabelHistoricalCss(fs.readFileSync(file,'utf8')).replace(/\r\n/g,'\n');
 test('only-child Chat create panel spans existing grid; all other theme bytes remain protected',()=>{
   assert.ok(source===base+CHAT_BOUNDARY_GRID_ADDITION,'Only the reviewed Chat only-child grid span may be appended');
   assert.doesNotMatch(CHAT_BOUNDARY_GRID_ADDITION,/!important|opacity|display|grid-template|transition|animation|width|padding/);

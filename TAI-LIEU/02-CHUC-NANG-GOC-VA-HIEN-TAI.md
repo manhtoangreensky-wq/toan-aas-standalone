@@ -2038,3 +2038,12 @@ native detail/device/Safari/toàn app và đầu ra provider không được suy
 |Chỉ QA metadata/arrays rỗng|QA có24contexts18turns ở15threads|ActualGET/DOM,8tables exact trước/sau|
 |Hàm options dùng global label cũ|Local labels theo mỗi lần render|Không đổi sharedmap/helper signature|
 |Nguy cơ kiểm lặp candidate/permanent|MộtactualVM RED→GREEN147/147|Không thêm candidate GREEN trùng|
+
+## Nhãn loại ghi chú sáng — đối chiếu15/11/2026
+
+|Trước BASE87afb6b6|Trong phiếu hiện tại|Bằng chứng/giới hạn|
+|---|---|---|
+|Rulecũ chỉ áp `.portal-field > label`|OneEOFselector cho saved-context `>span` sáng|Chỉcolor,không global/broad/darkchange|
+|Màu nhạt1.26533:1|Màu semanticink12.35155:1|ComputedRGBA,khôngguesshex|
+|RawDOMkhác do empty-style attrs|Giữraw,semanticclone bỏexactemptycontrolstyle|Mọi name/value/disabled/nonempty CSS giữ|
+|JSundefined keys khácJSONlưu|Presenceguards+samewirecomparison|Không bỏ meaningfuldata/màu/nền/layout|
