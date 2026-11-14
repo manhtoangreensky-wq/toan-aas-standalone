@@ -1732,7 +1732,30 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
   1440dark,realGEToffset0→50→0/50→5→50cards,dateexpectednativeIntl,
   nooverflow/errors/fakeAPI/external/productwrite.165QAtmpmetadata/
   6plan18scene/evidencegiữ,22ownedprocess→0.
-- [ ] CDPdocs/Tester/cases/metadata/provenance/exactCI/merge/deploy/runtime/
+- [x] CDPdocs/Tester/cases/metadata/provenance/exactCI/merge/deploy/runtime/
   assets/receipt,sourceđangchờfreeze;khôngđóngwholegoal/M-FINAL.
+- [x] CDPdeliveryPR733HEAD242a1a36,CI43592323015bothPASS,
+  merge/runtimed71c68c9,deploy43593305159PASS,treeb67ab3b9exact,
+  trackedclean/services/health/4assets/TTS+2videohashesexact.
+  Receipts6877073495/6877073806;khôngsigned-productionUI/audioLIVEclaim.
 - [ ] CHAT-DETAIL-FIELDS19key/3builders vàCHAT-LIFECYCLE10key/buttonconfirm
-  đanggiao2workeroutput-onlyriêng;chưaápdụng/chưanghiệmthu.
+  đãlocalverifiedởCDC bên dưới,chờcổnggiao hàng;khôngđóngtoàntrang.
+
+## Hội thoại chi tiết: biểu mẫu và nút thao tác — sau PR733
+
+- [x] CDC2workersR1→4exactchanges/2appfiles29keys87value;
+  candidate39BASE0PASS39RED→39PASS. Permanent34RED→34PASS;
+  103new+priorPASS/286affectedPASS,oldkey/order/freeze/hashesgiữ.
+- [x] Python8PASS1stalephraseFAIL→1actualrunfieldconsumerPASS;
+  guarded/forbidden/auth/API/money/schemagatesgiữ,17protectedpaths exact.
+  Syntax/compilePASS,reviewsourceC0I0M0,khôngrepeatsuitebyreviewer.
+- [x] NativeBASEr1harnessassumptionme.idwrong→r2finiteREDafteractualpublic
+  identity/exactownerIDs/GETproofcorrected;khôngappauthchange.
+- [x] Native24uniquestatesVI/EN/ZH375light1440dark×4states=13prefix+
+  3ENtail+8ZH;0repeatedacceptedstates,25screenshots/currentsourcehashsame.
+  r1overallFAILgiữ,2actual429ởNEXTrootphaseexcludedexplicit,khôngbypass.
+  15QAtmpmetadata/6plan18scene/evidencegiữ,22+13+15ownedprocess→0.
+- [ ] CDCdocs/Tester/cases/metadata/provenance/exactHEADCI/merge/deploy/
+  runtime/assets/receipt;khôngclaimotherdetail/wholeAX/M-FINAL.
+- [ ] CHAT-DETAIL-ACCESS-SUMMARY6newkeysreusecards vàCHAT-DETAIL-EDITOR5keys
+  đanggiao2sessionoutput-onlyriêng;chưaápdụng/chưanghiệmthu.

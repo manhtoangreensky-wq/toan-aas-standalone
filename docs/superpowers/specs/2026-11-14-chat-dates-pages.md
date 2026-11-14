@@ -42,8 +42,13 @@ PROVIDER_CALLS=0;WALLET_MUTATIONS=0;PRODUCTION_DATA_WRITES=0.
   nofakeAPI/boot/CSS/nooverflow/error,165QAtmpmetadata/6plan18scene/evidencegiữ.
 - [x] ReviewC0I0M0/17protected/golden/unknownkey/partial/hash;
   targeted+affectedregressions,compile/syntax,không rerun unrelatedsuite.
-- [ ] Docs hiện tại/gốc/Tester/cases/metadata/provenance/exactCI/merge/deploy/
+- [x] Docs hiện tại/gốc/Tester/cases/metadata/provenance/exactCI/merge/deploy/
   runtime/assets/receipt riêng;wholegoal vàmotion vẫn mở.
+
+Deliveryđãđạt:PR733HEAD242a1a36,CI43592323015bothPASS,merge/runtimed71c68c9,
+deploy43593305159PASS,treeb67ab3b9exact,trackedclean/services/health/
+4publicassets/TTS+2videohashesexact. ReceiptIssue6896877073495/PR7336877073806.
+Khôngclaimsigned-productionUI/actualaudio/toàngoal.
 
 ## QA / special constraints
 

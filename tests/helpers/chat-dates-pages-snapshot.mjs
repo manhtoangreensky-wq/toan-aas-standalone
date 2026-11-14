@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
+import {detailHistoricalSnapshot,detailHistoricalPortalSource} from './chat-detail-controls-snapshot.mjs';
 const keys=new Set(['chatPagesUiAria','chatPagesUiSummary','chatPagesUiPrevious','chatPagesUiNext']);
 const hashes={vi:'95316d9045e02b8720eefcfb267fccebc56cc423ed0987eb1baeb591c0bc17d2',en:'adb874b32ff8a64f7c1c4fa6bf551f973f9d220e2b87f4fddc9b371a48b8d99a',zh:'2f0c41525df9bc22d05a9404249b148cd9acb0dff1d831f160987a4d8e046d7b'};
 const hash=value=>createHash('sha256').update(value).digest('hex');
 export function datePagesHistoricalSnapshot(entries,locale){
+  entries=detailHistoricalSnapshot(entries,locale);
   assert.ok(hashes[locale]);
   const added=entries.filter(([key])=>keys.has(key));if(!added.length)return entries;
   assert.equal(added.length,4,'Unreviewed Chat dates/pages copy: missing keys');
@@ -18,7 +20,7 @@ const spans=[
 ];
 // Normalize only complete, hash-reviewed spans for older test scopes.
 export function datePagesHistoricalPortalSource(value){
-  let source=value.replace(/\r\n/g,'\n');
+  let source=detailHistoricalPortalSource(value).replace(/\r\n/g,'\n');
   for(const [start,end,expected]of spans){
     const a=source.indexOf(start),b=source.indexOf(end,a),oa=original.indexOf(start),ob=original.indexOf(end,oa);
     assert.ok(a>=0&&b>a&&oa>=0&&ob>oa,'Unreviewed Chat dates/pages source boundary');
