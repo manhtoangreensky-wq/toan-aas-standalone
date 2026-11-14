@@ -1249,3 +1249,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CSE-SAFETY|nặng|So schema/owners/15QArows/6plans18scenes|Source/evidence giữ,owned Jobs về0|0 provider/ví/request ngoài/product write|
 |CSE-REVIEW|vừa|Đối chiếu năm worker changes|C0/I0/M1;ba dòng trống ghi amendment|17 protected paths giữ BASE|
 |CSE-DELIVERY|nặng|Exact CI/merge/deploy/runtime/assets|Receipt cùng Issue/PR,không whole-goal claim|Checkbox EN/context/history/motion vẫn mở|
+
+## CHAT-CONTEXT-SECTION-20261114 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CCS-CREATE|nặng|Hai createforms3locale4state×caps|10keys đúng,controls/attrs/rights giữ|10RED→135target131+4PASS|
+|CCS-SECTION|vừa|Sáu headings và thứ tự khối|Chỉ đổi chữ,customerdata giữ|Exact6workerchanges/2files|
+|CCS-PINNED|nặng|Root/detailcheckedfalse/true×caps|Nhãn đúng,ID/value/disabled không đổi|ActualVM+native toggle/restore|
+|CCS-STRICT|nặng|17keys/hash/mutation/marker-free|Freeze thật/order/oldgate giữ|1newregressionPASS|
+|CCS-NATIVE|nặng|3locale375 sáng1440 tối×4state|24uniqueGETstates13ảnh|[Phiên CCS](PHIEN-CHAT-CONTEXT-SECTION-20261114.md)|
+|CCS-HARNESS|vừa|Lỗi historical mutation/no-op|Giữ failedreports, chỉ rerunaffected|286affected285+1finalPASS|
+|CCS-SAFETY|nặng|15QArows6plans18scenesschema/evidence|17protected paths/ownedJobs0|0provider/ví/productwrite|
+|CCS-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt cùng Issue/PR,khôngwholegoalclaim|History/run/motion vẫn mở|

@@ -2814,3 +2814,16 @@ không đổi hành vi/nguồn sau native. PR734 đã triển khai20c3e6fd, rece
 Checkbox mặc định bản EN còn Việt và các phần ngoài phiếu vẫn cần sửa;
 không nhận toàn trang/ngôn ngữ/engine/motion đã xong.
 [Báo cáo](../docs/reports/chat-detail-summary-editor-20261114.md).
+
+## Thêm ghi chú/nội dung và nhãn ô ghim — 14/11/2026
+
+17khóa/51giá trị VI/EN/ZH làm rõ hai form thêm, sáu tiêu đề/hướng dẫn và
+ô ghim ở tạo mới/chỉnh sửa. Tên/nội dung khách, form/ID/constraints/checked/
+disabled/quyền/state/route và dữ liệu lưu giữ. Không đổi generic renderer.
+135target được nghiệm thu bằng131PASS+4affectedPASS;286affected bằng285+
+1finalPASS; thêm1regression marker-freePASS,Python9PASS. Các lỗi bộ đo
+được ghi đúng lịch sử, không đổi ứng dụng để làm xanh.
+24native unique states/13ảnh qua3serverQA riêng, checkbox thay chọn rồi
+trả lại/khôngsubmit; source/data/evidence giữ/ownedJobs0.
+PR735 đã triển khai d124b867, receipts6879820281/6879820732.
+[Báo cáo](../docs/reports/chat-context-section-copy-20261114.md).

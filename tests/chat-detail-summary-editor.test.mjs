@@ -1,9 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {contextSectionHistoricalSnapshot,contextSectionHistoricalPortalSource} from './helpers/chat-context-section-snapshot.mjs';
 import {summaryRenderer,summarySources} from './helpers/chat-detail-summary-editor-runtime.mjs';
 import {summaryHistoricalSnapshot,summaryHistoricalPortalSource} from './helpers/chat-detail-summary-editor-snapshot.mjs';
-const source=summarySources(),oldSource=summarySources(true),current=await summaryRenderer(source),before=await summaryRenderer(oldSource);
+const live=summarySources(),source={...live,portal:contextSectionHistoricalPortalSource(live.portal)},oldSource=summarySources(true);
+const actual=await summaryRenderer(source),before=await summaryRenderer(oldSource);
+const current=(...args)=>{
+  const result=actual(...args);
+  return {...result,catalogFrozen:Object.fromEntries(['vi','en','zh'].map(locale=>[locale,Object.isFrozen(result.messages[locale])])),messages:Object.fromEntries(['vi','en','zh'].map(locale=>[
+    locale,Object.fromEntries(contextSectionHistoricalSnapshot(Object.entries(result.messages[locale]),locale))
+  ]))};
+};
 const approved=JSON.parse(fs.readFileSync(new URL('./fixtures/chat-detail-summary-editor-reviewed.json',import.meta.url),'utf8'));
 const cards=JSON.parse(fs.readFileSync(new URL('./fixtures/chat-cards-customer-copy-reviewed.json',import.meta.url),'utf8'));
 const id='11111111-1111-4111-8111-111111111111',route='/chat/'+id;
@@ -74,7 +82,7 @@ for(const locale of ['vi','en','zh']){
   test(`${locale}: exactly 11 new entries, every prior value/order and frozen dictionary remain`,()=>{
     const a=Object.entries(now.messages[locale]),b=Object.entries(old.messages[locale]);
     assert.deepEqual(JSON.parse(JSON.stringify(a.slice(0,b.length))),JSON.parse(JSON.stringify(b)));
-    assert.deepEqual(JSON.parse(JSON.stringify(a.slice(b.length))),Object.entries(copy));assert.ok(Object.isFrozen(now.messages[locale]));
+    assert.deepEqual(JSON.parse(JSON.stringify(a.slice(b.length))),Object.entries(copy));assert.equal(now.catalogFrozen[locale],true);
   });
   test(`${locale}: strict adapter rejects missing/mutated/reordered entries and preserves unknown customer keys`,()=>{
     const entries=Object.entries(now.messages[locale]),normalized=summaryHistoricalSnapshot(entries,locale);assert.equal(normalized.length,entries.length-11);
