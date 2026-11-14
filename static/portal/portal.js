@@ -10100,6 +10100,12 @@
   function localizedPageTitle(page, context) {
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
+    if (path === "/chat") {
+      return uiText("workspaceMenu.card.chat_workspace.title", fallback);
+    }
+    if (path === "/documents") {
+      return uiText("workspaceMenu.card.documents.title", fallback);
+    }
     if (path === "/video-studio/reference-format-planner") return uiText("videoPlannerHeaderCUi.reference-format-planner.title", "Lập định dạng tham chiếu");
     if (path === "/video-studio/storyboard-composer") return uiText("videoPlannerHeaderCUi.storyboard-composer.title", "Soạn bảng phân cảnh và mô tả");
     if (path === "/video-studio/script-to-screen-planner") return uiText("videoPlannerHeaderBUi.script-to-screen-planner.title", "Từ kịch bản đến phân cảnh");
@@ -10226,6 +10232,12 @@
   function localizedPageDescription(page) {
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
+    if (path === "/chat") {
+      return uiText("workspaceMenu.card.chat_workspace.description", fallback);
+    }
+    if (path === "/documents") {
+      return uiText("featureCatalog.entry.documents.description", fallback);
+    }
     if (path === "/video-studio/reference-format-planner") return uiText("videoPlannerHeaderCUi.reference-format-planner.description", "Từ định dạng video tham chiếu đã chọn, lập kế hoạch ba cảnh nguyên bản có mục tiêu kênh rõ ràng, rồi xác nhận lưu thành kế hoạch video riêng tư.");
     if (path === "/video-studio/storyboard-composer") return uiText("videoPlannerHeaderCUi.storyboard-composer.description", "Từ chủ đề, lập ba định hướng sáng tạo, quy tắc hình ảnh nhất quán, trình tự cảnh và bộ mô tả để rà soát trước khi dùng trong quy trình khác.");
     if (path === "/video-studio/script-to-screen-planner") return uiText("videoPlannerHeaderBUi.script-to-screen-planner.description", "Từ mô tả, lập kịch bản, bảng phân cảnh và mô tả tạo hình ảnh, video để rà soát; không tạo tệp đa phương tiện, bản dựng hoặc đầu ra.");
@@ -19501,8 +19513,8 @@ function renderAutoPostHub(page, context) {
     const canCreate = Boolean(context.capabilities && context.capabilities["chat-thread-create"] === true);
     const enabled = context.chatWorkspaceEnabled === true;
     if (!canView) {
-      const copy = enabled ? "Đăng nhập bằng signed session để xem thread thuộc Web account hiện tại." : "AI Chat Workspace đang được server giữ ở chế độ guarded. Web không gọi model hoặc bridge thay thế.";
-      return '<article class="portal-page portal-chat-workspace">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty("AI Chat Workspace đang được bảo vệ", copy, ICONS.chat) + '</section></article>';
+      const copy = enabled ? uiText("chatAccessUiEnabledBody", "Đăng nhập để xem các cuộc trò chuyện thuộc tài khoản hiện tại.") : uiText("chatAccessUiUnavailableBody", "Tính năng trò chuyện chưa được bật cho phiên này.");
+      return '<article class="portal-page portal-chat-workspace">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty(uiText("chatAccessUiHeading", "Khu vực trò chuyện hiện chưa thể mở"), copy, ICONS.chat) + '</section></article>';
     }
     const summary = context.chatWorkspaceSummary && typeof context.chatWorkspaceSummary === "object" ? context.chatWorkspaceSummary : {};
     const counts = summary.threads && typeof summary.threads === "object" ? summary.threads : {};
@@ -28369,7 +28381,7 @@ function renderAutoPostHub(page, context) {
     const readState = String(context.documentOperationsReadState || "guarded");
     const activePath = normalizePath(context && context.path || "/documents") === "/documents/pdf" ? "/documents/pdf" : "/documents";
     if (!canView) {
-      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>Document Operations đang ở chế độ an toàn</h2><p>Document Studio chỉ hiển thị lịch sử khi signed session, Asset Vault và storage Document Operations được máy chủ xác minh. Web không thay thế bằng Asset Vault, Bot job, provider hay output mô phỏng.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có output giả</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText("documentAccessUiHeading", "Tài liệu hiện chưa thể mở"))}</h2><p>${safeText(uiText("documentAccessUiBody", "Tài khoản hoặc phiên làm việc hiện chưa được phép xem công cụ và lịch sử tài liệu."))}</p></div></div></section></article>`;
     }
     if (readState === "loading") {
       return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>Đang xác minh lịch sử tài liệu private</h2><p>Web Workspace đang tải metadata Document Operations thuộc signed account hiện tại. Không hiển thị route trước, PWA cache, Asset Vault hay danh sách Bot trong khi chờ dữ liệu owner-scoped.</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div></div></div></section></article>`;

@@ -5,6 +5,7 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {withoutLegacyDecorativeWorkbench} from './helpers/legacy-decorative-workbench.mjs';
+import {chatDocHistoricalMarkup} from './helpers/chat-doc-access-snapshot.mjs';
 
 // Catch the fixed AI Studio label leaking into VI/ZH, or a broad replacement
 // that translates customer/unknown labels instead of adding one finite alias.
@@ -38,7 +39,7 @@ for(const locale of ['vi','en','zh'])for(const route of routes)test(`${locale}${
   assert.deepEqual(controls(current.html),controls(oldHtml));
   assert.equal(current.messages[locale]['shellNav.aiStudios'],labels[locale],'reuse the reviewed existing translation');
   assert.equal(actual[1],labels[locale]);
-  assert.equal(current.html,oldHtml.replace(previous[0],'<div class="portal-eyebrow">'+labels[locale]+'</div>'),'only accepted alias and independently verified legacy decoration removal');
+  assert.equal(chatDocHistoricalMarkup(current.html,locale),oldHtml.replace(previous[0],'<div class="portal-eyebrow">'+labels[locale]+'</div>'),'only accepted alias, legacy decoration and exact reviewed root-card labels');
 });
 for(const locale of ['vi','en','zh'])test(`${locale}: finite alias addition never rewrites unknown or customer labels`,()=>{
   const result=renderCurrent(locale,'/features',{});

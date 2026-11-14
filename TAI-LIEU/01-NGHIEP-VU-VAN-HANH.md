@@ -2687,3 +2687,18 @@ hiện panel vẫn giữ như vậy.
 panel giả/CSP/console/pageerror/tràn ngang. 0ghi sản phẩm/ví/provider/production;
 21tiến trình QA được dọn về0. Giao hàng theo receipt riêng trênIssue689/PR.
 [Báo cáo](../docs/reports/nav-legacy-workbench-20261113.md).
+
+## Trò chuyện/Tài liệu: tiêu đề và giới hạn xem — 14/11/2026
+
+Hai root dùng khóa dịch sẵn có, không đổi tên hội thoại khách đặt. Chat giữ
+phân biệt cần đăng nhập/chưa bật cho phiên bằng chữ dễ hiểu ba ngôn ngữ.
+DocumentHub giữ hạn chế truy cập, bỏ ba nhãn triển khai lặp; không giả dữ liệu
+trống, kết quả hoặc quyền sẵn sàng. Các form/nhánh có quyền/loading/lỗi/ready
+và nguồn dữ liệu giữ nguyên. Nhãn entry danh mục tiếp tục ưu tiên trước rootfallback.
+
+72ca riêng cuối và358ca chịu ảnh hưởng đạt (có chồng lấn),32Pythonđạt/
+1CSS-tail lỗi BASE giữ nguyên. Native24view root sáng/tối+12view/12click thẻ,
+không lỗi/tràn/ghi sản phẩm/provider/ví/production. Chỉ cấu hình childQA,
+không sửaENVmáy. Quyền/backend/engine/CSP/motion không đổi; không coi đã
+dịch toàn authoring/detail. Giao hàng theo receiptIssue689/PR.
+[Báo cáo](../docs/reports/chat-doc-root-access-20261114.md).
