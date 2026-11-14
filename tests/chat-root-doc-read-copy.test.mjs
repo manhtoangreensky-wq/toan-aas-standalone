@@ -5,13 +5,13 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {chatRootDocReadHistoricalSnapshot,chatRootDocReadHistoricalMarkup} from './helpers/chat-root-doc-read-snapshot.mjs';
+import {renderUsableHistoricalChild as current} from './helpers/chat-document-usable-snapshot.mjs';
 
 // Mutations caught: wrong-locale finite labels, changed controls/rights/data,
 // lost safety categories, blank/error branches, and translated customer names.
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const BASE='d14c6f0e1e0ecbef2dbba53b60cec48db67b2763';
 const helper=path.join(root,'tests/helpers/publishing-child-render.mjs');
-const {renderChild:current}=await import(pathToFileURL(helper));
 let source=fs.readFileSync(helper,'utf8');
 source=source.replace("const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');",'const root='+JSON.stringify(root)+';');
 for(const [name,file]of [['portal','static/portal/portal.js'],['i18n','static/portal/portal-i18n.js']]){

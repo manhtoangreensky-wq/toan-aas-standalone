@@ -1,0 +1,852 @@
+{
+  "schema": "reviewed-ui-source-and-copy.v1",
+  "sourceBase": "2cae14ab1825746b7e8e1123f59a89cb7cd54396",
+  "portalEdits": [
+    {
+      "specId": "CHAT-THREAD-FIELD-COPY-20261114",
+      "before": "  function chatThreadFields(context) {\n    return [\n      { name: \"title\", label: \"Tên hội thoại\", placeholder: \"Ví dụ: Chuẩn bị nội dung launch tháng 7\", required: true, minLength: 3, maxLength: 180 },\n      { name: \"mode\", label: \"Cách biên tập cục bộ\", control: \"select\", required: true, options: CHAT_WORKSPACE_MODES, help: \"Chỉ là profile authoring Web, không phải model, quota hoặc Bot mode.\" },\n      { name: \"objective\", label: \"Mục tiêu\", control: \"textarea\", placeholder: \"Kết quả muốn tự soạn, câu hỏi cần làm rõ, phạm vi và điều không được suy diễn…\", required: true, minLength: 3, maxLength: 8000, wide: true },\n      { name: \"system_context\", label: \"Ngữ cảnh làm việc (tùy chọn)\", control: \"textarea\", placeholder: \"Bối cảnh nội bộ, giọng điệu, giới hạn và tiêu chí tự rà soát…\", maxLength: 12000, wide: true },\n      { name: \"tags\", label: \"Tags\", placeholder: \"launch, brief, review\", maxLength: 1000 },\n      { name: \"project_id\", label: \"Project liên kết (tùy chọn)\", control: \"select\", options: chatWorkspaceProjectOptions(context), emptyLabel: \"Không liên kết Project\" },\n      { name: \"prompt_template_id\", label: \"Prompt Library (tùy chọn)\", control: \"select\", options: chatWorkspaceTemplateOptions(context), emptyLabel: \"Không liên kết Prompt Library\" },\n      { name: \"pinned\", label: \"Giữ hội thoại nổi bật\", type: \"checkbox\", help: \"Chỉ thay đổi thứ tự hiển thị của Web account hiện tại.\" }\n    ];\n  }",
+      "after": "  function chatThreadFields(context) {\n    const modeOptions = [\n      [\"focus\", uiText(\"chatFieldUiModeOptionFocus\", \"Soạn nhanh\")],\n      [\"deep\", uiText(\"chatFieldUiModeOptionDeep\", \"Đào sâu nội dung\")],\n      [\"pro\", uiText(\"chatFieldUiModeOptionPro\", \"Rà soát kỹ\")]\n    ];\n    return [\n      { name: \"title\", label: uiText(\"chatFieldUiTitleLabel\", \"Tên hội thoại\"), placeholder: uiText(\"chatFieldUiTitlePlaceholder\", \"Ví dụ: Chuẩn bị nội dung tháng 7\"), required: true, minLength: 3, maxLength: 180 },\n      { name: \"mode\", label: uiText(\"chatFieldUiModeLabel\", \"Cách soạn nội dung\"), control: \"select\", required: true, options: modeOptions, help: uiText(\"chatFieldUiModeHelp\", \"Chọn cách tổ chức nội dung bạn tự viết.\") },\n      { name: \"objective\", label: uiText(\"chatFieldUiObjectiveLabel\", \"Mục tiêu\"), control: \"textarea\", placeholder: uiText(\"chatFieldUiObjectivePlaceholder\", \"Kết quả muốn tự soạn, câu hỏi cần làm rõ, phạm vi và điều không được suy diễn…\"), required: true, minLength: 3, maxLength: 8000, wide: true },\n      { name: \"system_context\", label: uiText(\"chatFieldUiSystemContextLabel\", \"Thông tin tham khảo (tùy chọn)\"), control: \"textarea\", placeholder: uiText(\"chatFieldUiSystemContextPlaceholder\", \"Bối cảnh nội bộ, giọng điệu, giới hạn và tiêu chí tự rà soát…\"), maxLength: 12000, wide: true },\n      { name: \"tags\", label: uiText(\"chatFieldUiTagsLabel\", \"Từ khóa\"), placeholder: uiText(\"chatFieldUiTagsPlaceholder\", \"kế hoạch, nội dung, rà soát\"), maxLength: 1000 },\n      { name: \"project_id\", label: uiText(\"chatFieldUiProjectLabel\", \"Dự án liên kết (tùy chọn)\"), control: \"select\", options: chatWorkspaceProjectOptions(context), emptyLabel: uiText(\"chatFieldUiProjectEmptyLabel\", \"Không liên kết dự án\") },\n      { name: \"prompt_template_id\", label: uiText(\"chatFieldUiTemplateLabel\", \"Mẫu nội dung (tùy chọn)\"), control: \"select\", options: chatWorkspaceTemplateOptions(context), emptyLabel: uiText(\"chatFieldUiTemplateEmptyLabel\", \"Không dùng mẫu nội dung\") },\n      { name: \"pinned\", label: uiText(\"chatFieldUiPinnedLabel\", \"Giữ hội thoại nổi bật\"), type: \"checkbox\", help: uiText(\"chatFieldUiPinnedHelp\", \"Ưu tiên hội thoại này trong danh sách của bạn.\") }\n    ];\n  }"
+    },
+    {
+      "specId": "CHAT-EMPTY-COUNTS-20261114",
+      "before": "    const intro = '<section class=\"portal-chat-workspace-intro\"><div><span class=\"portal-section-kicker\">' + uiText(\"chatRootUiIntroKicker\", \"Hội thoại riêng tư\") + '</span><h2>' + uiText(\"chatRootUiIntroTitle\", \"Lưu mục tiêu, thông tin tham khảo và ghi chú cùng một nơi.\") + '</h2><p>' + uiText(\"chatRootUiIntroBody\", \"Bạn tự viết và lưu nội dung để xem lại khi cần. Lưu hội thoại không tạo câu trả lời tự động và không trừ Xu.\") + '</p></div><dl><div><dt>' + safeText(String(Number(counts.total || threads.length))) + '</dt><dd>' + uiText(\"chatRootUiCountTotal\", \"Hội thoại\") + '</dd></div><div><dt>' + safeText(String(Number(counts.review || 0))) + '</dt><dd>' + uiText(\"chatRootUiCountReview\", \"Đang xem lại\") + '</dd></div><div><dt>' + safeText(String(Number(counts.ready || 0))) + '</dt><dd>' + uiText(\"chatRootUiCountReady\", \"Đã chuẩn bị xong\") + '</dd></div></dl></section>';",
+      "after": "    const intro = '<section class=\"portal-chat-workspace-intro\"><div><span class=\"portal-section-kicker\">' + uiText(\"chatRootUiIntroKicker\", \"Hội thoại riêng tư\") + '</span><h2>' + uiText(\"chatRootUiIntroTitle\", \"Lưu mục tiêu, thông tin tham khảo và ghi chú cùng một nơi.\") + '</h2><p>' + uiText(\"chatRootUiIntroBody\", \"Bạn tự viết và lưu nội dung để xem lại khi cần. Lưu hội thoại không tạo câu trả lời tự động và không trừ Xu.\") + '</p></div>' + (Number(counts.total || threads.length) > 0 || Number(counts.review || 0) > 0 || Number(counts.ready || 0) > 0 ? '<dl><div><dt>' + safeText(String(Number(counts.total || threads.length))) + '</dt><dd>' + uiText(\"chatRootUiCountTotal\", \"Hội thoại\") + '</dd></div><div><dt>' + safeText(String(Number(counts.review || 0))) + '</dt><dd>' + uiText(\"chatRootUiCountReview\", \"Đang xem lại\") + '</dd></div><div><dt>' + safeText(String(Number(counts.ready || 0))) + '</dt><dd>' + uiText(\"chatRootUiCountReady\", \"Đã chuẩn bị xong\") + '</dd></div></dl>' : '') + '</section>';"
+    },
+    {
+      "specId": "DOCUMENT-TOOL-COPY-20261114",
+      "before": "    const cards = [\n      { group: \"pdf\", href: \"/documents/split\", icon: \"PDF\", title: \"Tách PDF\", text: \"Tạo một PDF mới từ một trang hoặc dải liên tiếp trong Asset Vault.\", ready: true },\n      { group: \"pdf\", href: \"/documents/merge\", icon: \"PDF\", title: \"Gộp PDF\", text: \"Gộp tối đa 8 PDF private theo đúng thứ tự đã chọn.\", ready: true },\n      { group: \"pdf\", href: \"/documents/compress\", icon: \"PDF\", title: \"Tối ưu PDF\", text: \"Chỉ phát một bản lossless khi kết quả nhỏ hơn đủ ý nghĩa.\", ready: true },\n      { group: \"convert\", href: \"/documents/pdf-to-images\", icon: \"PNG\", title: \"PDF sang ảnh\", text: \"Render toàn bộ trang PDF ở 2×. Một trang trả PNG, nhiều trang trả ZIP private đã kiểm tra.\", ready: Boolean(context.pdfToImagesEnabled) },\n      { group: \"convert\", href: \"/documents/image-to-pdf\", icon: \"ẢNH\", title: \"Ảnh sang PDF\", text: \"Tạo PDF từ JPEG/PNG/WebP private theo thứ tự trang có chủ đích.\", ready: Boolean(context.imageToPdfEnabled) },\n      { group: \"convert\", href: \"/documents/pdf-to-word\", icon: \"DOCX\", title: \"PDF có text → Word\", text: \"Trích xuất text có thể chọn thành DOCX; không OCR hoặc sao chép layout giả.\", ready: Boolean(context.pdfToWordEnabled) },\n      { group: \"ocr\", href: \"/documents/ocr\", icon: \"OCR\", title: \"OCR ảnh\", text: \"Đọc text từ một ảnh Asset Vault và chỉ phát TXT private sau khi server xác minh output.\", ready: Boolean(context.imageOcrEnabled) },\n      { group: \"ocr\", href: \"/documents/pdf-ocr\", icon: \"OCR\", title: \"OCR PDF\", text: \"Đọc text từ PDF private trong giới hạn tài nguyên an toàn của server và chỉ phát TXT đã xác minh.\", ready: Boolean(context.pdfOcrEnabled) },\n      { group: \"ocr\", href: \"/documents/pdf-ocr-to-word\", icon: \"DOCX\", title: \"OCR PDF → Word\", text: \"Đọc PDF scan private bằng OCR server-side và chỉ phát DOCX đã xác minh; không có preview text.\", ready: Boolean(context.pdfOcrWordEnabled) }\n    ];\n    const workflowGroups = [\n      { key: \"pdf\", title: \"PDF cơ bản\", text: \"Tách, gộp hoặc tối ưu một bản sao private đã được kiểm tra.\" },\n      { key: \"convert\", title: \"Chuyển đổi\", text: \"Đổi định dạng khi server có pipeline và output phù hợp.\" },\n      { key: \"ocr\", title: \"OCR & scan\", text: \"Đọc text bằng runtime local; chỉ phát output khi có kết quả thật.\" }\n    ];",
+      "after": "    const cards = [\n      { group: \"pdf\", href: \"/documents/split\", icon: \"PDF\", title: uiText(\"docToolUiSplitTitle\", \"Tách PDF\"), text: uiText(\"docToolUiSplitText\", \"Tạo tệp PDF từ một trang hoặc dải trang liên tiếp trong tài liệu đã lưu.\"), ready: true },\n      { group: \"pdf\", href: \"/documents/merge\", icon: \"PDF\", title: uiText(\"docToolUiMergeTitle\", \"Gộp PDF\"), text: uiText(\"docToolUiMergeText\", \"Gộp tối đa 8 tệp PDF theo thứ tự bạn chọn.\"), ready: true },\n      { group: \"pdf\", href: \"/documents/compress\", icon: \"PDF\", title: uiText(\"docToolUiCompressTitle\", \"Giảm dung lượng PDF\"), text: uiText(\"docToolUiCompressText\", \"Giảm dung lượng khi có thể mà giữ nguyên chất lượng tài liệu.\"), ready: true },\n      { group: \"convert\", href: \"/documents/pdf-to-images\", icon: \"PNG\", title: uiText(\"docToolUiPdfToImagesTitle\", \"PDF sang ảnh\"), text: uiText(\"docToolUiPdfToImagesText\", \"Chuyển các trang PDF thành ảnh. Một trang tải về dạng PNG; nhiều trang trong một tệp ZIP.\"), ready: Boolean(context.pdfToImagesEnabled) },\n      { group: \"convert\", href: \"/documents/image-to-pdf\", icon: \"ẢNH\", title: uiText(\"docToolUiImageToPdfTitle\", \"Ảnh sang PDF\"), text: uiText(\"docToolUiImageToPdfText\", \"Gộp ảnh JPEG, PNG hoặc WebP thành PDF theo thứ tự trang bạn chọn.\"), ready: Boolean(context.imageToPdfEnabled) },\n      { group: \"convert\", href: \"/documents/pdf-to-word\", icon: \"DOCX\", title: uiText(\"docToolUiPdfToWordTitle\", \"PDF sang Word\"), text: uiText(\"docToolUiPdfToWordText\", \"Chuyển phần chữ có thể bôi chọn trong PDF sang Word. Không nhận dạng chữ trong ảnh và không giữ nguyên cách dàn trang.\"), ready: Boolean(context.pdfToWordEnabled) },\n      { group: \"ocr\", href: \"/documents/ocr\", icon: \"OCR\", title: uiText(\"docToolUiImageOcrTitle\", \"Đọc chữ từ ảnh\"), text: uiText(\"docToolUiImageOcrText\", \"Đọc chữ từ ảnh đã lưu và lưu thành tệp văn bản.\"), ready: Boolean(context.imageOcrEnabled) },\n      { group: \"ocr\", href: \"/documents/pdf-ocr\", icon: \"OCR\", title: uiText(\"docToolUiPdfOcrTitle\", \"Đọc chữ từ PDF\"), text: uiText(\"docToolUiPdfOcrText\", \"Đọc chữ trong PDF và lưu thành tệp văn bản khi xử lý thành công.\"), ready: Boolean(context.pdfOcrEnabled) },\n      { group: \"ocr\", href: \"/documents/pdf-ocr-to-word\", icon: \"DOCX\", title: uiText(\"docToolUiPdfOcrToWordTitle\", \"PDF quét sang Word\"), text: uiText(\"docToolUiPdfOcrToWordText\", \"Nhận dạng chữ trong PDF quét rồi lưu thành Word khi xử lý thành công.\"), ready: Boolean(context.pdfOcrWordEnabled) }\n    ];\n    const workflowGroups = [\n      { key: \"pdf\", title: uiText(\"docToolUiGroupPdfTitle\", \"PDF cơ bản\"), text: uiText(\"docToolUiGroupPdfText\", \"Tách, gộp hoặc giảm dung lượng tài liệu PDF.\") },\n      { key: \"convert\", title: uiText(\"docToolUiGroupConvertTitle\", \"Chuyển đổi định dạng\"), text: uiText(\"docToolUiGroupConvertText\", \"Chuyển PDF sang ảnh/Word hoặc tạo PDF từ ảnh.\") },\n      { key: \"ocr\", title: uiText(\"docToolUiGroupOcrTitle\", \"Đọc chữ từ tài liệu\"), text: uiText(\"docToolUiGroupOcrText\", \"Nhận dạng chữ từ ảnh hoặc PDF quét để lưu lại.\") }\n    ];"
+    },
+    {
+      "specId": "DOCUMENT-BOARD-COPY-20261114",
+      "before": "      <section class=\"portal-document-operation-intro portal-document-board-summary\" data-document-operations-board><div><span class=\"portal-section-kicker\">Private Document Operations</span><h2>Bảng vận hành tài liệu, rõ nguồn và rõ kết quả</h2><p>Chọn workflow phù hợp, bắt đầu từ tài liệu private trong Asset Vault và theo dõi các artifact đã được server xác minh. Mỗi hàng chỉ thuộc signed account hiện tại; Web không tự suy diễn output, không hiển thị file cache hay thay thế bằng Bot job.</p></div><dl><div><dt>${safeText(String(readyWorkflowCount))}</dt><dd>Workflow private có contract</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>Artifact sẵn sàng tải</dd></div><div><dt>${safeText(String(activeCount || returned))}</dt><dd>${activeCount ? \"Đang chờ xử lý an toàn\" : \"Lịch sử ở trang hiện tại\"}</dd></div></dl></section>\n      <section class=\"portal-document-board-actions\" aria-label=\"Bắt đầu Document Operations\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Bắt đầu đúng nơi</h2><p class=\"portal-card-subtitle\">Các liên kết này chỉ mở một workspace mới; chúng không chọn sẵn file, truyền trạng thái, query hoặc tự chạy thao tác.</p></div>${badge(\"read_only\")}</div><div class=\"portal-document-board-action-grid\"><a class=\"portal-document-board-action portal-document-board-action--primary\" href=\"/asset-vault\"><strong>Chuẩn bị nguồn private</strong><span>Lưu hoặc kiểm tra PDF, ảnh trong Asset Vault trước khi chọn một công cụ.</span><b aria-hidden=\"true\">→</b></a><a class=\"portal-document-board-action\" href=\"/document-workspace\"><strong>Soạn và rà soát tài liệu</strong><span>Mở Document Workspace độc lập để viết, tổ chức và review nội dung trước khi xử lý.</span><b aria-hidden=\"true\">→</b></a></div></section>\n      <section class=\"portal-card portal-card-pad portal-document-board-history\" aria-live=\"polite\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Hoạt động gần đây</h2><p class=\"portal-card-subtitle\">Metadata đã được server giới hạn và owner-scope. Download chỉ xuất hiện khi output, integrity và ownership vẫn hợp lệ.</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"${safeText(activePath)}\"${canRefresh ? \"\" : \" disabled\"}>Làm mới</button></div>${renderDocumentOperationCards(operations, context, \"Chưa có thao tác tài liệu\", \"Khi một workflow tạo output private đã được server kiểm tra, metadata sẽ xuất hiện tại đây. Không có artifact, trạng thái hay download mô phỏng.\")}${renderDocumentOperationHistoryPagination(context, canView, activePath)}</section>\n      <section class=\"portal-document-board-workflows\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Chọn workflow</h2><p class=\"portal-card-subtitle\">Mỗi workflow giữ input/output, giới hạn xử lý và delivery riêng. Trạng thái guarded không thể tạo kết quả thay thế.</p></div></div><div class=\"portal-document-board-workflow-groups\">${workflowGroups.map((group) => { const items = cards.filter((item) => item.group === group.key); return `<section class=\"portal-document-board-workflow-group\" aria-labelledby=\"document-workflow-${safeText(group.key)}\"><div class=\"portal-document-board-workflow-heading\"><div><h2 id=\"document-workflow-${safeText(group.key)}\">${safeText(group.title)}</h2><p>${safeText(group.text)}</p></div><span>${safeText(String(items.filter((item) => item.ready).length))} workflow</span></div><div class=\"portal-module-grid\">${items.map((item) => { const state = item.ready ? \"ready\" : \"guarded\"; return `<a class=\"portal-module-card\" data-document-tool-state=\"${state}\" href=\"${safeText(item.href)}\"><div class=\"portal-module-icon\" aria-hidden=\"true\">${portalIcon(item.icon)}</div><div class=\"portal-module-copy\"><div class=\"portal-module-heading\"><h3>${safeText(item.title)}</h3>${badge(state)}</div><p>${safeText(item.text)}</p><span class=\"portal-module-link\">${state === \"ready\" ? \"Mở workflow\" : \"Xem điều kiện\"} <b aria-hidden=\"true\">→</b></span></div></a>`; }).join(\"\")}</div></section>`; }).join(\"\")}</div></section>",
+      "after": "      <section class=\"portal-document-operation-intro portal-document-board-summary\" data-document-operations-board><div><span class=\"portal-section-kicker\">${uiText(\"docBoardUi.introKicker\", \"Tài liệu của bạn\")}</span><h2>${uiText(\"docBoardUi.introH2\", \"Chọn công cụ và xem lại kết quả\")}</h2><p>${uiText(\"docBoardUi.introParagraph\", \"Chọn một công cụ để xử lý tài liệu đã lưu. Xem tiến trình và tải kết quả tại đây khi hoàn tất.\")}</p></div><dl><div><dt>${safeText(String(readyWorkflowCount))}</dt><dd>${uiText(\"docBoardUi.introReadyToolDd\", \"Công cụ có thể sử dụng\")}</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>${uiText(\"docBoardUi.introCompletedArtifactDd\", \"Kết quả có thể tải\")}</dd></div><div><dt>${safeText(String(activeCount || returned))}</dt><dd>${activeCount ? uiText(\"docBoardUi.introActiveBranchDd\", \"Đang xử lý\") : uiText(\"docBoardUi.introHistoryBranchDd\", \"Lịch sử đang xem\")}</dd></div></dl></section>\n      <section class=\"portal-document-board-actions\" aria-label=\"${uiText(\"docBoardUi.actionsAriaLabel\", \"Bắt đầu xử lý tài liệu\")}\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${uiText(\"docBoardUi.actionsH2\", \"Chuẩn bị tài liệu\")}</h2><p class=\"portal-card-subtitle\">${uiText(\"docBoardUi.actionsSubtitle\", \"Mở kho tệp để chọn tài liệu hoặc soạn nội dung mới trước khi xử lý.\")}</p></div>${badge(\"read_only\")}</div><div class=\"portal-document-board-action-grid\"><a class=\"portal-document-board-action portal-document-board-action--primary\" href=\"/asset-vault\"><strong>${uiText(\"docBoardUi.actionsAssetLinkStrong\", \"Mở kho tệp\")}</strong><span>${uiText(\"docBoardUi.actionsAssetLinkSpan\", \"Lưu hoặc kiểm tra tài liệu và ảnh trước khi chọn công cụ.\")}</span><b aria-hidden=\"true\">→</b></a><a class=\"portal-document-board-action\" href=\"/document-workspace\"><strong>${uiText(\"docBoardUi.actionsDocumentLinkStrong\", \"Soạn tài liệu\")}</strong><span>${uiText(\"docBoardUi.actionsDocumentLinkSpan\", \"Viết, sắp xếp và xem lại nội dung của bạn.\")}</span><b aria-hidden=\"true\">→</b></a></div></section>\n      <section class=\"portal-card portal-card-pad portal-document-board-history\" aria-live=\"polite\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${uiText(\"docBoardUi.historyH2\", \"Hoạt động gần đây\")}</h2><p class=\"portal-card-subtitle\">${uiText(\"docBoardUi.historySubtitle\", \"Xem tiến trình xử lý và tải những kết quả đã hoàn tất.\")}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"${safeText(activePath)}\"${canRefresh ? \"\" : \" disabled\"}>${uiText(\"docBoardUi.historyRefreshButton\", \"Làm mới\")}</button></div>${renderDocumentOperationCards(operations, context, uiText(\"docBoardUi.historyEmptyTitle\", \"Chưa có hoạt động xử lý tài liệu\"), uiText(\"docBoardUi.historyEmptyBody\", \"Sau khi bạn dùng một công cụ, các thao tác và kết quả sẽ xuất hiện tại đây.\"))}${renderDocumentOperationHistoryPagination(context, canView, activePath)}</section>\n      <section class=\"portal-document-board-workflows\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${uiText(\"docBoardUi.workflowsH2\", \"Chọn công cụ\")}</h2><p class=\"portal-card-subtitle\">${uiText(\"docBoardUi.workflowsSubtitle\", \"Chọn thao tác phù hợp với tài liệu của bạn.\")}</p></div></div><div class=\"portal-document-board-workflow-groups\">${workflowGroups.map((group) => { const items = cards.filter((item) => item.group === group.key); return `<section class=\"portal-document-board-workflow-group\" aria-labelledby=\"document-workflow-${safeText(group.key)}\"><div class=\"portal-document-board-workflow-heading\"><div><h2 id=\"document-workflow-${safeText(group.key)}\">${safeText(group.title)}</h2><p>${safeText(group.text)}</p></div><span>${uiText(\"docBoardUi.workflowsGroupCountLabel\", `${safeText(String(items.filter((item) => item.ready).length))} công cụ`, { count: safeText(String(items.filter((item) => item.ready).length)) })}</span></div><div class=\"portal-module-grid\">${items.map((item) => { const state = item.ready ? \"ready\" : \"guarded\"; return `<a class=\"portal-module-card\" data-document-tool-state=\"${state}\" href=\"${safeText(item.href)}\"><div class=\"portal-module-icon\" aria-hidden=\"true\">${portalIcon(item.icon)}</div><div class=\"portal-module-copy\"><div class=\"portal-module-heading\"><h3>${safeText(item.title)}</h3>${badge(state)}</div><p>${safeText(item.text)}</p><span class=\"portal-module-link\">${state === \"ready\" ? uiText(\"docBoardUi.workflowsReadyLinkText\", \"Mở công cụ\") : uiText(\"docBoardUi.workflowsUnreadyLinkText\", \"Xem yêu cầu\")} <b aria-hidden=\"true\">→</b></span></div></a>`; }).join(\"\")}</div></section>`; }).join(\"\")}</div></section>"
+    },
+    {
+      "specId": "DOCUMENT-FOOTER-REMOVE-20261114",
+      "before": "      <section class=\"portal-card portal-card-pad\"><div class=\"portal-notice portal-notice--info\"><span class=\"portal-notice-icon\" aria-hidden=\"true\">i</span><div><strong>Biên giới dữ liệu rõ ràng</strong><p>Không có URL công khai, PWA cache, raw path browser, provider payload, Bot job, ví Xu, PayOS order hay webhook mới trong các tiện ích này. Nếu một runtime chưa bật, workflow giữ guarded thay vì tạo kết quả giả.</p></div></div>${renderNotes(page)}</section>",
+      "after": ""
+    }
+  ],
+  "added": {
+    "vi": {
+      "entries": [
+        [
+          "chatFieldUiTitleLabel",
+          "Tên hội thoại"
+        ],
+        [
+          "chatFieldUiTitlePlaceholder",
+          "Ví dụ: Chuẩn bị nội dung tháng 7"
+        ],
+        [
+          "chatFieldUiModeLabel",
+          "Cách soạn nội dung"
+        ],
+        [
+          "chatFieldUiModeHelp",
+          "Chọn cách tổ chức nội dung bạn tự viết."
+        ],
+        [
+          "chatFieldUiModeOptionFocus",
+          "Soạn nhanh"
+        ],
+        [
+          "chatFieldUiModeOptionDeep",
+          "Đào sâu nội dung"
+        ],
+        [
+          "chatFieldUiModeOptionPro",
+          "Rà soát kỹ"
+        ],
+        [
+          "chatFieldUiObjectiveLabel",
+          "Mục tiêu"
+        ],
+        [
+          "chatFieldUiObjectivePlaceholder",
+          "Kết quả muốn tự soạn, câu hỏi cần làm rõ, phạm vi và điều không được suy diễn…"
+        ],
+        [
+          "chatFieldUiSystemContextLabel",
+          "Thông tin tham khảo (tùy chọn)"
+        ],
+        [
+          "chatFieldUiSystemContextPlaceholder",
+          "Bối cảnh nội bộ, giọng điệu, giới hạn và tiêu chí tự rà soát…"
+        ],
+        [
+          "chatFieldUiTagsLabel",
+          "Từ khóa"
+        ],
+        [
+          "chatFieldUiTagsPlaceholder",
+          "kế hoạch, nội dung, rà soát"
+        ],
+        [
+          "chatFieldUiProjectLabel",
+          "Dự án liên kết (tùy chọn)"
+        ],
+        [
+          "chatFieldUiProjectEmptyLabel",
+          "Không liên kết dự án"
+        ],
+        [
+          "chatFieldUiTemplateLabel",
+          "Mẫu nội dung (tùy chọn)"
+        ],
+        [
+          "chatFieldUiTemplateEmptyLabel",
+          "Không dùng mẫu nội dung"
+        ],
+        [
+          "chatFieldUiPinnedLabel",
+          "Giữ hội thoại nổi bật"
+        ],
+        [
+          "chatFieldUiPinnedHelp",
+          "Ưu tiên hội thoại này trong danh sách của bạn."
+        ],
+        [
+          "docToolUiSplitTitle",
+          "Tách PDF"
+        ],
+        [
+          "docToolUiSplitText",
+          "Tạo tệp PDF từ một trang hoặc dải trang liên tiếp trong tài liệu đã lưu."
+        ],
+        [
+          "docToolUiMergeTitle",
+          "Gộp PDF"
+        ],
+        [
+          "docToolUiMergeText",
+          "Gộp tối đa 8 tệp PDF theo thứ tự bạn chọn."
+        ],
+        [
+          "docToolUiCompressTitle",
+          "Giảm dung lượng PDF"
+        ],
+        [
+          "docToolUiCompressText",
+          "Giảm dung lượng khi có thể mà giữ nguyên chất lượng tài liệu."
+        ],
+        [
+          "docToolUiPdfToImagesTitle",
+          "PDF sang ảnh"
+        ],
+        [
+          "docToolUiPdfToImagesText",
+          "Chuyển các trang PDF thành ảnh. Một trang tải về dạng PNG; nhiều trang trong một tệp ZIP."
+        ],
+        [
+          "docToolUiImageToPdfTitle",
+          "Ảnh sang PDF"
+        ],
+        [
+          "docToolUiImageToPdfText",
+          "Gộp ảnh JPEG, PNG hoặc WebP thành PDF theo thứ tự trang bạn chọn."
+        ],
+        [
+          "docToolUiPdfToWordTitle",
+          "PDF sang Word"
+        ],
+        [
+          "docToolUiPdfToWordText",
+          "Chuyển phần chữ có thể bôi chọn trong PDF sang Word. Không nhận dạng chữ trong ảnh và không giữ nguyên cách dàn trang."
+        ],
+        [
+          "docToolUiImageOcrTitle",
+          "Đọc chữ từ ảnh"
+        ],
+        [
+          "docToolUiImageOcrText",
+          "Đọc chữ từ ảnh đã lưu và lưu thành tệp văn bản."
+        ],
+        [
+          "docToolUiPdfOcrTitle",
+          "Đọc chữ từ PDF"
+        ],
+        [
+          "docToolUiPdfOcrText",
+          "Đọc chữ trong PDF và lưu thành tệp văn bản khi xử lý thành công."
+        ],
+        [
+          "docToolUiPdfOcrToWordTitle",
+          "PDF quét sang Word"
+        ],
+        [
+          "docToolUiPdfOcrToWordText",
+          "Nhận dạng chữ trong PDF quét rồi lưu thành Word khi xử lý thành công."
+        ],
+        [
+          "docToolUiGroupPdfTitle",
+          "PDF cơ bản"
+        ],
+        [
+          "docToolUiGroupPdfText",
+          "Tách, gộp hoặc giảm dung lượng tài liệu PDF."
+        ],
+        [
+          "docToolUiGroupConvertTitle",
+          "Chuyển đổi định dạng"
+        ],
+        [
+          "docToolUiGroupConvertText",
+          "Chuyển PDF sang ảnh/Word hoặc tạo PDF từ ảnh."
+        ],
+        [
+          "docToolUiGroupOcrTitle",
+          "Đọc chữ từ tài liệu"
+        ],
+        [
+          "docToolUiGroupOcrText",
+          "Nhận dạng chữ từ ảnh hoặc PDF quét để lưu lại."
+        ],
+        [
+          "docBoardUi.introKicker",
+          "Tài liệu của bạn"
+        ],
+        [
+          "docBoardUi.introH2",
+          "Chọn công cụ và xem lại kết quả"
+        ],
+        [
+          "docBoardUi.introParagraph",
+          "Chọn một công cụ để xử lý tài liệu đã lưu. Xem tiến trình và tải kết quả tại đây khi hoàn tất."
+        ],
+        [
+          "docBoardUi.introReadyToolDd",
+          "Công cụ có thể sử dụng"
+        ],
+        [
+          "docBoardUi.introCompletedArtifactDd",
+          "Kết quả có thể tải"
+        ],
+        [
+          "docBoardUi.introActiveBranchDd",
+          "Đang xử lý"
+        ],
+        [
+          "docBoardUi.introHistoryBranchDd",
+          "Lịch sử đang xem"
+        ],
+        [
+          "docBoardUi.actionsAriaLabel",
+          "Bắt đầu xử lý tài liệu"
+        ],
+        [
+          "docBoardUi.actionsH2",
+          "Chuẩn bị tài liệu"
+        ],
+        [
+          "docBoardUi.actionsSubtitle",
+          "Mở kho tệp để chọn tài liệu hoặc soạn nội dung mới trước khi xử lý."
+        ],
+        [
+          "docBoardUi.actionsAssetLinkStrong",
+          "Mở kho tệp"
+        ],
+        [
+          "docBoardUi.actionsAssetLinkSpan",
+          "Lưu hoặc kiểm tra tài liệu và ảnh trước khi chọn công cụ."
+        ],
+        [
+          "docBoardUi.actionsDocumentLinkStrong",
+          "Soạn tài liệu"
+        ],
+        [
+          "docBoardUi.actionsDocumentLinkSpan",
+          "Viết, sắp xếp và xem lại nội dung của bạn."
+        ],
+        [
+          "docBoardUi.historyH2",
+          "Hoạt động gần đây"
+        ],
+        [
+          "docBoardUi.historySubtitle",
+          "Xem tiến trình xử lý và tải những kết quả đã hoàn tất."
+        ],
+        [
+          "docBoardUi.historyRefreshButton",
+          "Làm mới"
+        ],
+        [
+          "docBoardUi.historyEmptyTitle",
+          "Chưa có hoạt động xử lý tài liệu"
+        ],
+        [
+          "docBoardUi.historyEmptyBody",
+          "Sau khi bạn dùng một công cụ, các thao tác và kết quả sẽ xuất hiện tại đây."
+        ],
+        [
+          "docBoardUi.workflowsH2",
+          "Chọn công cụ"
+        ],
+        [
+          "docBoardUi.workflowsSubtitle",
+          "Chọn thao tác phù hợp với tài liệu của bạn."
+        ],
+        [
+          "docBoardUi.workflowsGroupCountLabel",
+          "{count} công cụ"
+        ],
+        [
+          "docBoardUi.workflowsReadyLinkText",
+          "Mở công cụ"
+        ],
+        [
+          "docBoardUi.workflowsUnreadyLinkText",
+          "Xem yêu cầu"
+        ]
+      ],
+      "sha256": "6b4f7c0a45b18b113db96827fe61a11af5b090d74bc449808fa0d6765264d925"
+    },
+    "en": {
+      "entries": [
+        [
+          "chatFieldUiTitleLabel",
+          "Conversation name"
+        ],
+        [
+          "chatFieldUiTitlePlaceholder",
+          "Example: Prepare July content"
+        ],
+        [
+          "chatFieldUiModeLabel",
+          "Content drafting method"
+        ],
+        [
+          "chatFieldUiModeHelp",
+          "Choose how to organize the content you write."
+        ],
+        [
+          "chatFieldUiModeOptionFocus",
+          "Quick draft"
+        ],
+        [
+          "chatFieldUiModeOptionDeep",
+          "In-depth content"
+        ],
+        [
+          "chatFieldUiModeOptionPro",
+          "Thorough review"
+        ],
+        [
+          "chatFieldUiObjectiveLabel",
+          "Objective"
+        ],
+        [
+          "chatFieldUiObjectivePlaceholder",
+          "Desired outcome to write, questions to clarify, scope, and points not to be assumed…"
+        ],
+        [
+          "chatFieldUiSystemContextLabel",
+          "Reference information (optional)"
+        ],
+        [
+          "chatFieldUiSystemContextPlaceholder",
+          "Internal context, tone, limits, and self-review criteria…"
+        ],
+        [
+          "chatFieldUiTagsLabel",
+          "Keywords"
+        ],
+        [
+          "chatFieldUiTagsPlaceholder",
+          "plan, content, review"
+        ],
+        [
+          "chatFieldUiProjectLabel",
+          "Linked project (optional)"
+        ],
+        [
+          "chatFieldUiProjectEmptyLabel",
+          "No linked project"
+        ],
+        [
+          "chatFieldUiTemplateLabel",
+          "Content template (optional)"
+        ],
+        [
+          "chatFieldUiTemplateEmptyLabel",
+          "Do not use content template"
+        ],
+        [
+          "chatFieldUiPinnedLabel",
+          "Pin conversation"
+        ],
+        [
+          "chatFieldUiPinnedHelp",
+          "Prioritize this conversation in your list."
+        ],
+        [
+          "docToolUiSplitTitle",
+          "Split PDF"
+        ],
+        [
+          "docToolUiSplitText",
+          "Create a PDF file from a single page or consecutive page range in saved documents."
+        ],
+        [
+          "docToolUiMergeTitle",
+          "Merge PDF"
+        ],
+        [
+          "docToolUiMergeText",
+          "Combine up to 8 PDF files in the order you choose."
+        ],
+        [
+          "docToolUiCompressTitle",
+          "Reduce PDF Size"
+        ],
+        [
+          "docToolUiCompressText",
+          "Reduce file size when possible while preserving document quality."
+        ],
+        [
+          "docToolUiPdfToImagesTitle",
+          "PDF to Images"
+        ],
+        [
+          "docToolUiPdfToImagesText",
+          "Convert PDF pages into images. Single page downloads as PNG; multiple pages in a ZIP file."
+        ],
+        [
+          "docToolUiImageToPdfTitle",
+          "Images to PDF"
+        ],
+        [
+          "docToolUiImageToPdfText",
+          "Combine JPEG, PNG, or WebP images into a PDF in the page order you choose."
+        ],
+        [
+          "docToolUiPdfToWordTitle",
+          "PDF to Word"
+        ],
+        [
+          "docToolUiPdfToWordText",
+          "Convert selectable text in PDF to Word. Does not recognize text in images and does not preserve page formatting."
+        ],
+        [
+          "docToolUiImageOcrTitle",
+          "Read Text from Images"
+        ],
+        [
+          "docToolUiImageOcrText",
+          "Read text from saved images and save as a text file."
+        ],
+        [
+          "docToolUiPdfOcrTitle",
+          "Read Text from PDF"
+        ],
+        [
+          "docToolUiPdfOcrText",
+          "Read text in PDF and save as a text file when successfully processed."
+        ],
+        [
+          "docToolUiPdfOcrToWordTitle",
+          "Image PDF to Word"
+        ],
+        [
+          "docToolUiPdfOcrToWordText",
+          "Recognize text in image-based PDF and save as Word upon successful processing."
+        ],
+        [
+          "docToolUiGroupPdfTitle",
+          "Basic PDF"
+        ],
+        [
+          "docToolUiGroupPdfText",
+          "Split, merge, or reduce the file size of PDF documents."
+        ],
+        [
+          "docToolUiGroupConvertTitle",
+          "Format Conversion"
+        ],
+        [
+          "docToolUiGroupConvertText",
+          "Convert PDF to images/Word or create PDF from images."
+        ],
+        [
+          "docToolUiGroupOcrTitle",
+          "Read Text from Documents"
+        ],
+        [
+          "docToolUiGroupOcrText",
+          "Recognize text from images or image-based PDF to save."
+        ],
+        [
+          "docBoardUi.introKicker",
+          "Your documents"
+        ],
+        [
+          "docBoardUi.introH2",
+          "Choose tools and review results"
+        ],
+        [
+          "docBoardUi.introParagraph",
+          "Select a tool to process your saved documents. Track progress and download results here once finished."
+        ],
+        [
+          "docBoardUi.introReadyToolDd",
+          "Available tools"
+        ],
+        [
+          "docBoardUi.introCompletedArtifactDd",
+          "Ready downloads"
+        ],
+        [
+          "docBoardUi.introActiveBranchDd",
+          "In progress"
+        ],
+        [
+          "docBoardUi.introHistoryBranchDd",
+          "Current page history"
+        ],
+        [
+          "docBoardUi.actionsAriaLabel",
+          "Start document processing"
+        ],
+        [
+          "docBoardUi.actionsH2",
+          "Prepare documents"
+        ],
+        [
+          "docBoardUi.actionsSubtitle",
+          "Open files to select documents or write new content before processing."
+        ],
+        [
+          "docBoardUi.actionsAssetLinkStrong",
+          "Open files"
+        ],
+        [
+          "docBoardUi.actionsAssetLinkSpan",
+          "Save or inspect documents and images before selecting a tool."
+        ],
+        [
+          "docBoardUi.actionsDocumentLinkStrong",
+          "Compose documents"
+        ],
+        [
+          "docBoardUi.actionsDocumentLinkSpan",
+          "Write, organize, and review your content."
+        ],
+        [
+          "docBoardUi.historyH2",
+          "Recent activity"
+        ],
+        [
+          "docBoardUi.historySubtitle",
+          "Track processing progress and download completed results."
+        ],
+        [
+          "docBoardUi.historyRefreshButton",
+          "Refresh"
+        ],
+        [
+          "docBoardUi.historyEmptyTitle",
+          "No document activity yet"
+        ],
+        [
+          "docBoardUi.historyEmptyBody",
+          "After you use a tool, operations and results will appear here."
+        ],
+        [
+          "docBoardUi.workflowsH2",
+          "Choose tools"
+        ],
+        [
+          "docBoardUi.workflowsSubtitle",
+          "Select the right action for your documents."
+        ],
+        [
+          "docBoardUi.workflowsGroupCountLabel",
+          "{count} tools"
+        ],
+        [
+          "docBoardUi.workflowsReadyLinkText",
+          "Open tool"
+        ],
+        [
+          "docBoardUi.workflowsUnreadyLinkText",
+          "View requirements"
+        ]
+      ],
+      "sha256": "2a5c5e94d4d7e650c834ab04486255f050f51b15b846035235aec748605e8bf2"
+    },
+    "zh": {
+      "entries": [
+        [
+          "chatFieldUiTitleLabel",
+          "对话名称"
+        ],
+        [
+          "chatFieldUiTitlePlaceholder",
+          "例如：准备7月份内容"
+        ],
+        [
+          "chatFieldUiModeLabel",
+          "内容编写方式"
+        ],
+        [
+          "chatFieldUiModeHelp",
+          "选择如何组织您自己编写的内容。"
+        ],
+        [
+          "chatFieldUiModeOptionFocus",
+          "快速起草"
+        ],
+        [
+          "chatFieldUiModeOptionDeep",
+          "深度编写"
+        ],
+        [
+          "chatFieldUiModeOptionPro",
+          "仔细审核"
+        ],
+        [
+          "chatFieldUiObjectiveLabel",
+          "目标"
+        ],
+        [
+          "chatFieldUiObjectivePlaceholder",
+          "期望编写的结果、需要明确的问题、范围及不可推断的事项…"
+        ],
+        [
+          "chatFieldUiSystemContextLabel",
+          "参考信息（可选）"
+        ],
+        [
+          "chatFieldUiSystemContextPlaceholder",
+          "内部背景、语气、限制及自我审核标准…"
+        ],
+        [
+          "chatFieldUiTagsLabel",
+          "关键词"
+        ],
+        [
+          "chatFieldUiTagsPlaceholder",
+          "计划, 内容, 审核"
+        ],
+        [
+          "chatFieldUiProjectLabel",
+          "关联项目（可选）"
+        ],
+        [
+          "chatFieldUiProjectEmptyLabel",
+          "不关联项目"
+        ],
+        [
+          "chatFieldUiTemplateLabel",
+          "内容模板（可选）"
+        ],
+        [
+          "chatFieldUiTemplateEmptyLabel",
+          "不使用内容模板"
+        ],
+        [
+          "chatFieldUiPinnedLabel",
+          "置顶对话"
+        ],
+        [
+          "chatFieldUiPinnedHelp",
+          "在您的列表中优先显示此对话。"
+        ],
+        [
+          "docToolUiSplitTitle",
+          "拆分 PDF"
+        ],
+        [
+          "docToolUiSplitText",
+          "从已保存的文档中提取单个页面或连续页面范围，生成新的 PDF 文件。"
+        ],
+        [
+          "docToolUiMergeTitle",
+          "合并 PDF"
+        ],
+        [
+          "docToolUiMergeText",
+          "按您选择的顺序合并最多 8 个 PDF 文件。"
+        ],
+        [
+          "docToolUiCompressTitle",
+          "压缩 PDF"
+        ],
+        [
+          "docToolUiCompressText",
+          "在保持文档质量的同时尽可能减小文件大小。"
+        ],
+        [
+          "docToolUiPdfToImagesTitle",
+          "PDF 转图片"
+        ],
+        [
+          "docToolUiPdfToImagesText",
+          "将 PDF 页面转换为图片。单页下载为 PNG 格式；多页打包为 ZIP 文件。"
+        ],
+        [
+          "docToolUiImageToPdfTitle",
+          "图片转 PDF"
+        ],
+        [
+          "docToolUiImageToPdfText",
+          "按您选择的页面顺序将 JPEG、PNG 或 WebP 图片合并为 PDF。"
+        ],
+        [
+          "docToolUiPdfToWordTitle",
+          "PDF 转 Word"
+        ],
+        [
+          "docToolUiPdfToWordText",
+          "将 PDF 中可选择的文字转换为 Word。不识别图片中的文字，且不保留原有页面排版。"
+        ],
+        [
+          "docToolUiImageOcrTitle",
+          "从图片读取文字"
+        ],
+        [
+          "docToolUiImageOcrText",
+          "读取已保存图片中的文字，并保存为文本文件。"
+        ],
+        [
+          "docToolUiPdfOcrTitle",
+          "从 PDF 读取文字"
+        ],
+        [
+          "docToolUiPdfOcrText",
+          "读取 PDF 中的文字，处理成功后保存为文本文件。"
+        ],
+        [
+          "docToolUiPdfOcrToWordTitle",
+          "图片 PDF 转 Word"
+        ],
+        [
+          "docToolUiPdfOcrToWordText",
+          "识别图片型 PDF 中的文字，处理成功后保存为 Word。"
+        ],
+        [
+          "docToolUiGroupPdfTitle",
+          "基础 PDF"
+        ],
+        [
+          "docToolUiGroupPdfText",
+          "拆分、合并或减小 PDF 文档大小。"
+        ],
+        [
+          "docToolUiGroupConvertTitle",
+          "格式转换"
+        ],
+        [
+          "docToolUiGroupConvertText",
+          "将 PDF 转换为图片/Word，或从图片创建 PDF。"
+        ],
+        [
+          "docToolUiGroupOcrTitle",
+          "从文档读取文字"
+        ],
+        [
+          "docToolUiGroupOcrText",
+          "识别图片或图片型 PDF 中的文字并予以保存。"
+        ],
+        [
+          "docBoardUi.introKicker",
+          "您的文档"
+        ],
+        [
+          "docBoardUi.introH2",
+          "选择工具并查看结果"
+        ],
+        [
+          "docBoardUi.introParagraph",
+          "选择工具以处理已保存的文档。完成后可在此查看进度并下载结果。"
+        ],
+        [
+          "docBoardUi.introReadyToolDd",
+          "可用工具"
+        ],
+        [
+          "docBoardUi.introCompletedArtifactDd",
+          "可下载结果"
+        ],
+        [
+          "docBoardUi.introActiveBranchDd",
+          "正在处理"
+        ],
+        [
+          "docBoardUi.introHistoryBranchDd",
+          "当前查看历史"
+        ],
+        [
+          "docBoardUi.actionsAriaLabel",
+          "开始处理文档"
+        ],
+        [
+          "docBoardUi.actionsH2",
+          "准备文档"
+        ],
+        [
+          "docBoardUi.actionsSubtitle",
+          "打开文件库以选择文档或在处理前编写新内容。"
+        ],
+        [
+          "docBoardUi.actionsAssetLinkStrong",
+          "打开文件库"
+        ],
+        [
+          "docBoardUi.actionsAssetLinkSpan",
+          "在选择工具前保存或检查文档和图片。"
+        ],
+        [
+          "docBoardUi.actionsDocumentLinkStrong",
+          "撰写文档"
+        ],
+        [
+          "docBoardUi.actionsDocumentLinkSpan",
+          "编写、整理和审阅您的内容。"
+        ],
+        [
+          "docBoardUi.historyH2",
+          "近期活动"
+        ],
+        [
+          "docBoardUi.historySubtitle",
+          "查看处理进度并下载已完成的结果。"
+        ],
+        [
+          "docBoardUi.historyRefreshButton",
+          "刷新"
+        ],
+        [
+          "docBoardUi.historyEmptyTitle",
+          "暂无文档处理活动"
+        ],
+        [
+          "docBoardUi.historyEmptyBody",
+          "使用工具后，操作和结果将显示在此处。"
+        ],
+        [
+          "docBoardUi.workflowsH2",
+          "选择工具"
+        ],
+        [
+          "docBoardUi.workflowsSubtitle",
+          "为您的文档选择合适的操作。"
+        ],
+        [
+          "docBoardUi.workflowsGroupCountLabel",
+          "{count} 个工具"
+        ],
+        [
+          "docBoardUi.workflowsReadyLinkText",
+          "打开工具"
+        ],
+        [
+          "docBoardUi.workflowsUnreadyLinkText",
+          "查看要求"
+        ]
+      ],
+      "sha256": "f6493b6caec529cb11df641623fef094656f5c7aa24d84bd15f73290ae512de0"
+    }
+  }
+}

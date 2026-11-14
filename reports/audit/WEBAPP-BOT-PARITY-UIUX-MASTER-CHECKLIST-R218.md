@@ -1634,3 +1634,29 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
   appchưaápdụng/REDnative/19newkeysregressionreleasecònđợi.
 - [ ] CHAT-EMPTY-COUNTS workerR1đãtrả,inlineconditionaldlđểbỏ3zero
   cards,khi>0giữsố/nhãn;chưaRED/ápdụng/native/giao hàng.
+
+## Hội thoại/Tài liệu: bước sử dụng trực tiếp — 14/11/2026
+
+- [x] TOSdelivery:PR729HEADf79f9d0f CI43564074983bothPASS,
+  merge/runtime2cae14ab,deploy43564951566PASS;test/mergetreeexact,
+  TTSsourcehash/fullruntime/trackedclean/WebBotnginxrunning/health/4assets
+  /2backendhashesexact. Receipt6872935896/6872936235;
+  postmergeCI43564879515bothPASS. Khôngđồngnghĩaactualaudio/UIentryready.
+- [x] CDU5workerR1:field19/countconditional/Doccards24/board24/footerline
+  exact8changes,67newkeys201values;84caseBASE21PASS63RED→84PASS.
+- [x]88finalnew+127prior215case:214PASS/1testCRLFLFerror→1affectedPASS;
+  92new+controls/279historicalPASS.194affected193PASS/1oldwordcomparator
+  →actualconsumerPASS;Python42/4→3wordingaffectedPASS/1CSStailBASEfailure.
+  Goldenhash/oldkeys/unknownsourceguardsgiữ,khôngtestweakening.
+- [x]48native3locale390/1440sángtối:24field/24filter/12retryGET200/
+  12toolnav;0unexpectedconsole/pageerror/overflow/product/provider/ví/prod.
+  48deliberatereadabortghiđủ;QA6plan18scene/evidencecùngsourcehash,
+  14ownedprocess×3→0. VItestracewaitprojectionđãsửariêng,ENZHkhôngchạylại.
+- [ ] CDUdelivery:docs/Tester/case/provenance/review/CIexactHEAD/merge/
+  deploy/runtime/assets/receiptIssue689. Spec2026-11-14-chat-document-usable-copy.
+- [ ] CDUngoàiphiếu:Chatcards/boundary/run/feedback/otherdetail,Docother
+  operations/historycards/toast/rootdescription;Chatlightfieldlabelnhạt
+  ghiAXfollowup. KhôngđổiCSSởdịchcopy;wholeAX/auth/device/Safari/motioncuối.
+- [ ] UI-TTS-ENTRY-PATH:sourceauditcógenericentrykhácdedicatedjobs,
+  publiccapabilityhiệnkhôngadvertisevoice_tts;exactestimate/receipt/receiver
+  contractDRAFT. Khôngtựbậtflag/ENV/auth/providerđểvượtchốt.

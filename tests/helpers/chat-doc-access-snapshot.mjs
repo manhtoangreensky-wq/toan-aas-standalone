@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {chatRootDocReadHistoricalSnapshot} from './chat-root-doc-read-snapshot.mjs';
+import {usableCopyHistoricalSnapshot} from './chat-document-usable-snapshot.mjs';
 
 const rows={
   chatAccessUiHeading:['Khu vực trò chuyện hiện chưa thể mở','Conversation area cannot currently be opened','当前无法打开对话区域'],
@@ -23,7 +24,7 @@ const value=(key,locale)=>rows[key][['vi','en','zh'].indexOf(locale)];
 // additions. Any mutated value, unknown key or existing value still fails.
 export function chatDocAccessHistoricalSnapshot(entries,locale){
   assert.ok(rootLabels[locale]);
-  entries=chatRootDocReadHistoricalSnapshot(entries,locale);
+  entries=chatRootDocReadHistoricalSnapshot(usableCopyHistoricalSnapshot(entries,locale),locale);
   return entries.flatMap(([key,text])=>{
     if(!Object.hasOwn(rows,key))return[[key,text]];
     assert.equal(text,value(key,locale),'Unreviewed access copy must fail: '+key);

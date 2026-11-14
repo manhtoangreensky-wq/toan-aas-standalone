@@ -1950,3 +1950,17 @@ sáng/tối. Không claimwholelocale/AX/auth/device/provider/signedproduction/mo
 |Phản hồitrễcóthểghi đècanonicalcompletedthiếutệp|SQLguard bảo vệbảncóâmthanhđãxong|4concurrentlatecases|
 |SourceauditnghiIDruntimekhácWebID|Bot804e23da lưuWebjobIDlàmprimarykey|Chỉđọcnguồn,khôngsửaID/auth|
 |Source/readinessđượcnhầmlàđầurathật|GiữactualfinaloutputNOT_OBSERVED|0realprovidercalls,khôngfakeaudio|
+
+## Usable Chat/Document copy — 14/11/2026
+
+|TrướcBASE2cae14ab|HiệntrạngđợtUI|Bằngchứng/giớihạn|
+|---|---|---|
+|ChatfieldnameshiệnlẫnAnh/kỹthuật|19text3locale,8contractgiữ|12consumercreate/detail,24nativegõ/chọn|
+|Chatintro3thẻ0chiếmhếtmobile|Chỉdlallnonpositivebỏ,positivegiữ|24cases,ảnh390thấyform|
+|9Doccards3grouplẫnprivate/runtime/output|24textcustomer-language|36readycases giữhref/readiness|
+|Boardinstructions/historylẫnjargon|24textvàcountparamsđúnglocale|48nativeview,12retry/12toolnav|
+|Footerchỉdisclaimerkỹthuật|Bỏexact1line,noreplacement|Sharednotes/otherconsumerskhôngđổi|
+|Testcũđòichữthuậtngữ|Actualconsumer +strictfinitehistoricaladapter|Unknownkey/mutationgiữFAIL,khôngđổigoldenhash|
+
+Khôngđóngtoànroute/auth/AX/device/Safari/provider/signedproduction/motion;
+chữngoàiphiếu/toast vànhãnsángnhạtphảilàmriêng.

@@ -86,7 +86,11 @@ def test_chat_authoring_boundary_is_explicit_in_ui_and_client_validation() -> No
         cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "không phải model" in surface
+    result = subprocess.run(
+        ["node", "--test", "--test-name-pattern", "actual eight-field", str(ROOT / "tests/chat-document-usable-copy.test.mjs")],
+        cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
     assert "không tạo câu trả lời giả" in surface
     for forbidden in (
         "fetch(",

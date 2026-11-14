@@ -1,6 +1,8 @@
 """Focused contracts for the canonical /documents operations board."""
 
 from pathlib import Path
+from functools import lru_cache
+import subprocess
 
 
 ROOT = Path(__file__).parents[1]
@@ -46,6 +48,15 @@ def test_document_board_uses_the_existing_combined_owner_scoped_reader_only() ->
         assert forbidden not in surface
 
 
+@lru_cache(maxsize=1)
+def _rendered_board_checks() -> None:
+    result = subprocess.run(
+        ["node", "--test", "--test-name-pattern", "Documents presents vertical", str(ROOT / "tests/documents-product-controls.test.mjs")],
+        cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_document_board_keeps_truthful_loading_failure_guard_and_download_boundaries() -> None:
     surface = board_surface()
     for token in (
@@ -56,28 +67,25 @@ def test_document_board_keeps_truthful_loading_failure_guard_and_download_bounda
         'uiText("documentAccessUiBody"',
         "Không cache private",
         "Không có URL công khai",
-        "Không có artifact, trạng thái hay download mô phỏng.",
     ):
         assert token in surface
     assert "bridge_request" not in surface
     assert "CORE_BRIDGE" not in surface
     assert "download_ready === true" in PORTAL
     assert "document-operation-page" in PORTAL
+    _rendered_board_checks()
 
 
 def test_document_board_groups_workflows_and_keeps_guarded_navigation_explanatory() -> None:
     surface = board_surface()
     for token in (
-        "PDF cơ bản",
-        "Chuyển đổi",
-        "OCR & scan",
         'data-document-tool-state="${state}"',
-        'state === "ready" ? "Mở workflow" : "Xem điều kiện"',
         "<h3>${safeText(item.title)}</h3>",
         'aria-labelledby="document-workflow-${safeText(group.key)}"',
     ):
         assert token in surface
     assert "aria-disabled" not in surface
+    _rendered_board_checks()
 
 
 def test_document_board_hydration_is_existing_signed_api_with_root_state_reset() -> None:
