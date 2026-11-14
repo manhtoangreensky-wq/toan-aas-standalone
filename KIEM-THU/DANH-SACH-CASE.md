@@ -1210,3 +1210,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CCC-GRID|vừa|375/1440VIlightdark+detailsentinel|Form343/343và1088/1088,khôngtrốngtrack|4root+1detailgeometry,norun24again|
 |CCC-SAFETY|nặng|QAseed/source/processcomparators|15row3owner/6plan18scene/evidence giữ|4workerchanges/16protected,19+13→0|
 |CCC-DELIVERY|nặng|ProvenanceexactCI/merge/deploy/runtimeassets|ReceiptcùngIssue/PR,khôngfakeaudio|Toàngoal/motionvẫnmở|
+
+## CHAT-DATES-PAGES-20261114 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CDP-DATE|vừa|UTC/offset/Dateobject3locale|Intlmedium/short,dữliệukhách/dateatrestgiữ|31newBASE3PASS28RED→31PASS|
+|CDP-INVALID|nặng|Null/space/invalid/formatterthrowempty|—khôngrawexception/ISO|ActualVMdates|
+|CDP-PAGES|nặng|First/middle/last/disabled/nullinvalidoffset|Range/math/data/actions/controls giữ|Localizedaria/summary/buttons|
+|CDP-STRICT|nặng|4newkeys/2spans+mutation|Oldhash/order/frozen giữ,unknownkhônglọc|4harnessfixedchecks riêng|
+|CDP-NATIVE|nặng|375light1440darkVI/EN/ZH|6views18statesGET0→50→0,50→5→50|[PhiênCDP](PHIEN-CHAT-DATES-PAGES-20261114.md)|
+|CDP-DATA|nặng|SoIDs/order/owner/rawdata/dateIntl|165validQArows/3owner/6plan18scenegiữ|0fakeAPI/boot/external/productwrite|
+|CDP-SCOPE|nặng|Replayworker/protectedsource/process|3changes2files/17protected,22owned→0|ReviewC0I0M0,0provider/ví|
+|CDP-DELIVERY|nặng|ExactCI/merge/deploy/runtimeassets|ReceiptcùngIssue/PR,khônggoalcomplete|MotionM-FINALvẫncòncuối|

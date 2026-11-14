@@ -74,7 +74,10 @@ field/control/count/revision/date/numeric-coercion/tags/customer literals.
   sourceexact4workerchanges/16protectedpaths. ReviewI1→C0I0M0 sauCSS+geometry;
   lỗi BASE phải có comparator,không skip/weaken để làm đẹp.
 - [ ] Docs hiện tại/gốc/Tester/case/metadata/provenance/finalexactHEADCI đạt.
-- [ ] PR/merge/deploy/runtime/assets/receipt cùngIssue689;chỉ chốt phần có evidence.
+- [x] PR/merge/deploy/runtime/assets/receipt cùngIssue689;chỉ chốt phần có evidence.
+- [x] DeliveryPR732HEAD211e45fe,CI43589450424bothPASS,merge/runtime7e30dd95,
+  deploy43590585769PASS,tree96606afc exact,services/health/4assets/protectedhashes.
+  ReceiptIssue6896876684304/PR7326876684561.
 
 QA chỉ SQLite/asset tạm, fake account đã sở hữu, secret ngẫu nhiên child-only,
 chặn egress ngoài localhost và mọi ghi sản phẩm từ browser. Nếu cần dữ liệu thẻ,

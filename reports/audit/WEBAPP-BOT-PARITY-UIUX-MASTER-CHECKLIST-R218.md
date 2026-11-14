@@ -1707,11 +1707,32 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
   geometry4root+1detailPASS1088/1088,343/343giữ;13ownedprocess→0.
   CSS2PASS+oldlabelcomparatorPASS,sourceexact4workerchanges/16protected,
   reviewextensionC0I0M0. Khôngrerun24copyview.
-- [ ] Docs/Tester/cases/metadata/provenance/exactCI/merge/deploy/receipt theo
+- [x] Docs/Tester/cases/metadata/provenance/exactCI/merge/deploy/receipt theo
   `docs/superpowers/specs/2026-11-14-chat-cards-customer-copy.md`,BASE398cea1c.
+- [x] CCCdeliveryPR732HEAD211e45fe,CI43589450424bothPASS,
+  merge/runtime7e30dd95,deploy43590585769PASS,tree96606afc exact,
+  trackedclean/services/health/4assets/TTS+2videohashesexact.
+  Receipts6876684304/6876684561;prior3f688CIstalesourceFAIL testonlyfixed.
 - [x] WEB-TTS-READ-VPS:4readinessbooleansonly,0secretoutput/change/call;
   voice_ttsAdapterListedfalse. Khôngtựbật quyền thực thi hoặc fakeaudio.
 - [ ] CHAT-CARD-DATE:nativescreenshotcònISO;phiếu1expressiondisplay
-  localizedDateTimescopeonly,chưaáp/publicsourceonlysessionđanggiao.
+  localizedDateTimescopeonlyđãlocalverified;chờCDPdeliverybêndưới.
 - [ ] CHAT-PAGINATION:4keys×3locale/onefunction,chỉlabels/aria,
-  offset/rights/GET/data giữ;phiếuriêngđanggiao,khônglẫnvớireleasethẻ.
+  offset/rights/GET/data giữ;đãlocalverified,chờCDPdeliverykhônglẫnvớireleasethẻ.
+
+## Ngày giờ/chuyển trang Hội thoại — sau PR732
+
+- [x] CDPworkers2sessions/3substitutions,public398+fullMAPonly;
+  candidate39BASE4PASS35RED→39PASS,inmemorynoappwrites.
+- [x] Permanent31BASE3PASS28RED→31PASS,captureexit1loggiữ;
+  group70=66PASS/4coordinatoradapterFAIL→4affectedPASS,nocodeworkerfault.
+- [x] 286affectedNode/9ChatPython/syntax/compilePASS;source3changes2files/
+  17protectedpaths;reviewC0I0M0,norepeatbyreviewer.
+- [x] NativeBASEfirstVI375lightRED;GREEN6views/18states3locale375light/
+  1440dark,realGEToffset0→50→0/50→5→50cards,dateexpectednativeIntl,
+  nooverflow/errors/fakeAPI/external/productwrite.165QAtmpmetadata/
+  6plan18scene/evidencegiữ,22ownedprocess→0.
+- [ ] CDPdocs/Tester/cases/metadata/provenance/exactCI/merge/deploy/runtime/
+  assets/receipt,sourceđangchờfreeze;khôngđóngwholegoal/M-FINAL.
+- [ ] CHAT-DETAIL-FIELDS19key/3builders vàCHAT-LIFECYCLE10key/buttonconfirm
+  đanggiao2workeroutput-onlyriêng;chưaápdụng/chưanghiệmthu.

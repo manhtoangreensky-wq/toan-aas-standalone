@@ -3,12 +3,19 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {chatCardsSources,chatCardsRenderer} from './helpers/chat-cards-customer-runtime.mjs';
 import {chatCardsHistoricalSnapshot,chatCardsHistoricalPortalSource} from './helpers/chat-cards-customer-snapshot.mjs';
+import {datePagesHistoricalSnapshot,datePagesHistoricalPortalSource} from './helpers/chat-dates-pages-snapshot.mjs';
 
 // Catches missing translation, lost customer data/controls, false execution
 // promises, a retained technical aside, and silently normalized regressions.
 const expected=JSON.parse(fs.readFileSync(new URL('./fixtures/chat-cards-customer-copy-reviewed.json',import.meta.url),'utf8'));
-const sources=chatCardsSources(),oldSources=chatCardsSources(true);
-const current=await chatCardsRenderer(sources),before=await chatCardsRenderer(oldSources);
+const live=chatCardsSources(),sources={...live,portal:datePagesHistoricalPortalSource(live.portal)},oldSources=chatCardsSources(true);
+const currentRender=await chatCardsRenderer(sources),before=await chatCardsRenderer(oldSources);
+const current=(...args)=>{
+  const result=currentRender(...args);
+  return {...result,catalogFrozen:Object.fromEntries(['vi','en','zh'].map(locale=>[locale,Object.isFrozen(result.messages[locale])])),messages:Object.fromEntries(['vi','en','zh'].map(locale=>[
+    locale,Object.fromEntries(datePagesHistoricalSnapshot(Object.entries(result.messages[locale]),locale))
+  ]))};
+};
 const id='11111111-1111-4111-8111-111111111111';
 const item=(extra={})=>({id,state:'draft',mode:'focus',title:'CUSTOMER_TITLE',objective_excerpt:'CUSTOMER_GOAL',tags:['CUSTOMER_TAG'],context_count:7,turn_count:11,revision:9,updated_at:'2026-11-14T08:09:10Z',...extra});
 const raw=(extra={})=>({capabilities:{'chat-workspace-view':true,'chat-thread-create':true,'chat-run-submit':false,'chat-run-refresh':true},chatWorkspaceEnabled:true,chatThreads:[item()],chatThreadDetail:{thread:item(),contexts:[],turns:[],versions:[],events:[]},...extra});
@@ -30,7 +37,7 @@ for(const locale of ['vi','en','zh']){
     const a=Object.entries(now.messages[locale]),b=Object.entries(old.messages[locale]);
     assert.deepEqual(JSON.parse(JSON.stringify(a.slice(0,b.length))),JSON.parse(JSON.stringify(b)));
     assert.deepEqual(JSON.parse(JSON.stringify(a.slice(b.length))),Object.entries(e));
-    assert.ok(Object.isFrozen(now.messages[locale]));
+    assert.equal(now.catalogFrozen[locale],true,'actual runtime catalog must remain frozen before historical projection');
   });
   test(`${locale}: real empty renderer gives useful localized guidance`,()=>{
     const html=cards([]);assert.ok(html.includes(e.chatCardsUiEmptyTitle));assert.ok(html.includes(e.chatCardsUiEmptyBody));
@@ -99,7 +106,7 @@ test('historical source adapter accepts only reviewed full spans, preserving unr
     const span=sources.portal.slice(a,b);assert.equal(span.split(before).length-1,1);
     return sources.portal.slice(0,a)+span.replace(before,after)+sources.portal.slice(b);
   };
-  assert.throws(()=>chatCardsHistoricalPortalSource(mutate('  function renderChatWorkspaceBoundary(context) {','  function renderChatWorkspaceCards(','    return "";\n','    return "UNREVIEWED";\n')),/Unreviewed Chat cards source/);
-  assert.throws(()=>chatCardsHistoricalPortalSource(mutate('  function renderChatWorkspaceCards(items, context) {','  function renderChatWorkspace(page, context) {','const statusLabel = state === "draft"','const statusLabel = state === "UNREVIEWED"')),/Unreviewed Chat cards source/);
+  assert.throws(()=>chatCardsHistoricalPortalSource(mutate('  function renderChatWorkspaceBoundary(context) {','  function renderChatWorkspaceCards(','    return "";\n','    return "UNREVIEWED";\n')),/Unreviewed Chat (?:cards|dates\/pages) source/);
+  assert.throws(()=>chatCardsHistoricalPortalSource(mutate('  function renderChatWorkspaceCards(items, context) {','  function renderChatWorkspace(page, context) {','const statusLabel = state === "draft"','const statusLabel = state === "UNREVIEWED"')),/Unreviewed Chat (?:cards|dates\/pages) source/);
   assert.ok(chatCardsHistoricalPortalSource(sources.portal+'\n// UNRELATED_SENTINEL').endsWith('// UNRELATED_SENTINEL'));
 });

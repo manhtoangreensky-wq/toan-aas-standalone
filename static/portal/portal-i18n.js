@@ -21557,6 +21557,27 @@
     chatCardsUiEditingNote: "编辑中"
   });
 
+  Object.assign(MESSAGES.vi, {
+    chatPagesUiAria: "Chuyển trang hội thoại",
+    chatPagesUiSummary: "Hiển thị {from}–{to} / {total} cuộc trò chuyện",
+    chatPagesUiPrevious: "← Trước",
+    chatPagesUiNext: "Sau →"
+  });
+
+  Object.assign(MESSAGES.en, {
+    chatPagesUiAria: "Conversation pages",
+    chatPagesUiSummary: "Showing {from}–{to} / {total} conversations",
+    chatPagesUiPrevious: "← Previous",
+    chatPagesUiNext: "Next →"
+  });
+
+  Object.assign(MESSAGES.zh, {
+    chatPagesUiAria: "对话分页",
+    chatPagesUiSummary: "显示第 {from}–{to} 条，共 {total} 条对话",
+    chatPagesUiPrevious: "← 上一页",
+    chatPagesUiNext: "下一页 →"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

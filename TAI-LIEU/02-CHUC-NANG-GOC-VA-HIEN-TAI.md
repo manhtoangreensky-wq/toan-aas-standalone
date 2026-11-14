@@ -1988,3 +1988,13 @@ native detail/device/Safari/toàn app và đầu ra provider không được suy
 |Mobile đã1cột|Giữ343/343px,sáng/tối|Không đổigridtemplate/motion/detail|
 |FixtureQA5states cóguarded khônghợp đồng|4validstates+draftlặpIDriêng|Loaderkhôngbypass,unknownVM riêng|
 |Ngày giờ vẫnISO/phântrangchưa dịch|Giữmởphiếukế,khôngbáođãdịchhết|KhônggộpcodechưaQA vàođợtthẻ|
+
+## Ngày giờ/chuyển trang — đối chiếu 14/11/2026
+
+|TrướcBASE7e30dd95|Trong phiếu hiện tại|Bằngchứng/giớihạn|
+|---|---|---|
+|Thẻ hiệnISO cóT/độ lệchgiờ|Intlmedium/short theoactive locale/browserzone|Khôngđổitimestampatrest/biểuthứckhác|
+|Ngày malformed hiệnrawtext|Ngày thiếu/lỗi/formatterthrowempty về—|31newcases,khôngrawexception|
+|PhântranghọithoạiluônViệt|4keys12valuesVI/EN/ZH|SafeText/uiText,dynamicfallbackgiữmath|
+|Trangđầu/sau/chuyểnngược|Cùngoffset0→50→0 và50→5→50thẻ|18nativeactualGETstates,khôngfakeAPI|
+|Adaptercũđoobjectclonefrozen|ĐoVMcatalogthậttrướcprojection|4harnesscases sửa,khôngclonefreezefakePASS|
