@@ -2018,3 +2018,13 @@ native detail/device/Safari/toàn app và đầu ra provider không được suy
 |Phần chỉnh sửa còn chữ cố định|Năm khóa mới và huy hiệu theo locale|Tám trường/lifecycle/attrs/disabled giữ|
 |Đòi nguyên byte toàn bộ đề xuất|Ghi rõ ba dòng trống bổ sung của điều phối|M1 không hành vi, không worker fault; giữ native binding|
 |Một bộ đo không đủ chứng minh toàn trang|24 unique scoped native states/13 ảnh|Checkbox EN và context/history/run ngoài phiếu vẫn mở|
+
+## Ghi chú/nội dung/ô ghim — đối chiếu 14/11/2026
+
+|Trước BASEd124b867|Hiện tại trong phiếu|Bằng chứng/giới hạn|
+|---|---|---|
+|Hai form còn Private context/Human-authored/Prompt|10keys3locale, hướng dẫn/nút dễ hiểu|Form attrs/disabled/rights giữ|
+|Context library/Conversation record ở sáu vị trí|Sáu slots dùng locale|Không đổi thứ tự/nội dung khách|
+|Checkbox EN/ZH rơi về “Tôi xác nhận”|Field riêng “Ghim hội thoại” theo locale|Root/detail value/checked/ID giữ|
+|Mutation19field dùng replacement đã không khớp|Chiếu accepted scope,assert target1 trước mutate|285+1affectedPASS, không no-op giả|
+|Adapter mới chặn nhầm nguồn lịch sử trước gate cũ|Nguồn không khóa mới chuyển nguyên vẹn|Old hash gate vẫn bắt writablemutation|

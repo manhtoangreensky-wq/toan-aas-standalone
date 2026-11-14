@@ -7,6 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {usableCopyHistoricalSnapshot,usableCopyHistoricalPortalSource} from './helpers/chat-document-usable-snapshot.mjs';
 import {documentRefreshHistoricalSnapshot} from './helpers/document-refresh-copy-snapshot.mjs';
 import {chatCardsHistoricalSnapshot,chatCardsHistoricalPortalSource} from './helpers/chat-cards-customer-snapshot.mjs';
+import {contextSectionHistoricalPortalSource} from './helpers/chat-context-section-snapshot.mjs';
 
 // Exercise actual renderers: wrong language, lost fields/data/rights, fabricated
 // tool readiness/counts/download, or an empty replacement must fail.
@@ -119,11 +120,12 @@ for(const locale of locales)test(`${locale}: historical adapter rejects mutated/
   assert.deepEqual(usableCopyHistoricalSnapshot([...entries,['unknown.customer.key',customer]],locale).at(-1),['unknown.customer.key',customer]);
 });
 test('historical source adapter accepts exactly reviewed spans and retains unrelated code',()=>{
-  const source=fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8').replace(/\r\n/g,'\n');
+  const source=contextSectionHistoricalPortalSource(fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8')).replace(/\r\n/g,'\n');
   const expected=execFileSync('git',['show',BASE+':static/portal/portal.js'],{cwd:root,encoding:'utf8',maxBuffer:30e6}).replace(/\r\n/g,'\n');
   assert.equal(usableCopyHistoricalPortalSource(source),expected);
   for(const edit of approved.portalEdits.filter(edit=>edit.after)){
-    assert.throws(()=>usableCopyHistoricalPortalSource(source.replace(edit.after,edit.after+'__UNREVIEWED__').replace(edit.after,'__MUTATED__')),/Unreviewed source fragment/);
+    assert.equal(source.split(edit.after).length-1,1,'Historical mutation must modify a real reviewed span');
+    assert.throws(()=>usableCopyHistoricalPortalSource(source.replace(edit.after,edit.after+'__UNREVIEWED__').replace(edit.after,'__MUTATED__')),/Unreviewed (?:source fragment|Chat context\/section pinned source)/);
   }
   assert.ok(usableCopyHistoricalPortalSource(source+'\n// UNRELATED_SOURCE_SENTINEL').endsWith('// UNRELATED_SOURCE_SENTINEL'));
 });

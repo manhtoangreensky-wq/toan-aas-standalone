@@ -1786,3 +1786,28 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
   đổi tiền hoặc ghi Bot/production data; không trộn code vào release UI.
 - [ ] Toàn goal, signed production UI/output, AX/auth/device/Safari và
   M-FINAL01..06 vẫn mở; motion vẫn cuối sau lỗi chức năng/giao diện.
+
+## Ghi chú/nội dung/ô ghim — sau PR735
+
+- [x] CSE delivery PR735HEAD97ad8252,CI43609528286hai nhóm đạt,
+  merged/runtimed124b867,deploy43610620888đạt,tree85ad980b exact;
+  services/health/4assets/TTS+2video hashes giữ,receipts6879820281/6879820732.
+- [x] CCS:hai phiên R1 trả6exactchanges/2files17keys51values;permanent10RED;
+  target135=131PASS+4affectedPASS,affected286=285PASS+1finalPASS;
+  thêm1marker-free regressionPASS/Python9/syntax/compile đạt.
+- [x] Lỗi bộ đo được giữ: defaultundefined→true; historicalsource chạy gate
+  sai thứ tự; mutation19field không còn target. Chỉ sửa test/helper đúng lỗi,
+  không app/worker repair, không lặp ca đã đạt/không nhận một fullgreenrun.
+- [x] Native24unique states3locale375sáng1440tối4states/3server riêng,
+  13ảnh/rootcheckbox toggle restore/0productwrites/errors/overflow/external;
+  15QArows/6plans18scenes/schema/evidence giữ,ownedJobs0.
+- [x] Exact6workerLFreplay,17protectedpaths/allPython giữ,source review
+  C0/I0/M0;oldhash/freeze/order/unknownmutationgates giữ.
+- [ ] CCS docs/Tester/cases/metadata/provenance/exactHEADCI/merge/deploy/
+  runtime/assets/receipt cùng Issue689/PR.
+- [ ] TTS-INGRESS:publicBot804e23da receiver không generic; actual bridge
+  trỏ listenerBot,OpenAPI không estimate/confirm generic nhưng có dedicated.
+  Phiếu planning chưa implementation-ready: cần bindingjob/receipt bền vững
+  phi tài chính/canonicalquoteprojection,không sửa money/authhelper/ENV.
+- [ ] ContextCards/turnList/history/execution/toast/Docothercopy,wholeAX/
+  auth/device/Safari/signedproduction/finalaudio vàM-FINAL01..06 vẫn mở.

@@ -21734,6 +21734,75 @@
     chatDetailEditorUiSubmit: "保存更改"
   });
 
+  Object.assign(MESSAGES.vi, {
+    chatDetailContextUiContextKicker: "Ghi chú tham khảo",
+    chatDetailContextUiContextTitle: "Thêm ghi chú",
+    chatDetailContextUiContextSubtitle: "Lưu thông tin tham khảo, giới hạn hoặc hướng dẫn cho cuộc trò chuyện này.",
+    chatDetailContextUiContextNote: "Ghi chú được lưu vào cuộc trò chuyện, không tạo câu trả lời tự động.",
+    chatDetailContextUiContextSubmit: "Thêm ghi chú",
+    chatDetailContextUiTurnKicker: "Nội dung của bạn",
+    chatDetailContextUiTurnTitle: "Thêm nội dung",
+    chatDetailContextUiTurnSubtitle: "Lưu câu hỏi, ghi chú hoặc quyết định do bạn viết để xem lại sau.",
+    chatDetailContextUiTurnNote: "Nội dung do bạn viết được lưu lại, không phải câu trả lời tự động.",
+    chatDetailContextUiTurnSubmit: "Thêm nội dung"
+  });
+
+  Object.assign(MESSAGES.en, {
+    chatDetailContextUiContextKicker: "Reference notes",
+    chatDetailContextUiContextTitle: "Add a note",
+    chatDetailContextUiContextSubtitle: "Save reference information, limits, or instructions for this conversation.",
+    chatDetailContextUiContextNote: "Notes are saved to the conversation and do not create automatic replies.",
+    chatDetailContextUiContextSubmit: "Add a note",
+    chatDetailContextUiTurnKicker: "Your content",
+    chatDetailContextUiTurnTitle: "Add content",
+    chatDetailContextUiTurnSubtitle: "Save questions, notes, or decisions you write to review later.",
+    chatDetailContextUiTurnNote: "Your writing is saved as your own content, not an automated reply.",
+    chatDetailContextUiTurnSubmit: "Add content"
+  });
+
+  Object.assign(MESSAGES.zh, {
+    chatDetailContextUiContextKicker: "参考笔记",
+    chatDetailContextUiContextTitle: "添加笔记",
+    chatDetailContextUiContextSubtitle: "保存此对话的参考信息、限制或说明。",
+    chatDetailContextUiContextNote: "笔记会保存到此对话，不会生成自动回复。",
+    chatDetailContextUiContextSubmit: "添加笔记",
+    chatDetailContextUiTurnKicker: "您的内容",
+    chatDetailContextUiTurnTitle: "添加内容",
+    chatDetailContextUiTurnSubtitle: "保存您撰写的问题、笔记或决定，方便日后查看。",
+    chatDetailContextUiTurnNote: "您撰写的内容会作为您的记录保存，并非自动回复。",
+    chatDetailContextUiTurnSubmit: "添加内容"
+  });
+
+  Object.assign(MESSAGES.vi, {
+    chatDetailSectionUiPinnedCheck: "Ghim hội thoại",
+    chatDetailSectionUiContextKicker: "Ghi chú tham khảo",
+    chatDetailSectionUiContextTitle: "Ghi chú của cuộc trò chuyện",
+    chatDetailSectionUiContextSubtitle: "Xem và chỉnh sửa thông tin tham khảo đã lưu cho cuộc trò chuyện này.",
+    chatDetailSectionUiTurnKicker: "Nội dung đã lưu",
+    chatDetailSectionUiTurnTitle: "Nội dung của bạn",
+    chatDetailSectionUiTurnSubtitle: "Xem lại câu hỏi, ghi chú và quyết định bạn đã viết."
+  });
+
+  Object.assign(MESSAGES.en, {
+    chatDetailSectionUiPinnedCheck: "Pin conversation",
+    chatDetailSectionUiContextKicker: "Reference notes",
+    chatDetailSectionUiContextTitle: "Conversation notes",
+    chatDetailSectionUiContextSubtitle: "View and edit the reference information saved for this conversation.",
+    chatDetailSectionUiTurnKicker: "Saved content",
+    chatDetailSectionUiTurnTitle: "Your content",
+    chatDetailSectionUiTurnSubtitle: "Review the questions, notes, and decisions you have written."
+  });
+
+  Object.assign(MESSAGES.zh, {
+    chatDetailSectionUiPinnedCheck: "置顶对话",
+    chatDetailSectionUiContextKicker: "参考笔记",
+    chatDetailSectionUiContextTitle: "对话笔记",
+    chatDetailSectionUiContextSubtitle: "查看并编辑为此对话保存的参考信息。",
+    chatDetailSectionUiTurnKicker: "已保存的内容",
+    chatDetailSectionUiTurnTitle: "您的内容",
+    chatDetailSectionUiTurnSubtitle: "回顾您撰写的问题、笔记和决定。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {
