@@ -23865,3 +23865,8 @@ html:not([data-portal-theme="dark"]) .portal-page:is(.portal-chat-workspace, .po
 .portal-chat-workspace .portal-chat-workspace-layout > .portal-chat-workspace-create:only-child {
   grid-column: 1 / -1;
 }
+
+/* Keep saved Chat note labels readable in the light theme. */
+html:not([data-portal-theme="dark"]) .portal-chat-workspace-detail .portal-chat-context-edit .portal-field > span {
+  color: var(--portal-ink);
+}

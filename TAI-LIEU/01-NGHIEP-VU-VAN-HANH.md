@@ -2838,3 +2838,13 @@ trả lại/khôngsubmit;8Chat tables/schema/evidence/6plans18scenes giữ/Jobs0
 ReviewC0/I0/M0/exact5workerchanges;17protectedpaths LF-content giữ.
 PR736 đã triển khai6a519756,receipts6880380587/6880380973.
 [Báo cáo](../docs/reports/chat-context-cards-turn-list-20261114.md).
+
+## Độ rõ nhãn loại ghi chú sáng — 15/11/2026
+
+Một rule riêng cho nhãn trong saved-context-edit dùng màu chữ chính;
+light375 đo1.26533→12.35155:1,dark144011.52797:1 giữ. Không thay font/
+layout/nội dung/quyền hoặc JS/Python.5CSSchecks đạt,một detailGET/hai
+observations mỗi lượt,19other-sourcepaths/dữ liệu/schema/evidence giữ/Jobs0.
+Hai loại lỗi bộ đo được ghi và sửa riêng;không chỉnh app để làm xanh,
+không lặp24wordviews/không nhận toànAXPASS.
+[Báo cáo](../docs/reports/chat-context-label-contrast-20261115.md).
