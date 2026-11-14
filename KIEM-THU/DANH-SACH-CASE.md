@@ -1171,3 +1171,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |TOS-SCOPE|nặng|SoAST/sourcephầnkhóa|Auth/prepare/tiền/route/schemaBotgiữ|3workerchanges,16protectedpaths|
 |TOS-DELIVERY|nặng|CI/merge/deploy/runtime|EvidencecùngIssue689/PR,khôngfakeaudio|[PhiênTOS](PHIEN-TTS-OUTPUT-STATE-20261114.md)|
 |TOS-REAL|nặng|Webjobthật→Bot→âmthanh|Tệpcóbytes/giảimãđược|NOT_OBSERVED,quyềnprovider riêng|
+
+## CHAT-DOCUMENT-USABLE-20261114 — Issue689
+
+|Mã|Mức|Thao tác|Kếtquảcầnđạt|Bằngchứng|
+|---|---|---|---|---|
+|CDU-FIELDS|vừa|8fieldroot/detail3locale|19text,mode/constraints/customeroptionsgiữ|12consumer+24nativefield|
+|CDU-COUNTS|vừa|Missing/zero/negative/invalid/positive/fallback|Chỉallnonpositivedlbiếnmất|24cases+nativemobile|
+|CDU-DOC|vừa|9tool3group/2roots/stateflags|48textlocale,hrefrights/dataexact|36readycases|
+|CDU-FOOTER|vừa|ReadyDocfooter|1linebỏ,noblankreplacement/sharedhelperchange|Exactworker/sourceparity|
+|CDU-ADAPTER|nặng|67newkeys+5span/mutation|Oldkey/golden/order/unknownsourcegiữ|4newstrictcases|
+|CDU-NATIVE|nặng|48view3locale390/1440lightdark|24field24filter12retry12nav,0overflow/error|[PhiênCDU](PHIEN-CHAT-DOCUMENT-USABLE-20261114.md)|
+|CDU-SAFETY|nặng|Soappsource/QA/process|8workerchanges/15protected,6plan18scene/evidencegiữ|14process×3→0,0provider/ví|
+|CDU-DELIVERY|nặng|CIexactHEAD→VPS|Giao hàngriêng,sameIssue/PR|Khôngđóngfullgoal/motion|

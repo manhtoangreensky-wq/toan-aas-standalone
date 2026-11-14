@@ -65,16 +65,25 @@ test("Documents forms preserve source order, ranges, and guarded choices", () =>
   }
 });
 
-test("Documents presents vertical workflow groups and truthful preview/confirm/result states", () => {
+test("Documents presents vertical workflow groups and truthful preview/confirm/result states", async () => {
   const start = portal.indexOf("  function renderDocumentHub(page, context)");
   const end = portal.indexOf("\n  function renderPdfSplit(page, context)", start);
   const board = portal.slice(start, end);
-  for (const label of ["PDF cơ bản", "Chuyển đổi", "OCR & scan", "Chọn workflow", "Hoạt động gần đây"]) {
-    assert.match(board, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  const {renderChild}=await import("./helpers/publishing-child-render.mjs");
+  const groups={vi:["PDF cơ bản","Chuyển đổi định dạng","Đọc chữ từ tài liệu"],en:["Basic PDF","Format Conversion","Read Text from Documents"],zh:["基础 PDF","格式转换","从文档读取文字"]};
+  for(const locale of ["vi","en","zh"])for(const enabled of [false,true]){
+    const flags=Object.fromEntries(["pdfToImagesEnabled","imageToPdfEnabled","pdfToWordEnabled","imageOcrEnabled","pdfOcrEnabled","pdfOcrWordEnabled"].map(key=>[key,enabled]));
+    const result=renderChild(locale,"/documents",{capabilities:{"document-operation-view":true},documentOperationsReadState:"ready",documentOperations:[],...flags});
+    const titles=[...result.html.matchAll(/<h2 id="document-workflow-[^"]+">([^<]+)<\/h2>/g)].map(match=>match[1]);
+    assert.deepEqual(titles,groups[locale]);
+    const states=[...result.html.matchAll(/data-document-tool-state="([^"]+)"/g)].map(match=>match[1]);
+    assert.equal(states.length,9);assert.equal(states.filter(state=>state==="ready").length,enabled?9:3);
+    assert.equal(states.filter(state=>state==="guarded").length,enabled?0:6);
+    assert.ok(result.html.includes(result.messages[locale]["docBoardUi.workflowsReadyLinkText"]));
+    if(!enabled)assert.ok(result.html.includes(result.messages[locale]["docBoardUi.workflowsUnreadyLinkText"]));
   }
   for (const route of operationRoutes) assert.match(board, new RegExp(`href: "${route.replaceAll("/", "\\/")}"`));
   assert.match(board, /data-document-tool-state="\$\{state\}"/);
-  assert.match(board, /state === "ready" \? "Mở workflow" : "Xem điều kiện"/);
   assert.match(portal, /data-portal-confirm="Tách PDF/);
   assert.match(portal, /renderDocumentOperationCards\(operations/);
   assert.match(portal, /documentOperationDownloadPath\(item\)/);

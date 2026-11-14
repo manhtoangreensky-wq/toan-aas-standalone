@@ -2729,3 +2729,16 @@ Khôngthayquote/charge,quyền,đườnggửi,ID,enginehayBot;không gọi thậ
 Bot sourceđangchạy804e23da dùngWebjobIDlàmkhóa,nênkhôngsửaIDtheophỏngđoán.
 Actualâmthanh từyêucầuthậtchưađo;giao hàngvàđầurathật ghi riêngIssue689.
 [Báo cáo](../docs/reports/web-bot-tts-output-state-20261114.md).
+
+## Hội thoại và Tài liệu dễ dùng — 14/11/2026
+
+8trườngHộithoại dùng19nhãn/trợgiúp3ngônngữ;mode/điềukiện/nhãnkháchgiữ.
+3thốngkê0bỏchỉkhimọimetricnonpositive,cósốthậtdươnggiữnguyên.
+Tài liệu9tool3groupvàphầnhướngdẫn/lịchsửđổi48chữ,kếthợp67newkeys.
+Bỏmộtfooterchỉgiảithíchkỹthuật,khôngthayhelperchung hoặcbấtkỳcôngcụ.
+
+84case21PASS63RED→84PASS;88new+127prior215casecóbằngchứng,1testLFđãsửa/
+rerunriêng. Native48view,24field/24filter/12retry/12toolclick0productwrite,
+cùngsourcehash.0provider/ví/production;6plan18scene/evidencegốcgiữ.
+Chatlabelcontrastsángvàcácchữngoàiphiếu/engineUIentry/finalmotionvẫnmở.
+[Báo cáo](../docs/reports/chat-document-usable-copy-20261114.md).

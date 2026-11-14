@@ -6,13 +6,13 @@ import {execFileSync} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {chatDocAccessHistoricalSnapshot,chatDocHistoricalMarkup} from './helpers/chat-doc-access-snapshot.mjs';
 import {chatRootDocReadHistoricalSnapshot,chatRootDocReadHistoricalMarkup} from './helpers/chat-root-doc-read-snapshot.mjs';
+import {renderUsableHistoricalChild as renderFresh} from './helpers/chat-document-usable-snapshot.mjs';
 
 // Catch fixed-language leaks without translating customer data or changing
 // access decisions, real forms, controls, loading/error/ready output.
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const BASE='7ef5e3c6ade86acff9a9578f36f9c85287a37a73';
 const helper=path.join(ROOT,'tests/helpers/publishing-child-render.mjs');
-const {renderChild:renderFresh}=await import(pathToFileURL(helper).href);
 function renderCurrent(locale,route,raw){
   const result=renderFresh(locale,route,raw);
   return {...result,html:chatRootDocReadHistoricalMarkup(result.html,locale,result.messages[locale]),
