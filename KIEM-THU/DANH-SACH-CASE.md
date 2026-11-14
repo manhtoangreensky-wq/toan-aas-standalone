@@ -1236,3 +1236,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CDC-QUOTA|nặng|13prefix+3ENtail+8ZH|0repeat/rateguardunchanged/r1FAILgiữ|2actual429excludednextphaseonly|
 |CDC-SAFETY|nặng|FakeQAidentity/15rows/6plan18scene/evidence|Noexposedid/authchange,owned22+13+15→0|0provider/ví/product/prodwrite|
 |CDC-DELIVERY|nặng|ExactCI/merge/deploy/runtimeassets|ReceiptcùngIssue/PR,khôngactualaudio/goalclaim|Otherdetail/motionvẫnmở|
+
+## CHAT-DETAIL-SUMMARY-EDITOR-20261114 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CSE-ACCESS|nặng|Thiếu/không quyền/ID sai3locale|Guard và backlink giữ, thông báo dễ hiểu|22 permanent RED →125 target+prior PASS|
+|CSE-SUMMARY|vừa|State/mode/unknown/ghim/count/revision/fallback|Đúng locale, tên/nội dung khách giữ|Actual VM bundle|
+|CSE-EDITOR|nặng|Badge/năm chữ/tám fields/lifecycle|Chỉ đổi chữ, rights/attrs/disabled không đổi|Escaping và language-switch checks|
+|CSE-STRICT|nặng|11keys/whole-detail hash/mutation|Old values/order/freeze giữ,unknown không bị lọc|286 affected Node/9 Python PASS|
+|CSE-NATIVE|nặng|375 sáng/1440 tối3locale×4states|24 unique actual GET states,13 ảnh|[Phiên CSE](PHIEN-CHAT-DETAIL-SUMMARY-EDITOR-20261114.md)|
+|CSE-SAFETY|nặng|So schema/owners/15QArows/6plans18scenes|Source/evidence giữ,owned Jobs về0|0 provider/ví/request ngoài/product write|
+|CSE-REVIEW|vừa|Đối chiếu năm worker changes|C0/I0/M1;ba dòng trống ghi amendment|17 protected paths giữ BASE|
+|CSE-DELIVERY|nặng|Exact CI/merge/deploy/runtime/assets|Receipt cùng Issue/PR,không whole-goal claim|Checkbox EN/context/history/motion vẫn mở|

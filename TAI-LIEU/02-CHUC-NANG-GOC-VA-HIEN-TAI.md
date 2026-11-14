@@ -2008,3 +2008,13 @@ native detail/device/Safari/toàn app và đầu ra provider không được suy
 |Assertcứngcâu“không tạo câu trả lời giả”|ActualrunfieldcontractkhônghứaAI|1affectedPythonPASS,cácguardkhácgiữ|
 |QAđòiidnộibộtrongpublicme|Kiểmknownfakeidentity+exactownerIDs+GETscope|KhônglộID/thayprojection/auth|
 |Mộtservernhiềuviewgặp429|Giữ13states,xửlý11statesthiếuserverriêng|24unique,khôngtắtguard/khônglặpVI|
+
+## Thông tin/chỉnh sửa chi tiết — đối chiếu 14/11/2026
+
+|Trước BASE20c3e6fd|Trong phiếu hiện tại|Bằng chứng/giới hạn|
+|---|---|---|
+|Guard/thông tin cố định lẫn ngôn ngữ|Sáu khóa mới và dùng lại nhãn đã dịch|Giữ điều kiện quyền/ID/backlink và nội dung khách|
+|Revision hiện tiền tố `v`|Nhãn lần cập nhật và cùng giá trị số|Không đổi phép tính hoặc dữ liệu lưu|
+|Phần chỉnh sửa còn chữ cố định|Năm khóa mới và huy hiệu theo locale|Tám trường/lifecycle/attrs/disabled giữ|
+|Đòi nguyên byte toàn bộ đề xuất|Ghi rõ ba dòng trống bổ sung của điều phối|M1 không hành vi, không worker fault; giữ native binding|
+|Một bộ đo không đủ chứng minh toàn trang|24 unique scoped native states/13 ảnh|Checkbox EN và context/history/run ngoài phiếu vẫn mở|

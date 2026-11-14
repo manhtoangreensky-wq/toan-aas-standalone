@@ -1759,3 +1759,30 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
   runtime/assets/receipt;khôngclaimotherdetail/wholeAX/M-FINAL.
 - [ ] CHAT-DETAIL-ACCESS-SUMMARY6newkeysreusecards vàCHAT-DETAIL-EDITOR5keys
   đanggiao2sessionoutput-onlyriêng;chưaápdụng/chưanghiệmthu.
+
+## Thông tin/chỉnh sửa hội thoại và yêu cầu song song — 14/11/2026
+
+- [x] CDC delivery PR734: HEAD10fa0844, CI43595369145 hai nhóm đạt,
+  merge/runtime20c3e6fd, deploy43607141243 đạt; tree d93f4e09 khớp,
+  services/health/4assets/TTS+2video hashes giữ. Receipt6879247049/6879247351.
+- [x] CSE: hai phiên output-only, năm thay đổi/hai app files,11keys33values.
+  Candidate30RED→30PASS; permanent22RED→125 target+prior PASS;
+  286 affected Node/9 Python/syntax/compile PASS,17 protected paths giữ.
+- [x] Review C0/I0/M1: M1 chỉ ba dòng trống i18n do điều phối thêm,
+  ghi amendment rõ; không lỗi worker, không đổi app sau native,
+  không nhận exact-byte replay cả hai tệp.
+- [x] Native VI/EN/ZH ×375 sáng/1440 tối ×4 states:24 unique actual GET,
+  13 ảnh,0 lỗi/tràn/request ngoài/ghi sản phẩm,15 hội thoại QA/6plans18scenes/
+  schema/evidence giữ; ba owned Jobs về0. Không đổi RateGuard/auth.
+- [ ] CSE giao hàng: docs/Tester/cases/metadata/provenance/exact-head CI/
+  merge/deploy/runtime/assets/receipt cùng Issue689 và PR.
+- [ ] Nhãn mặc định checkbox EN còn “Tôi xác nhận”: sửa theo phiếu riêng,
+  không ẩn hoặc coi phần ngoài11keys đã dịch xong.
+- [ ] Phiếu context/turn tạo mới đang được giao Antigravity riêng; history/
+  execution/toast/Doc other text và các ma trận còn lại giữ đúng hàng đợi.
+- [ ] Theo yêu cầu mới, mở song song kiểm tra có giới hạn receiver generic
+  Web–Bot Voice TTS, không lặp source audit đã có. Chưa kết luận wiring lỗi
+  nếu chưa đối chiếu receiver chuẩn. Không bật ENV/quyền, gọi provider,
+  đổi tiền hoặc ghi Bot/production data; không trộn code vào release UI.
+- [ ] Toàn goal, signed production UI/output, AX/auth/device/Safari và
+  M-FINAL01..06 vẫn mở; motion vẫn cuối sau lỗi chức năng/giao diện.

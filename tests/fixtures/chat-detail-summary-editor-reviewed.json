@@ -1,0 +1,41 @@
+{
+  "vi": {
+    "chatDetailSummaryUiAccessTitle": "Chưa mở được cuộc trò chuyện",
+    "chatDetailSummaryUiAccessBody": "Cuộc trò chuyện không còn trong tài khoản này hoặc chưa tải xong. Hãy quay lại danh sách và mở lại.",
+    "chatDetailSummaryUiBack": "Về danh sách hội thoại",
+    "chatDetailSummaryUiState": "Trạng thái",
+    "chatDetailSummaryUiUpdate": "Lần cập nhật",
+    "chatDetailSummaryUiCounts": "Ghi chú / lượt trao đổi",
+    "chatDetailEditorUiKicker": "Chỉnh sửa hội thoại",
+    "chatDetailEditorUiTitle": "Mục tiêu & thông tin tham khảo",
+    "chatDetailEditorUiSubtitle": "Chỉ có thể chỉnh sửa bản nháp. Mỗi lần lưu được ghi lại trong lịch sử.",
+    "chatDetailEditorUiNote": "Chuyển về bản nháp để chỉnh sửa các nội dung đang xem lại, đã chuẩn bị hoặc đã lưu trữ.",
+    "chatDetailEditorUiSubmit": "Lưu thay đổi"
+  },
+  "en": {
+    "chatDetailSummaryUiAccessTitle": "Cannot open conversation",
+    "chatDetailSummaryUiAccessBody": "This conversation is no longer in this account or has not finished loading. Return to the list and open it again.",
+    "chatDetailSummaryUiBack": "Back to conversation list",
+    "chatDetailSummaryUiState": "Status",
+    "chatDetailSummaryUiUpdate": "Update",
+    "chatDetailSummaryUiCounts": "Notes / exchanges",
+    "chatDetailEditorUiKicker": "Edit conversation",
+    "chatDetailEditorUiTitle": "Goals & reference information",
+    "chatDetailEditorUiSubtitle": "Only drafts can be edited. Each save is recorded in history.",
+    "chatDetailEditorUiNote": "Return content under review, prepared, or archived to draft to edit it.",
+    "chatDetailEditorUiSubmit": "Save changes"
+  },
+  "zh": {
+    "chatDetailSummaryUiAccessTitle": "无法打开对话",
+    "chatDetailSummaryUiAccessBody": "此对话已不在当前账户中，或尚未加载完成。请返回列表后重新打开。",
+    "chatDetailSummaryUiBack": "返回对话列表",
+    "chatDetailSummaryUiState": "状态",
+    "chatDetailSummaryUiUpdate": "更新次数",
+    "chatDetailSummaryUiCounts": "笔记 / 交流次数",
+    "chatDetailEditorUiKicker": "编辑对话",
+    "chatDetailEditorUiTitle": "目标与参考信息",
+    "chatDetailEditorUiSubtitle": "只有草稿可以编辑。每次保存都会记录在历史中。",
+    "chatDetailEditorUiNote": "将检查中、已准备好或已归档的内容转为草稿后即可编辑。",
+    "chatDetailEditorUiSubmit": "保存更改"
+  }
+}

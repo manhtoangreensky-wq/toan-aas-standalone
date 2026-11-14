@@ -3,8 +3,15 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {detailRenderer,detailSources} from './helpers/chat-detail-controls-runtime.mjs';
 import {detailHistoricalSnapshot,detailHistoricalPortalSource} from './helpers/chat-detail-controls-snapshot.mjs';
-const source=detailSources(),oldSource=detailSources(true);
-const current=await detailRenderer(source),before=await detailRenderer(oldSource);
+import {summaryHistoricalSnapshot,summaryHistoricalPortalSource} from './helpers/chat-detail-summary-editor-snapshot.mjs';
+const live=detailSources(),source={...live,portal:summaryHistoricalPortalSource(live.portal)},oldSource=detailSources(true);
+const actual=await detailRenderer(source),before=await detailRenderer(oldSource);
+const current=(...args)=>{
+  const result=actual(...args);
+  return {...result,catalogFrozen:Object.fromEntries(['vi','en','zh'].map(locale=>[locale,Object.isFrozen(result.messages[locale])])),messages:Object.fromEntries(['vi','en','zh'].map(locale=>[
+    locale,Object.fromEntries(summaryHistoricalSnapshot(Object.entries(result.messages[locale]),locale))
+  ]))};
+};
 const copy=JSON.parse(fs.readFileSync(new URL('./fixtures/chat-detail-controls-reviewed.json',import.meta.url),'utf8'));
 const id='11111111-1111-4111-8111-111111111111',route='/chat/'+id;
 const thread={id,revision:7,state:'draft',mode:'focus',title:'CUSTOMER Bot <script> "provider"&',objective:'CUSTOMER workflow metadata',tags:['Bot','provider','guarded']};
@@ -82,7 +89,7 @@ for(const locale of ['vi','en','zh']){
     assert.ok(now.html.includes(now.qa.safeText(thread.title)));assert.ok(now.html.includes(thread.objective));
     for(const suffix of ['ContextKindLabel','ContextTitleLabel','ContextBodyLabel','ContextTagsLabel','TurnKindLabel','TurnBodyLabel','RunLabel'])assert.ok(now.html.includes(now.qa.safeText(e['chatDetailFieldUi'+suffix])));
     const a=Object.entries(now.messages[locale]),b=Object.entries(old.messages[locale]);
-    assert.deepEqual(json(a.slice(0,b.length)),json(b));assert.deepEqual(json(a.slice(b.length)),Object.entries(e));assert.ok(Object.isFrozen(now.messages[locale]));
+    assert.deepEqual(json(a.slice(0,b.length)),json(b));assert.deepEqual(json(a.slice(b.length)),Object.entries(e));assert.equal(now.catalogFrozen[locale],true);
   });
   test(`${locale}: strict historical adapter rejects missing/mutated/reordered keys and preserves unknown text`,()=>{
     const entries=Object.entries(now.messages[locale]),normalized=detailHistoricalSnapshot(entries,locale);
