@@ -94,7 +94,10 @@ test("Prompt and Suggestions: prompt is required without empty suggestion cards 
 
 test("Editor capability: interactive workbench is withheld for music routes", () => {
   const workbenchFn = functionSource("renderInteractiveFeatureWorkbench");
-  assert.match(workbenchFn, /if \(path\.startsWith\("\/music"\) \|\| family === "music"\) \{\s*\/\/ Music uses the canonical guarded form/);
+  const workbench = new Function(`${workbenchFn}\nreturn renderInteractiveFeatureWorkbench;`)();
+  for (const page of [{path:"/music/create"},{path:"/music/song"},{path:"/features/music",featureFamily:"music"}]) {
+    assert.equal(workbench(page, {capabilities:{},bridge:{available:false},wallet:null}), "", "Music must never regain a decorative player/output");
+  }
   assert.match(portal, /const musicTask = \["\/music\/create", "\/music\/song"\]\.includes/);
   assert.match(portal, /interactiveWorkbench = videoTask \|\| musicTask \? "" :/);
 });

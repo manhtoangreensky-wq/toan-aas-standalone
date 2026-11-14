@@ -1125,3 +1125,14 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |MFO-IDENTITY|nặng|Duplicate, invalid predecessor, combo, code+label và100dòng|Dòng hợp lệ đầu tiên, không cho mượn ghi chú|20tìnhhuống×3locale|
 |MFO-VISUAL|vừa|390/1440 sáng/tối, component và trang đăng nhập QA|12component/12native/3rời trang, khôngtràn/lỗi/ghi sản phẩm|[Phiên MFO](PHIEN-MEMBERSHIP-FALLBACK-ORIGIN-20261113.md)|
 |MFO-DELIVERY|nặng|Kiểm nguồn và phát hành|240Node/51Pythonđạt,1Windowsbaseline; CI/runtime/assets riêng|18tệpbảovệ,receiptIssue689/PR|
+
+## NAV-LEGACY-WORKBENCH-20261113 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|NAL-ALIAS|vừa|Bảy nhóm và renderer root cũ VI/EN/ZH|Alias cố định theo locale; tên khách/unknown giữ|27ca,khôngsuyrootUIthật|
+|LWR-EMPTY|nặng|18đầu vào helper, gồm video/tài liệu/nội dung/Image/Music/unknown|Không panel/giá/claim/success/outputđiềnsẵn|18helpercases|
+|LWR-PARITY|nặng|20route×3locale×2state|Form/data/HTML/control ngoài đúng panel giữ nguyên|120renderer,inversebundle/18protected|
+|LWR-NATIVE|nặng|18view390/1440,3locale và18click video|0panelgiả/CSP/console/pageerror/overflow|[Phiên NAL/LWR](PHIEN-NAV-LEGACY-WORKBENCH-20261113.md)|
+|LWR-SAFETY|nặng|Đối chiếu copiedQA và cleanup|6plan18scene/versions/evidencegiữ,0provider/ví/productwrite,21process→0|Guard thật,không sửaCSP|
+|LWR-DELIVERY|nặng|CIexactHEAD và deploy/runtime/assets|Một tracker/PR,khôngđóngwholegoal/motion|ReceiptIssue689/PR|

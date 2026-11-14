@@ -1502,3 +1502,37 @@ Các cổng whole-route/auth/AX/device/Safari/signed LIVE và motion cuối vẫ
 Báo cáo: `docs/reports/membership-fallback-origin-20261113.md`.
 Không đóng toàn tuyến/trạng thái locale, AX/auth/device/Safari/signedLIVE hoặc
 provider output. M-FINAL-01..06 vẫn cuối, không thêm motion trong đợt này.
+
+## Nhãn nhóm và khối kết quả điền sẵn — tiếp tục 13/11/2026
+
+- [x] MEMBERSHIP-FALLBACK-ORIGIN delivery: PR725/finalHEAD615788f6,
+  CI43362149560 cả hai jobs đạt; merge/runtimec4da5f4a,
+  deploy43363810277 đạt. Web/Bot/nginx active/running, trackedsource sạch,
+  healthok/2backendhashes/4HTTPSassets exact. Receipt6843708748/6843709249;
+  postmergeCI43363748199 cũng đạt cả hai jobs.
+- [x] NAV-AI-STUDIO source: alias thiếu trong bản đồ nhãn; 27 ca riêng
+  baseline3đạt/24lỗi→27đạt, nhóm267Nodeđạt. Không đổi dictionary/manifest.
+- [x] MEMBERSHIP-STATUS-CLUTTER rút trước sửa mã: CSS đã ẩn status-grid;
+  không dùng source text làm bằng chứng khối đang hiện. Không lỗi worker/
+  không tiếp quản trực tiếp/không chạm renderer, trạng thái hoặc CSP.
+- [ ] LEGACY-WORKBENCH-REMOVE prerequisite: native chuyển nhóm thật có
+  36CSP inline-handler errors; helper tạo ba panel/tính phí/success/đầu ra
+  viết sẵn, không form/action/API. R1 chỉ source công khai + MAP, source
+  thật1tệp/3consumer;138RED62đạt/76lỗi trước sửa, form/luồng thật được bảo vệ.
+- [ ] Đợt nhãn/helper: native không còn lỗi CSP, hồi quy gộp và cổng giao hàng
+  riêng. Không đóng toàn goal, provider hoặc motion từ một helper được bỏ.
+
+Native `/features` root dùng bundle nhẹ riêng; các ca bundle-renderer root
+cũ không chứng minh UI root hiện tại. Native của alias phải vào nhóm thật.
+
+- [x] NAV/LEGACY-WORKBENCH local: một alias và helper3dòng theo worker,
+  ba panel/sáu alert-only buttons/giá và kết quả viết sẵn bỏ hoàn toàn;
+  toàn bộ ngoài helper+alias/3consumer/18protectedfiles exactBASE.
+- [x] 421Node gồm27alias+138helper/renderer+Image/Music;30Pythonđạt và
+  1CSS-tailBASE-equivalent giữ nguyên, compile/independentreview đạt.
+- [x] Native18view/18click ba nhóm thật390/1440VI/EN/ZH,sáng:
+  0panel/CSP/console/pageerror/overflow/egress/productwrite. QA6plan18scene/
+  versions/evidencegốc giữ,21ownedprocesses→0. Không nới CSP/tắt log.
+- [ ] NAV/LEGACY-WORKBENCH delivery: provenance,CIexactHEAD,merge/deploy/
+  runtime/assets và receipt riêng. Báo cáo nav-legacy-workbench-20261113.md;
+  toàn route/auth/AX/device/Safari/provider/signedLIVE và motioncuối còn mở.
