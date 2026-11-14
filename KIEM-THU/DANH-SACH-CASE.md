@@ -1197,3 +1197,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |DCL-NATIVE|nặng|VI/EN/ZH,Docroot375light/child1440dark|6lỗi+6phục hồi đúng phản hồi,0tràn/lỗi bất ngờ|12states/24controlledabort|
 |DCL-SAFETY|nặng|So nguồn/QA/process|3workerchanges/16protected,6plan18scene giữ|13Chat+20Doc owned→0,0provider/ví|
 |DCL-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|EvidencecùngIssue689/PR,khôngđóngwholegoal|Không suy source thành audio thật|
+
+## CHAT-CARDS-CUSTOMER-20261114 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CCC-COPY|vừa|Empty/5states/4modes3locale|20nhãnđúnglocale,khôngtechnicalfixedcopy|38cases3PASS35RED→38PASS|
+|CCC-DATA|nặng|Permission/invalidID/numeric/hostilecustomer|Tên/tags/counts/rawcodes/links/escape giữ|Actualrendererandattrsparity|
+|CCC-BOUNDARY|vừa|Root/detailhai quyền|Khôngaside/emptyreplacement,executionpanelgiữ|Consumer+actualoutput|
+|CCC-KEYS|nặng|20newkeys/2spansvàmutation|Oldhash/ordergiữ,unknown/partial/reorderFAIL|Strictfiniteadapter|
+|CCC-NATIVE|nặng|VI/EN/ZH375/1440sáng/tối|12root+12detailclickrealGETsameowner|[PhiênCCC](PHIEN-CHAT-CARDS-CUSTOMER-20261114.md)|
+|CCC-GRID|vừa|375/1440VIlightdark+detailsentinel|Form343/343và1088/1088,khôngtrốngtrack|4root+1detailgeometry,norun24again|
+|CCC-SAFETY|nặng|QAseed/source/processcomparators|15row3owner/6plan18scene/evidence giữ|4workerchanges/16protected,19+13→0|
+|CCC-DELIVERY|nặng|ProvenanceexactCI/merge/deploy/runtimeassets|ReceiptcùngIssue/PR,khôngfakeaudio|Toàngoal/motionvẫnmở|

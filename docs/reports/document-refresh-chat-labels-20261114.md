@@ -100,3 +100,12 @@ Không đưa Bot/engine/provider/ví/ENV vào bản sửa UI này.
 
 `PROVIDER_CALLS=0`, `WALLET_MUTATIONS=0`, `LIVE_OUTPUT=NOT_OBSERVED`.
 Toàn goal vẫn đang mở; merge/deploy không thay bằng chứng đầu ra thực.
+
+### Receipt giao hàng
+
+PR731 gộp HEAD799b08e2 sau CI43584766006 cả hai job đạt.
+Merge/runtime398cea1c, deploy43585904925 đạt; tree d307b2ba trùng bản kiểm.
+Tracked source sạch, Web/Bot/nginx active-running, health đạt, bốn asset công
+khai trùng từng byte và TTS/hai phần Video khóa giữ hash đúng.
+Receipt Issue689 `6876023868`, PR731 `6876024174`.
+Không phải signed-production UI hoặc âm thanh thật đã được quan sát.

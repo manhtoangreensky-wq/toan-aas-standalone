@@ -6,6 +6,7 @@ import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {usableCopyHistoricalSnapshot,usableCopyHistoricalPortalSource} from './helpers/chat-document-usable-snapshot.mjs';
 import {documentRefreshHistoricalSnapshot} from './helpers/document-refresh-copy-snapshot.mjs';
+import {chatCardsHistoricalSnapshot,chatCardsHistoricalPortalSource} from './helpers/chat-cards-customer-snapshot.mjs';
 
 // Exercise actual renderers: wrong language, lost fields/data/rights, fabricated
 // tool readiness/counts/download, or an empty replacement must fail.
@@ -18,6 +19,11 @@ async function load(base=false){
     const old=`const ${name}=fs.readFileSync(path.join(root,'${file}'),'utf8');`;assert.equal(source.split(old).length-1,1);
     source=source.replace(old,'const '+name+'='+JSON.stringify(execFileSync('git',['show',BASE+':'+file],{cwd:root,encoding:'utf8',maxBuffer:30e6}))+';');
   }
+  else{
+    const old="const portal=fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8');";
+    assert.equal(source.split(old).length-1,1);
+    source=source.replace(old,'const portal='+JSON.stringify(chatCardsHistoricalPortalSource(fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8')))+';');
+  }
   const old='normalizePublishReviewPackResult,customerMobileNavGroupForPath};';assert.equal(source.split(old).length-1,1);
   source=source.replace(old,'normalizePublishReviewPackResult,customerMobileNavGroupForPath,chatThreadFields};');
   source=source.replace('return {html,text:plain(html),','return {editorFields:window.__childLocale.chatThreadFields(context),html,text:plain(html),');
@@ -25,7 +31,7 @@ async function load(base=false){
   return(...args)=>{
     const result=renderChild(...args);
     return {...result,messages:Object.fromEntries(['vi','en','zh'].map(locale=>[
-      locale,Object.fromEntries(documentRefreshHistoricalSnapshot(Object.entries(result.messages[locale]),locale))
+      locale,Object.fromEntries(chatCardsHistoricalSnapshot(documentRefreshHistoricalSnapshot(Object.entries(result.messages[locale]),locale),locale))
     ]))};
   };
 }

@@ -23860,3 +23860,8 @@ html[data-portal-theme="dark"] .portal-membership-page > .portal-callout--info .
 html:not([data-portal-theme="dark"]) .portal-page:is(.portal-chat-workspace, .portal-chat-workspace-detail) .portal-field > label {
   color: var(--portal-ink);
 }
+
+/* Let the remaining Chat create panel fill its existing grid. */
+.portal-chat-workspace .portal-chat-workspace-layout > .portal-chat-workspace-create:only-child {
+  grid-column: 1 / -1;
+}

@@ -1,15 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import fs from "node:fs";
+import {chatCardsRenderer} from './helpers/chat-cards-customer-runtime.mjs';
 
-const source = fs.readFileSync("static/portal/portal.js", "utf8").replace(/\r\n/g, "\n");
-const start = source.indexOf("  function renderChatWorkspaceBoundary(context)");
-const end = source.indexOf("\n  function renderChatWorkspaceCards", start);
-assert.ok(start >= 0 && end > start, "Chat boundary renderer must remain present");
-
-test("Chat Workspace boundary uses one useful capability explanation", () => {
-  const renderer = source.slice(start, end);
-  assert.match(renderer, /portal-chat-workspace-guard-list/);
-  assert.match(renderer, /Máy chủ chưa công bố capability gửi request/);
-  assert.doesNotMatch(renderer, /<span><strong>Provider \/ Bot|<span><strong>Wallet \/ payment|<span><strong>Job \/ output/);
+const render=await chatCardsRenderer();
+test("Redundant Chat boundary adds neither an empty panel nor availability claims under either permission", () => {
+  for(const locale of ['vi','en','zh'])for(const allowed of [false,true]){
+    const result=render(locale,'/chat',{chatWorkspaceEnabled:true,capabilities:{'chat-workspace-view':true,'chat-run-submit':allowed}});
+    assert.equal(result.qa.renderChatWorkspaceBoundary(result.context),'');
+  }
 });

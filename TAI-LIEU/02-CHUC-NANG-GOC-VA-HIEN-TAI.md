@@ -1977,3 +1977,14 @@ chữngoàiphiếu/toast vànhãnsángnhạtphảilàmriêng.
 
 Không thay công cụ/đường xử lý/tiền/ENV/Bot/motion. Giao hàng có receipt riêng;
 native detail/device/Safari/toàn app và đầu ra provider không được suy từ phiếu này.
+
+## Thẻ Hội thoại — đối chiếu 14/11/2026
+
+|TrướcBASE398cea1c|Trong phiếu hiện tại|Bằng chứng/giới hạn|
+|---|---|---|
+|Thẻ cònFocus/context/review/archive/Mởthread|20key60valueVI/EN/ZH|Không đổi customerdata/rawcodes/links|
+|Aside chỉ giải thích triển khai ởroot/detail|Bỏexactreturn,khôngkhungthaythế|Execution controls giữ,39targetPASS|
+|Bỏaside đểdesktop trống mộttrack|Onlychildform spans existinggrid|RED604.546875/1088→1088/1088px|
+|Mobile đã1cột|Giữ343/343px,sáng/tối|Không đổigridtemplate/motion/detail|
+|FixtureQA5states cóguarded khônghợp đồng|4validstates+draftlặpIDriêng|Loaderkhôngbypass,unknownVM riêng|
+|Ngày giờ vẫnISO/phântrangchưa dịch|Giữmởphiếukế,khôngbáođãdịchhết|KhônggộpcodechưaQA vàođợtthẻ|

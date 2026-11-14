@@ -21488,6 +21488,75 @@
     docRefreshUiSuccess: "已更新文档历史记录。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    chatCardsUiEmptyTitle: "Chưa có cuộc trò chuyện",
+    chatCardsUiEmptyBody: "Tạo cuộc trò chuyện để lưu mục tiêu, thông tin tham khảo và ghi chú do bạn viết.",
+    chatCardsUiOpen: "Mở cuộc trò chuyện",
+    chatCardsUiNotes: "Ghi chú",
+    chatCardsUiTurns: "Lượt trao đổi",
+    chatCardsUiPinned: "Đã ghim",
+    chatCardsUiTitleFallback: "Cuộc trò chuyện",
+    chatCardsUiObjectiveFallback: "Chưa có mục tiêu hiển thị.",
+    chatCardsUiUpdate: "Lần cập nhật",
+    chatCardsUiModeFocus: "Soạn nhanh",
+    chatCardsUiModeDeep: "Đào sâu nội dung",
+    chatCardsUiModePro: "Rà soát kỹ",
+    chatCardsUiStateDraft: "Bản nháp",
+    chatCardsUiStateReview: "Đang xem lại",
+    chatCardsUiStateReady: "Đã chuẩn bị xong",
+    chatCardsUiStateArchived: "Đã lưu trữ",
+    chatCardsUiStateGuarded: "Chưa thể mở",
+    chatCardsUiReadyNote: "Nội dung đã chuẩn bị xong; việc gửi yêu cầu cần được hệ thống xác nhận.",
+    chatCardsUiArchivedNote: "Đã lưu trữ · chỉ đọc",
+    chatCardsUiEditingNote: "Đang biên tập"
+  });
+
+  Object.assign(MESSAGES.en, {
+    chatCardsUiEmptyTitle: "No conversations yet",
+    chatCardsUiEmptyBody: "Create a conversation to save your goals, reference information, and notes.",
+    chatCardsUiOpen: "Open conversation",
+    chatCardsUiNotes: "Notes",
+    chatCardsUiTurns: "Exchanges",
+    chatCardsUiPinned: "Pinned",
+    chatCardsUiTitleFallback: "Conversation",
+    chatCardsUiObjectiveFallback: "No goal to display yet.",
+    chatCardsUiUpdate: "Update",
+    chatCardsUiModeFocus: "Quick writing",
+    chatCardsUiModeDeep: "Explore in depth",
+    chatCardsUiModePro: "Careful review",
+    chatCardsUiStateDraft: "Draft",
+    chatCardsUiStateReview: "Under review",
+    chatCardsUiStateReady: "Content ready",
+    chatCardsUiStateArchived: "Archived",
+    chatCardsUiStateGuarded: "Cannot open yet",
+    chatCardsUiReadyNote: "Content is ready; sending a request still requires confirmation from the service.",
+    chatCardsUiArchivedNote: "Archived · read only",
+    chatCardsUiEditingNote: "Editing"
+  });
+
+  Object.assign(MESSAGES.zh, {
+    chatCardsUiEmptyTitle: "暂无对话",
+    chatCardsUiEmptyBody: "创建对话以保存您编写的目标、参考信息和笔记。",
+    chatCardsUiOpen: "打开对话",
+    chatCardsUiNotes: "笔记",
+    chatCardsUiTurns: "交流次数",
+    chatCardsUiPinned: "已置顶",
+    chatCardsUiTitleFallback: "对话",
+    chatCardsUiObjectiveFallback: "暂无可显示的目标。",
+    chatCardsUiUpdate: "更新次数",
+    chatCardsUiModeFocus: "快速撰写",
+    chatCardsUiModeDeep: "深入梳理",
+    chatCardsUiModePro: "仔细检查",
+    chatCardsUiStateDraft: "草稿",
+    chatCardsUiStateReview: "查看中",
+    chatCardsUiStateReady: "内容已准备好",
+    chatCardsUiStateArchived: "已归档",
+    chatCardsUiStateGuarded: "暂时无法打开",
+    chatCardsUiReadyNote: "内容已准备好，发送请求仍需服务确认。",
+    chatCardsUiArchivedNote: "已归档 · 仅可查看",
+    chatCardsUiEditingNote: "编辑中"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

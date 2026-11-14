@@ -37,7 +37,10 @@ finiteanimations/twopaints,noforcedCSS. Stablebaseline6views retained.
   native signed detail riêng, không coi đã đạt toàn bộ accessibility.
 - [x] NativeDocreadfailure/recovery/feedback3locale:12states/6failed+6ready,
   realGETrecovery,24controlledabort,0unexpectederrors/egress/productwrites.
-- [ ] Review/docs/Tester/provenance/exactCI/merge/deploy/runtime/assets/receipt.
+- [x] Review/docs/Tester/provenance/exactCI/merge/deploy/runtime/assets/receipt:
+  PR731HEAD799b08e2,CI43584766006bothPASS;merge/runtime398cea1c,
+  deploy43585904925PASS,tree d307b2ba exact,services/health/4assets exact.
+  Issue689receipt6876023868 / PR731receipt6876024174.
 
 Review độc lập C0/I0/M0; exact worker replay3/3,16protectedpaths unchanged.
 Node43target,224affected,41historical PASS; các nhóm không cộng tùy tiện.

@@ -4,6 +4,7 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {documentRefreshHistoricalSnapshot} from './document-refresh-copy-snapshot.mjs';
+import {chatCardsHistoricalSnapshot,chatCardsHistoricalPortalSource} from './chat-cards-customer-snapshot.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const reviewed=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/chat-document-usable-copy-reviewed.json'),'utf8'));
@@ -13,7 +14,7 @@ assert.equal(keys.size,67);
 // No prefix filter: every approved value/order must match and unknown keys
 // remain visible to older golden catalog checks.
 export function usableCopyHistoricalSnapshot(entries,locale){
-  entries=documentRefreshHistoricalSnapshot(entries,locale);
+  entries=chatCardsHistoricalSnapshot(documentRefreshHistoricalSnapshot(entries,locale),locale);
   assert.ok(reviewed.added[locale]);
   const added=entries.filter(([key])=>keys.has(key));if(!added.length)return entries;
   assert.equal(added.length,67,'Unreviewed usable copy: missing keys');
@@ -24,7 +25,7 @@ export function usableCopyHistoricalSnapshot(entries,locale){
 // Older scoped renderer tests retain their original scope only through exact
 // approved source spans. Unexpected edits cannot be normalized as new copy.
 export function usableCopyHistoricalPortalSource(value){
-  let source=value.replace(/\r\n/g,'\n');
+  let source=chatCardsHistoricalPortalSource(value).replace(/\r\n/g,'\n');
   for(const edit of [...reviewed.portalEdits].reverse()){
     const oldCount=source.split(edit.before).length-1;
     if(!edit.after){
