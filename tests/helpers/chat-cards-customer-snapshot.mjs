@@ -2,12 +2,14 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
+import {datePagesHistoricalSnapshot,datePagesHistoricalPortalSource} from './chat-dates-pages-snapshot.mjs';
 
 const reviewed=JSON.parse(fs.readFileSync(new URL('../fixtures/chat-cards-customer-copy-reviewed.json',import.meta.url),'utf8'));
 const keys=new Set(Object.keys(reviewed.vi));
 const hashes={vi:'cdc7f205d4715cc1cc4c43b100bf050981b6dc3621b09c035b104d2eb0452f5b',en:'b350e6202361143aa20105e1da1e2fbab84558b74ad56a211520ab8bebb217aa',zh:'a2d8ef008943e57c54d92752e423d1c3a9b5a3e942d32b9893a320db2f5bb76c'};
 const hash=text=>createHash('sha256').update(text).digest('hex');
 export function chatCardsHistoricalSnapshot(entries,locale){
+  entries=datePagesHistoricalSnapshot(entries,locale);
   assert.ok(hashes[locale]);
   const added=entries.filter(([key])=>keys.has(key));
   if(!added.length)return entries;
@@ -23,7 +25,7 @@ const spans=[
 // Restore only complete, hash-reviewed worker spans for historical scopes.
 // No regex over arbitrary/customer text, no accepting an unknown new fragment.
 export function chatCardsHistoricalPortalSource(value){
-  let source=value.replace(/\r\n/g,'\n');
+  let source=datePagesHistoricalPortalSource(value).replace(/\r\n/g,'\n');
   for(const [start,end,expected]of spans){
     const a=source.indexOf(start),b=source.indexOf(end,a);
     const oa=original.indexOf(start),ob=original.indexOf(end,oa);
