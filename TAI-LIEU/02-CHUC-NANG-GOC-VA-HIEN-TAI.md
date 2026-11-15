@@ -2057,3 +2057,18 @@ native detail/device/Safari/toàn app và đầu ra provider không được suy
 |ActivityR1thiếuVIfallback|SamefragmentR2đúngmọi fallback|ActualVMfallbacktest,onecoderfailuregiữ|
 |QAtrước chưa có versions/events|Ownedcopy24versions45events|ActualGET/DOM/order,8tablesexact|
 |RawISOtime cònhiển thị|Giữngoàiphiếu ngàygiờ kếtiếp|Không nhận toànmàn sạch mọi định dạng|
+
+## Yêu cầu hội thoại — đối chiếu15/11/2026
+
+Nguồn gốc đối chiếu: hợp đồng Chat guarded receipt trong
+`tests/test_chat_workspace_portal_contracts.py` và ba hàm renderer ở BASE63ddccd5;
+không suy thêm chức năng trả lời tự động từ bảng tính năng chung.
+
+|Trước BASE63ddccd5|Trong phiếu hiện tại|Bằng chứng/giới hạn|
+|---|---|---|
+|Bốn ô implementation/status còn thuật ngữ|Hai trạng thái tiếp nhận/trả lời tự động|Không đổi readiness/capabilities hoặc bật executor|
+|Timeline/kicker/confirm/note lẫn ngôn ngữ|29khóa×3locale, đầy đủ VI fallback|Bộ lọc/50/order/rawtimes/customerdata giữ|
+|86pxcap cắt giá trị sau dịch|Hai rule cho label/value xuống dòng|NativeVI/ENfail giữ; R2ba locale24uniquePASS|
+|Chỉ có metadata QA rỗng về run|21lifecycle run+21FKuser message giả|GET/DOM thật không chứng minh thực thi/assistant/output|
+|Needle test ghim nguyên câu kỹ thuật|Một biểu thức `safeText(uiText(...))` mới|Mọi chốt action/quyền/private-data còn nguyên|
+|Lịch sử unit trước chưa có receipt tại tài liệu|PR739 đãgiao63ddccd5/deploy43644999130|Signedproduction UI và wholegoal vẫn mở|

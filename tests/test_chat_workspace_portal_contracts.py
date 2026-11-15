@@ -211,7 +211,7 @@ def test_chat_run_is_a_server_confirmed_guarded_receipt_not_fake_ai() -> None:
         "function renderChatRunTimeline(",
         'data-portal-action="chat-run-submit"',
         'data-portal-action="chat-run-refresh"',
-        "data-portal-confirm=\"Gửi tin nhắn này thành Chat Run Web-native?",
+        """data-portal-confirm="'+ safeText(uiText("chatExecutionUiConfirm", "Gửi nội dung này để ghi nhận yêu cầu? Chưa có trả lời tự động."))""",
         'action === "chat-run-submit") clearTransientFormDraft(route);',
         "chatExecutionEnabled: source.chatExecutionEnabled === true",
         "chatExecutionReadState:",
