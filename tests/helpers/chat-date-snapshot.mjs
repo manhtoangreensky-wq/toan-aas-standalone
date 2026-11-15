@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
+import {documentCardHistoricalPortalSource} from './document-card-copy-snapshot.mjs';
 const hash=text=>createHash('sha256').update(text).digest('hex');
 export const chatDateChanges=[
   {
@@ -47,7 +48,7 @@ export const chatDateChanges=[
 ];
 for(const edit of chatDateChanges){assert.equal(hash(edit.old),edit.oldHash);assert.equal(hash(edit.new),edit.newHash);}
 export function chatDateHistoricalPortalSource(value){
-  let source=value.replace(/\r\n/g,'\n');
+  let source=documentCardHistoricalPortalSource(value).replace(/\r\n/g,'\n');
   if(!source.includes('chatWorkspaceDateLabel'))return source;
   assert.ok(chatDateChanges.every(edit=>source.split(edit.new).length-1===1),'Unreviewed Chat date source: partial/duplicate/changed helper or call context');
   for(const edit of [...chatDateChanges].reverse())source=source.replace(edit.new,edit.old);

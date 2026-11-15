@@ -1967,3 +1967,30 @@ Evidence:docs/reports/chat-page-meta-20261115.md/phiênCM,Issue689.
   motioncuối,noBot/routeengine/provider/ví/PayOS/productiondataimplementation.
 
 Evidence:docs/reports/chat-date-display-20261115.md/phiênCD,cùngIssue689.
+
+## Thẻ tài liệu —đơn vị15/11/2026
+
+- [x] DATEPR742đãgiao:CI43706589548bothPASS,merge/runtime5bc8f3cd,
+  treee5068733exact,deploy43707642952PASS,services/health/fiveassets exact;
+  receiptsIssue6896893485260/PR7426893485405.
+- [x] DOCUMENT-CARD-COPYlocal:3AGYproposals/6exactchanges/2appfiles/
+  23keys69values;pending/actionlabels/emptydefaults dễhiểuVIENZH.
+  State/caps/downloadpath/attrs/metrics/customerfilename/customemptyargsgiữ.
+- [x] PermanentBASE10RED/nativeBASEactualoldempty;group635ca633PASS2FAIL
+  oldwholei18nguards;test-onlyfinite3additioninverse/oldhashgiữ,
+  only3affectedrerunPASS. Accepted635=632+3,khônglặp632.
+- [x] Native6actualsignedemptyobservations/3mobilecrops/wholeoperationstable0;
+  9tablesrows/schema/6plans18scenes/source/evidencegiữ/Jobs0/noreseed.
+  ActualVMcoverspending/download/rights;khôngnativetệpoutputclaim.
+- [x] Exact6workerreplay/wholeoutsideDelta/20protectedLF/CIonecommand/
+  nativebytebinding;rootVIEWEDVI/ZHemptycrops.
+- [ ] Source-review/docs/Tester/case/provenance/exactHEADCI/merge/deploy/
+  runtime/fiveassets/receipt;chưađóngtừlocal.
+- [ ] NEXT3Documentproposals(historypages/PDFsourcefields/3notices),
+  rồireadmetaclustertworows và2catalogauditpanelsREADYNOTAPPLIED.
+- [ ] Documentselected/source/outputmetrics/fallbacknames/icon/rawdate/
+  otherforms/pageheadings còntechnicalcopy,giữ trongqueuekhôngticktoànmàn.
+- [ ] Remaininglocale/AX/auth/device/Safari/signedUI/M-FINAL01..06mở;
+  motioncuối,noBot/routeengine/provider/ví/PayOS/productiondataimplementation.
+
+Evidence:docs/reports/document-card-copy-20261115.md/phiênDC,cùngIssue689.

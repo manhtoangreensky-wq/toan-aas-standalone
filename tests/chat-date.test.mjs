@@ -3,7 +3,15 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {chatDateRenderer,chatDateSources} from './helpers/chat-date-runtime.mjs';
 import {chatDateChanges,chatDateHistoricalPortalSource} from './helpers/chat-date-snapshot.mjs';
-const source=chatDateSources(),baseline=chatDateSources(true),current=await chatDateRenderer(source),before=await chatDateRenderer(baseline);
+import {documentCardHistoricalSnapshot,documentCardHistoricalPortalSource,documentCardHistoricalI18nSource} from './helpers/document-card-copy-snapshot.mjs';
+const live=chatDateSources(),source={...live,portal:documentCardHistoricalPortalSource(live.portal),i18n:documentCardHistoricalI18nSource(live.i18n)},baseline=chatDateSources(true);
+const actual=await chatDateRenderer(source),before=await chatDateRenderer(baseline);
+const current=(...args)=>{
+  const result=actual(...args);
+  return {...result,catalogFrozen:Object.fromEntries(['vi','en','zh'].map(locale=>[locale,Object.isFrozen(result.messages[locale])])),messages:Object.fromEntries(['vi','en','zh'].map(locale=>[
+    locale,Object.fromEntries(documentCardHistoricalSnapshot(Object.entries(result.messages[locale]),locale))
+  ]))};
+};
 const id='11111111-1111-4111-8111-111111111111',turnId='22222222-2222-4222-8222-222222222222',runId='33333333-3333-4333-8333-333333333333',route='/chat/'+id;
 const literal='CUSTOMER 2026-11-15T08:09:10Z media Facebook TikTok <script>alert("x")</script>&';
 const caps=Object.fromEntries(['chat-workspace-view','chat-thread-update','chat-context-create','chat-turn-create','chat-turn-state','chat-thread-restore-version','chat-run-submit','chat-run-refresh'].map(key=>[key,true]));
@@ -64,7 +72,7 @@ for(const locale of ['vi','en','zh']){
   test(`${locale}: SAME VM locale changes dates again, catalog remains byte-exact/frozen and root card behavior is unchanged`,()=>{
     const value='2026-11-15T08:09:10Z',next=locale==='vi'?'en':locale==='en'?'zh':'vi';
     try{now.setLocale(next);const a=smalls(render(now,value).html);for(const slot of a)assert.ok(slot.text.includes(esc(now,expected(next,value))));}finally{now.setLocale(locale);}
-    assert.ok(Object.isFrozen(now.messages[locale]));assert.deepEqual(JSON.parse(JSON.stringify(Object.entries(now.messages[locale]))),JSON.parse(JSON.stringify(Object.entries(old.messages[locale]))));
+    assert.equal(now.catalogFrozen[locale],true);assert.deepEqual(JSON.parse(JSON.stringify(Object.entries(now.messages[locale]))),JSON.parse(JSON.stringify(Object.entries(old.messages[locale]))));
     const raw={chatWorkspaceEnabled:true,capabilities:{'chat-workspace-view':true},chatThreads:[{...baseRaw.chatThreadDetail.thread,objective_excerpt:literal,updated_at:value,context_count:0,turn_count:0}]};
     const rootNow=current(locale,'/chat',raw),rootOld=before(locale,'/chat',raw);assert.equal(rootNow.html,rootOld.html);assert.equal(JSON.stringify(rootNow.context),JSON.stringify(rootOld.context));
   });

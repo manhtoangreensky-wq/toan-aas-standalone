@@ -2897,3 +2897,15 @@ Năm thay thế/oneappfile/0keys. Node625đạt một lượt; nativeR2sáu sign
 quan sát/sáu ảnh đúng vùngcuộn,8tables/6plans18scenes/source/evidence/Jobs0.
 [Báo cáo](../docs/reports/chat-date-display-20261115.md).
 Chưa nhận DATEdeployed hoặc signedproduction/finaloutput từlocalQA.
+
+## Thẻ tài liệu —15/11/2026, ứng viên chưa triển khai
+
+DATEđãgiaoPR742/5bc8f3cd/CI43706589548/deploy43707642952;
+runtime/services/health/fiveassets exact,receiptIssue6896893485260.
+Ứng viên thẻ tài liệu dịch23fixedkeys/69values về pending/actions/empty,
+giữ actualstate/strictcaps/downloads/filenames/metrics/DTO/customemptyargs.
+Node635nghiệmthu632+3affected;native6actualemptyobservations/3crops,
+9producttables/schema/6plans18scenes/source/evidencegiữ/Jobs0/noreseed.
+[Báo cáo](../docs/reports/document-card-copy-20261115.md).
+Không nhận đã xử lý/tải tệp thật từ fixture hoặc nhãn nút; phần còn kỹ thuật
+ngoài thẻ vẫn nằm trong checklist, không khẳng định toànDocumentđãhoànthiện.

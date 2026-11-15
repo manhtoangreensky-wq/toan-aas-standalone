@@ -5,7 +5,15 @@ import {createHash} from 'node:crypto';
 import {pageMetaRenderer,pageMetaSources} from './helpers/chat-page-meta-runtime.mjs';
 import {pageMetaHistoricalSnapshot,pageMetaHistoricalPortalSource,pageMetaFragments} from './helpers/chat-page-meta-snapshot.mjs';
 import {chatDateHistoricalPortalSource} from './helpers/chat-date-snapshot.mjs';
-const live=pageMetaSources(),source={...live,portal:chatDateHistoricalPortalSource(live.portal)},baseline=pageMetaSources(true),current=await pageMetaRenderer(source),before=await pageMetaRenderer(baseline);
+import {documentCardHistoricalSnapshot,documentCardHistoricalI18nSource} from './helpers/document-card-copy-snapshot.mjs';
+const live=pageMetaSources(),source={...live,portal:chatDateHistoricalPortalSource(live.portal),i18n:documentCardHistoricalI18nSource(live.i18n)},baseline=pageMetaSources(true);
+const actual=await pageMetaRenderer(source),before=await pageMetaRenderer(baseline);
+const current=(...args)=>{
+  const result=actual(...args);
+  return {...result,catalogFrozen:Object.fromEntries(['vi','en','zh'].map(locale=>[locale,Object.isFrozen(result.messages[locale])])),messages:Object.fromEntries(['vi','en','zh'].map(locale=>[
+    locale,Object.fromEntries(documentCardHistoricalSnapshot(Object.entries(result.messages[locale]),locale))
+  ]))};
+};
 const copy=JSON.parse(fs.readFileSync(new URL('./fixtures/chat-page-meta-reviewed.json',import.meta.url),'utf8'));
 const id='11111111-1111-4111-8111-111111111111',detail='/chat/'+id;
 const customerTitles=['AI Chat Workspace','Trò chuyện','Chat','对话','AI Chat Workspace · Trò chuyện · Chat · 对话 <script>alert("x")</script> Facebook TikTok'];
@@ -65,7 +73,7 @@ for(const locale of ['vi','en','zh']){
     }
   });
   test(`${locale}: exact new pair, prior catalog order/values/freeze, broader workspace labels and legacy routes remain`,()=>{
-    const {now,old}=sessions[locale][detail],entries=Object.entries(now.messages[locale]),prior=Object.entries(old.messages[locale]);assert.ok(Object.isFrozen(now.messages[locale]));
+    const {now,old}=sessions[locale][detail],entries=Object.entries(now.messages[locale]),prior=Object.entries(old.messages[locale]);assert.equal(now.catalogFrozen[locale],true);
     assert.deepEqual(JSON.parse(JSON.stringify(entries.slice(0,prior.length))),JSON.parse(JSON.stringify(prior)));assert.deepEqual(JSON.parse(JSON.stringify(entries.slice(prior.length))),Object.entries(copy[locale]));
     for(const suffix of ['title','description'])assert.equal(now.messages[locale]['workspaceMenu.card.chat_workspace.'+suffix],old.messages[locale]['workspaceMenu.card.chat_workspace.'+suffix]);
     assert.deepEqual(JSON.parse(JSON.stringify(pageMetaHistoricalSnapshot(entries,locale))),JSON.parse(JSON.stringify(prior)));
