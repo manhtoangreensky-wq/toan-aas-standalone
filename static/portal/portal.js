@@ -25325,8 +25325,18 @@ function renderAutoPostHub(page, context) {
     const pagination = listing.pagination || {};
     if (!pagination.returned && !pagination.has_more && pagination.previous_offset === null) return "";
     return renderOperationsPagination(
-      listing, enabled, "thao tác tài liệu", "document-operation-page", route,
-      "data-document-operation-offset", "Phân trang lịch sử thao tác tài liệu"
+      listing, enabled, uiText("docHistoryUiLabel", "thao tác tài liệu"), "document-operation-page", route,
+      "data-document-operation-offset", uiText("docHistoryUiAria", "Phân trang lịch sử thao tác tài liệu"),
+      {
+        localized: true,
+        translate: (key, fallback, params) => {
+          if (key === "pagination.range") return uiText("docHistoryUiRange", `Đang hiển thị ${params.start}–${params.end} ${params.label}`, params);
+          if (key === "pagination.empty") return uiText("docHistoryUiEmpty", `Không có ${params.label} ở trang này`, params);
+          if (key === "pagination.previous") return uiText("docHistoryUiPrevious", "Trang trước");
+          if (key === "pagination.next") return uiText("docHistoryUiNext", "Trang sau");
+          return fallback;
+        }
+      }
     );
   }
 
@@ -25436,14 +25446,14 @@ function renderAutoPostHub(page, context) {
   function pdfSplitFormFields() {
     return [
       {
-        name: "source_asset_id", label: "PDF nguồn trong Asset Vault", control: "select", optionsFrom: "pdfVaultAssets", referencePicker: "document-pdf",
-        emptyLabel: "Chọn PDF riêng tư", required: true,
-        help: "Chỉ PDF active thuộc signed Web account hiện tại xuất hiện. Không chọn URL, path hoặc tệp từ browser ở bước này."
+        name: "source_asset_id", label: uiText("docPdfSourceUiLabel", "PDF từ kho tệp"), control: "select", optionsFrom: "pdfVaultAssets", referencePicker: "document-pdf",
+        emptyLabel: uiText("docPdfSourceUiEmpty", "Chọn PDF"), required: true,
+        help: uiText("docPdfSourceUiHelp", "Chọn PDF đã lưu trong kho tệp của bạn. Bước này không nhận tệp tải lên, liên kết hoặc đường dẫn.")
       },
       {
-        name: "page_range", label: "Trang cần tách", placeholder: "Ví dụ: 2 hoặc 2-5", required: true,
+        name: "page_range", label: uiText("docPdfPageUiLabel", "Trang cần tách"), placeholder: uiText("docPdfPageUiPlaceholder", "Ví dụ: 2 hoặc 2-5"), required: true,
         pattern: "\\d+(?:-\\d+)?", maxLength: 32,
-        help: "Chỉ một trang hoặc một dải liên tiếp. Dải đảo chiều như 5-2 được chuẩn hóa thành 2-5; giới hạn PDF nguồn là 20 MB và 30 trang."
+        help: uiText("docPdfPageUiHelp", "Chọn một trang hoặc một dải liên tiếp từ 1 đến tối đa 30. Dải đảo chiều như 5-2 được đổi thành 2-5. PDF nguồn tối đa 20 MB và 30 trang.")
       }
     ];
   }
@@ -25470,9 +25480,9 @@ function renderAutoPostHub(page, context) {
 
   function pdfOptimizeFormFields() {
     return [{
-      name: "source_asset_id", label: "PDF nguồn trong Asset Vault", control: "select", optionsFrom: "pdfVaultAssets", referencePicker: "document-pdf",
-      emptyLabel: "Chọn PDF riêng tư", required: true,
-      help: "Web tạo một bản tối ưu lossless độc lập và chỉ phát output nếu sau khi kiểm tra nó nhỏ hơn đủ ý nghĩa. File gốc không bị thay đổi."
+      name: "source_asset_id", label: uiText("docPdfSourceUiLabel", "PDF từ kho tệp"), control: "select", optionsFrom: "pdfVaultAssets", referencePicker: "document-pdf",
+      emptyLabel: uiText("docPdfSourceUiEmpty", "Chọn PDF"), required: true,
+      help: uiText("docPdfOptimizeUiHelp", "Tạo bản sao giữ nguyên nội dung. Chỉ cung cấp tệp nếu kiểm tra xác nhận dung lượng giảm đáng kể; tệp gốc không thay đổi.")
     }];
   }
 
@@ -28530,7 +28540,7 @@ function renderAutoPostHub(page, context) {
       <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Document Operations</span><h2>Tách PDF riêng tư, không qua Bot</h2><p>Chọn PDF đã có trong Asset Vault. Máy chủ sao chép input sang vùng xử lý cô lập, giới hạn parser theo 20 MB/30 trang, loại bỏ annotation/action tương tác và chỉ phát attachment khi output vượt qua kiểm tra.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PDF output sẵn sàng tải</dd></div></dl></section>
       <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo PDF Split</h2><p class="portal-card-subtitle">Một trang hoặc một dải liên tiếp. Browser không upload bytes hoặc gửi raw file path cho thao tác này.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="document-operation-pdf-split" data-portal-route="/documents/split" data-portal-confirm="Tách PDF từ Asset Vault? Web sẽ tạo một attachment riêng tư mới sau khi kiểm tra input và output." novalidate>${renderFields(pdfSplitFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tách PDF</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới rõ ràng</h2><p class="portal-card-subtitle">Document Operations là pipeline Web độc lập.</p></div></div><ol class="portal-project-steps"><li><strong>1. Nguồn có ownership</strong><span>Chỉ asset PDF private đang active của signed account hiện tại được đọc.</span></li><li><strong>2. Xử lý có giới hạn</strong><span>Không PDF mã hóa, không quá 20 MB/30 trang, không page list tuỳ ý.</span></li><li><strong>3. Delivery riêng tư</strong><span>Output được hash/parse lại và tải qua signed session; không public URL hoặc PWA cache.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PDF đã xử lý</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Download không khả dụng nếu integrity hoặc ownership không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="/documents/split"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations, context)}${renderDocumentOperationHistoryPagination(context, canView, "/documents/split")}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Không thay thế workflow Bot</strong><p>PDF Split này là artifact Web-native có lifecycle riêng. Nó không tạo Job Bot, gọi provider, trừ/cộng Xu, tạo PayOS order hoặc dùng webhook thanh toán.</p></div></div>${renderNotes(page)}</section>
+      ${renderNotes(page)}
     </article>`;
   }
 
@@ -28556,7 +28566,7 @@ function renderAutoPostHub(page, context) {
       <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Document Operations</span><h2>Gộp PDF riêng tư theo đúng thứ tự</h2><p>Chọn từ hai đến tám PDF đã có trong Asset Vault. Máy chủ kiểm tra ownership, sao chép từng nguồn vào vùng xử lý cô lập, giới hạn mỗi nguồn 20 MB, tổng 40 MB và 30 trang, sau đó loại bỏ annotation/action tương tác trước khi phát attachment riêng tư.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PDF Merge sẵn sàng tải</dd></div></dl></section>
       <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Chọn thứ tự PDF</h2><p class="portal-card-subtitle">PDF 1 xuất hiện trước, rồi tới PDF 2… Browser không upload bytes hoặc gửi raw file path cho thao tác này.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="document-operation-pdf-merge" data-portal-route="/documents/merge" data-portal-confirm="Gộp PDF theo đúng thứ tự đã chọn? Web sẽ tạo một attachment riêng tư mới sau khi kiểm tra tất cả input và output." novalidate>${renderFields(pdfMergeFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Gộp PDF riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới rõ ràng</h2><p class="portal-card-subtitle">Document Operations là pipeline Web độc lập.</p></div></div><ol class="portal-project-steps"><li><strong>1. Thứ tự có chủ đích</strong><span>Slot PDF 1 đến PDF 8 được giữ nguyên trong request fingerprint và output artifact.</span></li><li><strong>2. Xử lý có giới hạn</strong><span>Tối đa 8 nguồn, mỗi nguồn 20 MB, tổng 40 MB/30 trang; chặn PDF mã hóa và nguồn trùng.</span></li><li><strong>3. Delivery riêng tư</strong><span>Output được hash/parse lại và tải qua signed session; không public URL hoặc PWA cache.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PDF đã gộp</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Download không khả dụng nếu integrity hoặc ownership không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="/documents/merge"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations, context, "Chưa có PDF đã gộp", "PDF gộp chỉ xuất hiện sau khi mọi nguồn và output đều vượt qua kiểm tra server-side. Không có Job Bot hoặc output mô phỏng.")}${renderDocumentOperationHistoryPagination(context, canView, "/documents/merge")}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Không thay thế workflow Bot</strong><p>PDF Merge này là artifact Web-native có lifecycle riêng. Nó không tạo Job Bot, gọi provider, trừ/cộng Xu, tạo PayOS order hoặc dùng webhook thanh toán.</p></div></div>${renderNotes(page)}</section>
+      ${renderNotes(page)}
     </article>`;
   }
 
@@ -28582,7 +28592,7 @@ function renderAutoPostHub(page, context) {
       <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Document Operations</span><h2>Tối ưu PDF minh bạch, không hạ chất lượng hình ảnh</h2><p>Chọn PDF trong Asset Vault. Máy chủ sao chép input vào vùng xử lý cô lập, tối ưu content stream/cấu trúc, loại bỏ annotation/action tương tác, kiểm tra lại parser và hash. Nếu artifact cuối cùng không nhỏ hơn đủ ý nghĩa, Web không tạo download và không thay file gốc.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PDF tối ưu sẵn sàng tải</dd></div></dl></section>
       <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tối ưu PDF không resample</h2><p class="portal-card-subtitle">Một profile duy nhất, có kiểm tra thật. Không có dropdown light/medium/strong không tác động engine.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="document-operation-pdf-optimize" data-portal-route="/documents/compress" data-portal-confirm="Tối ưu PDF từ Asset Vault? File gốc không bị thay đổi; output chỉ được tạo nếu máy chủ xác minh bản mới nhỏ hơn đủ ý nghĩa." novalidate>${renderFields(pdfOptimizeFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tối ưu PDF</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Kết quả trung thực</h2><p class="portal-card-subtitle">Không resample ảnh hoặc tạo output giả; annotation/action tương tác được loại bỏ để delivery an toàn.</p></div></div><ol class="portal-project-steps"><li><strong>1. Nguồn có ownership</strong><span>Chỉ asset PDF private active của signed account hiện tại được sao chép/đọc.</span></li><li><strong>2. Tối ưu có giới hạn</strong><span>Tối đa 20 MB/30 trang; không PDF mã hóa, không chạy shell/command hoặc dịch vụ ngoài.</span></li><li><strong>3. Chỉ giao khi giảm thật</strong><span>Artifact phải strict-reparse, hash đúng và tiết kiệm tối thiểu 1 KiB cùng 1%; nếu không có output.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PDF đã tối ưu</h2><p class="portal-card-subtitle">Dung lượng nguồn, output và mức giảm chỉ được server công bố sau completed. Trạng thái guarded nghĩa là không có bản nhỏ hơn đạt chuẩn — không phải một download bị ẩn.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="/documents/compress"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations, context, "Chưa có PDF tối ưu", "Một output chỉ xuất hiện khi máy chủ xác minh bản lossless nhỏ hơn thật. File gốc trong Asset Vault luôn được giữ nguyên.")}${renderDocumentOperationHistoryPagination(context, canView, "/documents/compress")}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Không thay thế workflow Bot</strong><p>PDF Optimize này là artifact Web-native có lifecycle riêng. Nó không tạo Job Bot, gọi provider, trừ/cộng Xu, tạo PayOS order hoặc dùng webhook thanh toán.</p></div></div>${renderNotes(page)}</section>
+      ${renderNotes(page)}
     </article>`;
   }
 

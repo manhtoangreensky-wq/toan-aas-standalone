@@ -1994,3 +1994,29 @@ Evidence:docs/reports/chat-date-display-20261115.md/phiênCD,cùngIssue689.
   motioncuối,noBot/routeengine/provider/ví/PayOS/productiondataimplementation.
 
 Evidence:docs/reports/document-card-copy-20261115.md/phiênDC,cùngIssue689.
+
+## Giao diện PDF —đơn vị15/11/2026
+
+- [x] CARDPR743đãgiao:CI43709678826bothPASS,merge/runtimec2fc6c65,
+  treed146bc69exact,deploy43710852871PASS/services/health/fiveassets exact;
+  receiptsIssue6896893914967/PR7436893915073.
+- [x] DOCUMENT-PDF-UIlocal:8exactAGYchanges/2files/13keys39values,
+  pagination+SplitOptimizefields và3noticewrappers bỏ,notes/formsgiữ.
+- [x] BASE1PASS9RED/nativeVI375oldfields+notice;onegroup645PASS0FAIL,
+  actualpagination/fielddescriptors/3wholepages/notes/rights/customerguards.
+- [x] Native9unique3signedlocale×Split375light/Compress1440dark/Merge375light,
+  3fieldcrops,actualGETempty/noreseed/9tables/schema/6plans18scenes/
+  source/evidence/Jobs0. RootVIEWEDVI/ENcrops.
+- [x] Exact8replay/wholeoutside/20LF/allPython/CIonecommand/nativebinding;
+  PDFinverseFIRST/cardtestactualcatalogfreezebeforeclone/oldhashgiữ.
+- [ ] Source-review/docs/Tester/case/provenance/exactHEADCI/merge/deploy/
+  runtime/fiveassets/receipt,khôngđóngtừlocal.
+- [ ] PDF-LIGHT-READABILITY:labels/help nhìnnhạt trongcrops trênwhite,
+  CSSbyte-exactBASE,chưađocomputedcontrast. Đo/giaosửa riêng,
+  khôngẩnfieldcầnthiết hoặcnhậnwholePDF/AXPASS.
+- [ ] NEXTreadmetatworows/catalogauditpanels;cardnamesproposalđanggiaoAGY,
+  otherselected/metrics/rawdates/forms/headings còn trongqueue.
+- [ ] Remaininglocale/AX/auth/device/Safari/signedUI/finaloutput/M-FINALmở;
+  motioncuối,noBot/routeengine/provider/financial/productiondataimplementation.
+
+Evidence:docs/reports/document-pdf-ui-20261115.md/phiênDP,cùngIssue689.

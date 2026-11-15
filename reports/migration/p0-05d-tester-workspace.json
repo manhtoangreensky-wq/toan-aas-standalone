@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-15",
-  "local_files_refresh_scope": "Document card copy: canonical case source1351lines/147541bytes after8scoped card case rows; local file metadata only. Historical remote/P0/48case/safety fields preserved; current Issue689 observations remain separate from historical remote validation.",
+  "local_files_refresh_scope": "Document PDF UI: canonical case source1364lines/148634bytes after8scoped PDF case rows; local file metadata only. Historical remote/P0/48case/safety fields preserved; current Issue689 observations remain separate from historical remote validation.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1351,
-      "bytes": 147541,
-      "sha256": "0d660bcc4394030dfb180909242fbdf9e814e28da955939e42afa7aad83358cf"
+      "lines": 1364,
+      "bytes": 148634,
+      "sha256": "a72690d209c99b6bdd7b27ce2637adb4b72d87963f9ce1b10acc9dc295e89894"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

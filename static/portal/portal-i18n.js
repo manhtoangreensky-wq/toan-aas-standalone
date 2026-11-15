@@ -22152,6 +22152,59 @@
     docCardEmptyUiBody: "处理文档后，您可在此查看并下载结果。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    docHistoryUiLabel: "thao tác tài liệu",
+    docHistoryUiAria: "Phân trang lịch sử thao tác tài liệu",
+    docHistoryUiRange: "Đang hiển thị {start}–{end} {label}",
+    docHistoryUiEmpty: "Không có {label} ở trang này",
+    docHistoryUiPrevious: "Trang trước",
+    docHistoryUiNext: "Trang sau"
+  });
+  Object.assign(MESSAGES.en, {
+    docHistoryUiLabel: "document operations",
+    docHistoryUiAria: "Document operation history pagination",
+    docHistoryUiRange: "Showing {start}–{end} {label}",
+    docHistoryUiEmpty: "No {label} on this page",
+    docHistoryUiPrevious: "Previous page",
+    docHistoryUiNext: "Next page"
+  });
+  Object.assign(MESSAGES.zh, {
+    docHistoryUiLabel: "文档操作",
+    docHistoryUiAria: "文档操作历史分页",
+    docHistoryUiRange: "正在显示第 {start}–{end} 条{label}",
+    docHistoryUiEmpty: "本页没有{label}",
+    docHistoryUiPrevious: "上一页",
+    docHistoryUiNext: "下一页"
+  });
+
+  Object.assign(MESSAGES.vi, {
+    docPdfSourceUiLabel: "PDF từ kho tệp",
+    docPdfSourceUiEmpty: "Chọn PDF",
+    docPdfSourceUiHelp: "Chọn PDF đã lưu trong kho tệp của bạn. Bước này không nhận tệp tải lên, liên kết hoặc đường dẫn.",
+    docPdfPageUiLabel: "Trang cần tách",
+    docPdfPageUiPlaceholder: "Ví dụ: 2 hoặc 2-5",
+    docPdfPageUiHelp: "Chọn một trang hoặc một dải liên tiếp từ 1 đến tối đa 30. Dải đảo chiều như 5-2 được đổi thành 2-5. PDF nguồn tối đa 20 MB và 30 trang.",
+    docPdfOptimizeUiHelp: "Tạo bản sao giữ nguyên nội dung. Chỉ cung cấp tệp nếu kiểm tra xác nhận dung lượng giảm đáng kể; tệp gốc không thay đổi."
+  });
+  Object.assign(MESSAGES.en, {
+    docPdfSourceUiLabel: "PDF from file library",
+    docPdfSourceUiEmpty: "Choose PDF",
+    docPdfSourceUiHelp: "Choose a PDF saved in your file library. This step does not accept uploads, links or file paths.",
+    docPdfPageUiLabel: "Pages to extract",
+    docPdfPageUiPlaceholder: "For example: 2 or 2-5",
+    docPdfPageUiHelp: "Choose one page or a consecutive range from 1 up to 30. A reversed range such as 5-2 becomes 2-5. The source PDF is limited to 20 MB and 30 pages.",
+    docPdfOptimizeUiHelp: "Create a copy with the content preserved. A file is provided only if checks confirm a meaningful size reduction; the original is unchanged."
+  });
+  Object.assign(MESSAGES.zh, {
+    docPdfSourceUiLabel: "文件库中的 PDF",
+    docPdfSourceUiEmpty: "选择 PDF",
+    docPdfSourceUiHelp: "请选择已保存在文件库中的 PDF。此步骤不接受上传文件、链接或文件路径。",
+    docPdfPageUiLabel: "要提取的页面",
+    docPdfPageUiPlaceholder: "例如：2 或 2-5",
+    docPdfPageUiHelp: "请选择第 1 至最多第 30 页中的单页或连续页码范围。倒序范围（如 5-2）会调整为 2-5。源 PDF 最大为 20 MB、30 页。",
+    docPdfOptimizeUiHelp: "创建保留原内容的副本。只有检查确认文件大小明显减小时才提供文件；原文件保持不变。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

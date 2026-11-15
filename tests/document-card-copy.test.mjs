@@ -4,8 +4,20 @@ import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {documentCardRenderer,documentCardSources} from './helpers/document-card-copy-runtime.mjs';
 import {documentCardHistoricalSnapshot,documentCardHistoricalPortalSource,documentCardHistoricalI18nSource} from './helpers/document-card-copy-snapshot.mjs';
+import {documentPdfHistoricalSnapshot,documentPdfHistoricalPortalSource,documentPdfHistoricalI18nSource} from './helpers/document-pdf-ui-snapshot.mjs';
 const reviewed=JSON.parse(fs.readFileSync(new URL('./fixtures/document-card-copy-reviewed.json',import.meta.url),'utf8'));
-const source=documentCardSources(),baseline=documentCardSources(true),current=await documentCardRenderer(source),before=await documentCardRenderer(baseline);
+const rawSource=documentCardSources();
+const source={portal:documentPdfHistoricalPortalSource(rawSource.portal),i18n:documentPdfHistoricalI18nSource(rawSource.i18n)};
+const baseline=documentCardSources(true),rawCurrent=await documentCardRenderer(rawSource),before=await documentCardRenderer(baseline);
+const rawCatalogueFrozen=Symbol('rawCatalogueFrozen');
+function current(...args){
+  const session=rawCurrent(...args),frozen={},messages={};
+  for(const locale of ['vi','en','zh']){
+    frozen[locale]=Object.isFrozen(session.messages[locale]);
+    messages[locale]=Object.fromEntries(documentPdfHistoricalSnapshot(Object.entries(session.messages[locale]),locale));
+  }
+  return {...session,messages,[rawCatalogueFrozen]:frozen};
+}
 const kinds=['pdf_split','pdf_merge','pdf_optimize','image_to_pdf','pdf_to_images','pdf_to_word_text','image_ocr','pdf_ocr','pdf_ocr_word'];
 const id='11111111-1111-4111-8111-111111111111',literal='CUSTOMER Artifact provider Bot server media Facebook TikTok <script>alert("x")</script>.pdf';
 const item=(kind='pdf_split',pages=1,extra={})=>({id,kind,state:'completed',download_ready:true,original_filename:literal,source_page_count:pages,output_page_count:pages,source_count:2,selected_start_page:2,selected_end_page:4,input_byte_size:4096,byte_size:3072,saved_bytes:1024,saved_percent:25,language:'vi',completed_at:'2026-11-15T08:09:10Z',updated_at:'RAW_UPDATED',created_at:'RAW_CREATED',...extra});
@@ -78,7 +90,7 @@ for(const locale of ['vi','en','zh']){
     const fallbackEmpty=now.qa.withUiText((key,value)=>value,()=>render(now,[]));assert.ok(fallbackEmpty.includes(esc(now,reviewed.vi.docCardEmptyUiBody)));
     const hostile='<img src=x onerror="alert(1)"> \'&',html=now.qa.withUiText((key,fallback)=>key.startsWith('docCard')?hostile:fallback,()=>render(now,[record]));
     assert.ok(html.includes('data-portal-confirm="'+esc(now,hostile)+'"'));assert.equal(html.includes('<img'),false);assert.equal(html.includes('&amp;lt;img'),false);
-    const entries=Object.entries(now.messages[locale]),prior=Object.entries(old.messages[locale]);assert.ok(Object.isFrozen(now.messages[locale]));assert.deepEqual(JSON.parse(JSON.stringify(entries.slice(0,prior.length))),JSON.parse(JSON.stringify(prior)));assert.deepEqual(JSON.parse(JSON.stringify(entries.slice(prior.length))),Object.entries(e));
+    const entries=Object.entries(now.messages[locale]),prior=Object.entries(old.messages[locale]);assert.equal(now[rawCatalogueFrozen][locale],true);assert.deepEqual(JSON.parse(JSON.stringify(entries.slice(0,prior.length))),JSON.parse(JSON.stringify(prior)));assert.deepEqual(JSON.parse(JSON.stringify(entries.slice(prior.length))),Object.entries(e));
     assert.deepEqual(JSON.parse(JSON.stringify(documentCardHistoricalSnapshot(entries,locale))),JSON.parse(JSON.stringify(prior)));
     for(const key of Object.keys(e)){assert.throws(()=>documentCardHistoricalSnapshot(entries.filter(([name])=>name!==key),locale),/Unreviewed document card copy/);assert.throws(()=>documentCardHistoricalSnapshot(entries.map(([name,value])=>[name,name===key?'UNREVIEWED':value]),locale),/Unreviewed document card copy/);}
     assert.throws(()=>documentCardHistoricalSnapshot([...prior,...Object.entries(e).toReversed()],locale),/Unreviewed document card copy/);assert.throws(()=>documentCardHistoricalSnapshot([...entries,['docCardUiUnknown','UNKNOWN']],locale),/Unreviewed document card copy/);
