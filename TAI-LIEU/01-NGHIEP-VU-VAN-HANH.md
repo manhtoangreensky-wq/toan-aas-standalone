@@ -2886,3 +2886,14 @@ PR740đãtriểnkhai0e97fd8a/deploy43684233179/fiveassets exact.
 KiểmtraCIđầuPR741còn18comparatorlịchsửchưaadmitnhãnmới;
 chỉsửahaitệptestadapter,18RED→18PASS,khôngđổiứngdụng.
 Chưađưabảnmetadata lênproductiontừCIfailed43688639581.
+
+## Ngày giờ Chat —15/11/2026, ứng viên chưa triển khai
+
+Metadata đãtriểnkhaiPR741/c048dd7e/CI43689932109/deploy43690886966,
+runtime/services/health/fiveassets exact. ReceiptIssue6896891216336.
+Ứng viên ngày giờ đổi riêng bốn vùng hệ thống sang medium/short theo ngôn
+ngữ hiện tại; giữ timestamp lưu,timezone,customercontent vàcontrols.
+Năm thay thế/oneappfile/0keys. Node625đạt một lượt; nativeR2sáu signedfake
+quan sát/sáu ảnh đúng vùngcuộn,8tables/6plans18scenes/source/evidence/Jobs0.
+[Báo cáo](../docs/reports/chat-date-display-20261115.md).
+Chưa nhận DATEdeployed hoặc signedproduction/finaloutput từlocalQA.

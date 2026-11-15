@@ -2087,3 +2087,17 @@ _PORTAL_SHELL_TITLES tạiBASE0e97fd8a,khôngbịa featuregốc.
 |Sentineltoàncatalogquárộng|Finite2nodeprojection/oldassertionsgiữ|473+3affectedNodePASS|
 |Khôngcówholeappclaim|12native/69Python/476Node scoped|SignedUI/AX/auth/device/motionmở|
 |18comparatorlịchsửvẫngiữmetadata trướcđổi|Haitestrendererschiếuđúng4sourcefragmentsđãduyệt|18RED→18PASS;app/customer/control/oldhashgiữ|
+
+## Ngày giờ Chat —đối chiếu15/11/2026
+
+Nguồn:bốn timestampconsumer trong actualrenderChatWorkspaceDetail/
+renderChatRunTimeline và dateIIFE thẻroot tạiBASEc048dd7e.
+
+|Hành vi trước|Ứng viên trong phiếu|Bằng chứng/giới hạn|
+|---|---|---|
+|RawISO ở yêu cầu/nội dung/lần lưu/hoạt động|Format mediumshort theo currentlocale|BASE10RED/native4areas→625PASS/native6|
+|DateIIFEroot đãformat|Giữ nguyên từngbyte|RootwholeHTMLsentinel|
+|Timestamp/customerISO bị dùng cùng giao diện|Chỉsystemdateconsumer đổi|RawDTO/store/body/title/tag giữ|
+|FullPageQA không chụp inner-scroll|Viewportshot có actualdatebox|R1 giữ;R2sixaffectedPASS|
+|Oldtestguard ghim source trướcdate|Strict5fragmentinverse trướcmetadata|Khôngoldhash/globalmask|
+|Titleunit chưa có receipt trong tài liệu|PR741c048 đãgiao|CI43689932109/deploy43690886966|

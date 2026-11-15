@@ -1945,3 +1945,25 @@ Evidence:docs/reports/chat-page-meta-20261115.md/phiênCM,Issue689.
   assertionsgiữ;18affectedrerunPASSexit0/5445.5115ms.
 - [ ] Refreshprovenance/exactHEADCI→merge→deploy→runtime/assets/receipt.
   Khônglặplạinhómđãđạt;khôngđóngwholegoal.
+
+## Ngày giờ Chat —đơn vị15/11/2026
+
+- [x] MetadataPR741đãgiao:c048dd7e,CI43689932109bothPASS,
+  tree176834d9exact,deploy43690886966PASS/runtime/services/health/fiveassets
+  exact;receiptsIssue6896891216336/PR7416891216075.
+- [x] CHAT-DATE-DISPLAY:5exactAGYchanges/1appfile/0keys,
+  4systemdateslotsformat theo VIENZH,rawstore/customer/rights/order giữ.
+- [x] CorrectedpermanentBASE10RED/nativeBASE4rawISOareas;oneNodegroup625PASS.
+  Firstrootanchor harnesspreflightfailure giữ riêng,khôngworkerfault.
+- [x] NativeR1data/date6PASSnhưngfullPageshotskhôngchụpinner-scroll;
+  chỉcaptureharnesssửa,sixaffectedR2PASS/sixusefulshots,khônglặp625/BASE.
+- [x] 8tables/schema/6plans18scenes/source/evidence/Jobs0/noreseed;
+  exact5replay/20protectedLF/wholeoutsideDelta/CIonecommand/nativebinding.
+- [ ] DATEsource-review/docs/Tester/case/provenance/exactHEADCI/merge/deploy/
+  runtime/fiveassets/receipt;chưađóngtừlocal.
+- [ ] NEXTsixDocumentproposals,thêm2catalogueaudit-onlyremovalsREADYNOTAPPLIED,
+  giữ actions/permissions/status,khôngkhungtrống.
+- [ ] Remaininglocale/AX/auth/device/Safari/signedUI/M-FINAL01..06 giữmở;
+  motioncuối,noBot/routeengine/provider/ví/PayOS/productiondataimplementation.
+
+Evidence:docs/reports/chat-date-display-20261115.md/phiênCD,cùngIssue689.
