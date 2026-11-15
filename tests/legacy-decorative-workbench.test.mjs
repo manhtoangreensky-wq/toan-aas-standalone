@@ -3,17 +3,25 @@ import test from 'node:test';
 import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {fileURLToPath,pathToFileURL} from 'node:url';
+import {fileURLToPath} from 'node:url';
 import {withoutLegacyDecorativeWorkbench} from './helpers/legacy-decorative-workbench.mjs';
 import {chatDocHistoricalMarkup} from './helpers/chat-doc-access-snapshot.mjs';
+import {pageMetaHistoricalPortalSource} from './helpers/chat-page-meta-snapshot.mjs';
 
 // Catch fabricated success/price/readiness/output panels returning before real
 // forms, and catch accidentally deleting anything outside those exact panels.
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const BASE='c4da5f4a90a4ca37c46b66220c81928b806a4f2a';
 const helper=path.join(ROOT,'tests/helpers/publishing-child-render.mjs');
-const {renderChild:renderCurrent}=await import(pathToFileURL(helper).href);
 let source=fs.readFileSync(helper,'utf8');
+// Only the four separately verified metadata fragments may precede this
+// historical whole-markup comparison; unknown/partial source changes fail.
+let currentSource=source;
+for(const [old,next]of [
+  ["const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');",'const root='+JSON.stringify(ROOT)+';'],
+  ["const portal=fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8');",'const portal='+JSON.stringify(pageMetaHistoricalPortalSource(fs.readFileSync(path.join(ROOT,'static/portal/portal.js'),'utf8')))+';']
+]){assert.equal(currentSource.split(old).length-1,1);currentSource=currentSource.replace(old,next);}
+const {renderChild:renderCurrent}=await import('data:text/javascript;base64,'+Buffer.from(currentSource).toString('base64'));
 const edits=[["const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');",'const root='+JSON.stringify(ROOT)+';']];
 for(const [name,file]of [['portal','static/portal/portal.js'],['i18n','static/portal/portal-i18n.js']]){
   const text=execFileSync('git',['show',BASE+':'+file],{cwd:ROOT,encoding:'utf8',maxBuffer:30e6});

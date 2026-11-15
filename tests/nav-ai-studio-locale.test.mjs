@@ -6,6 +6,7 @@ import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {withoutLegacyDecorativeWorkbench} from './helpers/legacy-decorative-workbench.mjs';
 import {chatDocHistoricalMarkup} from './helpers/chat-doc-access-snapshot.mjs';
+import {pageMetaHistoricalPortalSource} from './helpers/chat-page-meta-snapshot.mjs';
 
 // Catch the fixed AI Studio label leaking into VI/ZH, or a broad replacement
 // that translates customer/unknown labels instead of adding one finite alias.
@@ -22,6 +23,12 @@ async function actualHelper(revision){
     const text=execFileSync('git',['show',revision+':'+file],{cwd:ROOT,encoding:'utf8',maxBuffer:30e6});
     edits.push([`const ${name}=fs.readFileSync(path.join(root,'${file}'),'utf8');`,'const '+name+'='+JSON.stringify(text)+';']);
   }
+  // Keep this alias comparator historical only for the four exact metadata
+  // fragments; the dedicated metadata tests render unprojected app source.
+  if(!revision)edits.push([
+    "const portal=fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8');",
+    'const portal='+JSON.stringify(pageMetaHistoricalPortalSource(fs.readFileSync(path.join(ROOT,'static/portal/portal.js'),'utf8')))+';'
+  ]);
   for(const [old,next]of edits){assert.equal(source.split(old).length-1,1);source=source.replace(old,next);}
   return (await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'))).renderChild;
 }

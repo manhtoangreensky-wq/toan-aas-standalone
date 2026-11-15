@@ -10100,8 +10100,8 @@
   function localizedPageTitle(page, context) {
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
-    if (path === "/chat") {
-      return uiText("workspaceMenu.card.chat_workspace.title", fallback);
+    if (path === "/chat" || (page && page.layout === "chat-workspace-detail")) {
+      return uiText("chatPageMetaUiTitle", "Trò chuyện");
     }
     if (path === "/documents") {
       return uiText("workspaceMenu.card.documents.title", fallback);
@@ -10232,8 +10232,8 @@
   function localizedPageDescription(page) {
     const fallback = typeof page.description === "string" ? page.description : "";
     const path = normalizePath(page && (page.routePath || page.path));
-    if (path === "/chat") {
-      return uiText("workspaceMenu.card.chat_workspace.description", fallback);
+    if (path === "/chat" || (page && page.layout === "chat-workspace-detail")) {
+      return uiText("chatPageMetaUiDescription", "Viết và lưu mục tiêu, thông tin tham khảo và ghi chú để xem lại khi cần.");
     }
     if (path === "/documents") {
       return uiText("featureCatalog.entry.documents.description", fallback);
@@ -11196,7 +11196,7 @@
       : uiText("chrome.searchWorkspace", "Tìm hoặc chuyển workspace");
     const crumbItems = (adminSurface
       ? ["TOAN AAS", localizedPageTitle(page, context)]
-      : ["TOAN AAS", page.section, localizedPageTitle(page, context)])
+      : ["TOAN AAS", page && page.layout === "chat-workspace-detail" ? uiText("chatPageMetaUiTitle", "Trò chuyện") : page.section, localizedPageTitle(page, context)])
       .filter(Boolean);
     if (adminSurface && adminActiveGroup) crumbItems.splice(1, 0, adminActiveGroup.title);
     const displayCrumbItems = crumbItems.filter((piece, index, arr) => {
@@ -12229,6 +12229,7 @@
   function supportTicketHeroSection(page) {
     const routeKey = supportTicketHeroRouteKey(page);
     const route = normalizePath(page && (page.routePath || page.path) || "/");
+    if (page && page.layout === "chat-workspace-detail") return uiText("chatPageMetaUiTitle", "Trò chuyện");
     if (route === "/media-workspace/music-prompt-composer") return musicPromptComposerUiText("page.kicker", "Lập kế hoạch âm nhạc");
     if (["media-workspace", "media-workspace-detail"].includes(page && page.layout)) return audioWorkspaceText("workspace.libraryLabel", "Thư viện âm thanh");
     if (["audio-hub", "audio-hub-detail"].includes(page && page.layout)) return audioWorkspaceText("workspace.hubLabel", "Trung tâm sản xuất âm thanh");

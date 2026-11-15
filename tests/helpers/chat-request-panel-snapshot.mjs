@@ -2,11 +2,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {requestPanelSources} from './chat-request-panel-runtime.mjs';
+import {pageMetaHistoricalSnapshot,pageMetaHistoricalPortalSource} from './chat-page-meta-snapshot.mjs';
 const copy=JSON.parse(fs.readFileSync(new URL('../fixtures/chat-request-panel-reviewed.json',import.meta.url),'utf8'));
 const keys=new Set(Object.keys(copy.vi)),hash=value=>createHash('sha256').update(value).digest('hex');
 const hashes={vi:'b7c7339ccb4b40142e33bff3d4d479a531c57aa5d96e12eefe0a93ce63bf594b',en:'66e4178b42e68c8aa840afcb5b9f7e72059e8669ae54ce8f4e5d94f26b8e7bf7',zh:'1af4b4a115ab3ce91f02af0b12b1c464a38871b92f606684616e9bca49d12d2a'};
 assert.equal(keys.size,29);
 export function requestPanelHistoricalSnapshot(entries,locale){
+  entries=pageMetaHistoricalSnapshot(entries,locale);
   assert.ok(hashes[locale]);
   const reserved=entries.filter(([key])=>/^(?:chatExecutionUi|chatRunTimelineUi)/.test(key));
   if(!reserved.length)return entries;
@@ -33,7 +35,7 @@ const oldParts=requestPanelSpans.map(spec=>{
   const value=part(original,spec).text;assert.equal(hash(value),spec[3],'History release has a different protected request baseline');return value;
 });
 export function requestPanelHistoricalPortalSource(value){
-  let source=value.replace(/\r\n/g,'\n');
+  let source=pageMetaHistoricalPortalSource(value).replace(/\r\n/g,'\n');
   const spans=requestPanelSpans.map(spec=>part(source,spec)),states=spans.map((p,k)=>hash(p.text)===requestPanelSpans[k][3]?'old':hash(p.text)===requestPanelSpans[k][4]?'new':'unknown');
   if(states.every(state=>state==='old'))return source;
   assert.ok(states.every(state=>state==='new'),'Unreviewed Chat request source: changed or partial function set');

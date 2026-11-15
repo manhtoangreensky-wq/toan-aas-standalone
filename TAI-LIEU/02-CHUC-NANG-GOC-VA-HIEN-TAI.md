@@ -2072,3 +2072,18 @@ không suy thêm chức năng trả lời tự động từ bảng tính năng c
 |Chỉ có metadata QA rỗng về run|21lifecycle run+21FKuser message giả|GET/DOM thật không chứng minh thực thi/assistant/output|
 |Needle test ghim nguyên câu kỹ thuật|Một biểu thức `safeText(uiText(...))` mới|Mọi chốt action/quyền/private-data còn nguyên|
 |Lịch sử unit trước chưa có receipt tại tài liệu|PR739 đãgiao63ddccd5/deploy43644999130|Signedproduction UI và wholegoal vẫn mở|
+
+## Metadata Chat —đối chiếu15/11/2026
+
+Nguồngốc:registryChat/localizedPageTitle/Description/_shell_title_for/
+_PORTAL_SHELL_TITLES tạiBASE0e97fd8a,khôngbịa featuregốc.
+
+|Trước BASE0e97fd8a|Trongphiếu|Bằngchứng/giớihạn|
+|---|---|---|
+|DetailAIChatWorkspace/rootnhãnmenu rộng|TitleTròchuyện/Chat/对话riêng|Registry/customerfields giữ|
+|Descriptionthread/context/Webaccount|Môtảviết/lưudễhiểu|2keys/locale/fallback/per-render|
+|SSRgenericworkspace|HTMLresponsechatlocale ngay|UUIDfullmatch/trust/auth giữ|
+|Catalogchatconsumerdùnghelper|2textnodes đồngnhấtmetadata|Restcard/pageexact3locale|
+|Sentineltoàncatalogquárộng|Finite2nodeprojection/oldassertionsgiữ|473+3affectedNodePASS|
+|Khôngcówholeappclaim|12native/69Python/476Node scoped|SignedUI/AX/auth/device/motionmở|
+|18comparatorlịchsửvẫngiữmetadata trướcđổi|Haitestrendererschiếuđúng4sourcefragmentsđãduyệt|18RED→18PASS;app/customer/control/oldhashgiữ|

@@ -4,7 +4,15 @@ import fs from 'node:fs';
 import {requestPanelRenderer,requestPanelSources} from './helpers/chat-request-panel-runtime.mjs';
 import {requestPanelHistoricalSnapshot,requestPanelHistoricalPortalSource,requestPanelHistoricalCss,requestPanelCssOld,requestPanelCssNew,requestPanelSpans,requestStatusWrapRules} from './helpers/chat-request-panel-snapshot.mjs';
 import {historyHistoricalPortalSource,historyHistoricalSnapshot} from './helpers/chat-history-snapshot.mjs';
-const source=requestPanelSources(),oldSource=requestPanelSources(true),current=await requestPanelRenderer(source),before=await requestPanelRenderer(oldSource);
+import {pageMetaHistoricalSnapshot,pageMetaHistoricalPortalSource} from './helpers/chat-page-meta-snapshot.mjs';
+const live=requestPanelSources(),source={...live,portal:pageMetaHistoricalPortalSource(live.portal)},oldSource=requestPanelSources(true);
+const actual=await requestPanelRenderer(source),before=await requestPanelRenderer(oldSource);
+const current=(...args)=>{
+  const result=actual(...args);
+  return {...result,catalogFrozen:Object.fromEntries(['vi','en','zh'].map(locale=>[locale,Object.isFrozen(result.messages[locale])])),messages:Object.fromEntries(['vi','en','zh'].map(locale=>[
+    locale,Object.fromEntries(pageMetaHistoricalSnapshot(Object.entries(result.messages[locale]),locale))
+  ]))};
+};
 const copy=JSON.parse(fs.readFileSync(new URL('./fixtures/chat-request-panel-reviewed.json',import.meta.url),'utf8'));
 const id='11111111-1111-4111-8111-111111111111',route='/chat/'+id,literal='CUSTOMER media studio Bot provider Facebook TikTok <script>alert("x")</script>&';
 const thread={id,revision:7,state:'draft',mode:'focus',title:literal,objective:literal,tags:['media','studio','Bot','provider','Facebook','TikTok']};
@@ -69,7 +77,7 @@ for(const locale of ['vi','en','zh']){
     for(const chatRuns of [[],ignored,undefined,null]){const empty=panel(render(now,{chatRuns}));assert.equal(timeline(empty),'');assert.ok(empty.includes('<h3>'+esc(now,copy[locale].chatRunTimelineUiEmptyTitle)+'</h3>'));assert.ok(empty.includes('<p>'+esc(now,copy[locale].chatRunTimelineUiEmptyBody)+'</p>'));}
   });
   test(`${locale}: per-render locale/VI fallback, fixed29 copy, catalog order/freeze and single escaping remain exact`,()=>{
-    const entries=Object.entries(now.messages[locale]),previous=Object.entries(old.messages[locale]);assert.ok(Object.isFrozen(now.messages[locale]));assert.deepEqual(JSON.parse(JSON.stringify(entries.slice(0,previous.length))),JSON.parse(JSON.stringify(previous)));assert.deepEqual(JSON.parse(JSON.stringify(entries.slice(previous.length))),Object.entries(copy[locale]));
+    const entries=Object.entries(now.messages[locale]),previous=Object.entries(old.messages[locale]);assert.equal(now.catalogFrozen[locale],true);assert.deepEqual(JSON.parse(JSON.stringify(entries.slice(0,previous.length))),JSON.parse(JSON.stringify(previous)));assert.deepEqual(JSON.parse(JSON.stringify(entries.slice(previous.length))),Object.entries(copy[locale]));
     const next=locale==='vi'?'en':locale==='en'?'zh':'vi';try{now.setLocale(next);checkRows(now,render(now,{chatRuns:runs}),runs,next);checkPanel(now,next,render(now),render(sessions[next].old),{});}finally{now.setLocale(locale);}
     const fallback=now.qa.withUiText((key,value)=>value,()=>render(now,{chatRuns:runs}));checkRows(now,fallback,runs,'vi');checkPanel(now,'vi',fallback,render(sessions.vi.old,{chatRuns:runs}),{});
     const empty=now.qa.withUiText((key,value)=>value,()=>panel(render(now)));for(const key of ['chatRunTimelineUiEmptyTitle','chatRunTimelineUiEmptyBody'])assert.ok(empty.includes(esc(now,copy.vi[key])));

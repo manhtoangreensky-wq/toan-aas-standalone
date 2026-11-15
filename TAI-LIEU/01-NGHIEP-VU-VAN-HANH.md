@@ -2872,3 +2872,17 @@ Native R2 có24quan sát duy nhất/13ảnh, tám bảng/source/evidence giữ/J
 PR739 lịch sử đã triển khai63ddccd5/deploy43644999130; đơn vị request
 có cổng CI/merge/deploy riêng. Tiêu đề shell/rawdates/AX/auth/motion còn mở.
 [Báo cáo](../docs/reports/chat-request-panel-20261115.md).
+
+## Metadata trò chuyện —15/11/2026
+
+Title/description/crumb/tab vàfirstpaintChat theoVI/EN/ZH,2keys6values;
+customerdata giữ. Hai node thẻhệthốngChat cùngmetadata, khôngđổi action/
+route/badge.7workerchanges/3appfiles, khôngđổi localeauthority/auth/engine.
+Node476bằng473+3affected/Python69PASS/native12unique6ảnh;
+8tables/schema/6plans18scenes/source/evidence giữ/Jobs0/fixturewrites0.
+PR740đãtriểnkhai0e97fd8a/deploy43684233179/fiveassets exact.
+[Báo cáo](../docs/reports/chat-page-meta-20261115.md).
+
+KiểmtraCIđầuPR741còn18comparatorlịchsửchưaadmitnhãnmới;
+chỉsửahaitệptestadapter,18RED→18PASS,khôngđổiứngdụng.
+Chưađưabảnmetadata lênproductiontừCIfailed43688639581.
