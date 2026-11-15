@@ -15,3 +15,9 @@ BASE0e97fd8a;Issue689;localmetadataonly,deliverygate riêng.
 
 PythonfirststalledprocessstoppedonlyownedPIDs;bounded69PASS/cleanup0.
 Node473+3affected,khônglặp473đạt. Invalid/nonChat/samesessionVM/SSRonly.
+
+CM-CI-ADAPTER:CI43688639581failed369/351PASS/18FAIL,authskipped.
+18affectedIDsreproducedRED;onlytwooldhistoricalrenderersreceiveexisting
+strictfour-fragmentmetadataSOURCEinverse. WholeHTML/control/customer/data/
+oldhashassertionskept. 18/18affectedPASSexit0/5445.5115ms;appunchanged.
+NewexactHEADCIrequired;notmerged/deployedfromfailedrun.

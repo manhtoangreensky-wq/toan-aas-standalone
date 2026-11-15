@@ -61,3 +61,19 @@ anchor `/chat` duy nhất sang expected cũ rồi so toàn trang, không regex l
 từ hoặc bỏ assertion. Ba route sentinel khác và mọi tên khách giữ nguyên.
 Đây là spec/harness quá rộng của điều phối, worker code failures0.
 Chỉ chạy lại ba test đã fail;473ca đã đạt không chạy lại.
+
+## Amendment sau CI43688639581
+
+HEAD2ad6e1f9: nhóm369ca có351PASS/18FAIL. Twelve legacy-decorative-workbench
+comparators (3locale×catalogcontent/chatroot×2wallet states) và six
+nav-ai-studio-locale comparators (3locale×features/content) còn đối chiếu
+metadata cũ. Hai test dùng renderer source hiện tại nhưng HTML projector
+cũ không biết title/description mới đã duyệt.
+
+Allowlist bổ sung chỉ hai tệp test này: nạp current portal qua
+`pageMetaHistoricalPortalSource` hiện có trước khi chạy comparator lịch sử.
+Helper chỉ nhận đủ bốn literal source fragments/hash/count, chặn unknown/
+partial/duplicate. Không đổi app, old golden hashes, whole-markup/control/
+customer/data assertions hoặc bộ kiểm actual metadata mới.
+Chỉ chạy 18 ID đã fail trước/sau; các nhóm local đã đạt không chạy lại.
+CI lỗi là thiếu adapter của điều phối, không tính lỗi Antigravity.

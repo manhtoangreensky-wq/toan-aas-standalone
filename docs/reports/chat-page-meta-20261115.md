@@ -65,3 +65,19 @@ CASE_METADATA=1325lines/145383bytesLF/SHA256
 chỉcase-metadatađổiđượckiểm1/1PASS,khônglặp32casekhôngđổi.
 Testerlabels12/12đãđọc ởPR740,templates/Projects giữ,khôngtạo tracker mới.
 PUSH_GATE=READY;source/finalSHAghiPRsaucommit;mergechỉsauCIđúngHEADđạt.
+
+## CI amendment —18 affected historical comparisons
+
+PR741 HEAD2ad6e1f9, CI43688639581 failed:369total/351PASS/18FAIL;
+authenticated group skipped. No merge/deploy took place.
+Failures were exactly12 legacy-decorative-workbench and6 nav-ai-studio-locale
+comparators. Their historical current renderer did not admit the approved
+Chat root/catalogue metadata. Local affected-only reproduction:18RED.
+
+Two test files now pass current portal through the existing strict
+four-fragment pageMetaHistoricalPortalSource inverse before those historical
+comparisons. No app source, old hashes, whole-markup/control/customer/raw-data
+assertions or dedicated unprojected metadata tests changed.
+Affected-only rerun:18/18PASS, exit0,5445.5115ms. No repeat of prior473Node/
+69Python/12native observations. This is a coordinator harness omission,
+not an Antigravity code failure. New exact-head CI is still required.

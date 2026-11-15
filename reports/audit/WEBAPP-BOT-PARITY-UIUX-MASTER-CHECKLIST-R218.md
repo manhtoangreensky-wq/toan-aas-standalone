@@ -1936,3 +1936,12 @@ Bằng chứng: `docs/reports/chat-request-panel-20261115.md`,
   cònmở,motioncuối,WebApp-only,noBot/route-engine/provider/money/datamutation.
 
 Evidence:docs/reports/chat-page-meta-20261115.md/phiênCM,Issue689.
+
+### Metadata CI amendment —15/11
+
+- [x] CI43688639581:369total/351PASS/18FAIL,authskipped;khôngmerge/deploy.
+- [x] Tái hiệnđúng18IDRED;chỉhaitestlegacy/navđượcnạpsourcequaexisting
+  strict4-fragmentmetadata inverse. App/oldhash/customer/control/rawdata
+  assertionsgiữ;18affectedrerunPASSexit0/5445.5115ms.
+- [ ] Refreshprovenance/exactHEADCI→merge→deploy→runtime/assets/receipt.
+  Khônglặplạinhómđãđạt;khôngđóngwholegoal.
