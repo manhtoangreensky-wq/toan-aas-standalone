@@ -127,6 +127,7 @@ _PORTAL_SHELL_TITLES = {
     "/": {"vi": "TOAN AAS", "en": "TOAN AAS", "zh": "TOAN AAS"},
     "/app": {"vi": "TOAN AAS Workspace", "en": "TOAN AAS Workspace", "zh": "TOAN AAS 工作台"},
     "/dashboard": {"vi": "Tổng quan · TOAN AAS", "en": "Overview · TOAN AAS", "zh": "概览 · TOAN AAS"},
+    "/chat": {"vi": "Trò chuyện · TOAN AAS", "en": "Chat · TOAN AAS", "zh": "对话 · TOAN AAS"},
     "/wallet": {"vi": "Ví Xu · TOAN AAS", "en": "Wallet & Credits · TOAN AAS", "zh": "积分钱包 · TOAN AAS"},
     "/wallet/topup": {"vi": "Nạp Xu · TOAN AAS", "en": "Topup Credits · TOAN AAS", "zh": "充值积分 · TOAN AAS"},
     "/wallet/history": {"vi": "Lịch sử ví & Xu · TOAN AAS", "en": "Wallet History · TOAN AAS", "zh": "积分记录 · TOAN AAS"},
@@ -486,6 +487,8 @@ def _shell_title_for(path: str, locale: str) -> str:
     titles = _PORTAL_SHELL_TITLES.get(normalized)
     if titles:
         return titles[locale]
+    if CHAT_WORKSPACE_PATH.fullmatch(normalized):
+        return _PORTAL_SHELL_TITLES["/chat"][locale]
     if normalized.startswith("/content/channel-strategy/"):
         return _PORTAL_SHELL_TITLES["/content/channel-strategy"][locale]
     if JOB_DETAIL_PATH.fullmatch(normalized):

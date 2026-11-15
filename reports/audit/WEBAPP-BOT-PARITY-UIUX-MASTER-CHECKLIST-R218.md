@@ -1912,3 +1912,27 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
 
 Bằng chứng: `docs/reports/chat-request-panel-20261115.md`,
 `KIEM-THU/PHIEN-CHAT-REQUEST-PANEL-20261115.md`; cùng Issue689.
+
+## Metadata Chat —đơn vị15/11/2026
+
+- [x] PR740delivery:CI43683345433bothPASS,merge/runtime0e97fd8a,
+  testedtree0682f1efexact,deploy43684233179PASS;services/health/5assetsinclCSS
+  exact,receiptsIssue6896890245651/PR7406890245902.
+- [x] CHAT-PAGE-META client+shelllocal:7workerchanges/3appfiles/2keys6values,
+  root/detailheader/hero/description/tab/crumb/SSRlocale đúng.
+  Customername/h2/form/tags/registry/sharedmenu/route/auth/localetrust giữ.
+- [x] VMBASE14RED/SSRBASE6RED3PASS;Node476bằng473+3affected/Python69PASS;
+  sentinelcatalogthẻ/chat2fixednodes được đo restcard/pageexact,khôngmasktừ.
+- [x] Native12unique/6ảnh,onefreshserver/3signedlocaleowners/SSRresponse+
+  hydrated;khôngreseed,8tables/schema/6plans18scenes/source/evidence giữ,
+  Jobs0/0productwrites. Khônglặp24requestlifecycle.
+- [x] Metadata source-reviewC0/I0/M0/docs/Tester/caseproof:
+  1325lines145383bytesLF/exactSHA,changedmetadata1PASS.
+- [ ] Metadata provenance/exactCI/merge/deploy/runtime/assets/receipt;
+  khôngđóng từlocal.
+- [ ] NEXT rawdates:1privateChatdatehelper+4displayslotsproposalREADY,
+  chưaapply/chưaQA,đợi metadatarelease. Storedtimestamps/controldata giữ.
+- [ ] Doc6proposals/remaininglocale/AX/auth/device/Safari/signedUI/M-FINAL
+  cònmở,motioncuối,WebApp-only,noBot/route-engine/provider/money/datamutation.
+
+Evidence:docs/reports/chat-page-meta-20261115.md/phiênCM,Issue689.

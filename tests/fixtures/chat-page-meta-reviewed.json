@@ -1,0 +1,14 @@
+{
+  "vi": {
+    "chatPageMetaUiTitle": "Trò chuyện",
+    "chatPageMetaUiDescription": "Viết và lưu mục tiêu, thông tin tham khảo và ghi chú để xem lại khi cần."
+  },
+  "en": {
+    "chatPageMetaUiTitle": "Chat",
+    "chatPageMetaUiDescription": "Write and save goals, reference information, and notes to revisit later."
+  },
+  "zh": {
+    "chatPageMetaUiTitle": "对话",
+    "chatPageMetaUiDescription": "编写并保存目标、参考信息和笔记，方便日后查看。"
+  }
+}

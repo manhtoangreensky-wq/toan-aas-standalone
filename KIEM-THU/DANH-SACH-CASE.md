@@ -1310,3 +1310,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CR-SAFETY|nặng|18protectedLF/Pythonexceptexactneedle|NoappPython/provider/money/motionchange|Exact8workerreplay|
 |CR-REGRESSION|nặng|Strict3function/fullCSS3ruleprojection|Unknown/partial/value/order khôngbịlọc|Mutationguards/actualVM|
 |CR-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|KhôngclaimLIVEtừlocal/HTTP200|Rawdates/header/wholegoalactive|
+
+## CHAT-PAGE-META-20261115 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CM-CLIENT|nặng|Root/detailtitle/desc/header/hero/tab|VIENZH/per-render/fallback/escape|14targetVM|
+|CM-SSR|nặng|HTMLResponse2routes×3locale|Firstpainttitle/bootstrap/lang đúng|69PythonPASS|
+|CM-CUSTOMER|nặng|Productnames/script/brandsasuserdata|H2/input/tag/DTO/attrs giữ|WholeHTMLcustomerassertions|
+|CM-CATALOG|nặng|Exact/chatcardh3+p|Chỉ2fixednodes đổi,restexact|473+3affectedNodePASS|
+|CM-NATIVE|nặng|3signedlocale×rootdetail×3751440|12unique/6ảnh/SSR+hydrated|[Phiên CM](PHIEN-CHAT-PAGE-META-20261115.md)|
+|CM-DATA|nặng|ExistingownedQA/khôngreseed|8tables/schema/6plans18scenes giữ|Source/evidence/Jobs0|
+|CM-SOURCE|nặng|7workerchanges/18protectedLF|Unknown/partial/mutation khôngche|Strictmetadataadapter|
+|CM-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Nowholegoalclaimtừmetadata|Rawdates/Doc/M-FINALmở|

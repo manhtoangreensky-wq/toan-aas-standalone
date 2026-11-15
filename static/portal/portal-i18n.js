@@ -22049,6 +22049,19 @@
     chatRunTimelineUiKicker: "已记录的请求",
     chatRunTimelineUiBody: "此状态表示请求已被记录。此请求尚无自动回复。"
   });
+  Object.assign(MESSAGES.vi, {
+    chatPageMetaUiTitle: "Trò chuyện",
+    chatPageMetaUiDescription: "Viết và lưu mục tiêu, thông tin tham khảo và ghi chú để xem lại khi cần."
+  });
+  Object.assign(MESSAGES.en, {
+    chatPageMetaUiTitle: "Chat",
+    chatPageMetaUiDescription: "Write and save goals, reference information, and notes to revisit later."
+  });
+  Object.assign(MESSAGES.zh, {
+    chatPageMetaUiTitle: "对话",
+    chatPageMetaUiDescription: "编写并保存目标、参考信息和笔记，方便日后查看。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {
