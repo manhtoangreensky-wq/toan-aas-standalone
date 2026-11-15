@@ -10421,7 +10421,7 @@
         "copyfast_partner_readiness.py",
         "copyfast_pricing_policy.py"
       ],
-      "occurrences": 1211,
+      "occurrences": 1213,
       "provider": "PayOS"
     },
     {
@@ -18796,9 +18796,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 533,
-  "source_files_scanned": 533,
-  "source_fingerprint_sha256": "e7f49f7a25970fe7ebba3006b2fd3621699c121c7a9a2478f12a9b4167d59b9d",
+  "source_files_discovered": 535,
+  "source_files_scanned": 535,
+  "source_fingerprint_sha256": "94bd1f49a0493b6222f8ffa61d0fad7b0ab5f9610341183971b8f81162044e60",
   "source_root": "repository-root",
   "ui_path_references": [
     {
