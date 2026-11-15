@@ -1349,3 +1349,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |DC-NATIVE|nặng|3signedprofiles375light1440dark|6observations/3mobilecrops,nofakecards|[Phiên DC](PHIEN-DOCUMENT-CARD-COPY-20261115.md)|
 |DC-DATA|nặng|Wholeoperationstable0/noreseed|9tables/schema/6plans18scenes/sourcegiữ|Jobs0/productwrites0|
 |DC-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt riêng,khôngwholeDocumentclaim|Othercopy/AX/auth/M-FINALmở|
+
+## DOCUMENT-PDF-UI-20261115 —Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|DP-PAGES|nặng|Range/empty/next/previous/invalidcounts|Locale/offset/attrs/controlstate giữ|1PASS9RED→645PASS|
+|DP-FIELDS|nặng|Split/Optimize7copykeys|Validation/limits/options/refpicker exact|Actualdescriptors+renderFields|
+|DP-NOTICES|nặng|3fullPDFpagesblankfilled/rights/notes|Chỉ3wrapperbỏ/renderNotesexact/asideformsgiữ|WholeHTMLactualVM|
+|DP-LOCALE|nặng|VIENZH/fallback/SAMEVM/freeze|13keys39values/escapeonce/ordergiữ|Unknown/missing/sourceguards|
+|DP-SOURCE|nặng|PDFinverseFIRST CARD/DATE/META|8replay/20LF/oldhash/assertionsgiữ|WholeoutsideDelta|
+|DP-NATIVE|nặng|3localeSplit375/Compress1440/Merge375|9unique/3Splitfieldcrops/nooutputfake|[Phiên DP](PHIEN-DOCUMENT-PDF-UI-20261115.md)|
+|DP-DATA|nặng|Wholeoperations0/noseed/productGET|9tables/schema/6plans18scenes/source/evidencegiữ|Jobs0/0productwrites|
+|DP-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt riêng,wholePDF/AXmở|LIGHTreadabilitychưađocontrast|

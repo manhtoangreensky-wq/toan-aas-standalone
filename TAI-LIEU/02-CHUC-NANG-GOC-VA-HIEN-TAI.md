@@ -2115,3 +2115,16 @@ không bịa featurelist hoặc actualoutput.
 |Wholei18noldguards chưa có23keys|Finite3literaladditioninverse|2FAIL+1expandedgate→3PASS|
 |Có thể nhầm fakecompleted vớioutput|Nativechỉactualempty9tables0writes|Nocards/nodownloads/submitblocked|
 |DATEcổnglocalđangmởtrongtài liệu trước|PR7425bc8đãgiao|CI43706589548/deploy43707642952|
+
+## Giao diện PDF —đối chiếu15/11/2026
+
+Nguồnactualdocumentpagination/SplitOptimizefields/3PDFrenderers tạiBASEc2fc.
+
+|Trước|Ứng viên|Bằng chứng/giới hạn|
+|---|---|---|
+|PaginationcứngVI|6labels/ariaVIENZH|Offsets/controlstate/helpersgiữ|
+|Sourcefields nêu thuật ngữ nội bộ|7fieldcopykeys dễhiểu|Validation/limits20MB30pages/options/refpickergiữ|
+|3noticewrapperkhôngcóaction|Chỉwrapperbỏ/notesrendergiữ|Whole3pages/asideformsrights exact|
+|Đã có thẻ tài liệu dịch|Không thay thẻ lần nữa|Oldhash/catalogfreeze/customerkept|
+|LIGHTtextnhạttrênwhite|GhiUIreadabilityseparate|Chưađocomputedcontrast,khôngcontrastPASS|
+|CARDchưacóreceipttrongtài liệu trước|PR743c2fcđãgiao|CI43709678826/deploy43710852871|

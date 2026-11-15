@@ -2909,3 +2909,15 @@ Node635nghiệmthu632+3affected;native6actualemptyobservations/3crops,
 [Báo cáo](../docs/reports/document-card-copy-20261115.md).
 Không nhận đã xử lý/tải tệp thật từ fixture hoặc nhãn nút; phần còn kỹ thuật
 ngoài thẻ vẫn nằm trong checklist, không khẳng định toànDocumentđãhoànthiện.
+
+## Giao diện PDF —15/11/2026, ứng viên chưa triển khai
+
+CARDđãgiaoPR743/c2fc6c65/CI43709678826/deploy43710852871;
+runtime/services/health/fiveassets exact,receiptIssue6896893914967.
+Ứng viên PDF13fixedkeys39values/8patches:pagination/2sourcefieldfactories
+và3noticewrappers bỏ,giữnotes/limits/validation/options/rights/forms.
+Onegroup645NodePASS/native9actualsignedobservations/3Splitfieldcrops,
+9tables/schema/6plans18scenes/source/evidence/Jobs0/khôngreseed.
+[Báo cáo](../docs/reports/document-pdf-ui-20261115.md).
+LIGHTlabels/help cònnhạt trongcrops,CSSgiữBASE/chưađocomputedcontrast;
+đãghibacklogđộdễđọc,khôngnhậntoànPDF/AXđạt.
