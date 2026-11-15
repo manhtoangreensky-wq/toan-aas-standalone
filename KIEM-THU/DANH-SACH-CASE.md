@@ -1296,3 +1296,17 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CH-DATA|nặng|15threads24context18turn24version45event|8tables allrows/schema/evidencegiữ|6plans18scenes/Jobs0|
 |CH-SAFETY|nặng|19protectedLF/allPython/khôngrestoreclick|C0/I0/M0/Python9PASS/0productwrites|KhôngwholeAX/signedUIclaim|
 |CH-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt cùngIssue/PR,wholegoalactive|Rawdates/requestpanel/timeline/motionmở|
+
+## CHAT-REQUEST-PANEL-20261115 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CR-PANEL|nặng|Projection/read/flag/state/caps/form|Chỉ2statusmeaningful,rawattrs/disabled giữ|ActualVM/29keys|
+|CR-TIMELINE|nặng|7state+unknown/empty/invalid/50+|Những hàng hợp lệ/thứ tự/time vẫn giữ|12targettests|
+|CR-LOCALE|nặng|VI/EN/ZH/fallback/freeze/hostile|87values/escapeonce/oldcatalog giữ|BASE11RED→461groupPASS|
+|CR-WRAP|nặng|375VI/ENvalue147/133/101/112px|Không86pxcap/ellipsis,wrapđủchữ|RED11PASS1RED→affected17PASS|
+|CR-NATIVE|nặng|3locale375sáng1440tối4state|24uniqueGET/13ảnh/twocolumns/mobile1|[Phiên CR](PHIEN-CHAT-REQUEST-PANEL-20261115.md)|
+|CR-DATA|nặng|21fakeuser+21run/0assistant/runevent|8tables/allrows/schema/FK/evidence giữ|6plans18scenes/Jobs0|
+|CR-SAFETY|nặng|18protectedLF/Pythonexceptexactneedle|NoappPython/provider/money/motionchange|Exact8workerreplay|
+|CR-REGRESSION|nặng|Strict3function/fullCSS3ruleprojection|Unknown/partial/value/order khôngbịlọc|Mutationguards/actualVM|
+|CR-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|KhôngclaimLIVEtừlocal/HTTP200|Rawdates/header/wholegoalactive|

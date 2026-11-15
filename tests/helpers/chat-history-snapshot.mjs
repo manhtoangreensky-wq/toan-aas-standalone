@@ -4,12 +4,14 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {requestPanelHistoricalSnapshot,requestPanelHistoricalPortalSource} from './chat-request-panel-snapshot.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const reviewed=JSON.parse(fs.readFileSync(new URL('../fixtures/chat-history-reviewed.json',import.meta.url),'utf8'));
 const keys=new Set(Object.keys(reviewed.vi)),hash=value=>createHash('sha256').update(value).digest('hex');
 const hashes={vi:'c8e3a4bbb29f258ee4cd12c2cf80fca86c56d6fb028c59de0f0e1c26fe4f21d1',en:'918cf6e155874f3330abcd984fd3085476b960d0d846a6e7050870c26ae84295',zh:'84ed499da93d6ad0bcbb3bf5cfeca5903f99dab536e8a15214524fdda7e11b29'};
 assert.equal(keys.size,22);
 export function historyHistoricalSnapshot(entries,locale){
+  entries=requestPanelHistoricalSnapshot(entries,locale);
   assert.ok(hashes[locale]);
   const scoped=entries.filter(([key])=>/^chatHistory(?:Version|Activity)Ui/.test(key));
   if(!scoped.length)return entries;
@@ -23,7 +25,7 @@ const original=execFileSync('git',['show','d4ad39344f4b686dc7386257213ed9bc0b4fe
 const start='  function renderChatWorkspaceDetail(page, context) {',end='\n  // Analytics Workspace';
 const oa=original.indexOf(start),ob=original.indexOf(end,oa);assert.ok(oa>=0&&ob>oa);
 export function historyHistoricalPortalSource(value){
-  const source=value.replace(/\r\n/g,'\n');
+  const source=requestPanelHistoricalPortalSource(value).replace(/\r\n/g,'\n');
   assert.equal(source.split(start).length-1,1,'Unreviewed Chat history source boundary');
   const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>=0&&b>a,'Unreviewed Chat history source boundary');
   const part=source.slice(a,b),old=original.slice(oa,ob);

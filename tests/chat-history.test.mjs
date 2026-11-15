@@ -4,7 +4,15 @@ import fs from 'node:fs';
 import {chatHistoryRenderer,chatHistorySources} from './helpers/chat-history-runtime.mjs';
 import {historyHistoricalSnapshot,historyHistoricalPortalSource} from './helpers/chat-history-snapshot.mjs';
 import {cardsTurnHistoricalPortalSource} from './helpers/chat-context-cards-turn-snapshot.mjs';
-const source=chatHistorySources(),oldSource=chatHistorySources(true),current=await chatHistoryRenderer(source),before=await chatHistoryRenderer(oldSource);
+import {requestPanelHistoricalSnapshot,requestPanelHistoricalPortalSource} from './helpers/chat-request-panel-snapshot.mjs';
+const live=chatHistorySources(),source={...live,portal:requestPanelHistoricalPortalSource(live.portal)},oldSource=chatHistorySources(true);
+const actual=await chatHistoryRenderer(source),before=await chatHistoryRenderer(oldSource);
+const current=(...args)=>{
+  const result=actual(...args);
+  return {...result,catalogFrozen:Object.fromEntries(['vi','en','zh'].map(locale=>[locale,Object.isFrozen(result.messages[locale])])),messages:Object.fromEntries(['vi','en','zh'].map(locale=>[
+    locale,Object.fromEntries(requestPanelHistoricalSnapshot(Object.entries(result.messages[locale]),locale))
+  ]))};
+};
 const copy=JSON.parse(fs.readFileSync(new URL('./fixtures/chat-history-reviewed.json',import.meta.url),'utf8'));
 const id='11111111-1111-4111-8111-111111111111',route='/chat/'+id,literal='CUSTOMER media studio Facebook TikTok <script>alert("Bot")</script>&';
 const actionKeys={thread_created:'ThreadCreated',thread_updated:'ThreadUpdated',thread_draft:'@Draft',thread_review:'@Review',thread_ready:'@Ready',thread_archived:'@Archived',thread_version_restored:'ThreadRestored',context_created:'ContextCreated',context_updated:'ContextUpdated',context_active:'ContextActive',context_archived:'ContextArchived',turn_created:'TurnCreated',turn_active:'TurnActive',turn_archived:'TurnArchived',chat_run_guarded:'RequestNotExecuted'};
@@ -72,7 +80,7 @@ for(const locale of ['vi','en','zh']){
     for(const action of ['__proto__','constructor','toString'])assert.equal(activityRows(a)[actions.indexOf(action)][1],now.qa.safeText(e.chatHistoryActivityUiUnknown));
   });
   test(`${locale}: empty guidance, runtime locale, VI fallbacks, safe interpolation and frozen ordered catalog remain`,()=>{
-    const a=Object.entries(now.messages[locale]),b=Object.entries(old.messages[locale]);assert.ok(Object.isFrozen(now.messages[locale]));
+    const a=Object.entries(now.messages[locale]),b=Object.entries(old.messages[locale]);assert.equal(now.catalogFrozen[locale],true);
     assert.deepEqual(JSON.parse(JSON.stringify(a.slice(0,b.length))),JSON.parse(JSON.stringify(b)));assert.deepEqual(JSON.parse(JSON.stringify(a.slice(b.length))),Object.entries(e));
     const empty=render(now,'draft',true,7,true);assert.ok(empty.includes(now.qa.safeText(e.chatHistoryVersionUiEmpty)));assert.ok(empty.includes(now.qa.safeText(e.chatHistoryActivityUiEmpty)));
     const next=locale==='vi'?'en':locale==='en'?'zh':'vi';

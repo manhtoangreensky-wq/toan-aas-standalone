@@ -2858,3 +2858,17 @@ có nhãn chung vẫn giữ hàng. Khôi phục chỉ tạo bản nháp cập nh
 QA,cùng15threads24contexts18turns/8tables/schema/evidencegiữ/Jobs0.
 ActivityR1thiếuVIfallback được trả đúngfragmentR2,khôngrootapprepair.
 [Báo cáo](../docs/reports/chat-history-copy-20261115.md).
+
+## Yêu cầu và lịch sử yêu cầu — 15/11/2026
+
+Giao diện dùng29khóa/87giá trị VI/EN/ZH, bỏ hai ô giải thích triển khai,
+giữ trạng thái tiếp nhận và trả lời tự động trung thực. Quyền/form/action/
+ID/revision/disabled/filter50/order/rawtime/customerdata giữ nguyên.
+Desktop hai cột/mobile một cột; hai rule wrapping khắc phục cap86px cắt
+chữ Việt/Anh. Tám thay thế Antigravity, ba tệp ứng dụng; không thay engine.
+Nhóm Node461đạt, sau prerequisite kiểm17ca bị ảnh hưởng đạt; Python9đạt.
+Native R2 có24quan sát duy nhất/13ảnh, tám bảng/source/evidence giữ/Jobs0.
+21run+21user-message chỉ là metadata QA giả, không có assistant/đầu ra.
+PR739 lịch sử đã triển khai63ddccd5/deploy43644999130; đơn vị request
+có cổng CI/merge/deploy riêng. Tiêu đề shell/rawdates/AX/auth/motion còn mở.
+[Báo cáo](../docs/reports/chat-request-panel-20261115.md).

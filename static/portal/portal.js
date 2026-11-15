@@ -19484,7 +19484,16 @@ function renderAutoPostHub(page, context) {
   }
   function chatRunBadge(value) {
     const state = chatRunState(value);
-    return '<span class="portal-badge" data-status="' + safeText(state) + '">' + safeText(CHAT_RUN_STATES[state] || "Được bảo vệ") + "</span>";
+    const labels = {
+      draft: uiText("chatRunTimelineUiStateDraft", "Bản nháp"),
+      queued: uiText("chatRunTimelineUiStateQueued", "Đã tiếp nhận"),
+      processing: uiText("chatRunTimelineUiStateProcessing", "Đang xử lý"),
+      completed: uiText("chatRunTimelineUiStateCompleted", "Đã xử lý xong"),
+      failed: uiText("chatRunTimelineUiStateFailed", "Chưa xử lý được"),
+      guarded: uiText("chatRunTimelineUiStateGuarded", "Chưa thể xử lý"),
+      cancelled: uiText("chatRunTimelineUiStateCancelled", "Đã hủy")
+    };
+    return '<span class="portal-badge" data-status="' + safeText(state) + '">' + safeText(labels[state] || labels.guarded) + "</span>";
   }
   function chatExecutionProjection(context) {
     const source = context && context.chatExecution && typeof context.chatExecution === "object" ? context.chatExecution : {};
@@ -19506,11 +19515,20 @@ function renderAutoPostHub(page, context) {
   }
   function renderChatRunTimeline(context) {
     const runs = Array.isArray(context && context.chatRuns) ? context.chatRuns.filter((item) => item && validChatThreadId(item.id) && String(item.assistant_message_id || "") === "").slice(0, 50) : [];
-    if (!runs.length) return renderEmpty("Chưa có Chat Run", "Khi máy chủ nhận yêu cầu, timeline chỉ hiển thị trạng thái receipt thực tế. Portal không tạo assistant message, typing indicator, file hoặc output thay backend.", ICONS.chat);
-    return '<ol class="portal-chat-run-timeline" aria-label="Timeline Chat Run">' + runs.map((run) => {
+    if (!runs.length) return renderEmpty(uiText("chatRunTimelineUiEmptyTitle", "Chưa có yêu cầu"), uiText("chatRunTimelineUiEmptyBody", "Các yêu cầu đã được hệ thống ghi nhận sẽ xuất hiện tại đây."), ICONS.chat);
+    const labels = {
+      draft: uiText("chatRunTimelineUiStateDraft", "Bản nháp"),
+      queued: uiText("chatRunTimelineUiStateQueued", "Đã tiếp nhận"),
+      processing: uiText("chatRunTimelineUiStateProcessing", "Đang xử lý"),
+      completed: uiText("chatRunTimelineUiStateCompleted", "Đã xử lý xong"),
+      failed: uiText("chatRunTimelineUiStateFailed", "Chưa xử lý được"),
+      guarded: uiText("chatRunTimelineUiStateGuarded", "Chưa thể xử lý"),
+      cancelled: uiText("chatRunTimelineUiStateCancelled", "Đã hủy")
+    };
+    return '<ol class="portal-chat-run-timeline" aria-label="' + safeText(uiText("chatRunTimelineUiAria", "Lịch sử yêu cầu")) + '">' + runs.map((run) => {
       const state = chatRunState(run.state);
       const timestamp = String(run.updated_at || run.created_at || "—");
-      return '<li class="portal-chat-run-card"><div><span class="portal-section-kicker">Yêu cầu Web-native</span><h3>' + safeText(CHAT_RUN_STATES[state] || "Được bảo vệ") + '</h3><p>Đã có receipt từ máy chủ. Không có assistant message, streaming, provider call, Bot, wallet, payment, job, file output hoặc delivery trong trạng thái này.</p><small>' + safeText(timestamp) + '</small></div>' + chatRunBadge(state) + '</li>';
+      return '<li class="portal-chat-run-card"><div><span class="portal-section-kicker">' + safeText(uiText("chatRunTimelineUiKicker", "Yêu cầu đã ghi nhận")) + '</span><h3>' + safeText(labels[state] || labels.guarded) + '</h3><p>' + safeText(uiText("chatRunTimelineUiBody", "Trạng thái phản ánh yêu cầu đã được ghi nhận. Chưa có trả lời tự động cho yêu cầu này.")) + '</p><small>' + safeText(timestamp) + '</small></div>' + chatRunBadge(state) + '</li>';
     }).join("") + "</ol>";
   }
   function renderChatExecutionPanel(thread, context, route) {
@@ -19522,13 +19540,13 @@ function renderAutoPostHub(page, context) {
     const executorFlag = context && context.chatExecutionEnabled === true;
     const attrs = ' data-portal-route="' + safeText(route) + '" data-chat-thread-id="' + safeText(String(thread.id)) + '" data-chat-thread-revision="' + safeText(String(thread.revision)) + '" data-chat-thread-state="' + safeText(String(thread.state || "")) + '"';
     const readiness = !serverConfirmed
-      ? "Máy chủ chưa xác nhận Chat Run cho thread này. Portal giữ composer khóa để không giả trạng thái khả dụng."
+      ? uiText("chatExecutionUiReadinessUnconfirmed", "Chưa có trạng thái mới. Hãy làm mới để kiểm tra.")
       : executorFlag
-        ? "Máy chủ đã xác nhận receipt Chat Run. Provider/assistant vẫn đang guarded cho đến khi adapter Web riêng được kiểm định."
-        : "Executor Web đang tắt theo feature flag. Bạn vẫn có thể gửi request để nhận receipt guarded từ máy chủ; không có provider hoặc assistant output.";
-    const composer = '<form class="portal-form portal-chat-run-composer" data-portal-form data-portal-action="chat-run-submit"' + attrs + ' data-portal-confirm="Gửi tin nhắn này thành Chat Run Web-native? Máy chủ sẽ xác nhận session, CSRF, ownership, revision và idempotency. Khi provider chưa được cấp, request chỉ có trạng thái guarded; không tạo assistant reply, Bot, Xu, PayOS, job, file hoặc delivery." novalidate>' + renderFields(chatRunFields(), canSubmit, context, {}, "chat-run-compose-" + String(thread.id)) + '<div class="portal-form-footer"><span class="portal-form-note">Không nhập URL/path/blob, secret, OTP/CVV, payment reference, provider/Bot/job handle. Browser không giữ transcript hoặc tự tạo output.</span><button class="portal-button portal-button--primary" type="submit"' + (canSubmit ? "" : " disabled") + '>Gửi yêu cầu an toàn</button></div></form>';
-    const controls = '<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-run-refresh"' + attrs + (canRefresh ? "" : " disabled") + '>Làm mới trạng thái</button></div>';
-    return '<section class="portal-card portal-card-pad portal-chat-execution"><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native Chat Run</span><h2 class="portal-card-title">Gửi yêu cầu với trạng thái minh bạch</h2><p class="portal-card-subtitle">' + safeText(readiness) + '</p></div>' + (serverConfirmed ? badge(execution.run_submission_available ? "ready" : "guarded") : badge("guarded")) + '</div><div class="portal-chat-execution-status"><span><strong>Gửi request</strong><em>' + (execution.run_submission_available === true ? "available" : "guarded") + '</em></span><span><strong>Provider / assistant</strong><em>guarded</em></span><span><strong>Bot / payment</strong><em>guarded</em></span><span><strong>Output / delivery</strong><em>guarded</em></span></div><div class="portal-chat-execution-layout"><section><h3 class="portal-chat-execution-heading">Composer có xác nhận</h3>' + composer + '</section><section><div class="portal-card-header"><div><span class="portal-section-kicker">Server receipt timeline</span><h3 class="portal-card-title">Các yêu cầu gần đây</h3></div>' + controls + '</div>' + renderChatRunTimeline(context) + '</section></div></section>';
+        ? uiText("chatExecutionUiReadinessConfirmed", "Hệ thống đã xác nhận trạng thái yêu cầu. Trả lời tự động chưa được bật.")
+        : uiText("chatExecutionUiReadinessDisabled", "Trả lời tự động chưa được bật. Trạng thái tiếp nhận yêu cầu được hiển thị bên dưới.");
+    const composer = '<form class="portal-form portal-chat-run-composer" data-portal-form data-portal-action="chat-run-submit"' + attrs + ' data-portal-confirm="'+ safeText(uiText("chatExecutionUiConfirm", "Gửi nội dung này để ghi nhận yêu cầu? Chưa có trả lời tự động.")) + '" novalidate>' + renderFields(chatRunFields(), canSubmit, context, {}, "chat-run-compose-" + String(thread.id)) + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(uiText("chatExecutionUiSafetyNote", "Không nhập liên kết, đường dẫn tệp, mật khẩu, mã xác nhận hoặc thông tin thanh toán.")) + '</span><button class="portal-button portal-button--primary" type="submit"' + (canSubmit ? "" : " disabled") + '>' + safeText(uiText("chatExecutionUiSubmit", "Ghi nhận yêu cầu")) + '</button></div></form>';
+    const controls = '<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-run-refresh"' + attrs + (canRefresh ? "" : " disabled") + '>' + safeText(uiText("chatExecutionUiRefresh", "Làm mới trạng thái")) + '</button></div>';
+    return '<section class="portal-card portal-card-pad portal-chat-execution"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("chatExecutionUiKicker", "Yêu cầu của bạn")) + '</span><h2 class="portal-card-title">' + safeText(uiText("chatExecutionUiTitle", "Ghi nhận và theo dõi yêu cầu")) + '</h2><p class="portal-card-subtitle">' + safeText(readiness) + '</p></div>' + (serverConfirmed ? badge(execution.run_submission_available ? "ready" : "guarded") : badge("guarded")) + '</div><div class="portal-chat-execution-status"><span><strong>' + safeText(uiText("chatExecutionUiReceiveLabel", "Tiếp nhận yêu cầu")) + '</strong><em>' + (execution.run_submission_available === true ? safeText(uiText("chatExecutionUiReceiveAvailable", "Có thể tiếp nhận")) : safeText(uiText("chatExecutionUiReceiveUnavailable", "Chưa thể tiếp nhận"))) + '</em></span><span><strong>' + safeText(uiText("chatExecutionUiReplyLabel", "Trả lời tự động")) + '</strong><em>' + safeText(uiText("chatExecutionUiReplyUnavailable", "Chưa được bật")) + '</em></span></div><div class="portal-chat-execution-layout"><section><h3 class="portal-chat-execution-heading">' + safeText(uiText("chatExecutionUiComposerHeading", "Nội dung yêu cầu")) + '</h3>' + composer + '</section><section><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("chatExecutionUiTimelineKicker", "Lịch sử yêu cầu")) + '</span><h3 class="portal-card-title">' + safeText(uiText("chatExecutionUiRecentTitle", "Yêu cầu gần đây")) + '</h3></div>' + controls + '</div>' + renderChatRunTimeline(context) + '</section></div></section>';
   }
   function renderChatWorkspaceBoundary(context) {
     const execution = chatExecutionProjection(context);

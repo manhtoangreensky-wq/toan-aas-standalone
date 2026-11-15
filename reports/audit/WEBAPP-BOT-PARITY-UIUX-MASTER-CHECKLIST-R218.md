@@ -1880,3 +1880,35 @@ Toànroute/AX/auth/device/Safari/signedLIVE/motioncuốivẫnmở.
 - [ ] Requestpanel17keys+timeline12keysoutputready,chờgate;Docpending/
   pagination7+6keysđãtrảoutput-only. ToànAX/auth/responsive/device/Safari/
   signedUI/M-FINAL01..06 vẫn mở,motioncuối;noBot/routeenginefinancialscope.
+
+## Yêu cầu/lịch sử yêu cầu — đơn vị15/11/2026
+
+- [x] CHAT-HISTORY-COPY delivery: PR739/CI43643846449hai nhómPASS,
+  merge/runtime63ddccd5/cây9d1c1eb8đúng bản kiểm,deploy43644999130PASS;
+  services/health/protected Websources/4HTTPSassets exact;
+  receipts6896884777207/PR7396884777617.
+- [x] CHAT-REQUEST-PANEL-PLAIN + CHAT-RUN-TIMELINE-PLAIN local:
+  29keys87values/ba appfiles, hai ô thừa bỏ, hai trạng thái thật giữ;
+  filter50/order/IDs/caps/disabled/attrs/customerdata/rawtimestamps giữ.
+  BASE11RED→461NodePASS/9PythonPASS; no appbackendchange.
+- [x] CHAT-REQUEST-STATUS-WRAP prerequisite: nativeR1VI/ENfail86pxcap,
+  giữ fail; AGYR1hai exactCSSrules cho chữ wrap,root không tựviếtapp.
+  Testmới11PASS1RED→affected17PASS; nativeR2ba locale24unique/13ảnh đạt.
+- [x] QA21run+21fakeusermessages/0assistant/0runevents được ghi rõ là
+  metadata giả, không output proof;8tables/allrows/schema/source/evidence/
+  6plans18scenes giữ/Jobs0;18protectedLF + exactPython-testneedle.
+- [x] Đợt request source review C0/I0/M0/current docs/Tester/case metadata:
+  1312lines/144400bytesLF/exactSHA;32metadataPASS/1knownWindowsPOSIXFAIL,
+  không sửa app/test để làm xanh, không lặp32ca đã đạt.
+- [ ] Đợt request provenance/exactCI/merge/deploy/runtime/assets/receipt;
+  không đóng từlocal.
+- [ ] NEXT Chat shell title “AI Chat Workspace” và rawdate display còn mở;
+  sau cổng request mới xử lý, không dịch/filter nội dung khách.
+- [ ] Document đã có sáu gói output-only về pending/actions/pagination/
+  PDFsource/defaultempty/ba notice; chưaapply/chưaQA, không tự tick.
+- [ ] AX/auth/device/Safari/signedproduction và M-FINAL01..06 giữ mở.
+  ActivegoalWebApp-only, không Bot/route-engine/provider/ví/PayOS/data;
+  motion vẫn cuối.
+
+Bằng chứng: `docs/reports/chat-request-panel-20261115.md`,
+`KIEM-THU/PHIEN-CHAT-REQUEST-PANEL-20261115.md`; cùng Issue689.
