@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {documentPdfSources} from './document-pdf-ui-runtime.mjs';
+import {displayClutterHistoricalPortalSource} from './display-clutter-snapshot.mjs';
 const fixture=JSON.parse(fs.readFileSync(new URL('../fixtures/document-pdf-ui-reviewed.json',import.meta.url),'utf8')),keys=new Set(Object.keys(fixture.vi)),hash=value=>createHash('sha256').update(value).digest('hex');
 assert.equal(keys.size,13);
 export function documentPdfHistoricalSnapshot(entries,locale){
@@ -26,7 +27,7 @@ const original=documentPdfSources(true).portal,oldParts=fixture.binding.chunks.m
   const old=index<3?text:(assert.equal(text.length,1),text[0]);assert.equal(hash(old),edit.oldHash,'Reviewed document-card baseline chunk');return old;
 });
 export function documentPdfHistoricalPortalSource(value){
-  let source=value.replace(/\r\n/g,'\n'),has=/docHistoryUi|docPdf(?:Source|Page|Optimize)Ui/.test(source);
+  let source=displayClutterHistoricalPortalSource(value),has=/docHistoryUi|docPdf(?:Source|Page|Optimize)Ui/.test(source);
   if(!has)has=fixture.binding.chunks.slice(3).some(edit=>source.includes('  function '+edit.name+'(')&&scope(source,edit.name).text.split('\n').includes('      ${renderNotes(page)}'));
   if(!has)return source;
   for(let k=fixture.binding.chunks.length-1;k>=0;k--){

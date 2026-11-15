@@ -1362,3 +1362,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |DP-NATIVE|nặng|3localeSplit375/Compress1440/Merge375|9unique/3Splitfieldcrops/nooutputfake|[Phiên DP](PHIEN-DOCUMENT-PDF-UI-20261115.md)|
 |DP-DATA|nặng|Wholeoperations0/noseed/productGET|9tables/schema/6plans18scenes/source/evidencegiữ|Jobs0/0productwrites|
 |DP-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt riêng,wholePDF/AXmở|LIGHTreadabilitychưađocontrast|
+
+## DISPLAY-CLUTTER-20261115 —Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CL-DOC|nặng|Loading/failed/ready+strictviewrefresh|2rowsbỏ/paragraphretryexact|10RED→490NodePASS|
+|CL-CAT|nặng|Descriptorthreestates/catalogcards|Noticeempty/normalizer/routesgiữ|Actualfullrenderer|
+|CL-FAMILY|nặng|Familyavailable/null/missing|Detailsbỏ/aside3metricsgiữ|WholeHTML+nativefamily|
+|CL-LOCALE|nặng|VIENZH/customerliteral|0dịchnộidungkhách/0inputmutation|ActualVM+nativeprofiles|
+|CL-SOURCE|nặng|4literalproposalchanges|Inverse/outside/protectedexact|[Phiên CL](PHIEN-DISPLAY-CLUTTER-20261115.md)|
+|CL-NATIVE|nặng|Catalogue375/family1440×3locale|2actualowners,R4one+R5five|KhôngfakeAPI/khôngcleansixclaim|
+|CL-DATA|nặng|9tables/schema/6plans18scenes|0productwrites/reseed/egress|Jobs0/sourceevidenceexact|
+|CL-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt riêng|Wholelocale/AX/auth/M-FINALmở|

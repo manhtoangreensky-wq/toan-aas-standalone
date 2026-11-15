@@ -2128,3 +2128,17 @@ Nguồnactualdocumentpagination/SplitOptimizefields/3PDFrenderers tạiBASEc2fc.
 |Đã có thẻ tài liệu dịch|Không thay thẻ lần nữa|Oldhash/catalogfreeze/customerkept|
 |LIGHTtextnhạttrênwhite|GhiUIreadabilityseparate|Chưađocomputedcontrast,khôngcontrastPASS|
 |CARDchưacóreceipttrongtài liệu trước|PR743c2fcđãgiao|CI43709678826/deploy43710852871|
+
+## Thông tin nội bộ —đối chiếu15/11/2026
+
+NguồnthựcBASE206eccc2:renderDocumentHub,renderRouteEngineBoundary,
+renderCapabilityHubFamilySummary;catalogue-chínhportal-features.js.
+
+|Trước|Ứng viên|Bằng chứng/giới hạn|
+|---|---|---|
+|Loading/failedcó6tagtriểnkhai|Bỏ2metarows|Paragraph/retry/rightsstrict exact|
+|Familyvẽnoticeđịnhtuyếnkhôngaction|Helpertrảrỗng|Khôngsửaengine/capabilities/normalizer|
+|Familyauditdetailsnằmtronghiddenstatusgrid|BỏDOMdetails|KhônggọiđâylàthayđổiUIđangvisible|
+|Cataloguebundlecũkháccatalogue-chính|Kiểmownerthậttừserver|Lightentry135cardskhôngđổitrongunit|
+|PDFchưaghiđãtriểnkhai|PR744206eccc2đãgiao|CI43713208147/deploy43732595353|
+|Readabilitychưacósốđo|4LIGHTfail/4DARKpass|Chỉ2Splitobservations,phiếuCSSriêng|
