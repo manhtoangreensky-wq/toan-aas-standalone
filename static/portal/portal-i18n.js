@@ -22062,6 +22062,96 @@
     chatPageMetaUiDescription: "编写并保存目标、参考信息和笔记，方便日后查看。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    docPendingUiOptimizeGuarded: "Chưa có tệp PDF nhỏ hơn đáp ứng yêu cầu an toàn. Tệp gốc được giữ nguyên; hãy kiểm tra tệp nguồn trước khi thử lại.",
+    docPendingUiWordGuarded: "Chưa có tệp Word vì PDF không có văn bản có thể trích xuất. Hãy chọn PDF có văn bản rồi chạy lại.",
+    docPendingUiOcrWordGuarded: "Chưa có tệp Word vì chưa nhận dạng được văn bản phù hợp hoặc thao tác đang bị chặn để bảo đảm an toàn. Hãy kiểm tra tệp PDF trước khi thử lại.",
+    docPendingUiImagesFailed: "Không tạo được tệp PNG/ZIP để tải xuống. Hãy kiểm tra PDF nguồn rồi tạo thao tác mới.",
+    docPendingUiOcrTextGuarded: "Chưa có tệp TXT vì chưa nhận dạng được văn bản phù hợp hoặc thao tác đang bị chặn để bảo đảm an toàn. Hãy kiểm tra tệp nguồn trước khi thử lại.",
+    docPendingUiFailed: "Không tạo được tệp để tải xuống. Hãy kiểm tra tệp nguồn rồi tạo thao tác mới.",
+    docPendingUiWaiting: "Tệp chưa sẵn sàng để tải xuống. Hãy kiểm tra lại trạng thái thao tác sau."
+  });
+  Object.assign(MESSAGES.en, {
+    docPendingUiOptimizeGuarded: "No smaller PDF meets the safety requirements. Your original file is unchanged; check the source file before trying again.",
+    docPendingUiWordGuarded: "No Word file is available because the PDF has no extractable text. Choose a PDF with text and try again.",
+    docPendingUiOcrWordGuarded: "No Word file is available because suitable text could not be recognized or the operation is blocked for safety. Check the PDF before trying again.",
+    docPendingUiImagesFailed: "The PNG/ZIP file could not be created for download. Check the source PDF and start a new operation.",
+    docPendingUiOcrTextGuarded: "No TXT file is available because suitable text could not be recognized or the operation is blocked for safety. Check the source file before trying again.",
+    docPendingUiFailed: "The file could not be created for download. Check the source file and start a new operation.",
+    docPendingUiWaiting: "The file is not ready to download. Check the operation status again later."
+  });
+  Object.assign(MESSAGES.zh, {
+    docPendingUiOptimizeGuarded: "尚无更小且符合安全要求的 PDF。原文件保持不变；请检查源文件后再重试。",
+    docPendingUiWordGuarded: "PDF 中没有可提取的文字，因此暂无 Word 文件。请选择包含文字的 PDF 后重试。",
+    docPendingUiOcrWordGuarded: "尚未识别出符合要求的文字，或操作因安全要求被阻止，因此暂无 Word 文件。请检查 PDF 后再重试。",
+    docPendingUiImagesFailed: "未能生成可下载的 PNG/ZIP 文件。请检查源 PDF 后创建新操作。",
+    docPendingUiOcrTextGuarded: "尚未识别出符合要求的文字，或操作因安全要求被阻止，因此暂无 TXT 文件。请检查源文件后再重试。",
+    docPendingUiFailed: "未能生成可下载的文件。请检查源文件后创建新操作。",
+    docPendingUiWaiting: "文件尚未准备好供下载。请稍后再次查看处理状态。"
+  });
+
+  Object.assign(MESSAGES.vi, {
+    docCardUiSource: "Nguồn",
+    docCardUiOutput: "Kết quả",
+    docCardUiUpdated: "Cập nhật",
+    docCardUiReduced: "Đã giảm",
+    docCardUiResultFile: "Tệp kết quả",
+    docCardUiDownloadTxt: "Tải TXT",
+    docCardUiDownloadDocx: "Tải DOCX",
+    docCardUiDownloadPng: "Tải PNG",
+    docCardUiDownloadZip: "Tải ZIP",
+    docCardUiDownloadPdf: "Tải PDF",
+    docCardUiSaveToVault: "Lưu vào kho tệp",
+    docCardUiSaveAndHandoff: "Lưu và chuẩn bị bàn giao",
+    docCardUiSaveConfirm: "Sao chép tệp kết quả đã kiểm tra vào kho tệp? Hệ thống sẽ kiểm tra lại quyền sở hữu và tính toàn vẹn trước khi sao chép.",
+    docCardUiHandoffConfirm: "Sao chép tệp kết quả vào kho tệp rồi mở biểu mẫu bàn giao? Bản ghi bàn giao chỉ được tạo khi bạn gửi biểu mẫu."
+  });
+  Object.assign(MESSAGES.en, {
+    docCardUiSource: "Source",
+    docCardUiOutput: "Result",
+    docCardUiUpdated: "Updated",
+    docCardUiReduced: "Reduced",
+    docCardUiResultFile: "Result file",
+    docCardUiDownloadTxt: "Download TXT",
+    docCardUiDownloadDocx: "Download DOCX",
+    docCardUiDownloadPng: "Download PNG",
+    docCardUiDownloadZip: "Download ZIP",
+    docCardUiDownloadPdf: "Download PDF",
+    docCardUiSaveToVault: "Save to file library",
+    docCardUiSaveAndHandoff: "Save and prepare handoff",
+    docCardUiSaveConfirm: "Copy the checked result file to your file library? The system will recheck ownership and file integrity before copying.",
+    docCardUiHandoffConfirm: "Copy the result file to your file library and open the handoff form? The handoff record is created only when you submit the form."
+  });
+  Object.assign(MESSAGES.zh, {
+    docCardUiSource: "来源",
+    docCardUiOutput: "结果",
+    docCardUiUpdated: "更新时间",
+    docCardUiReduced: "已减少",
+    docCardUiResultFile: "结果文件",
+    docCardUiDownloadTxt: "下载 TXT",
+    docCardUiDownloadDocx: "下载 DOCX",
+    docCardUiDownloadPng: "下载 PNG",
+    docCardUiDownloadZip: "下载 ZIP",
+    docCardUiDownloadPdf: "下载 PDF",
+    docCardUiSaveToVault: "保存到文件库",
+    docCardUiSaveAndHandoff: "保存并准备交接",
+    docCardUiSaveConfirm: "将已检查的结果文件复制到文件库？复制前，系统将再次检查文件所有权和完整性。",
+    docCardUiHandoffConfirm: "将结果文件复制到文件库并打开交接表单？只有提交表单后才会创建交接记录。"
+  });
+
+  Object.assign(MESSAGES.vi, {
+    docCardEmptyUiTitle: "Chưa có kết quả xử lý",
+    docCardEmptyUiBody: "Sau khi xử lý tài liệu, bạn có thể xem và tải kết quả tại đây."
+  });
+  Object.assign(MESSAGES.en, {
+    docCardEmptyUiTitle: "No processed results yet",
+    docCardEmptyUiBody: "After processing a document, you can view and download the results here."
+  });
+  Object.assign(MESSAGES.zh, {
+    docCardEmptyUiTitle: "暂无处理结果",
+    docCardEmptyUiBody: "处理文档后，您可在此查看并下载结果。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

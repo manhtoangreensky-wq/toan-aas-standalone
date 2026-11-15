@@ -1336,3 +1336,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CD-NATIVE|nặng|3signedlocale375light1440darkdraft|6unique/sixusefulviewportshotsR2|[Phiên CD](PHIEN-CHAT-DATE-20261115.md)|
 |CD-DATA|nặng|CopyclosedQA/khôngreseed|8tables/schema/6plans18scenes/source/evidencegiữ|Jobs0/productwrites0|
 |CD-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt riêng,wholegoalvẫnmở|Document/AX/auth/M-FINALmở|
+
+## DOCUMENT-CARD-COPY-20261115 —Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|DC-PENDING|nặng|7branches/failed/unavailable/waiting|23keys69values/VIENZHsafeescape|10RED→635accepted632+3|
+|DC-ACTIONS|nặng|9kinds/singlemulti/strictreadycaps|CanonicalURL/attrs/state/metricsgiữ|ActualfullbundleVM|
+|DC-EMPTY|nặng|Default/customargs/SAMEVMlocale|Plainemptydefaults/customergiữ|Native/splitactualempty|
+|DC-CUSTOMER|nặng|Filenamecótechnical/script/brands|Wholecardngoàiapprovedslots/rawDTOgiữ|Noarbitrarywordfilter|
+|DC-CATALOG|nặng|Order/freeze/unknown/missing/value|Finite23keys/3additionblocks/oldhashgiữ|Mutationguards|
+|DC-NATIVE|nặng|3signedprofiles375light1440dark|6observations/3mobilecrops,nofakecards|[Phiên DC](PHIEN-DOCUMENT-CARD-COPY-20261115.md)|
+|DC-DATA|nặng|Wholeoperationstable0/noreseed|9tables/schema/6plans18scenes/sourcegiữ|Jobs0/productwrites0|
+|DC-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt riêng,khôngwholeDocumentclaim|Othercopy/AX/auth/M-FINALmở|

@@ -2101,3 +2101,17 @@ renderChatRunTimeline và dateIIFE thẻroot tạiBASEc048dd7e.
 |FullPageQA không chụp inner-scroll|Viewportshot có actualdatebox|R1 giữ;R2sixaffectedPASS|
 |Oldtestguard ghim source trướcdate|Strict5fragmentinverse trướcmetadata|Khôngoldhash/globalmask|
 |Titleunit chưa có receipt trong tài liệu|PR741c048 đãgiao|CI43689932109/deploy43690886966|
+
+## Thẻ tài liệu —đối chiếu15/11/2026
+
+NguồnactualrenderDocumentOperationCards/state/downloadhelpers tạiBASE5bc8;
+không bịa featurelist hoặc actualoutput.
+
+|Trước|Ứng viên|Bằng chứng/giới hạn|
+|---|---|---|
+|7pendingbranches có thuật ngữ nội bộ|Chữ dễ hiểuVIENZH/escapeonce|ActualVM/conditionsgiữ|
+|Nhãn vàconfirmationcứngVI|14keysperlocale|DownloadURL/caps/attrs/metrics exact|
+|Defaultempty mô tảparser/output|2keysper-call|Actual/splitGETempty,customargsgiữ|
+|Wholei18noldguards chưa có23keys|Finite3literaladditioninverse|2FAIL+1expandedgate→3PASS|
+|Có thể nhầm fakecompleted vớioutput|Nativechỉactualempty9tables0writes|Nocards/nodownloads/submitblocked|
+|DATEcổnglocalđangmởtrongtài liệu trước|PR7425bc8đãgiao|CI43706589548/deploy43707642952|
