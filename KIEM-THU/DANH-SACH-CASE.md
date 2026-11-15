@@ -1323,3 +1323,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CM-DATA|nặng|ExistingownedQA/khôngreseed|8tables/schema/6plans18scenes giữ|Source/evidence/Jobs0|
 |CM-SOURCE|nặng|7workerchanges/18protectedLF|Unknown/partial/mutation khôngche|Strictmetadataadapter|
 |CM-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Nowholegoalclaimtừmetadata|Rawdates/Doc/M-FINALmở|
+
+## CHAT-DATE-20261115 — Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CD-DATE|nặng|4systemdateslots/3locale/actualIntl|Mediumshort đúng môi trường,storedtimegiữ|10RED→625groupPASS|
+|CD-INVALID|nặng|Date/numeric/blank/bool/invalid/hostile|Parsing/fallbackdash/escapeonce|Actualhelper/fullDetail|
+|CD-LOCALE|nặng|Đổi locale SAMEVM/catalogfreeze|Ngày render lại,catalogorder/valuesgiữ|IndependentIntltimezone|
+|CD-CUSTOMER|nặng|Nội dung có ISO/media/brands/script|WholeHTMLngoài4dates/rawDTO/controlsexact|Nodate/customerfilter|
+|CD-PROJECTION|nặng|5literalDATE trướcMETA/REQUEST/HISTORY|Unknown/partial/duplicate khôngche|Oldhashesgiữ|
+|CD-NATIVE|nặng|3signedlocale375light1440darkdraft|6unique/sixusefulviewportshotsR2|[Phiên CD](PHIEN-CHAT-DATE-20261115.md)|
+|CD-DATA|nặng|CopyclosedQA/khôngreseed|8tables/schema/6plans18scenes/source/evidencegiữ|Jobs0/productwrites0|
+|CD-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt riêng,wholegoalvẫnmở|Document/AX/auth/M-FINALmở|

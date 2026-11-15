@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
+import {chatDateHistoricalPortalSource} from './chat-date-snapshot.mjs';
 const reviewed=JSON.parse(fs.readFileSync(new URL('../fixtures/chat-page-meta-reviewed.json',import.meta.url),'utf8'));
 const keys=new Set(Object.keys(reviewed.vi)),hash=text=>createHash('sha256').update(text).digest('hex');
 const hashes={vi:'d4119da82b99375626286760c023e3596330746e253cb2df97c0b378ea331d95',en:'f2f07e43e87e942680adee4d7cf4e96f14330676a5c04d4c2d0627bb3c6d8ff0',zh:'69afb2ccba9f7d3c802ec061d372c26b75f1619ed6b0ab92e637ccccb33af659'};
@@ -42,7 +43,7 @@ export const pageMetaFragments=[
 ];
 for(const fragment of pageMetaFragments){assert.equal(hash(fragment.old),fragment.oldHash);assert.equal(hash(fragment.new),fragment.newHash);}
 export function pageMetaHistoricalPortalSource(value){
-  let source=value.replace(/\r\n/g,'\n');
+  let source=chatDateHistoricalPortalSource(value).replace(/\r\n/g,'\n');
   const newCounts=pageMetaFragments.map(edit=>source.split(edit.new).length-1);
   // Earlier historical sources without this unit's markers remain untouched
   // for their original strict gates; no unknown source is silently normalized.
