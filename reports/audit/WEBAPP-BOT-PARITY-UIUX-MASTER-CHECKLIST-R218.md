@@ -2048,3 +2048,28 @@ Evidence:docs/reports/document-pdf-ui-20261115.md/phiênDP,cùngIssue689.
   finaloutput/M-FINAL01..06 giữmở,motioncuối.
 
 Evidence:docs/reports/display-clutter-20261115.md/phiênCL,cùngIssue689.
+
+## Chữ Tách PDF —đơn vị16/11/2026
+
+- [x] DISPLAYPR745đãgiao:CI43737144840bothSUCCESS,
+  merge/runtime44134931e2adb08fecb0cad68c4eac19a6903c7f/
+  treec076ae8fexact/deploy43814377064SUCCESS/services/health5assetsverified;
+  receiptsIssue6896908815742/PR7456908816152.
+- [x] PDF-SPLIT-LABEL-HELPlocal:1literalAGYreplaceappend2LIGHTcolorrules,
+  1appCSSfile,mọibytekhácgiữ,dark/controls/fonts/layout/motionkhôngđổi.
+- [x] RED1PASS1FAIL→onegroup4files7NodePASS0FAIL328.3419ms;
+  finitePDFinverseFIRST/oldChatCSShashassertionsgiữ.
+- [x] NativeBASE3/GREEN3:Split375LIGHT/1440DARK+Compress375LIGHTsentinel;
+  4targetlabel/help12.351555/5.797099:1,paintchainverified;
+  dark/sentinel/control/font/geometryexactBASE,rootviewedGREENfieldcrop.
+  9tables/schema/6plans18scenes/source/evidence/Jobs0/0productwrites.
+- [x] CSSsource-reviewC0/I0/M0;scope23LF/allPython/themeinverse/nativebinding;
+  docsTesterREADY/case1389lines150460bytes/metadata1PASS32deselected.
+- [ ] CSSprovenance/exactHEADCI/merge/deploy/runtime/assets/receipt,
+  chưanhậnđãlênwebtừlocal.
+- [ ] CompressLIGHTcònnhạtvàPDFreferencehelper/spacing/copycòndở,
+  khôngđóngwholePDF/AX;giữqueuecardnames/selected/cataloguehub/lightowner.
+- [ ] Locale/AX/auth/device/Safari/signedUI/finaloutput/M-FINAL01..06mở;
+  motioncuối,khôngmởBot/engine/provider/financial/productiondataimplementation.
+
+Evidence:docs/reports/pdf-split-readability-20261116.md/phiênSR,cùngIssue689.

@@ -2934,3 +2934,14 @@ source/evidencegiữ/Jobs0/no productwrites. Catalogue chính dùng
 [Báo cáo](../docs/reports/display-clutter-20261115.md).
 SplitLIGHT đãđo label1.265330/help2.021153 trênwhite,phiếuCSSriêng;
 chưa áp/khôngwholePDF/AXPASS. Dữ liệu và tên tệp khách giữ nguyên.
+
+## Chữ biểu mẫu Tách PDF —16/11/2026, ứng viên riêng
+
+DISPLAYPR745đãgiao44134931/CI43737144840/deploy43814377064;
+runtime/services/health/5assetsverified,receipts6908815742/6908816152.
+Ứngviên2LIGHTrulesđổiđúnglabel/helpTáchPDF,giữfont/layout/controls/dark.
+7NodePASS;nativeBASE3/GREEN3:4targetlabel/help12.351555/5.797099:1,
+darkSplitvàCompresssentinelstyles/geometryexact.9tables/schema/
+6plans18scenes/source/evidence/Jobs0,noproductwrites/reseed.
+[Báo cáo](../docs/reports/pdf-split-readability-20261116.md).
+CompressLIGHTcònnhạtpre-existing,queueđộclập;khôngwholePDF/AXclaim.
