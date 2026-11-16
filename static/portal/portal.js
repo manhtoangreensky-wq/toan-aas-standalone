@@ -28515,7 +28515,7 @@ function renderAutoPostHub(page, context) {
     const canRunCapability = Boolean(context.capabilities && context.capabilities["document-operation-pdf-split"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["document-operation-refresh"] === true);
     if (!canView) {
-      return `<article class="portal-page portal-pdf-split">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>Document Operations đang ở chế độ an toàn</h2><p>PDF Split chỉ bật khi cả Asset Vault và thư mục output cô lập, persistent của Web được server xác nhận. Không fallback sang static, browser storage, Bot job hoặc provider.</p><div class="portal-state-meta"><span>Signed session</span><span>Storage riêng</span><span>Không có output giả</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-pdf-split">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText("docPdfGuardUiTitle", "Chưa mở được công cụ PDF"))}</h2><p>${safeText(uiText("docPdfGuardUiBody", "Không thể tải công cụ lúc này. Vui lòng tải lại trang."))}</p></div></div></section></article>`;
     }
     const sources = pdfVaultItems(context);
     const operations = documentOperationItems(context, "pdf_split");
@@ -28541,7 +28541,7 @@ function renderAutoPostHub(page, context) {
     const canRunCapability = Boolean(context.capabilities && context.capabilities["document-operation-pdf-merge"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["document-operation-refresh"] === true);
     if (!canView) {
-      return `<article class="portal-page portal-pdf-merge">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>Document Operations đang ở chế độ an toàn</h2><p>PDF Merge chỉ bật khi cả Asset Vault và storage output cô lập, persistent của Web được server xác nhận. Không fallback sang static, browser storage, Bot job hoặc provider.</p><div class="portal-state-meta"><span>Signed session</span><span>Storage riêng</span><span>Không có output giả</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-pdf-merge">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText("docPdfGuardUiTitle", "Chưa mở được công cụ PDF"))}</h2><p>${safeText(uiText("docPdfGuardUiBody", "Không thể tải công cụ lúc này. Vui lòng tải lại trang."))}</p></div></div></section></article>`;
     }
     const sources = pdfVaultItems(context);
     const operations = documentOperationItems(context, "pdf_merge");
@@ -28567,7 +28567,7 @@ function renderAutoPostHub(page, context) {
     const canRunCapability = Boolean(context.capabilities && context.capabilities["document-operation-pdf-optimize"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["document-operation-refresh"] === true);
     if (!canView) {
-      return `<article class="portal-page portal-pdf-optimize">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>Document Operations đang ở chế độ an toàn</h2><p>PDF Optimize chỉ bật khi cả Asset Vault và storage output cô lập, persistent của Web được server xác nhận. Không fallback sang static, browser storage, Bot job hoặc provider.</p><div class="portal-state-meta"><span>Signed session</span><span>Storage riêng</span><span>Không có output giả</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-pdf-optimize">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText("docPdfGuardUiTitle", "Chưa mở được công cụ PDF"))}</h2><p>${safeText(uiText("docPdfGuardUiBody", "Không thể tải công cụ lúc này. Vui lòng tải lại trang."))}</p></div></div></section></article>`;
     }
     const sources = pdfVaultItems(context);
     const operations = documentOperationItems(context, "pdf_optimize");

@@ -2127,3 +2127,33 @@ Evidence:docs/reports/document-card-display-20261116.md/phiênCD,cùngIssue689.
 
 Evidence: docs/superpowers/specs/2026-11-16-document-card-metrics.md,
 cùng Issue #689. Không tạo checklist cạnh tranh.
+
+## Độ dễ dùng PDF — đơn vị16/11/2026
+
+- [x] Metrics PR748 đã giao: exact-head CI43857216020 hai nhóm SUCCESS;
+  merge/runtime38a92641678516b589dea84efc62ec99233a9766;
+  tested/merged treea917eb36475ff68540a58f0492b21705535875a0 exact;
+  deploy43859221752 SUCCESS, ba services/health/năm HTTPS assets exact.
+  Receipts Issue6915066642 / PR6915376473.
+- [x] Hai phiếu Antigravity có sẵn: Compress light1CSS replacement và
+  guarded-copy3JS returns+2keys6values; zero worker faults, chưa áp/QA.
+- [x] BASE3PASS12RED → exact5replay → một nhóm26tệp536NodePASS/0FAIL/
+ 0SKIP40521.3514ms. NativeGREEN3/10samples/2Compress targets/1viewedcrop:
+  label1.265330→12.351555/help2.021153→5.797099:1; Split sentinels/fonts/
+  geometry/controls exact, dùng lại nativeBASE với same theme/không rerun.
+- [x]9tables/schema/6plans18scenes/source/evidence giữ/0productwrites/
+  reseed/egress/Jobs0; guarded copy VM-only, không fake API/quyền/output.
+- [x] Scope22LF/allappPython/CI+1/nativebytebinding và source reviewC0/I0/M0.
+  Docs hiện tại/đối chiếu gốc/Tester READY, metadata1PASS32deselected0.45s,
+  case1431lines154298LFbytes; không đổi historical remote/P0 metadata.
+- [ ] Provenance → exact-head CI → merge/deploy/
+  runtime/assets/receipt. Catalogue light owner/descriptions/fallback hub
+  vẫn theo hàng đợi sau; không thu hẹp mục tiêu.
+- [ ] Full locale/responsive/AX/keyboard/auth/device/Safari/signed UI/output/
+  M-FINAL01..06 vẫn mở; motion cuối, không Bot/engine/provider/financial/
+  ENV/production-data implementation.
+- [ ] Ready-page PDF intro/aside/form/confirm/history vẫn có chữ kỹ thuật;
+  reference helper có nhãn/trạng thái sát nhau và footer rỗng lặp thông tin.
+  Có crop/source evidence, cần phiếu riêng; không nhận whole PDF đã sạch.
+
+Evidence: docs/superpowers/specs/2026-11-16-pdf-usability.md, cùng Issue #689.

@@ -1415,3 +1415,17 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | CM-SOURCE-GATE | nặng | Bốn patch Antigravity R1A | Exact replay/inverse/22LF/all appPython | CI chỉ thêm một command |
 | CM-NATIVE-DATA | nặng | Ba signed empty histories375light | Actual GET/9tables/6plans18scenes giữ |0productwrites/reseed/egress/Jobs0 |
 | CM-DELIVERY | nặng | Exact CI/merge/deploy/runtime/assets | Receipt riêng đúng revision | Full locale/AX/auth/M-FINAL mở |
+
+## PDF-USABILITY-20261116 — Issue #689
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| PU-CONTRAST | nặng | Compress light label/help | Hai targets≥4.5:1, không đổi vị trí/font |12.351555/5.797099:1 |
+| PU-GUARDS | nặng | Ba PDF tools/ba locale/strict view | Chỉ hai text slots và metadata đổi | BASE12RED→536NodePASS |
+| PU-RIGHTS | nặng | View/run/refresh độc lập | Ready HTML/controls/validation bằng BASE | Actual full renderer |
+| PU-CUSTOMER | nặng | Tên/notes kỹ thuật/brand/HTML | Literal, immutable, escape một lần | No customer translation |
+| PU-LOCALE | nặng | Same-VM/fallback/frozen catalogue |2orderedkeys6values/unknownmissingrejected | [Phiên PU](PHIEN-PDF-USABILITY-20261116.md) |
+| PU-SOURCE | nặng | Five exact worker replacements | Whole outside/inverse/22LF/allappPython | CI chỉ thêm một command |
+| PU-NATIVE | nặng | Compress target/Split sentinels | Three GREEN observations, BASE theme exact reused |10samples/2targets/1crop |
+| PU-DATA | nặng |9tables/6plans18scenes/source/evidence |0productwrites/reseed/egress/Jobs0 | Guarded copy VM-only |
+| PU-DELIVERY | nặng | Exact CI/merge/deploy/runtime/assets | Receipt riêng đúng revision | Whole PDF/AX/auth/M-FINAL mở |

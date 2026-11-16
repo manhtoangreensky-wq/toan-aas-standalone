@@ -1,0 +1,72 @@
+{
+  "base": "38a92641678516b589dea84efc62ec99233a9766",
+  "proposals": [
+    {
+      "name": "pdf-compress-label-help-public-nov16-r1",
+      "sha256": "df48225600be25a16ed8a9185bc7fcacaac3d51ae73f05495f1de1b2e6fd2c38",
+      "specId": "PDF-COMPRESS-LABEL-HELP-20261116"
+    },
+    {
+      "name": "pdf-guard-customer-copy-public-nov16-r1",
+      "sha256": "3dfd8b68a6a8ed3770af4bc6aa5e61df9e0f6153f6136c5441d5bd0cb57dac97",
+      "specId": "PDF-GUARDED-CUSTOMER-COPY-20261116"
+    }
+  ],
+  "changes": [
+    {
+      "file": "static/portal/portal-theme.css",
+      "old": "/* Keep PDF split field names and guidance readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-split .portal-field > label {\n  color: var(--portal-text);\n}\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-split .portal-field-help {\n  color: var(--portal-muted);\n}\n",
+      "new": "/* Keep PDF split field names and guidance readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-split .portal-field > label {\n  color: var(--portal-text);\n}\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-split .portal-field-help {\n  color: var(--portal-muted);\n}\n\n/* Keep PDF compression field names and guidance readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-optimize .portal-field > label {\n  color: var(--portal-text);\n}\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-optimize .portal-field-help {\n  color: var(--portal-muted);\n}\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "      return `<article class=\"portal-page portal-pdf-split\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>Document Operations đang ở chế độ an toàn</h2><p>PDF Split chỉ bật khi cả Asset Vault và thư mục output cô lập, persistent của Web được server xác nhận. Không fallback sang static, browser storage, Bot job hoặc provider.</p><div class=\"portal-state-meta\"><span>Signed session</span><span>Storage riêng</span><span>Không có output giả</span></div></div></div></section></article>`;",
+      "new": "      return `<article class=\"portal-page portal-pdf-split\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText(\"docPdfGuardUiTitle\", \"Chưa mở được công cụ PDF\"))}</h2><p>${safeText(uiText(\"docPdfGuardUiBody\", \"Không thể tải công cụ lúc này. Vui lòng tải lại trang.\"))}</p></div></div></section></article>`;",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "      return `<article class=\"portal-page portal-pdf-merge\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>Document Operations đang ở chế độ an toàn</h2><p>PDF Merge chỉ bật khi cả Asset Vault và storage output cô lập, persistent của Web được server xác nhận. Không fallback sang static, browser storage, Bot job hoặc provider.</p><div class=\"portal-state-meta\"><span>Signed session</span><span>Storage riêng</span><span>Không có output giả</span></div></div></div></section></article>`;",
+      "new": "      return `<article class=\"portal-page portal-pdf-merge\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText(\"docPdfGuardUiTitle\", \"Chưa mở được công cụ PDF\"))}</h2><p>${safeText(uiText(\"docPdfGuardUiBody\", \"Không thể tải công cụ lúc này. Vui lòng tải lại trang.\"))}</p></div></div></section></article>`;",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "      return `<article class=\"portal-page portal-pdf-optimize\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>Document Operations đang ở chế độ an toàn</h2><p>PDF Optimize chỉ bật khi cả Asset Vault và storage output cô lập, persistent của Web được server xác nhận. Không fallback sang static, browser storage, Bot job hoặc provider.</p><div class=\"portal-state-meta\"><span>Signed session</span><span>Storage riêng</span><span>Không có output giả</span></div></div></div></section></article>`;",
+      "new": "      return `<article class=\"portal-page portal-pdf-optimize\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText(\"docPdfGuardUiTitle\", \"Chưa mở được công cụ PDF\"))}</h2><p>${safeText(uiText(\"docPdfGuardUiBody\", \"Không thể tải công cụ lúc này. Vui lòng tải lại trang.\"))}</p></div></div></section></article>`;",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  verifyEqualKeysets();",
+      "new": "  Object.assign(MESSAGES.vi, {\n    docPdfGuardUiTitle: \"Chưa mở được công cụ PDF\",\n    docPdfGuardUiBody: \"Không thể tải công cụ lúc này. Vui lòng tải lại trang.\"\n  });\n  Object.assign(MESSAGES.en, {\n    docPdfGuardUiTitle: \"PDF tool could not be opened\",\n    docPdfGuardUiBody: \"The tool could not be loaded right now. Please reload the page.\"\n  });\n  Object.assign(MESSAGES.zh, {\n    docPdfGuardUiTitle: \"无法打开 PDF 工具\",\n    docPdfGuardUiBody: \"目前无法加载工具，请重新加载页面。\"\n  });\n\n  verifyEqualKeysets();",
+      "count": 1
+    }
+  ],
+  "vi": {
+    "docPdfGuardUiTitle": "Chưa mở được công cụ PDF",
+    "docPdfGuardUiBody": "Không thể tải công cụ lúc này. Vui lòng tải lại trang."
+  },
+  "en": {
+    "docPdfGuardUiTitle": "PDF tool could not be opened",
+    "docPdfGuardUiBody": "The tool could not be loaded right now. Please reload the page."
+  },
+  "zh": {
+    "docPdfGuardUiTitle": "无法打开 PDF 工具",
+    "docPdfGuardUiBody": "目前无法加载工具，请重新加载页面。"
+  },
+  "binding": {
+    "baselinePortal": "027499a7e7ee821b9306d77ec30f2a847817fde83afd127d3d88041192498d00",
+    "candidatePortal": "c1a4defe7b883d1b182198d60eab4353c3ace61f70d20d36aa4a6d64f30a6358",
+    "baselineI18n": "e2443981bd87f6ef0673b07b129977746a3a6f0d4c895bc64904004839d66968",
+    "candidateI18n": "e52505655b14c640a7a9d68a6da912b78e24f6783fb61486799ff788429c7c8d",
+    "baselineTheme": "6679321f8799acbb98dd65099372a7e6e31c2dfdcf4ffc530d665b254bc93440",
+    "candidateTheme": "6a5028c129fc78bb701d7fd585fe3eb9776b8902a4948560e6debccbfb412f90",
+    "catalogHashes": {
+      "vi": "f66917acbaea68a285a6644abf730b33334a3af9b396e4fd1b5bdd3691178ce1",
+      "en": "8d444a689c40ffb48e2885a30b0d6363ed9714b3ba29cfc5294754069bc24ea1",
+      "zh": "dcf8e740d18676b6dcb0a2cbdf3c1db33e5eaadd8ba13df7105b4327c9b9d9c2"
+    }
+  }
+}

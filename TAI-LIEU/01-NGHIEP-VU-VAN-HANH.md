@@ -2970,3 +2970,17 @@ BASE16RED→một nhóm521NodePASS; native ba signed empty histories375light,
 Filled metrics mới có actual-renderer VM proof, không được nhận native
 completed file hay final output. Compress/catalogue/forms và toàn bộ
 locale/AX/auth/signed UI/motion còn theo checklist; chưa triển khai metrics.
+
+## PDF dễ đọc và thông báo ngắn —16/11/2026, ứng viên riêng
+
+Metrics PR748 đã giao: CI43857216020/deploy43859221752/runtime38a92641,
+services/health/năm assets exact; receipts6915066642/6915376473.
+Ứng viên PDF sửa hai màu Compress light và guarded-copy của Tách/Gộp/Nén,
+giữ nguyên guard/quyền/ready forms/validation/download. Năm thay thế,2keys6values.
+BASE3PASS12RED→536NodePASS; native GREEN3observations dùng lại BASE native
+cùng theme, hai targets12.351555/5.797099:1; geometry/fonts/controls/sentinels
+giữ.9tables/schema/6plans18scenes/source/evidence/Jobs0,0productwrites.
+[Báo cáo](../docs/reports/pdf-usability-20261116.md).
+Thông báo guarded chỉ được chứng minh qua actual renderer; QA thực tế là
+ready forms. Ready-page technical copy và reference helper/footer vẫn cần
+xử lý riêng; không nhận toàn PDF/customer-ready hay real output đã đạt.

@@ -2181,3 +2181,17 @@ danh sách chức năng gốc đã đối chiếu; đây là thay đổi chữ, 
 | EN đếm một tệp có thể sai số nhiều | Năm nhãn label-first trong R1A | Phụ lục người điều phối, không lỗi worker |
 | Có thể nhận native empty là output thật | Filled metrics VM-only | Native ba histories thực sự0cards |
 | PR747 chưa ghi đã triển khai | PR747b3c1749f đã giao | CI43821671694/deploy43853462350/receipt6910067903 |
+
+## PDF dễ dùng — đối chiếu16/11/2026
+
+Nguồn thực: ba renderPdf functions và theme tại BASE38a92641; danh sách
+chức năng gốc giữ nguyên, không thêm engine hay khả năng xử lý mới.
+
+| Trước | Ứng viên | Bằng chứng/giới hạn |
+|---|---|---|
+| Compress light label/help1.265330/2.021153:1 | Hai semantic colors light-only |12.351555/5.797099:1; font/geometry giữ |
+| Guarded giải thích signed/storage/Bot/provider | Hai thông báo locale, bỏ metadata | Whole HTML ngoài hai slots/removal exact |
+| Ready forms có copy kỹ thuật | Không đổi trong đợt này | Ghi backlog, không nhận sạch whole PDF |
+| Reference-picker header/footer còn chật/dư | Không đổi trong đợt này | Crop Compress thực tế, cần phiếu riêng |
+| Có thể giả trạng thái blocked cho ảnh | Không fake API/quyền | Guarded VM-only, native actual ready |
+| Metrics chưa ghi đã triển khai | PR74838a92641 đã giao | CI43857216020/deploy43859221752/receipt6915066642 |
