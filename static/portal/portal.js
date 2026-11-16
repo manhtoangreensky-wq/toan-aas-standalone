@@ -12563,9 +12563,7 @@
   }
 
   function renderCapabilityHubFamilySummary(context, familyKey) {
-    const family = capabilityHubFamily(context, familyKey);
-    if (!family) return "";
-    return `<details class="portal-capability-family-summary"><summary>${safeText(featureCatalogText("capabilityHub.family.summary", "Phạm vi chuyển đổi"))}</summary><div class="portal-capability-family-summary-body">${renderCapabilityHubFamilyMetrics(family)}<p>${safeText(featureCatalogText("capabilityHub.family.note", "Các con số chỉ phản ánh các mục Bot đã phân loại vào nhóm này. Trang và bộ xử lý của ứng dụng vẫn được kiểm tra độc lập theo phiên đăng nhập và quyền sử dụng."))}</p></div></details>`;
+    return "";
   }
 
   function renderFeatureFamilyExplorer() {
@@ -12600,13 +12598,7 @@
   }
 
   function renderRouteEngineBoundary(context) {
-    const routeEngine = normalizeRouteEngineDescriptor(context && context.routeEngine);
-    const messages = routeEngine.state === "deferred"
-      ? { modifier: "deferred", title: "notice.deferred.title", body: "notice.deferred.body" }
-      : routeEngine.state === "loading"
-        ? { modifier: "loading", title: "notice.loading.title", body: "notice.loading.body" }
-        : { modifier: "guarded", title: "notice.guarded.title", body: "notice.guarded.body" };
-    return `<section class="portal-route-engine-notice portal-route-engine-notice--${safeText(messages.modifier)}" role="status" aria-live="polite"><span class="portal-route-engine-notice-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><div class="portal-route-engine-notice-copy"><span class="portal-route-engine-notice-kicker">${safeText(routeEngineText("notice.kicker", "Định tuyến xử lý"))}</span><h2>${safeText(routeEngineText(messages.title, "Trạng thái định tuyến"))}</h2><p>${safeText(routeEngineText(messages.body, "Trạng thái này chỉ cung cấp thông tin cho danh mục."))}</p></div></section>`;
+    return "";
   }
 
   function renderFeatureCatalog(page, context) {
@@ -28479,13 +28471,13 @@ function renderAutoPostHub(page, context) {
       return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText("documentAccessUiHeading", "Tài liệu hiện chưa thể mở"))}</h2><p>${safeText(uiText("documentAccessUiBody", "Tài khoản hoặc phiên làm việc hiện chưa được phép xem công cụ và lịch sử tài liệu."))}</p></div></div></section></article>`;
     }
     if (readState === "loading") {
-      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>${uiText("docReadUiLoadingHeading", "Đang tải lịch sử tài liệu")}</h2><p>${uiText("docReadUiLoadingBody", "Đang tải lịch sử tài liệu cho tài khoản hiện tại. Vui lòng chờ trong giây lát.")}</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>${uiText("docReadUiLoadingHeading", "Đang tải lịch sử tài liệu")}</h2><p>${uiText("docReadUiLoadingBody", "Đang tải lịch sử tài liệu cho tài khoản hiện tại. Vui lòng chờ trong giây lát.")}</p></div></div></section></article>`;
     }
     if (readState !== "ready") {
       const retry = canRefresh
         ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="document-operation-refresh" data-portal-route="${safeText(activePath)}">${uiText("docReadUiRetryButton", "Thử lại")}</button></div>`
         : "";
-      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>${uiText("docReadUiFailedHeading", "Chưa thể tải lịch sử tài liệu")}</h2><p>${uiText("docReadUiFailedBody", "Không thể tải lịch sử tài liệu. Nội dung hiển thị trước đó đã được xóa, vui lòng thử lại.")}</p><div class="portal-state-meta"><span>Không có cache</span><span>Không có Bot fallback</span><span>Không có URL công khai</span></div>${retry}</div></div></section></article>`;
+      return `<article class="portal-page portal-document-hub">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>${uiText("docReadUiFailedHeading", "Chưa thể tải lịch sử tài liệu")}</h2><p>${uiText("docReadUiFailedBody", "Không thể tải lịch sử tài liệu. Nội dung hiển thị trước đó đã được xóa, vui lòng thử lại.")}</p>${retry}</div></div></section></article>`;
     }
     const cards = [
       { group: "pdf", href: "/documents/split", icon: "PDF", title: uiText("docToolUiSplitTitle", "Tách PDF"), text: uiText("docToolUiSplitText", "Tạo tệp PDF từ một trang hoặc dải trang liên tiếp trong tài liệu đã lưu."), ready: true },

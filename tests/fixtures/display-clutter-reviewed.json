@@ -1,0 +1,48 @@
+{
+  "base": "206eccc2eabe546ac11be89c26423eb9bf58df81",
+  "baselinePortal": "a4130687f3bacee27082f89dd7afee96f4fdc9aa6db05d70594fc7194723e656",
+  "candidatePortal": "9b414b3f3e4495fe170e3dc3abdb2f53da8bc0442ceed2baf15f068cb0205a98",
+  "proposals": [
+    {
+      "name": "document-read-meta-clutter-public-nov15-r1",
+      "sha256": "8be85d1bc616999666e61dbadae3c5f7c7743750220323a8b0d8bab8bb2069ab",
+      "specId": "DOCUMENT-READ-META-CLUTTER-20261115"
+    },
+    {
+      "name": "catalog-route-notice-public-nov15-r1",
+      "sha256": "d027c64cc428bd523f690085ed3905f0c26a90b780d7bed6018dffd77e819c2b",
+      "specId": "CATALOG-ROUTE-NOTICE-20261115"
+    },
+    {
+      "name": "catalog-family-audit-public-nov15-r1",
+      "sha256": "4f74e8907359b0a74e3714fde2107d26bddc25d1fec96d0ed671e3d1cf6eb7a2",
+      "specId": "CATALOG-FAMILY-AUDIT-20261115"
+    }
+  ],
+  "changes": [
+    {
+      "file": "static/portal/portal.js",
+      "old": "<p>${uiText(\"docReadUiLoadingBody\", \"Đang tải lịch sử tài liệu cho tài khoản hiện tại. Vui lòng chờ trong giây lát.\")}</p><div class=\"portal-state-meta\"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div>",
+      "new": "<p>${uiText(\"docReadUiLoadingBody\", \"Đang tải lịch sử tài liệu cho tài khoản hiện tại. Vui lòng chờ trong giây lát.\")}</p>",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "<p>${uiText(\"docReadUiFailedBody\", \"Không thể tải lịch sử tài liệu. Nội dung hiển thị trước đó đã được xóa, vui lòng thử lại.\")}</p><div class=\"portal-state-meta\"><span>Không có cache</span><span>Không có Bot fallback</span><span>Không có URL công khai</span></div>${retry}",
+      "new": "<p>${uiText(\"docReadUiFailedBody\", \"Không thể tải lịch sử tài liệu. Nội dung hiển thị trước đó đã được xóa, vui lòng thử lại.\")}</p>${retry}",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function renderRouteEngineBoundary(context) {\n    const routeEngine = normalizeRouteEngineDescriptor(context && context.routeEngine);\n    const messages = routeEngine.state === \"deferred\"\n      ? { modifier: \"deferred\", title: \"notice.deferred.title\", body: \"notice.deferred.body\" }\n      : routeEngine.state === \"loading\"\n        ? { modifier: \"loading\", title: \"notice.loading.title\", body: \"notice.loading.body\" }\n        : { modifier: \"guarded\", title: \"notice.guarded.title\", body: \"notice.guarded.body\" };\n    return `<section class=\"portal-route-engine-notice portal-route-engine-notice--${safeText(messages.modifier)}\" role=\"status\" aria-live=\"polite\"><span class=\"portal-route-engine-notice-icon\" aria-hidden=\"true\">${portalIcon(ICONS.security)}</span><div class=\"portal-route-engine-notice-copy\"><span class=\"portal-route-engine-notice-kicker\">${safeText(routeEngineText(\"notice.kicker\", \"Định tuyến xử lý\"))}</span><h2>${safeText(routeEngineText(messages.title, \"Trạng thái định tuyến\"))}</h2><p>${safeText(routeEngineText(messages.body, \"Trạng thái này chỉ cung cấp thông tin cho danh mục.\"))}</p></div></section>`;\n  }",
+      "new": "  function renderRouteEngineBoundary(context) {\n    return \"\";\n  }",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function renderCapabilityHubFamilySummary(context, familyKey) {\n    const family = capabilityHubFamily(context, familyKey);\n    if (!family) return \"\";\n    return `<details class=\"portal-capability-family-summary\"><summary>${safeText(featureCatalogText(\"capabilityHub.family.summary\", \"Phạm vi chuyển đổi\"))}</summary><div class=\"portal-capability-family-summary-body\">${renderCapabilityHubFamilyMetrics(family)}<p>${safeText(featureCatalogText(\"capabilityHub.family.note\", \"Các con số chỉ phản ánh các mục Bot đã phân loại vào nhóm này. Trang và bộ xử lý của ứng dụng vẫn được kiểm tra độc lập theo phiên đăng nhập và quyền sử dụng.\"))}</p></div></details>`;\n  }",
+      "new": "  function renderCapabilityHubFamilySummary(context, familyKey) {\n    return \"\";\n  }",
+      "count": 1
+    }
+  ]
+}

@@ -77,12 +77,12 @@ def test_feature_catalogue_routes_fixed_chrome_through_i18n_without_price_surfac
         assert forbidden not in family
 
 
-def test_feature_family_hero_uses_reviewed_group_copy_and_keeps_route_engine_guard() -> None:
+def test_feature_family_hero_uses_reviewed_group_copy_without_internal_notice() -> None:
     title = _function(PORTAL, "localizedPageTitle")
     description = _function(PORTAL, "localizedPageDescription")
     route_engine = _function(PORTAL, "renderRouteEngineBoundary")
 
     assert "featureCatalogGroupCopy(" in title
     assert "featureCatalogGroupCopy(" in description
-    assert 'role="status"' in route_engine
+    assert route_engine.strip() == 'function renderRouteEngineBoundary(context) {\n    return "";\n  }'
     assert "data-portal-action" not in route_engine

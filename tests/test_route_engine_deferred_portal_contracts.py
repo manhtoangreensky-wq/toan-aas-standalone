@@ -144,7 +144,7 @@ def test_catalog_hydration_replaces_route_engine_state_without_browser_storage()
     assert "localStorage" not in route_engine_read
 
 
-def test_portal_route_engine_notice_is_closed_localized_and_non_authorizing() -> None:
+def test_hidden_route_notice_keeps_descriptor_closed_and_non_authorizing() -> None:
     normalizer = _function(PORTAL, "normalizeRouteEngineDescriptor")
     assert 'return { state: "loading" }' in normalizer
     assert 'source.state !== "deferred"' in normalizer
@@ -154,7 +154,7 @@ def test_portal_route_engine_notice_is_closed_localized_and_non_authorizing() ->
     assert 'return { state: "guarded" }' in normalizer
 
     notice = _function(PORTAL, "renderRouteEngineBoundary")
-    assert 'role="status"' in notice
+    assert notice.strip() == 'function renderRouteEngineBoundary(context) {\n    return "";\n  }'
     assert "data-portal-action" not in notice
     for forbidden in ("provider", "model", "fallback", "cost", "price", "payment", "wallet", "job", "canAct"):
         assert forbidden not in notice

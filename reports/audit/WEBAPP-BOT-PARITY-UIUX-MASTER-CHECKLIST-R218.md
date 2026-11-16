@@ -2020,3 +2020,31 @@ Evidence:docs/reports/document-card-copy-20261115.md/phiênDC,cùngIssue689.
   motioncuối,noBot/routeengine/provider/financial/productiondataimplementation.
 
 Evidence:docs/reports/document-pdf-ui-20261115.md/phiênDP,cùngIssue689.
+
+## Dọn thông tin nội bộ —đơn vị15/11/2026
+
+- [x] PDFPR744đãgiao:exactHEADCI43713208147bothSUCCESS;
+  merge/runtime206eccc2eabe546ac11be89c26423eb9bf58df81;
+  tree66c3e0b9exact/deploy43732595353SUCCESS/services/health/fiveassets exact.
+  ReceiptsIssue6896894228512/PR7446897259945.
+- [x] DISPLAYlocal4literalAGYchanges/1appfile/0keys:
+  2Documentmetarows+route-notice/familyaudithelperbỏ,paragraph/retrygiữ.
+- [x] BASE10RED→onegroup22files490NodePASS0FAIL0SKIP42328.5387ms;
+  Python22PASS3.82s,descriptor/normalizer/catalog/cards/rights giữ.
+- [x] Actualnative6observations=R4VIcatalogue1+R5affected5:
+  3locale×catalogue375light/family1440dark;135/8cards,noticeaudit0,
+  routecreategiữ,nooverflow/errors;9tables/schema/6plans18scenes/
+  source/evidence/Jobs0. R1–R4harnessfailgiữlịch sử,khôngworkerfault.
+- [x] DISPLAYsource-reviewC0/I0/M0;scopeexit0/23LF/allPython;
+  docsTesterREADY/case1377lines149616LFbytes/metadata1PASS32deselected.
+- [ ] DISPLAYprovenance/exactHEADCI/merge/deploy/runtime/assets/receipt,
+  chưanhậnđãlênweb.
+- [x] PDFSplitreadabilityđoriêng2observations:4LIGHTcontrastfail/
+  4DARKpass,noseed/sourcegiữ/Jobs0;khôngwholeAXclaim.
+- [ ] PDFSplitCSS2light-onlyrulesđãgiaoAGY,NOT_APPLIED/NOT_QA;
+  cardnames/selectedcopy/cataloguehubproposalscócode,chờtheothứtự.
+- [ ] Cataloguechínhportal-features.js cònsignal/copykỹthuật,
+  khôngđóngtừhelperbundlecũ;locale/AX/auth/device/Safari/signedUI/
+  finaloutput/M-FINAL01..06 giữmở,motioncuối.
+
+Evidence:docs/reports/display-clutter-20261115.md/phiênCL,cùngIssue689.
