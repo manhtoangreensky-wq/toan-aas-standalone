@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {pdfInputFont16HistoricalCss} from "./pdf-input-font16-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/pdf-customer-cleanup-reviewed.json",import.meta.url),"utf8"));
 const edits=fixture.changes,ready=edits.slice(0,8),reference=edits.slice(-11),amendments=edits.slice(8,-11);
 const portal="static/portal/portal.js",i18n="static/portal/portal-i18n.js",theme="static/portal/portal-theme.css";
@@ -69,6 +70,7 @@ export const PDF_CUSTOMER_CLEANUP_READY_CSS_PREFIX=ready[7].new.slice(0,-ready[7
 export const PDF_CUSTOMER_CLEANUP_REFERENCE_CSS_PREFIX=reference[10].new.slice(0,-reference[10].old.length);
 export function pdfCustomerCleanupHistoricalCss(source){
   assert.equal(typeof source,"string",fail+" CSS");
+  source=pdfInputFont16HistoricalCss(source);
   const has=/Keep PDF forms focused on the selected task|portal-document-operation-layout--single|Keep source-file search labels and navigation readable|\.portal-operation-reference-picker \.portal-operation-reference-copy/.test(source);
   if(!has)return source;
   assert.ok(ready[7].new.endsWith(ready[7].old)&&reference[10].new.endsWith(reference[10].old),fail+" CSS prepend contract");

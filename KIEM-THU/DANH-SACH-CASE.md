@@ -1446,3 +1446,17 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | PC-DATA | nặng |9tables/6plans18scenes |0productwrites/reseed/egress/Jobs0 | Source/evidenceexact |
 | PC-LEGACY | nặng | Python/Nodecomparators |29PythonPASS/3NodePASS1sameBASEFAIL | Khôngnới/lossless |
 | PC-DELIVERY | nặng | CI/merge/deploy/runtime | Receiptđúngrevision | Font16/M-FINAL/goalvẫnmở |
+
+## PDF-INPUT-FONT16-20261116 — Issue689
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| PF-MOBILE | nặng | BaPDFforms375/390/767 | Chỉ controlfont16px |42actualsamples |
+| PF-DESKTOP | nặng | BaPDFforms768/1440 | Font15px giữ |28actualsamples |
+| PF-SCOPE | nặng | OneCSSreplacement | Exactforward/inverse/outside | Baselectors/onefontdeclaration |
+| PF-PROTECT | nặng | Portal/i18n/allPython | WholeLFtext/24protectedpaths giữ | CI chỉ+1command |
+| PF-HISTORY | nặng | CSS historical comparators | Finiteinverse,oldassertions giữ |564NodePASS |
+| PF-NATIVE | nặng |15ownedcases/2viewedcrops | Khôngoverflow/overlap | KhôngSafari/iOS/wholeAXclaim |
+| PF-SEARCH | nặng | OneFindClearGET/Tab→Find | Controls/history/notesexact |0productwrites |
+| PF-DATA | nặng |9tables/6plans18scenes | Source/evidence/Jobs0 giữ | [PhiênPF](PHIEN-PDF-INPUT-FONT16-20261116.md) |
+| PF-DELIVERY | nặng | ExactCI/merge/deploy/runtime | Receipt riêng đúngrevision | Fullgoal/M-FINAL cònmở |
