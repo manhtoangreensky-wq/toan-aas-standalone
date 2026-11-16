@@ -2118,7 +2118,9 @@ Evidence:docs/reports/document-card-display-20261116.md/phiênCD,cùngIssue689.
 - [x] Docs hiện tại/đối chiếu gốc/Tester READY; metadata1PASS32deselected,
   case1417lines152989LFbytes, không đổi historical remote/P0 metadata.
 - [x] Source review C0/I0/M0, đúng hai frozen hashes, không lặp test.
-- [ ] Provenance/exact-head CI → merge/deploy/runtime/receipt.
+- [x] Metrics PR748 đã giao:CI43857216020/deploy43859221752/runtime
+ 38a92641678516b589dea84efc62ec99233a9766;receipt6915066642/6915376473,
+ exacttree/services/health/5assets;sourcePDFnextunit đã ghi bằng chứng.
 - [ ] Các phiếu Compress light/guard copy/catalogue light owner/descriptions/
   fallback hub giữ nguyên thứ tự và bằng chứng riêng, chưa áp vào app.
 - [ ] Full locale/responsive/AX/keyboard/auth/device/Safari/signed UI/
@@ -2146,8 +2148,9 @@ cùng Issue #689. Không tạo checklist cạnh tranh.
 - [x] Scope22LF/allappPython/CI+1/nativebytebinding và source reviewC0/I0/M0.
   Docs hiện tại/đối chiếu gốc/Tester READY, metadata1PASS32deselected0.45s,
   case1431lines154298LFbytes; không đổi historical remote/P0 metadata.
-- [ ] Provenance → exact-head CI → merge/deploy/
-  runtime/assets/receipt. Catalogue light owner/descriptions/fallback hub
+- [x] PDF-USABILITY PR749 đã giao:CI43863230530/deploy43865201248/runtime
+ 2b126b40766404e4b5c0520a121d60c02760d168;receipt6916141029/6916377502,
+ exacttree/services/health/5assets. Catalogue light owner/descriptions/fallback hub
   vẫn theo hàng đợi sau; không thu hẹp mục tiêu.
 - [ ] Full locale/responsive/AX/keyboard/auth/device/Safari/signed UI/output/
   M-FINAL01..06 vẫn mở; motion cuối, không Bot/engine/provider/financial/
@@ -2180,8 +2183,10 @@ Evidence: docs/superpowers/specs/2026-11-16-pdf-usability.md, cùng Issue #689.
  Previouslaterpage/44pxVM-onlytrừoffsetthựcquan sát,khôngfakeAPI/output.
 - [x] Scope22LF/allappPython/exactoutside/CI+1/nativebytebinding và
  source reviewC0/I0/M0. Docshiệntại/đốichiếugốc/TesterPCREADY.
-- [ ] Provenance → exactHEADCI → merge/deploy/
-  runtime/assets/receipt. Catalogue light owner/descriptions/fallback và
+- [x] PR750 đã giao:CI43874550883bothSUCCESS,merge/runtime
+ efe06a2964c9e32778e673689410b9e93c939cc3,treee8985865/whole diff0,
+ deploy43876776533SUCCESS/services/health/5assetsbyteexact;
+ receiptsIssue6917466951/PR6917965895. Catalogue light owner/descriptions/fallback và
   các PDF tools khác vẫn theo hàng đợi sau.
 - [ ] Full locale/responsive/AX/auth/device/Safari/signedUI/real output/
   M-FINAL01..06 còn mở; motion cuối, không engine/Bot/provider/financial/
@@ -2198,3 +2203,24 @@ cùng Issue #689. Không thu hẹp goal hoặc mở checklist cạnh tranh.
   ContractIssue6917285933;CLI đãkiểm modelsgemini3.8FlashHigh cao nhất
   trongdanh sách16/11. R1output-onlycompletion0/exact1CSSreplacement,
   NOT_APPLIED/NOT_QA;khônglogin/settingsmới,khôngnhậnđãsửafont.
+
+## PDF mobile font16 — đơn vị16/11/2026
+
+- [x] PR750 đã giao trướcBASEefe06a29;khôngchạmpendingMergefieldspatch.
+- [x] Antigravity3.8FlashHighR1code0/exact1CSSreplacement;publicproof/fullMAP,
+  zero genuine workerfault. Font16 chỉ≤767px ở3PDFforms,desktop15px giữ.
+- [x] QA drafts8tests/2files syntax0/rootread;NOT_RUN, chưaapplyapp.
+- [x] BASE4PASS4RED548.9254ms→exact1replay→onegroup28files564PASS/
+ 0FAIL/0SKIP43663.3933ms;khôngchạylặpphầnđạt.
+- [x] NativeR2fifteenownedcases/70samples:42mobile16px28desktop15px,
+ 2viewedcrops/oneFindClearGET/Tab→Find/nooverflow/overlap/errors/Jobs0.
+ R1zeroobs thiếu referenceinput của coordinator,khôngworkerfault/appchange.
+- [x] Scope24LF/allappPython/CI+1/source+evidencebytes/9tables/6plans18scenes
+ giữ/0productwrites/reseed/egress;source reviewC0/I0/M0.
+- [x] Docs/Tester READY;case1462lines156827LFbytes/metadata1PASS32deselected0.75s.
+- [ ] Provenance/exactheadCI→release gate.
+- [ ] Provenance/exactheadCI→exactmergedtree/deploy/runtime/receipt.
+- [ ] MergefieldsR1code0/exact3changes/7keys21values,Issue6917766121;
+  NOT_APPLIED/NOT_QA,đợiđúngthứtự. Remaininggoal/M-FINAL giữmở.
+
+Evidence:docs/superpowers/specs/2026-11-16-pdf-input-font16.md,cùngIssue689.

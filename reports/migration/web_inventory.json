@@ -10503,6 +10503,7 @@
         "copyfast_db.py",
         "copyfast_provider_policy.py",
         "docs/AGY-DISPATCH-POINT-20261107.md",
+        "docs/reports/pdf-input-font16-20261116.md",
         "docs/reports/pdf-split-readability-20261116.md",
         "docs/reports/video-inner-first-three-20261110.md",
         "reports/audit/R218-CHECKPOINT-20261021.md",
@@ -10535,7 +10536,7 @@
         "video.html",
         "video.py"
       ],
-      "occurrences": 53,
+      "occurrences": 55,
       "provider": "Gemini"
     },
     {
@@ -18797,9 +18798,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 549,
-  "source_files_scanned": 549,
-  "source_fingerprint_sha256": "282928bf12a028a97c5475527578298a635c22c9377806e13ef7d9619eb4851c",
+  "source_files_discovered": 551,
+  "source_files_scanned": 551,
+  "source_fingerprint_sha256": "06c792ab6a42be052710f6c3c6ce2302c1e42cfc17d7700b693b5705c3f3d371",
   "source_root": "repository-root",
   "ui_path_references": [
     {

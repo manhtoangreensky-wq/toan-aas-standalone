@@ -3000,3 +3000,17 @@ BASE17RED→556NodePASS;native6ownedemptycases/2viewedcrops/1realFindClearGET,
 LegacyNode/lossless1fail tồn tại cảBASE/branch,khôngnớiassertion.
 Input15px làfinding cótrước,giữriêngPDF-INPUT-FONT16;Mergefields/defaultnotes/
 côngcụkhác/wholelocale/AX/auth/signedUI/output/motioncònmở,chưadeploycleanup.
+
+## Cỡ chữ nhập PDF —16/11/2026, ứng viên riêng
+
+Cleanup PR750 đã giao: CI43874550883, deploy43876776533, runtimeefe06a29;
+services/health/năm assets exact; receipts6917466951/6917965895.
+Ứng viên font chỉ thêm một rule CSS ở ba form Tách/Gộp/Nén PDF: ô nhập/chọn
+16px khi màn hình≤767px, giữ15px từ768px. Không đổi nhãn, chức năng hay màu.
+BASE4RED→564NodePASS; native15cases/70samples:42mobile16px,28desktop15px,
+hai crops đã xem, một Find/ClearGET thật; không tràn/chồng ô. Dữ liệu,
+source/evidence và ownedJob0 giữ. NativeR1 thiếu input observer đã sửa riêng,
+không tính workerfault và không chạy lại564tests.
+[Báo cáo](../docs/reports/pdf-input-font16-20261116.md).
+Chưa triển khai đơn vị font; không nhận Safari/iOS/wholeAX/signed UI/output.
+Mergefields/defaultnotes/công cụ khác/fullgoal/motion còn theo checklist.

@@ -23908,3 +23908,12 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-pdf-optimize .portal-fi
 html:not([data-portal-theme="dark"]) .portal-page.portal-pdf-optimize .portal-field-help {
   color: var(--portal-muted);
 }
+
+/* Keep PDF text controls readable on small screens. */
+@media (max-width: 767px) {
+  .portal-page.portal-pdf-split .portal-document-operation-form :is(input, select, textarea),
+  .portal-page.portal-pdf-merge .portal-document-operation-form :is(input, select, textarea),
+  .portal-page.portal-pdf-optimize .portal-document-operation-form :is(input, select, textarea) {
+    font-size: 16px;
+  }
+}

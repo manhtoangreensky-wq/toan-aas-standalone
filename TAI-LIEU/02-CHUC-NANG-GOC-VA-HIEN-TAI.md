@@ -2211,3 +2211,16 @@ Danh sáchchức nănggốc giữ,khôngthêm enginehay khả năngxửlýmới.
 | Legacy/losslessassertionfail | Giữ1samefailBASE/branch | Python29PASSboth;khônghiddenfailure |
 | PUchưaghiđãtriểnkhai | PR7492b126b40đãgiao | CI43863230530/deploy43865201248/receipt6916141029 |
 | CóthểnhậnwholePDFsạchlocale | Mergefields/defaultnotes/toolskháccòn |KhôngwholeAX/signedUI/outputclaim |
+
+## Cỡ chữ nhập PDF — đối chiếu16/11/2026
+
+Nguồn thực: theme CSS tại BASEefe06a29. Không thêm công cụ hay engine.
+
+| Trước | Ứng viên | Bằng chứng/giới hạn |
+|---|---|---|
+| Control PDF15px ở màn hình nhỏ | Chỉ ba form tăng16px≤767px |42actualmobile samples |
+| Control desktop15px | Giữ15px≥768px |28actualdesktop samples |
+| Có thể sửa ké theme hoặc logic | Một exact CSS replacement |24protectedLF/allappPython/outside giữ |
+| QA observer thiếu metadata tham chiếu | Đọc fixture cũ qua boundSHA | R1zeroobs/R2native15cases,khôngworkerfault |
+| Cleanup còn ghi chưa triển khai | PR750efe06a29 đã giao | CI43874550883/deploy43876776533/receipt6917466951 |
+| Có thể nhận font là toàn bộ AX đạt | Chỉ actual owned QA font proof | Safari/iOS/locale/signedUI/output riêng |

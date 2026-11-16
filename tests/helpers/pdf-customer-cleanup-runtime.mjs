@@ -3,14 +3,18 @@ import fs from "node:fs";
 import path from "node:path";
 import {execFileSync} from "node:child_process";
 import {fileURLToPath,pathToFileURL} from "node:url";
+import {pdfInputFont16HistoricalCss} from "./pdf-input-font16-snapshot.mjs";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../..");
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/pdf-customer-cleanup-reviewed.json",import.meta.url),"utf8"));
 const files={portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js",theme:"static/portal/portal-theme.css"};
 export function pdfCustomerCleanupSources(historical=false){
   assert.match(fixture.base,/^[a-f0-9]{40}$/,"Bind the verified full 40-hex customer-cleanup BASE before git");
-  return Object.fromEntries(Object.entries(files).map(([key,file])=>[key,(historical
+  return Object.fromEntries(Object.entries(files).map(([key,file])=>{
+    const value=(historical
     ?execFileSync("git",["show",fixture.base+":"+file],{cwd:root,encoding:"utf8",maxBuffer:30e6})
-    :fs.readFileSync(path.join(root,file),"utf8")).replace(/\r\n/g,"\n")]));
+    :fs.readFileSync(path.join(root,file),"utf8")).replace(/\r\n/g,"\n");
+    return [key,key==="theme"?pdfInputFont16HistoricalCss(value):value];
+  }));
 }
 export async function pdfCustomerCleanupRenderer(sources){
   assert.equal(typeof sources?.portal,"string");assert.equal(typeof sources?.i18n,"string");
