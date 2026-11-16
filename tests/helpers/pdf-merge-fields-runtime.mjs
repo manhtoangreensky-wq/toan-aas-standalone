@@ -5,6 +5,7 @@ import {execFileSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import {pdfCustomerCleanupRenderer} from "./pdf-customer-cleanup-runtime.mjs";
 import {pdfMergeContrastHistoricalCss} from "./pdf-merge-contrast-snapshot.mjs";
+import {operationReferenceFeedbackHistoricalI18nSource} from "./operation-reference-feedback-snapshot.mjs";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../..");
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/pdf-merge-fields-reviewed.json",import.meta.url),"utf8"));
 const files={portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js",theme:"static/portal/portal-theme.css"};
@@ -14,7 +15,7 @@ export function pdfMergeFieldsSources(historical=false){
     const value=(historical
     ?execFileSync("git",["show",fixture.base+":"+file],{cwd:root,encoding:"utf8",maxBuffer:30e6})
     :fs.readFileSync(path.join(root,file),"utf8")).replace(/\r\n/g,"\n");
-    return [key,key==="theme"?pdfMergeContrastHistoricalCss(value):value];
+    return [key,key==="theme"?pdfMergeContrastHistoricalCss(value):key==="i18n"?operationReferenceFeedbackHistoricalI18nSource(value):value];
   }));
 }
 export async function pdfMergeFieldsRenderer(sources){

@@ -22429,6 +22429,27 @@
     docPdfMergeUiOptionalHelp: "无需添加更多文件时可留空。每个 PDF 只能选择一次。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    "operationReferenceFeedback.failed": "Chưa tải được tệp. Hãy thử lại.",
+    "operationReferenceFeedback.page": "Đã tải danh sách tệp.",
+    "operationReferenceFeedback.cleared": "Đã xóa bộ lọc.",
+    "operationReferenceFeedback.filtered": "Đã lọc danh sách tệp."
+  });
+
+  Object.assign(MESSAGES.en, {
+    "operationReferenceFeedback.failed": "Files could not be loaded. Please try again.",
+    "operationReferenceFeedback.page": "File list loaded.",
+    "operationReferenceFeedback.cleared": "Filter cleared.",
+    "operationReferenceFeedback.filtered": "File list filtered."
+  });
+
+  Object.assign(MESSAGES.zh, {
+    "operationReferenceFeedback.failed": "无法加载文件。请重试。",
+    "operationReferenceFeedback.page": "已加载文件列表。",
+    "operationReferenceFeedback.cleared": "已清除筛选。",
+    "operationReferenceFeedback.filtered": "已筛选文件列表。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

@@ -1,0 +1,77 @@
+{
+  "specId": "OPERATION-REFERENCE-FEEDBACK-COPY-20261116",
+  "base": "eb3ab9a780a8d790c6744201ddb549027fea80bf",
+  "proposalSha256": "f9b19007188a44fb42eb3f033f9dd57cf29027547d59fcf144e605b10226cd1a",
+  "changes": [
+    {
+      "file": "static/portal/integration.js",
+      "count": 1,
+      "old": "  function operationAssetReferenceListPath(kind, filter, offset) {",
+      "new": "  function operationReferenceFeedbackText(key, fallback) {\n    const i18n = window.TOANAASI18n;\n    const value = i18n && typeof i18n.t === \"function\" ? i18n.t(\"operationReferenceFeedback.\" + key) : \"\";\n    return typeof value === \"string\" && value ? value : fallback;\n  }\n\n  function operationAssetReferenceListPath(kind, filter, offset) {"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "count": 1,
+      "old": "        if (!refreshed) throw new Error(\"Không thể tải reference Document Operations an toàn. Hãy thử lại.\");",
+      "new": "        if (!refreshed) throw new Error(operationReferenceFeedbackText(\"failed\", \"Chưa tải được tệp. Hãy thử lại.\"));"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "count": 1,
+      "old": "        toast(action === \"document-asset-reference-page\" ? \"Đã tải trang reference từ API owner-scoped.\" : (clear ? \"Đã xóa bộ lọc reference riêng tư.\" : \"Đã lọc reference riêng tư.\"));",
+      "new": "        toast(action === \"document-asset-reference-page\"\n          ? operationReferenceFeedbackText(\"page\", \"Đã tải danh sách tệp.\")\n          : (clear ? operationReferenceFeedbackText(\"cleared\", \"Đã xóa bộ lọc.\") : operationReferenceFeedbackText(\"filtered\", \"Đã lọc danh sách tệp.\")));"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "count": 1,
+      "old": "        if (!refreshed) throw new Error(\"Không thể tải reference Image Operations an toàn. Hãy thử lại.\");",
+      "new": "        if (!refreshed) throw new Error(operationReferenceFeedbackText(\"failed\", \"Chưa tải được tệp. Hãy thử lại.\"));"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "count": 1,
+      "old": "        toast(action === \"image-operation-asset-reference-page\" ? \"Đã tải trang reference từ API owner-scoped.\" : (clear ? \"Đã xóa bộ lọc reference riêng tư.\" : \"Đã lọc reference riêng tư.\"));",
+      "new": "        toast(action === \"image-operation-asset-reference-page\"\n          ? operationReferenceFeedbackText(\"page\", \"Đã tải danh sách tệp.\")\n          : (clear ? operationReferenceFeedbackText(\"cleared\", \"Đã xóa bộ lọc.\") : operationReferenceFeedbackText(\"filtered\", \"Đã lọc danh sách tệp.\")));"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "count": 1,
+      "old": "  verifyEqualKeysets();",
+      "new": "  Object.assign(MESSAGES.vi, {\n    \"operationReferenceFeedback.failed\": \"Chưa tải được tệp. Hãy thử lại.\",\n    \"operationReferenceFeedback.page\": \"Đã tải danh sách tệp.\",\n    \"operationReferenceFeedback.cleared\": \"Đã xóa bộ lọc.\",\n    \"operationReferenceFeedback.filtered\": \"Đã lọc danh sách tệp.\"\n  });\n\n  Object.assign(MESSAGES.en, {\n    \"operationReferenceFeedback.failed\": \"Files could not be loaded. Please try again.\",\n    \"operationReferenceFeedback.page\": \"File list loaded.\",\n    \"operationReferenceFeedback.cleared\": \"Filter cleared.\",\n    \"operationReferenceFeedback.filtered\": \"File list filtered.\"\n  });\n\n  Object.assign(MESSAGES.zh, {\n    \"operationReferenceFeedback.failed\": \"无法加载文件。请重试。\",\n    \"operationReferenceFeedback.page\": \"已加载文件列表。\",\n    \"operationReferenceFeedback.cleared\": \"已清除筛选。\",\n    \"operationReferenceFeedback.filtered\": \"已筛选文件列表。\"\n  });\n\n  verifyEqualKeysets();"
+    }
+  ],
+  "rows": [
+    [
+      "failed",
+      "Chưa tải được tệp. Hãy thử lại.",
+      "Files could not be loaded. Please try again.",
+      "无法加载文件。请重试。"
+    ],
+    [
+      "page",
+      "Đã tải danh sách tệp.",
+      "File list loaded.",
+      "已加载文件列表。"
+    ],
+    [
+      "cleared",
+      "Đã xóa bộ lọc.",
+      "Filter cleared.",
+      "已清除筛选。"
+    ],
+    [
+      "filtered",
+      "Đã lọc danh sách tệp.",
+      "File list filtered.",
+      "已筛选文件列表。"
+    ]
+  ],
+  "binding": {
+    "baselineIntegration": "2ac328fddd66cf17812004f6e52abb86e475347057fa990482cd1b0806209a9c",
+    "candidateIntegration": "bb7563da32e717697445bb0bd941539b42d01411dbeeff2b6b6ae4dbcc55cf5f",
+    "baselineI18n": "30ed9ca9fb0e0eff6c1b0d4eb0bcfd24b014ca0659a885ea9cd2ecc631da4d1b",
+    "candidateI18n": "791eb992edd38941f159b209cda1f46b7f362419067238f441dbb0cfc79aaff8",
+    "candidatePortal": "135ddb443fde351e8702e0a3bc803a224541b4faa205ad67824c932949fa70ee",
+    "candidateTheme": "e30a4b077bbfa89280a44ce482c1411a625b62e96c3d304dcb45b65ac89ef276"
+  }
+}

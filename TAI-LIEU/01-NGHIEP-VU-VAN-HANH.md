@@ -3040,3 +3040,21 @@ dark. TrueMergeBASE/GREENmỗi3cases48textsamples24controls:
 [Báo cáo](../docs/reports/pdf-merge-contrast-20261116.md).
 Crophelp-regionđãxem,stickyheaderchelabel/selecttrongcrop,khôngwholefield
 visual/AXclaim. Màuchưadeploy;referencefeedback/defaultnotes/fullgoal/motioncòn.
+
+## Thông báo tìm tệp —17/11/2026
+
+Màu Gộp PDF của PR753 đã được giao: CI43916771242, merge/runtimeeb3ab9a7,
+deploy43919393644; nguồn đang chạy sạch, ba dịch vụ chạy, health và năm tệp
+giao diện công khai khớp. ReceiptIssue6923402077/PR6924062786 thay cho trạng
+thái chờ triển khai ở mốc lịch sử phía trên.
+
+Ứng viên kế tiếp chỉ thay thông báo tìm, xóa bộ lọc, chuyển trang và tải lỗi
+trong danh sách tệp của công cụ tài liệu/ảnh bằng bốn khóa VI/EN/ZH. Không
+thay quyền, truy vấn, trạng thái, thời gian hay cách tải; giữ tên tệp khách,
+tệp đang chọn và tệp ghim. Tải lỗi không được báo thành công.
+Đây chưa phải bản chạy production; nghiệm thu giao diện và phát hành có
+gate riêng. Không gọi tạo PDF/ảnh hoặc dịch vụ có phí.
+
+Một lỗi cũ được tái hiện riêng: phản hồi đã cũ sau đổi trang/phiên vẫn có
+thể hiện báo lỗi, dù dữ liệu đã được chặn. Phiếu riêng xử lý sau đơn vị chữ;
+không nhận sửa câu chữ là đã sửa hành vi này hoặc toàn UI đã sạch.

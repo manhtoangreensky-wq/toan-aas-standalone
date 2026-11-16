@@ -1490,3 +1490,19 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | MC-DATA | nặng |9tables/6plans18scenes | Source/evidence/Jobs0giữ | [PhiênMC](PHIEN-PDF-MERGE-CONTRAST-20261116.md) |
 | MC-VISUAL | nặng | Help-regioncrop | Khôngnhậnlabel/selectvisualtừcropoccluded | FullUX/AXvẫnmở |
 | MC-DELIVERY | nặng | ExactCI/merge/deploy/runtime | Receiptđúngrevision | Referencefeedback/M-FINALcònmở |
+
+## OPERATION-REFERENCE-FEEDBACK-20261117 — Issue689
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| RF-COPY | nặng | Find/Clear/Page/lỗi ởVI/EN/ZH | Chỉfixedcopydịch |4keys12values |
+| RF-GET | nặng | Hai route/baaction/haioutcome | GETshape/truthfultoast |36VMscenarios |
+| RF-LOCALE | nặng | Localeđổi/missing/empty/hostile | Fallbacktext/plaintext | Frozenexportgiữ |
+| RF-DATA | nặng | Chọn/ghim/tênkhách | UUID/metadata/literalgiữ | NoHTMLexecution |
+| RF-GUARDS | nặng | Strictpermission/route | ExactBASE/zeroGET | Noauthchange |
+| RF-STALE | nặng | So hànhvicũ | Khônggánsilencevàocopy | Separatecontract6924139241 |
+| RF-SOURCE | nặng | Sixexactedits | Forward/inverse/outside | AllPythonprotected |
+| RF-HISTORY | nặng | Oldhashes/catalogues | Finiteinverse/noassertionloss |582unaffectedonce |
+| RF-NATIVE | nặng |12locale/route/viewportcases |24realFindCleartoasts | [PhiênRF](PHIEN-OPERATION-REFERENCE-FEEDBACK-20261117.md) |
+| RF-ISOLATION | nặng | FreshownedQA | Setupseparate/productwrites0/Jobs0 | Noprovider/wallet |
+| RF-DELIVERY | nặng | CI/merge/deploy/runtime | Exactrevisionreceipt | SignedUI/fullgoal/M-FINALriêng |
