@@ -2099,3 +2099,31 @@ Evidence:docs/reports/pdf-split-readability-20261116.md/phiênSR,cùngIssue689.
   M-FINAL01..06mở,motioncuối;khôngthu hẹpgoal.
 
 Evidence:docs/reports/document-card-display-20261116.md/phiênCD,cùngIssue689.
+
+## Số liệu thẻ tài liệu — đơn vị 16/11/2026
+
+- [x] PR747 đã giao: exact-head CI43821671694 hai nhóm SUCCESS;
+  merge/runtime b3c1749fdc0876164cf9b3bedd64290fdf4d9bf4;
+  tested/merged tree6778c61672610a493aed543db38511cbcc60b3c0 exact;
+  deploy43853462350 SUCCESS; services/health/năm HTTPS assets khớp.
+  Receipts Issue6896910067903 / PR7476914555619.
+- [x] Metrics R1 và catalogue descriptions R1 trả patch đúng literal,
+  NOT_APPLIED/NOT_QA; không phải đã nghiệm thu sản phẩm.
+- [x] Metrics R1A sửa riêng năm cách đếm EN theo phụ lục người điều phối;
+  không tính lỗi worker. BASE16RED → exact4replay →
+  một nhóm25tệp521NodePASS/0FAIL/0SKIP41745.4586ms.
+- [x] Native ba signed empty histories375light/1crop, actual GET/refresh,
+ 9tables/schema/6plans18scenes/source/evidence giữ/Jobs0/0productwrites.
+  Filled metrics VM-only; scope22LF/allappPython/outside/CI+1 exit0.
+- [x] Docs hiện tại/đối chiếu gốc/Tester READY; metadata1PASS32deselected,
+  case1417lines152989LFbytes, không đổi historical remote/P0 metadata.
+- [x] Source review C0/I0/M0, đúng hai frozen hashes, không lặp test.
+- [ ] Provenance/exact-head CI → merge/deploy/runtime/receipt.
+- [ ] Các phiếu Compress light/guard copy/catalogue light owner/descriptions/
+  fallback hub giữ nguyên thứ tự và bằng chứng riêng, chưa áp vào app.
+- [ ] Full locale/responsive/AX/keyboard/auth/device/Safari/signed UI/
+  final output/M-FINAL01..06 mở, motion cuối; không đổi Bot/engine/provider/
+  ví/PayOS/production data.
+
+Evidence: docs/superpowers/specs/2026-11-16-document-card-metrics.md,
+cùng Issue #689. Không tạo checklist cạnh tranh.

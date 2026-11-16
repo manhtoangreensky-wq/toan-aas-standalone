@@ -1,10 +1,12 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {documentCardMetricsHistoricalSnapshot,documentCardMetricsHistoricalPortalSource,documentCardMetricsHistoricalI18nSource} from "./document-card-metrics-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/document-card-display-reviewed.json",import.meta.url),"utf8"));
 const keys=new Set(Object.keys(fixture.vi)),hash=v=>createHash("sha256").update(v).digest("hex");
 assert.equal(keys.size,19);
 export function documentCardDisplayHistoricalSnapshot(entries,locale){
+  entries=documentCardMetricsHistoricalSnapshot(entries,locale);
   const scoped=entries.filter(([key])=>/^(?:docCardNameUi|docSelectedUi)/.test(key));
   if(!scoped.length)return entries;
   const added=entries.filter(([key])=>keys.has(key));
@@ -15,7 +17,7 @@ export function documentCardDisplayHistoricalSnapshot(entries,locale){
 }
 const catalogEdits=fixture.changes.filter(edit=>edit.file.endsWith("portal-i18n.js"));
 export function documentCardDisplayHistoricalI18nSource(value){
-  let source=value.replace(/\r\n/g,"\n");
+  let source=documentCardMetricsHistoricalI18nSource(value);
   if(!/(?:docCardNameUi|docSelectedUi)/.test(source))return source;
   for(const edit of [...catalogEdits].reverse()){
     assert.equal(source.split(edit.new).length-1,1,"Unreviewed document display i18n");
@@ -24,7 +26,7 @@ export function documentCardDisplayHistoricalI18nSource(value){
   return source;
 }
 export function documentCardDisplayHistoricalPortalSource(value){
-  const source=value.replace(/\r\n/g,"\n");
+  const source=documentCardMetricsHistoricalPortalSource(value);
   if(!/docCardNameUi|docSelectedUi|safeText\(chatWorkspaceDateLabel\(item\.completed_at/.test(source))return source;
   const start="  function renderDocumentOperationCards(",end="\n  function renderMediaHubPage(";
   assert.equal(source.split(start).length-1,1,"Unreviewed document display boundary");

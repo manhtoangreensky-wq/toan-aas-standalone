@@ -1401,3 +1401,17 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CD-NATIVE|nặng|3signedlocale/docshistory375|ActualemptyGET/1VIcrop/0fakecards|FilledfieldsVM-only|
 |CD-DATA|nặng|9tables/6plans18scenes/source|0productwrites/reseed/egress/Jobs0|15parenthashesretained|
 |CD-DELIVERY|nặng|ExactCI/merge/deploy/runtimeassets|Receipt riêng|WholePDFlocaleAXauthM-FINALmở|
+
+## DOCUMENT-CARD-METRICS-20261116 — Issue #689
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| CM-SOURCE | nặng | Chín kind, count/pages ở ba locale | Số liệu theo locale, coercion giữ |16RED→521NodePASS |
+| CM-OUTPUT | nặng | Completed/failed/guarded và download_ready | Không nhận có tệp từ trạng thái giả | Strict paths/rights unchanged |
+| CM-BYTES | nặng | Bytes/savings/percent hợp lệ và bất thường | Format và nhánh số giữ | Actual full renderer |
+| CM-CUSTOMER | nặng | Tên chứa private/media/brand/HTML | Không dịch, chỉ escape một lần | Literal name/hostile translations |
+| CM-LOCALE | nặng | Same-VM/fallback/frozen catalogue |13orderedkeys39values/missingunknownrejected | [Phiên CM](PHIEN-DOCUMENT-CARD-METRICS-20261116.md) |
+| CM-CONTROLS | nặng | Chín kind/năm trạng thái/quyền strict | Whole HTML ngoài ba ô số liệu bằng BASE | Date/name/actions giữ |
+| CM-SOURCE-GATE | nặng | Bốn patch Antigravity R1A | Exact replay/inverse/22LF/all appPython | CI chỉ thêm một command |
+| CM-NATIVE-DATA | nặng | Ba signed empty histories375light | Actual GET/9tables/6plans18scenes giữ |0productwrites/reseed/egress/Jobs0 |
+| CM-DELIVERY | nặng | Exact CI/merge/deploy/runtime/assets | Receipt riêng đúng revision | Full locale/AX/auth/M-FINAL mở |

@@ -3,12 +3,15 @@ import path from "node:path";
 import assert from "node:assert/strict";
 import {execFileSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
+import {documentCardMetricsHistoricalPortalSource,documentCardMetricsHistoricalI18nSource} from "./document-card-metrics-snapshot.mjs";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../..");
 export const DOCUMENT_CARD_DISPLAY_BASE="c40f94ce713576a65a8d30399bd3b8516346cba2";
 export function documentCardDisplaySources(historical=false){
-  return Object.fromEntries(Object.entries({portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js"}).map(([key,file])=>[
-    key,(historical?execFileSync("git",["show",DOCUMENT_CARD_DISPLAY_BASE+":"+file],{cwd:root,encoding:"utf8",maxBuffer:30e6}):
-      fs.readFileSync(path.join(root,file),"utf8")).replace(/\r\n/g,"\n")]));
+  return Object.fromEntries(Object.entries({portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js"}).map(([key,file])=>{
+    const source=(historical?execFileSync("git",["show",DOCUMENT_CARD_DISPLAY_BASE+":"+file],{cwd:root,encoding:"utf8",maxBuffer:30e6}):
+      fs.readFileSync(path.join(root,file),"utf8")).replace(/\r\n/g,"\n");
+    return [key,key==="portal"?documentCardMetricsHistoricalPortalSource(source):documentCardMetricsHistoricalI18nSource(source)];
+  }));
 }
 export async function documentCardDisplayRenderer(sources=documentCardDisplaySources()){
   let helper=fs.readFileSync(path.join(root,"tests/helpers/chat-page-meta-runtime.mjs"),"utf8");

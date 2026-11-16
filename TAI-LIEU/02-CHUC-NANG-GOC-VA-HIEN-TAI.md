@@ -2167,3 +2167,17 @@ NguồnactualrenderDocumentOperationCards/datehelper tạiBASEc40f94ce.
 |Carddateproposalwholefunction|ReplayDATEfirstthennames/selected|Khôngghiđècácunit/compoundinverseexact|
 |Cóthểlấynativeemptylàfilledcardproof|FilledfieldactualVM-only|Native0cards/nofakedata/output|
 |SplitCSSchưaghiđãtriểnkhai|PR746c40f94ceđãgiao|CI43816413685/deploy43817989559|
+
+## Số liệu thẻ tài liệu — đối chiếu16/11/2026
+
+Nguồn thực tế: renderDocumentOperationCards tại BASE b3c1749f, giữ nguyên
+danh sách chức năng gốc đã đối chiếu; đây là thay đổi chữ, không thêm công cụ.
+
+| Trước | Ứng viên | Bằng chứng/giới hạn |
+|---|---|---|
+| Count/pages có chữ VI cứng ở EN/ZH |13 key theo locale | Actual renderer9kind/521NodePASS |
+| Image source ghi private |1 ảnh đã chọn theo locale | Tên tệp khách chứa private vẫn literal |
+| Output ghi đã xác minh từ nhãn | Chỉ nêu định dạng khi downloadPath hợp lệ | Không đổi state/capability/download guard |
+| EN đếm một tệp có thể sai số nhiều | Năm nhãn label-first trong R1A | Phụ lục người điều phối, không lỗi worker |
+| Có thể nhận native empty là output thật | Filled metrics VM-only | Native ba histories thực sự0cards |
+| PR747 chưa ghi đã triển khai | PR747b3c1749f đã giao | CI43821671694/deploy43853462350/receipt6910067903 |

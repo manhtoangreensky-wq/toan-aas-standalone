@@ -2956,3 +2956,17 @@ BASE13RED→503NodePASS/native3actualemptyhistories1crop,
 9tables/schema/6plans18scenes/source/evidence/Jobs0/0productwrites.
 [Báo cáo](../docs/reports/document-card-display-20261116.md).
 Source/outputmetricsotherforms/copycònriêng;khôngnhậntoàncard/PDF/AXđạt.
+
+## Số liệu thẻ tài liệu —16/11/2026, ứng viên metrics
+
+PR747 đã giao: exact-head CI43821671694 hai nhóm SUCCESS;
+merge/runtime b3c1749f, deploy43853462350 SUCCESS; services/health/năm
+HTTPS assets exact; receipts Issue6910067903/PR6914555619.
+Ứng viên metrics dịch ba ô số liệu bằng13 key/39 giá trị, bỏ chữ nội bộ,
+giữ tên khách, state/quyền/download/count/bytes/savings và hành vi.
+BASE16RED→một nhóm521NodePASS; native ba signed empty histories375light,
+9tables/schema/6plans18scenes/source/evidence giữ/Jobs0/0productwrites.
+[Báo cáo](../docs/reports/document-card-metrics-20261116.md).
+Filled metrics mới có actual-renderer VM proof, không được nhận native
+completed file hay final output. Compress/catalogue/forms và toàn bộ
+locale/AX/auth/signed UI/motion còn theo checklist; chưa triển khai metrics.

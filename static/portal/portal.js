@@ -26351,25 +26351,25 @@ function renderAutoPostHub(page, context) {
         ? uiText(isPdfOcr ? "docSelectedUiPdfText" : "docSelectedUiImageText", isPdfOcr ? "Đọc chữ từ PDF · {language}" : "Đọc chữ từ ảnh · {language}", { language: imageOcrLanguageLabel(item.language || item.requested_language) })
         : (Number.isInteger(start) && Number.isInteger(end) ? (start === end ? uiText("docSelectedUiPage", "Trang {start}", { start: String(start) }) : uiText("docSelectedUiRange", "Trang {start}–{end}", { start: String(start), end: String(end) })) : uiText("docSelectedUiChecking", "Đang kiểm tra số trang"));
       const sourceMetric = isOptimize
-        ? (Number.isFinite(Number(item.input_byte_size)) ? vaultBytes(item.input_byte_size) : (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang` : "Đang kiểm tra"))
+        ? (Number.isFinite(Number(item.input_byte_size)) ? vaultBytes(item.input_byte_size) : (Number.isInteger(sourcePages) ? safeText(uiText("docMetricUiPages", "{pages} trang", { pages: String(sourcePages) })) : safeText(uiText("docMetricUiChecking", "Đang kiểm tra"))))
         : isMerge
-        ? `${safeText(String(sourceCount))} PDF${Number.isInteger(sourcePages) ? ` · ${safeText(String(sourcePages))} trang` : ""}`
+        ? `${safeText(uiText("docMetricUiPdfCount", "{count} tệp PDF", { count: String(sourceCount) }))}${Number.isInteger(sourcePages) ? safeText(uiText("docMetricUiPagesSuffix", " · {pages} trang", { pages: String(sourcePages) })) : ""}`
         : isImageToPdf
-        ? `${safeText(String(sourceCount))} ảnh${Number.isInteger(sourcePages) ? ` · ${safeText(String(sourcePages))} trang` : ""}`
+        ? `${safeText(uiText("docMetricUiImagesCount", "{count} ảnh", { count: String(sourceCount) }))}${Number.isInteger(sourcePages) ? safeText(uiText("docMetricUiPagesSuffix", " · {pages} trang", { pages: String(sourcePages) })) : ""}`
         : isPdfToImages
-        ? (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang PDF` : "Đang kiểm tra")
+        ? (Number.isInteger(sourcePages) ? safeText(uiText("docMetricUiPdfPages", "{pages} trang PDF", { pages: String(sourcePages) })) : safeText(uiText("docMetricUiChecking", "Đang kiểm tra")))
         : isPdfToWord
-        ? (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang PDF` : "Đang kiểm tra")
+        ? (Number.isInteger(sourcePages) ? safeText(uiText("docMetricUiPdfPages", "{pages} trang PDF", { pages: String(sourcePages) })) : safeText(uiText("docMetricUiChecking", "Đang kiểm tra")))
         : isPdfOcrWord
-        ? (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang PDF` : "Đang kiểm tra")
+        ? (Number.isInteger(sourcePages) ? safeText(uiText("docMetricUiPdfPages", "{pages} trang PDF", { pages: String(sourcePages) })) : safeText(uiText("docMetricUiChecking", "Đang kiểm tra")))
         : isImageOcr
-        ? "1 ảnh private đã chọn"
-        : (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang` : "Đang kiểm tra");
+        ? safeText(uiText("docMetricUiSelectedImage", "1 ảnh đã chọn"))
+        : (Number.isInteger(sourcePages) ? safeText(uiText("docMetricUiPages", "{pages} trang", { pages: String(sourcePages) })) : safeText(uiText("docMetricUiChecking", "Đang kiểm tra")));
       const savedBytes = Number(item.saved_bytes);
       const savedPercent = Number(item.saved_percent);
       const thirdMetric = isOptimize
-        ? (Number.isFinite(savedBytes) && savedBytes > 0 ? `${safeText(vaultBytes(savedBytes))}${Number.isFinite(savedPercent) ? ` · ${safeText(String(savedPercent))}%` : ""}` : "Chưa giảm đủ")
-        : safeText(item.byte_size ? vaultBytes(item.byte_size) : "Đang kiểm tra");
+        ? (Number.isFinite(savedBytes) && savedBytes > 0 ? `${safeText(vaultBytes(savedBytes))}${Number.isFinite(savedPercent) ? ` · ${safeText(String(savedPercent))}%` : ""}` : safeText(uiText("docMetricUiNotReduced", "Chưa giảm được dung lượng")))
+        : safeText(item.byte_size ? vaultBytes(item.byte_size) : uiText("docMetricUiChecking", "Đang kiểm tra"));
       const pendingMessage = isOptimize && status === "guarded"
         ? safeText(uiText("docPendingUiOptimizeGuarded", "Chưa có tệp PDF nhỏ hơn đáp ứng yêu cầu an toàn. Tệp gốc được giữ nguyên; hãy kiểm tra tệp nguồn trước khi thử lại."))
         : isPdfToWord && status === "guarded"
@@ -26382,12 +26382,12 @@ function renderAutoPostHub(page, context) {
         ? safeText(uiText("docPendingUiOcrTextGuarded", "Chưa có tệp TXT vì chưa nhận dạng được văn bản phù hợp hoặc thao tác đang bị chặn để bảo đảm an toàn. Hãy kiểm tra tệp nguồn trước khi thử lại."))
         : (status === "failed" || status === "unavailable" ? safeText(uiText("docPendingUiFailed", "Không tạo được tệp để tải xuống. Hãy kiểm tra tệp nguồn rồi tạo thao tác mới.")) : safeText(uiText("docPendingUiWaiting", "Tệp chưa sẵn sàng để tải xuống. Hãy kiểm tra lại trạng thái thao tác sau.")));
       const outputMetric = isPdfToWord || isPdfOcrWord
-        ? (status === "completed" && downloadPath ? "DOCX đã xác minh" : "Chưa có")
+        ? (status === "completed" && downloadPath ? safeText(uiText("docMetricUiDocxFile", "Tệp DOCX")) : safeText(uiText("docMetricUiNoFile", "Chưa có tệp")))
         : isPdfToImages
-        ? (status === "completed" && downloadPath ? (Number.isInteger(outputPages) && outputPages === 1 ? "PNG đã xác minh" : `${safeText(String(outputPages || 0))} PNG trong ZIP`) : "Chưa có")
+        ? (status === "completed" && downloadPath ? (Number.isInteger(outputPages) && outputPages === 1 ? safeText(uiText("docMetricUiPngImage", "Ảnh PNG")) : safeText(uiText("docMetricUiPngZip", "{count} ảnh PNG trong tệp ZIP", { count: String(outputPages || 0) }))) : safeText(uiText("docMetricUiNoFile", "Chưa có tệp")))
         : isOcrText
-        ? (status === "completed" && downloadPath ? "TXT đã xác minh" : "Chưa có")
-        : (isOptimize ? safeText(item.byte_size ? vaultBytes(item.byte_size) : "Chưa có") : (Number.isInteger(outputPages) ? `${safeText(String(outputPages))} trang` : "Chưa có"));
+        ? (status === "completed" && downloadPath ? safeText(uiText("docMetricUiTxtFile", "Văn bản TXT")) : safeText(uiText("docMetricUiNoFile", "Chưa có tệp")))
+        : (isOptimize ? safeText(item.byte_size ? vaultBytes(item.byte_size) : uiText("docMetricUiNoFile", "Chưa có tệp")) : (Number.isInteger(outputPages) ? safeText(uiText("docMetricUiPages", "{pages} trang", { pages: String(outputPages) })) : safeText(uiText("docMetricUiNoFile", "Chưa có tệp"))));
       const artifactLabel = isOcrText ? "TXT" : ((isPdfToWord || isPdfOcrWord) ? "DOCX" : (isPdfToImages ? (Number.isInteger(outputPages) && outputPages === 1 ? "PNG" : "ZIP") : (isOptimize ? uiText("docCardUiReduced", "Đã giảm") : uiText("docCardUiResultFile", "Tệp kết quả"))));
       const downloadLabel = isOcrText ? uiText("docCardUiDownloadTxt", "Tải TXT") : ((isPdfToWord || isPdfOcrWord) ? uiText("docCardUiDownloadDocx", "Tải DOCX") : (isPdfToImages ? (Number.isInteger(outputPages) && outputPages === 1 ? uiText("docCardUiDownloadPng", "Tải PNG") : uiText("docCardUiDownloadZip", "Tải ZIP")) : uiText("docCardUiDownloadPdf", "Tải PDF")));
       const fallbackFilename = isPdfOcrWord ? uiText("docCardNameUiOcrWord", "Word từ PDF quét") : (isPdfOcr ? uiText("docCardNameUiPdfText", "Văn bản từ PDF") : (isImageOcr ? uiText("docCardNameUiImageText", "Văn bản từ ảnh") : (isPdfToWord ? uiText("docCardNameUiWord", "Tài liệu Word") : (isPdfToImages ? uiText("docCardNameUiImages", "Ảnh từ PDF") : uiText("docCardNameUiPdf", "Tài liệu PDF")))));
