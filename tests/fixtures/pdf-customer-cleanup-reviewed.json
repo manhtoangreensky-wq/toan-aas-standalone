@@ -1,0 +1,400 @@
+{
+  "base": "2b126b40766404e4b5c0520a121d60c02760d168",
+  "proposals": [
+    {
+      "name": "pdf-ready-customer-ui-public-nov16-r1",
+      "sha256": "565413b6486ee3b73c651ac0b29412298d53095f3c0a91b6ea901fa82742841c",
+      "specId": "PDF-READY-CUSTOMER-UI-20261116"
+    },
+    {
+      "name": "pdf-ready-limit-amendment-nov16-r1a",
+      "sha256": "c3acd85794835591c4689b5a256ead6e66ce60861fa66cc9660f16dcaf7205e5",
+      "specId": "PDF-READY-CUSTOMER-UI-20261116"
+    },
+    {
+      "name": "operation-reference-customer-ui-public-nov16-r1",
+      "sha256": "be2fa1c9615af3b7d77d359c9bec5d882f06d7582fea40ac928353bb5b4d4795",
+      "specId": "OPERATION-REFERENCE-CUSTOMER-UI-20261116"
+    }
+  ],
+  "changes": [
+    {
+      "file": "static/portal/portal.js",
+      "old": "    const runReason = !canRunCapability\n      ? \"Cần signed session, CSRF và capability Document Operations từ server.\"\n      : sources.length === 0\n        ? \"Hãy lưu một PDF private vào Asset Vault trước khi tách.\"\n        : \"Source → bản sao cô lập → xác minh parser/output → attachment riêng tư.\";\n    const sourceSummary = sources.length === 1 ? \"1 PDF đang hoạt động\" : `${sources.length} PDF đang hoạt động`;\n    const completedCount = operations.filter((item) => documentOperationState(item) === \"completed\" && item.download_ready === true).length;",
+      "new": "    const runReason = !canRunCapability\n      ? uiText(\"docPdfReadyUiNoPermission\", \"Tài khoản này chưa được phép dùng công cụ.\")\n      : sources.length === 0\n        ? uiText(\"docPdfReadyUiChooseOne\", \"Chọn một PDF trong kho tệp để bắt đầu.\")\n        : uiText(\"docPdfReadyUiOriginalKept\", \"Tệp gốc được giữ nguyên.\");",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    return `<article class=\"portal-page portal-pdf-split\">${renderHero(page, context)}\n      <section class=\"portal-document-operation-intro\"><div><span class=\"portal-section-kicker\">Web-native Document Operations</span><h2>Tách PDF riêng tư, không qua Bot</h2><p>Chọn PDF đã có trong Asset Vault. Máy chủ sao chép input sang vùng xử lý cô lập, giới hạn parser theo 20 MB/30 trang, loại bỏ annotation/action tương tác và chỉ phát attachment khi output vượt qua kiểm tra.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PDF output sẵn sàng tải</dd></div></dl></section>\n      <div class=\"portal-document-operation-layout\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Tạo PDF Split</h2><p class=\"portal-card-subtitle\">Một trang hoặc một dải liên tiếp. Browser không upload bytes hoặc gửi raw file path cho thao tác này.</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-pdf-split\" data-portal-route=\"/documents/split\" data-portal-confirm=\"Tách PDF từ Asset Vault? Web sẽ tạo một attachment riêng tư mới sau khi kiểm tra input và output.\" novalidate>${renderFields(pdfSplitFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>Tách PDF</button></div></form></section><aside class=\"portal-card portal-card-pad portal-document-operation-boundary\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Ranh giới rõ ràng</h2><p class=\"portal-card-subtitle\">Document Operations là pipeline Web độc lập.</p></div></div><ol class=\"portal-project-steps\"><li><strong>1. Nguồn có ownership</strong><span>Chỉ asset PDF private đang active của signed account hiện tại được đọc.</span></li><li><strong>2. Xử lý có giới hạn</strong><span>Không PDF mã hóa, không quá 20 MB/30 trang, không page list tuỳ ý.</span></li><li><strong>3. Delivery riêng tư</strong><span>Output được hash/parse lại và tải qua signed session; không public URL hoặc PWA cache.</span></li></ol><div class=\"portal-form-footer\"><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">Mở Asset Vault</a></div></aside></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">PDF đã xử lý</h2><p class=\"portal-card-subtitle\">Chỉ thao tác thuộc signed Web account hiện tại. Download không khả dụng nếu integrity hoặc ownership không còn hợp lệ.</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/split\"${canRefresh ? \"\" : \" disabled\"}>Làm mới</button></div>${renderDocumentOperationCards(operations, context)}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/split\")}</section>\n      ${renderNotes(page)}\n    </article>`;",
+      "new": "    return `<article class=\"portal-page portal-pdf-split\">${renderHero(page, context)}\n      <div class=\"portal-document-operation-layout portal-document-operation-layout--single\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docPdfReadyUiSplitTitle\", \"Tách PDF\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiSplitDescription\", \"Chọn một trang hoặc một dải trang liên tiếp trong PDF.\"))}</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-pdf-split\" data-portal-route=\"/documents/split\" data-portal-confirm=\"${safeText(uiText(\"docPdfReadyUiSplitConfirm\", \"Tách các trang đã chọn thành tệp PDF mới? Tệp gốc được giữ nguyên.\"))}\" novalidate>${renderFields(pdfSplitFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(uiText(\"docPdfReadyUiOpenFiles\", \"Mở kho tệp\"))}</a><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiSplitTitle\", \"Tách PDF\"))}</button></div></form></section></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docPdfReadyUiSplitHistory\", \"PDF đã tách\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiHistoryBody\", \"Xem tiến trình và tải tệp khi xử lý hoàn tất.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/split\"${canRefresh ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiRefresh\", \"Làm mới\"))}</button></div>${renderDocumentOperationCards(operations, context)}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/split\")}</section>\n      ${renderNotes(page)}\n    </article>`;",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    const runReason = !canRunCapability\n      ? \"Cần signed session, CSRF và capability Document Operations từ server.\"\n      : sources.length < 2\n        ? \"Hãy lưu ít nhất hai PDF private vào Asset Vault trước khi gộp.\"\n        : \"PDF 1 → PDF 8 xác định thứ tự trang; nguồn được sao chép cô lập trước khi parser xử lý.\";\n    const sourceSummary = sources.length === 1 ? \"1 PDF đang hoạt động\" : `${sources.length} PDF đang hoạt động`;\n    const completedCount = operations.filter((item) => documentOperationState(item) === \"completed\" && item.download_ready === true).length;",
+      "new": "    const runReason = !canRunCapability\n      ? uiText(\"docPdfReadyUiNoPermission\", \"Tài khoản này chưa được phép dùng công cụ.\")\n      : sources.length < 2\n        ? uiText(\"docPdfReadyUiChooseTwo\", \"Chọn ít nhất hai PDF trong kho tệp để bắt đầu.\")\n        : uiText(\"docPdfReadyUiOriginalKept\", \"Tệp gốc được giữ nguyên.\");",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    return `<article class=\"portal-page portal-pdf-merge\">${renderHero(page, context)}\n      <section class=\"portal-document-operation-intro\"><div><span class=\"portal-section-kicker\">Web-native Document Operations</span><h2>Gộp PDF riêng tư theo đúng thứ tự</h2><p>Chọn từ hai đến tám PDF đã có trong Asset Vault. Máy chủ kiểm tra ownership, sao chép từng nguồn vào vùng xử lý cô lập, giới hạn mỗi nguồn 20 MB, tổng 40 MB và 30 trang, sau đó loại bỏ annotation/action tương tác trước khi phát attachment riêng tư.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PDF Merge sẵn sàng tải</dd></div></dl></section>\n      <div class=\"portal-document-operation-layout\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Chọn thứ tự PDF</h2><p class=\"portal-card-subtitle\">PDF 1 xuất hiện trước, rồi tới PDF 2… Browser không upload bytes hoặc gửi raw file path cho thao tác này.</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-pdf-merge\" data-portal-route=\"/documents/merge\" data-portal-confirm=\"Gộp PDF theo đúng thứ tự đã chọn? Web sẽ tạo một attachment riêng tư mới sau khi kiểm tra tất cả input và output.\" novalidate>${renderFields(pdfMergeFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>Gộp PDF riêng tư</button></div></form></section><aside class=\"portal-card portal-card-pad portal-document-operation-boundary\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Ranh giới rõ ràng</h2><p class=\"portal-card-subtitle\">Document Operations là pipeline Web độc lập.</p></div></div><ol class=\"portal-project-steps\"><li><strong>1. Thứ tự có chủ đích</strong><span>Slot PDF 1 đến PDF 8 được giữ nguyên trong request fingerprint và output artifact.</span></li><li><strong>2. Xử lý có giới hạn</strong><span>Tối đa 8 nguồn, mỗi nguồn 20 MB, tổng 40 MB/30 trang; chặn PDF mã hóa và nguồn trùng.</span></li><li><strong>3. Delivery riêng tư</strong><span>Output được hash/parse lại và tải qua signed session; không public URL hoặc PWA cache.</span></li></ol><div class=\"portal-form-footer\"><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">Mở Asset Vault</a></div></aside></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">PDF đã gộp</h2><p class=\"portal-card-subtitle\">Chỉ thao tác thuộc signed Web account hiện tại. Download không khả dụng nếu integrity hoặc ownership không còn hợp lệ.</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/merge\"${canRefresh ? \"\" : \" disabled\"}>Làm mới</button></div>${renderDocumentOperationCards(operations, context, \"Chưa có PDF đã gộp\", \"PDF gộp chỉ xuất hiện sau khi mọi nguồn và output đều vượt qua kiểm tra server-side. Không có Job Bot hoặc output mô phỏng.\")}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/merge\")}</section>\n      ${renderNotes(page)}\n    </article>`;",
+      "new": "    return `<article class=\"portal-page portal-pdf-merge\">${renderHero(page, context)}\n      <div class=\"portal-document-operation-layout portal-document-operation-layout--single\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docPdfReadyUiMergeTitle\", \"Gộp PDF\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiMergeDescription\", \"Chọn từ hai đến tám PDF theo thứ tự muốn gộp. Mỗi tệp tối đa 20 MB, tổng tối đa 40 MB và 30 trang.\"))}</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-pdf-merge\" data-portal-route=\"/documents/merge\" data-portal-confirm=\"${safeText(uiText(\"docPdfReadyUiMergeConfirm\", \"Gộp các tệp PDF theo đúng thứ tự đã chọn? Các tệp gốc được giữ nguyên.\"))}\" novalidate>${renderFields(pdfMergeFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(uiText(\"docPdfReadyUiOpenFiles\", \"Mở kho tệp\"))}</a><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiMergeTitle\", \"Gộp PDF\"))}</button></div></form></section></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docPdfReadyUiMergeHistory\", \"PDF đã gộp\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiHistoryBody\", \"Xem tiến trình và tải tệp khi xử lý hoàn tất.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/merge\"${canRefresh ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiRefresh\", \"Làm mới\"))}</button></div>${renderDocumentOperationCards(operations, context)}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/merge\")}</section>\n      ${renderNotes(page)}\n    </article>`;",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    const runReason = !canRunCapability\n      ? \"Cần signed session, CSRF và capability Document Operations từ server.\"\n      : sources.length === 0\n        ? \"Hãy lưu một PDF private vào Asset Vault trước khi tối ưu.\"\n        : \"Chỉ phát attachment khi bản đã kiểm tra thật sự giảm tối thiểu 1 KiB và 1%; nếu không file gốc vẫn nguyên vẹn.\";\n    const sourceSummary = sources.length === 1 ? \"1 PDF đang hoạt động\" : `${sources.length} PDF đang hoạt động`;\n    const completedCount = operations.filter((item) => documentOperationState(item) === \"completed\" && item.download_ready === true).length;",
+      "new": "    const runReason = !canRunCapability\n      ? uiText(\"docPdfReadyUiNoPermission\", \"Tài khoản này chưa được phép dùng công cụ.\")\n      : sources.length === 0\n        ? uiText(\"docPdfReadyUiChooseOne\", \"Chọn một PDF trong kho tệp để bắt đầu.\")\n        : uiText(\"docPdfReadyUiOriginalKept\", \"Tệp gốc được giữ nguyên.\");",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    return `<article class=\"portal-page portal-pdf-optimize\">${renderHero(page, context)}\n      <section class=\"portal-document-operation-intro\"><div><span class=\"portal-section-kicker\">Web-native Document Operations</span><h2>Tối ưu PDF minh bạch, không hạ chất lượng hình ảnh</h2><p>Chọn PDF trong Asset Vault. Máy chủ sao chép input vào vùng xử lý cô lập, tối ưu content stream/cấu trúc, loại bỏ annotation/action tương tác, kiểm tra lại parser và hash. Nếu artifact cuối cùng không nhỏ hơn đủ ý nghĩa, Web không tạo download và không thay file gốc.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PDF tối ưu sẵn sàng tải</dd></div></dl></section>\n      <div class=\"portal-document-operation-layout\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Tối ưu PDF không resample</h2><p class=\"portal-card-subtitle\">Một profile duy nhất, có kiểm tra thật. Không có dropdown light/medium/strong không tác động engine.</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-pdf-optimize\" data-portal-route=\"/documents/compress\" data-portal-confirm=\"Tối ưu PDF từ Asset Vault? File gốc không bị thay đổi; output chỉ được tạo nếu máy chủ xác minh bản mới nhỏ hơn đủ ý nghĩa.\" novalidate>${renderFields(pdfOptimizeFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>Tối ưu PDF</button></div></form></section><aside class=\"portal-card portal-card-pad portal-document-operation-boundary\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Kết quả trung thực</h2><p class=\"portal-card-subtitle\">Không resample ảnh hoặc tạo output giả; annotation/action tương tác được loại bỏ để delivery an toàn.</p></div></div><ol class=\"portal-project-steps\"><li><strong>1. Nguồn có ownership</strong><span>Chỉ asset PDF private active của signed account hiện tại được sao chép/đọc.</span></li><li><strong>2. Tối ưu có giới hạn</strong><span>Tối đa 20 MB/30 trang; không PDF mã hóa, không chạy shell/command hoặc dịch vụ ngoài.</span></li><li><strong>3. Chỉ giao khi giảm thật</strong><span>Artifact phải strict-reparse, hash đúng và tiết kiệm tối thiểu 1 KiB cùng 1%; nếu không có output.</span></li></ol><div class=\"portal-form-footer\"><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">Mở Asset Vault</a></div></aside></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">PDF đã tối ưu</h2><p class=\"portal-card-subtitle\">Dung lượng nguồn, output và mức giảm chỉ được server công bố sau completed. Trạng thái guarded nghĩa là không có bản nhỏ hơn đạt chuẩn — không phải một download bị ẩn.</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/compress\"${canRefresh ? \"\" : \" disabled\"}>Làm mới</button></div>${renderDocumentOperationCards(operations, context, \"Chưa có PDF tối ưu\", \"Một output chỉ xuất hiện khi máy chủ xác minh bản lossless nhỏ hơn thật. File gốc trong Asset Vault luôn được giữ nguyên.\")}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/compress\")}</section>\n      ${renderNotes(page)}\n    </article>`;",
+      "new": "    return `<article class=\"portal-page portal-pdf-optimize\">${renderHero(page, context)}\n      <div class=\"portal-document-operation-layout portal-document-operation-layout--single\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docPdfReadyUiOptimizeTitle\", \"Nén PDF\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiOptimizeDescription\", \"Chọn PDF muốn giảm dung lượng. Tệp gốc không bị thay đổi.\"))}</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-pdf-optimize\" data-portal-route=\"/documents/compress\" data-portal-confirm=\"${safeText(uiText(\"docPdfReadyUiOptimizeConfirm\", \"Nén tệp PDF đã chọn? Tệp gốc được giữ nguyên.\"))}\" novalidate>${renderFields(pdfOptimizeFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(uiText(\"docPdfReadyUiOpenFiles\", \"Mở kho tệp\"))}</a><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiOptimizeTitle\", \"Nén PDF\"))}</button></div></form></section></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docPdfReadyUiOptimizeHistory\", \"PDF đã nén\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiHistoryBody\", \"Xem tiến trình và tải tệp khi xử lý hoàn tất.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/compress\"${canRefresh ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiRefresh\", \"Làm mới\"))}</button></div>${renderDocumentOperationCards(operations, context)}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/compress\")}</section>\n      ${renderNotes(page)}\n    </article>`;",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  verifyEqualKeysets();",
+      "new": "  Object.assign(MESSAGES.vi, {\n    docPdfReadyUiNoPermission: \"Tài khoản này chưa được phép dùng công cụ.\",\n    docPdfReadyUiOpenFiles: \"Mở kho tệp\",\n    docPdfReadyUiRefresh: \"Làm mới\",\n    docPdfReadyUiHistoryBody: \"Xem tiến trình và tải tệp khi xử lý hoàn tất.\",\n    docPdfReadyUiOriginalKept: \"Tệp gốc được giữ nguyên.\",\n    docPdfReadyUiChooseOne: \"Chọn một PDF trong kho tệp để bắt đầu.\",\n    docPdfReadyUiChooseTwo: \"Chọn ít nhất hai PDF trong kho tệp để bắt đầu.\",\n    docPdfReadyUiSplitTitle: \"Tách PDF\",\n    docPdfReadyUiSplitDescription: \"Chọn một trang hoặc một dải trang liên tiếp trong PDF.\",\n    docPdfReadyUiSplitConfirm: \"Tách các trang đã chọn thành tệp PDF mới? Tệp gốc được giữ nguyên.\",\n    docPdfReadyUiSplitHistory: \"PDF đã tách\",\n    docPdfReadyUiMergeTitle: \"Gộp PDF\",\n    docPdfReadyUiMergeDescription: \"Chọn từ hai đến tám PDF theo thứ tự muốn gộp. Mỗi tệp tối đa 20 MB, tổng tối đa 40 MB và 30 trang.\",\n    docPdfReadyUiMergeConfirm: \"Gộp các tệp PDF theo đúng thứ tự đã chọn? Các tệp gốc được giữ nguyên.\",\n    docPdfReadyUiMergeHistory: \"PDF đã gộp\",\n    docPdfReadyUiOptimizeTitle: \"Nén PDF\",\n    docPdfReadyUiOptimizeDescription: \"Chọn PDF muốn giảm dung lượng. Tệp gốc không bị thay đổi.\",\n    docPdfReadyUiOptimizeConfirm: \"Nén tệp PDF đã chọn? Tệp gốc được giữ nguyên.\",\n    docPdfReadyUiOptimizeHistory: \"PDF đã nén\"\n  });\n  Object.assign(MESSAGES.en, {\n    docPdfReadyUiNoPermission: \"This account is not allowed to use this tool.\",\n    docPdfReadyUiOpenFiles: \"Open file library\",\n    docPdfReadyUiRefresh: \"Refresh\",\n    docPdfReadyUiHistoryBody: \"Track progress and download files when processing is complete.\",\n    docPdfReadyUiOriginalKept: \"Original files remain unchanged.\",\n    docPdfReadyUiChooseOne: \"Choose a PDF from your file library to begin.\",\n    docPdfReadyUiChooseTwo: \"Choose at least two PDFs from your file library to begin.\",\n    docPdfReadyUiSplitTitle: \"Split PDF\",\n    docPdfReadyUiSplitDescription: \"Choose one page or a consecutive page range from the PDF.\",\n    docPdfReadyUiSplitConfirm: \"Split the selected pages into a new PDF? The original file remains unchanged.\",\n    docPdfReadyUiSplitHistory: \"Split PDFs\",\n    docPdfReadyUiMergeTitle: \"Merge PDFs\",\n    docPdfReadyUiMergeDescription: \"Choose two to eight PDFs in the order to merge. Each file can be up to 20 MB, with a total limit of 40 MB and 30 pages.\",\n    docPdfReadyUiMergeConfirm: \"Merge the PDFs in the selected order? The original files remain unchanged.\",\n    docPdfReadyUiMergeHistory: \"Merged PDFs\",\n    docPdfReadyUiOptimizeTitle: \"Compress PDF\",\n    docPdfReadyUiOptimizeDescription: \"Choose the PDF to reduce its file size. The original file is not changed.\",\n    docPdfReadyUiOptimizeConfirm: \"Compress the selected PDF? The original file remains unchanged.\",\n    docPdfReadyUiOptimizeHistory: \"Compressed PDFs\"\n  });\n  Object.assign(MESSAGES.zh, {\n    docPdfReadyUiNoPermission: \"此账户尚无权使用此工具。\",\n    docPdfReadyUiOpenFiles: \"打开文件库\",\n    docPdfReadyUiRefresh: \"刷新\",\n    docPdfReadyUiHistoryBody: \"查看处理进度，并在完成后下载文件。\",\n    docPdfReadyUiOriginalKept: \"原始文件保持不变。\",\n    docPdfReadyUiChooseOne: \"从文件库中选择一个 PDF 以开始。\",\n    docPdfReadyUiChooseTwo: \"从文件库中选择至少两个 PDF 以开始。\",\n    docPdfReadyUiSplitTitle: \"拆分 PDF\",\n    docPdfReadyUiSplitDescription: \"选择 PDF 中的一页或连续页码范围。\",\n    docPdfReadyUiSplitConfirm: \"将所选页面拆分为新的 PDF？原始文件保持不变。\",\n    docPdfReadyUiSplitHistory: \"已拆分的 PDF\",\n    docPdfReadyUiMergeTitle: \"合并 PDF\",\n    docPdfReadyUiMergeDescription: \"按合并顺序选择 2 至 8 个 PDF。每个文件不超过 20 MB，总计不超过 40 MB 和 30 页。\",\n    docPdfReadyUiMergeConfirm: \"按所选顺序合并 PDF？原始文件保持不变。\",\n    docPdfReadyUiMergeHistory: \"已合并的 PDF\",\n    docPdfReadyUiOptimizeTitle: \"压缩 PDF\",\n    docPdfReadyUiOptimizeDescription: \"选择要减小文件大小的 PDF。原始文件不会被更改。\",\n    docPdfReadyUiOptimizeConfirm: \"压缩所选的 PDF？原始文件保持不变。\",\n    docPdfReadyUiOptimizeHistory: \"已压缩的 PDF\"\n  });\n\n  verifyEqualKeysets();",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-theme.css",
+      "old": "/* Keep PDF split field names and guidance readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-split .portal-field > label {\n  color: var(--portal-text);\n}\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-split .portal-field-help {\n  color: var(--portal-muted);\n}\n",
+      "new": "/* Keep PDF forms focused on the selected task. */\n.portal-page.portal-pdf-split .portal-document-operation-layout.portal-document-operation-layout--single,\n.portal-page.portal-pdf-merge .portal-document-operation-layout.portal-document-operation-layout--single,\n.portal-page.portal-pdf-optimize .portal-document-operation-layout.portal-document-operation-layout--single {\n  grid-template-columns: minmax(0, 1fr);\n}\n\n/* Keep PDF split field names and guidance readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-split .portal-field > label {\n  color: var(--portal-text);\n}\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-split .portal-field-help {\n  color: var(--portal-muted);\n}\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "uiText(\"docPdfReadyUiOptimizeDescription\", \"Chọn PDF muốn giảm dung lượng. Tệp gốc không bị thay đổi.\")",
+      "new": "uiText(\"docPdfReadyUiOptimizeDescription\", \"Chọn PDF muốn giảm dung lượng, tối đa 20 MB và 30 trang. Tệp gốc không bị thay đổi.\")",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  Object.assign(MESSAGES.vi, {\n    docPdfReadyUiNoPermission: \"Tài khoản này chưa được phép dùng công cụ.\",\n    docPdfReadyUiOpenFiles: \"Mở kho tệp\",\n    docPdfReadyUiRefresh: \"Làm mới\",\n    docPdfReadyUiHistoryBody: \"Xem tiến trình và tải tệp khi xử lý hoàn tất.\",\n    docPdfReadyUiOriginalKept: \"Tệp gốc được giữ nguyên.\",\n    docPdfReadyUiChooseOne: \"Chọn một PDF trong kho tệp để bắt đầu.\",\n    docPdfReadyUiChooseTwo: \"Chọn ít nhất hai PDF trong kho tệp để bắt đầu.\",\n    docPdfReadyUiSplitTitle: \"Tách PDF\",\n    docPdfReadyUiSplitDescription: \"Chọn một trang hoặc một dải trang liên tiếp trong PDF.\",\n    docPdfReadyUiSplitConfirm: \"Tách các trang đã chọn thành tệp PDF mới? Tệp gốc được giữ nguyên.\",\n    docPdfReadyUiSplitHistory: \"PDF đã tách\",\n    docPdfReadyUiMergeTitle: \"Gộp PDF\",\n    docPdfReadyUiMergeDescription: \"Chọn từ hai đến tám PDF theo thứ tự muốn gộp. Mỗi tệp tối đa 20 MB, tổng tối đa 40 MB và 30 trang.\",\n    docPdfReadyUiMergeConfirm: \"Gộp các tệp PDF theo đúng thứ tự đã chọn? Các tệp gốc được giữ nguyên.\",\n    docPdfReadyUiMergeHistory: \"PDF đã gộp\",\n    docPdfReadyUiOptimizeTitle: \"Nén PDF\",\n    docPdfReadyUiOptimizeDescription: \"Chọn PDF muốn giảm dung lượng. Tệp gốc không bị thay đổi.\",\n    docPdfReadyUiOptimizeConfirm: \"Nén tệp PDF đã chọn? Tệp gốc được giữ nguyên.\",\n    docPdfReadyUiOptimizeHistory: \"PDF đã nén\"\n  });\n  Object.assign(MESSAGES.en, {\n    docPdfReadyUiNoPermission: \"This account is not allowed to use this tool.\",\n    docPdfReadyUiOpenFiles: \"Open file library\",\n    docPdfReadyUiRefresh: \"Refresh\",\n    docPdfReadyUiHistoryBody: \"Track progress and download files when processing is complete.\",\n    docPdfReadyUiOriginalKept: \"Original files remain unchanged.\",\n    docPdfReadyUiChooseOne: \"Choose a PDF from your file library to begin.\",\n    docPdfReadyUiChooseTwo: \"Choose at least two PDFs from your file library to begin.\",\n    docPdfReadyUiSplitTitle: \"Split PDF\",\n    docPdfReadyUiSplitDescription: \"Choose one page or a consecutive page range from the PDF.\",\n    docPdfReadyUiSplitConfirm: \"Split the selected pages into a new PDF? The original file remains unchanged.\",\n    docPdfReadyUiSplitHistory: \"Split PDFs\",\n    docPdfReadyUiMergeTitle: \"Merge PDFs\",\n    docPdfReadyUiMergeDescription: \"Choose two to eight PDFs in the order to merge. Each file can be up to 20 MB, with a total limit of 40 MB and 30 pages.\",\n    docPdfReadyUiMergeConfirm: \"Merge the PDFs in the selected order? The original files remain unchanged.\",\n    docPdfReadyUiMergeHistory: \"Merged PDFs\",\n    docPdfReadyUiOptimizeTitle: \"Compress PDF\",\n    docPdfReadyUiOptimizeDescription: \"Choose the PDF to reduce its file size. The original file is not changed.\",\n    docPdfReadyUiOptimizeConfirm: \"Compress the selected PDF? The original file remains unchanged.\",\n    docPdfReadyUiOptimizeHistory: \"Compressed PDFs\"\n  });\n  Object.assign(MESSAGES.zh, {\n    docPdfReadyUiNoPermission: \"此账户尚无权使用此工具。\",\n    docPdfReadyUiOpenFiles: \"打开文件库\",\n    docPdfReadyUiRefresh: \"刷新\",\n    docPdfReadyUiHistoryBody: \"查看处理进度，并在完成后下载文件。\",\n    docPdfReadyUiOriginalKept: \"原始文件保持不变。\",\n    docPdfReadyUiChooseOne: \"从文件库中选择一个 PDF 以开始。\",\n    docPdfReadyUiChooseTwo: \"从文件库中选择至少两个 PDF 以开始。\",\n    docPdfReadyUiSplitTitle: \"拆分 PDF\",\n    docPdfReadyUiSplitDescription: \"选择 PDF 中的一页或连续页码范围。\",\n    docPdfReadyUiSplitConfirm: \"将所选页面拆分为新的 PDF？原始文件保持不变。\",\n    docPdfReadyUiSplitHistory: \"已拆分的 PDF\",\n    docPdfReadyUiMergeTitle: \"合并 PDF\",\n    docPdfReadyUiMergeDescription: \"按合并顺序选择 2 至 8 个 PDF。每个文件不超过 20 MB，总计不超过 40 MB 和 30 页。\",\n    docPdfReadyUiMergeConfirm: \"按所选顺序合并 PDF？原始文件保持不变。\",\n    docPdfReadyUiMergeHistory: \"已合并的 PDF\",\n    docPdfReadyUiOptimizeTitle: \"压缩 PDF\",\n    docPdfReadyUiOptimizeDescription: \"选择要减小文件大小的 PDF。原始文件不会被更改。\",\n    docPdfReadyUiOptimizeConfirm: \"压缩所选的 PDF？原始文件保持不变。\",\n    docPdfReadyUiOptimizeHistory: \"已压缩的 PDF\"\n  });\n\n  verifyEqualKeysets();",
+      "new": "  Object.assign(MESSAGES.vi, {\n    docPdfReadyUiNoPermission: \"Tài khoản này chưa được phép dùng công cụ.\",\n    docPdfReadyUiOpenFiles: \"Mở kho tệp\",\n    docPdfReadyUiRefresh: \"Làm mới\",\n    docPdfReadyUiHistoryBody: \"Xem tiến trình và tải tệp khi xử lý hoàn tất.\",\n    docPdfReadyUiOriginalKept: \"Tệp gốc được giữ nguyên.\",\n    docPdfReadyUiChooseOne: \"Chọn một PDF trong kho tệp để bắt đầu.\",\n    docPdfReadyUiChooseTwo: \"Chọn ít nhất hai PDF trong kho tệp để bắt đầu.\",\n    docPdfReadyUiSplitTitle: \"Tách PDF\",\n    docPdfReadyUiSplitDescription: \"Chọn một trang hoặc một dải trang liên tiếp trong PDF.\",\n    docPdfReadyUiSplitConfirm: \"Tách các trang đã chọn thành tệp PDF mới? Tệp gốc được giữ nguyên.\",\n    docPdfReadyUiSplitHistory: \"PDF đã tách\",\n    docPdfReadyUiMergeTitle: \"Gộp PDF\",\n    docPdfReadyUiMergeDescription: \"Chọn từ hai đến tám PDF theo thứ tự muốn gộp. Mỗi tệp tối đa 20 MB, tổng tối đa 40 MB và 30 trang.\",\n    docPdfReadyUiMergeConfirm: \"Gộp các tệp PDF theo đúng thứ tự đã chọn? Các tệp gốc được giữ nguyên.\",\n    docPdfReadyUiMergeHistory: \"PDF đã gộp\",\n    docPdfReadyUiOptimizeTitle: \"Nén PDF\",\n    docPdfReadyUiOptimizeDescription: \"Chọn PDF muốn giảm dung lượng, tối đa 20 MB và 30 trang. Tệp gốc không bị thay đổi.\",\n    docPdfReadyUiOptimizeConfirm: \"Nén tệp PDF đã chọn? Tệp gốc được giữ nguyên.\",\n    docPdfReadyUiOptimizeHistory: \"PDF đã nén\"\n  });\n  Object.assign(MESSAGES.en, {\n    docPdfReadyUiNoPermission: \"This account is not allowed to use this tool.\",\n    docPdfReadyUiOpenFiles: \"Open file library\",\n    docPdfReadyUiRefresh: \"Refresh\",\n    docPdfReadyUiHistoryBody: \"Track progress and download files when processing is complete.\",\n    docPdfReadyUiOriginalKept: \"Original files remain unchanged.\",\n    docPdfReadyUiChooseOne: \"Choose a PDF from your file library to begin.\",\n    docPdfReadyUiChooseTwo: \"Choose at least two PDFs from your file library to begin.\",\n    docPdfReadyUiSplitTitle: \"Split PDF\",\n    docPdfReadyUiSplitDescription: \"Choose one page or a consecutive page range from the PDF.\",\n    docPdfReadyUiSplitConfirm: \"Split the selected pages into a new PDF? The original file remains unchanged.\",\n    docPdfReadyUiSplitHistory: \"Split PDFs\",\n    docPdfReadyUiMergeTitle: \"Merge PDFs\",\n    docPdfReadyUiMergeDescription: \"Choose two to eight PDFs in the order to merge. Each file can be up to 20 MB, with a total limit of 40 MB and 30 pages.\",\n    docPdfReadyUiMergeConfirm: \"Merge the PDFs in the selected order? The original files remain unchanged.\",\n    docPdfReadyUiMergeHistory: \"Merged PDFs\",\n    docPdfReadyUiOptimizeTitle: \"Compress PDF\",\n    docPdfReadyUiOptimizeDescription: \"Choose a PDF up to 20 MB and 30 pages to reduce its file size. The original file is not changed.\",\n    docPdfReadyUiOptimizeConfirm: \"Compress the selected PDF? The original file remains unchanged.\",\n    docPdfReadyUiOptimizeHistory: \"Compressed PDFs\"\n  });\n  Object.assign(MESSAGES.zh, {\n    docPdfReadyUiNoPermission: \"此账户尚无权使用此工具。\",\n    docPdfReadyUiOpenFiles: \"打开文件库\",\n    docPdfReadyUiRefresh: \"刷新\",\n    docPdfReadyUiHistoryBody: \"查看处理进度，并在完成后下载文件。\",\n    docPdfReadyUiOriginalKept: \"原始文件保持不变。\",\n    docPdfReadyUiChooseOne: \"从文件库中选择一个 PDF 以开始。\",\n    docPdfReadyUiChooseTwo: \"从文件库中选择至少两个 PDF 以开始。\",\n    docPdfReadyUiSplitTitle: \"拆分 PDF\",\n    docPdfReadyUiSplitDescription: \"选择 PDF 中的一页或连续页码范围。\",\n    docPdfReadyUiSplitConfirm: \"将所选页面拆分为新的 PDF？原始文件保持不变。\",\n    docPdfReadyUiSplitHistory: \"已拆分的 PDF\",\n    docPdfReadyUiMergeTitle: \"合并 PDF\",\n    docPdfReadyUiMergeDescription: \"按合并顺序选择 2 至 8 个 PDF。每个文件不超过 20 MB，总计不超过 40 MB 和 30 页。\",\n    docPdfReadyUiMergeConfirm: \"按所选顺序合并 PDF？原始文件保持不变。\",\n    docPdfReadyUiMergeHistory: \"已合并的 PDF\",\n    docPdfReadyUiOptimizeTitle: \"压缩 PDF\",\n    docPdfReadyUiOptimizeDescription: \"选择要减小文件大小的 PDF，文件不超过 20 MB 且不超过 30 页。原始文件不会被更改。\",\n    docPdfReadyUiOptimizeConfirm: \"压缩所选的 PDF？原始文件保持不变。\",\n    docPdfReadyUiOptimizeHistory: \"已压缩的 PDF\"\n  });\n\n  verifyEqualKeysets();",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    const range = returned\n      ? imageOperationText(\"reference.range\", \"Đang hiển thị {start}–{end} {label}\", { start: String(offset + 1), end: String(offset + returned), label: imageOperationText(\"reference.type.reference\", \"tham chiếu\") })\n      : imageOperationText(\"reference.empty\", \"Không có {label} ở trang này\", { label: imageOperationText(\"reference.type.reference\", \"tham chiếu\") });",
+      "new": "    const range = returned\n      ? imageOperationText(\"reference.range\", \"{label}: {start}–{end}\", { start: String(offset + 1), end: String(offset + returned), label: imageOperationText(\"reference.type.reference\", \"Tệp\") })\n      : \"\";",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    return `<nav class=\"portal-vault-pagination portal-operation-reference-pagination\" aria-label=\"${safeText(imageOperationText(\"reference.aria\", \"Phân trang tham chiếu\"))}\"><span>${safeText(range)}</span><div>${previousButton}${nextButton}</div></nav>`;",
+      "new": "    return `<nav class=\"portal-vault-pagination portal-operation-reference-pagination\" aria-label=\"${safeText(imageOperationText(\"reference.aria\", \"Trang tệp\"))}\">${range ? `<span>${safeText(range)}</span>` : ''}<div>${previousButton}${nextButton}</div></nav>`;",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    const statusText = readState === \"loading\"\n      ? imageOperationText(\"reference.loading\", \"Đang tải tham chiếu thuộc tài khoản…\")\n      : readState === \"failed\"\n        ? imageOperationText(\"reference.failed\", \"Chưa tải được tham chiếu; không dùng dữ liệu thay thế.\")\n        : rowsText;",
+      "new": "    const statusText = readState === \"loading\"\n      ? imageOperationText(\"reference.loading\", \"Đang tải tệp…\")\n      : readState === \"failed\"\n        ? imageOperationText(\"reference.failed\", \"Chưa tải được tệp. Hãy bấm Tìm để tải lại.\")\n        : rowsText;",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    return `<section class=\"portal-operation-reference-picker\" data-operation-reference-kind=\"${safeText(selected)}\"><div class=\"portal-operation-reference-copy\"><strong>${safeText(imageOperationText(\"reference.title\", \"Tìm {type} cũ\", { type: typeLabel }))}</strong><span>${safeText(statusText)}</span></div><div class=\"portal-operation-reference-controls\"><label><span class=\"portal-sr-only\">${safeText(imageOperationText(\"reference.inputLabel\", \"Tìm {type}\", { type: typeLabel }))}</span><input class=\"portal-input\" name=\"asset_reference_q\" value=\"${safeText(listing.filters.q)}\" maxlength=\"100\" placeholder=\"${safeText(imageOperationText(\"reference.placeholder\", \"Tên hiển thị hoặc tên tệp\"))}\"${disabled}></label><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"${safeText(actionPrefix + \"-filter\")}\" data-portal-route=\"${safeText(route)}\"${disabled}>${safeText(imageOperationText(\"reference.find\", \"Tìm\"))}</button><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"${safeText(actionPrefix + \"-filter-clear\")}\" data-portal-route=\"${safeText(route)}\"${disabled}>${safeText(imageOperationText(\"reference.clear\", \"Xóa lọc\"))}</button></div>${renderOperationAssetReferencePagination(listing, actionPrefix + \"-page\", offsetAttribute, route)}</section>`;",
+      "new": "    return `<section class=\"portal-operation-reference-picker\" data-operation-reference-kind=\"${safeText(selected)}\"><div class=\"portal-operation-reference-copy\"><strong>${safeText(imageOperationText(\"reference.title\", \"Tìm {type} trong kho tệp\", { type: typeLabel }))}</strong><span>${safeText(statusText)}</span></div><div class=\"portal-operation-reference-controls\"><label><span class=\"portal-sr-only\">${safeText(imageOperationText(\"reference.inputLabel\", \"Tìm {type}\", { type: typeLabel }))}</span><input class=\"portal-input\" name=\"asset_reference_q\" value=\"${safeText(listing.filters.q)}\" maxlength=\"100\" placeholder=\"${safeText(imageOperationText(\"reference.placeholder\", \"Tên hiển thị hoặc tên tệp\"))}\"${disabled}></label><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"${safeText(actionPrefix + \"-filter\")}\" data-portal-route=\"${safeText(route)}\"${disabled}>${safeText(imageOperationText(\"reference.find\", \"Tìm\"))}</button><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"${safeText(actionPrefix + \"-filter-clear\")}\" data-portal-route=\"${safeText(route)}\"${disabled}>${safeText(imageOperationText(\"reference.clear\", \"Xóa lọc\"))}</button></div>${renderOperationAssetReferencePagination(listing, actionPrefix + \"-page\", offsetAttribute, route)}</section>`;",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "    [\"reference.range\", \"Đang hiển thị {start}–{end} {label}\", \"Showing {start}–{end} {label}\", \"正在显示 {start}–{end} {label}\"],",
+      "new": "    [\"reference.range\", \"{label}: {start}–{end}\", \"{label}: {start}–{end}\", \"{label}：{start}–{end}\"],",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "    [\"reference.aria\", \"Phân trang tham chiếu\", \"Reference pagination\", \"参考分页\"],",
+      "new": "    [\"reference.aria\", \"Trang tệp\", \"File pages\", \"文件分页\"],",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "    [\"reference.title\", \"Tìm {type} cũ\", \"Find existing {type}\", \"查找现有{type}\"],",
+      "new": "    [\"reference.title\", \"Tìm {type} trong kho tệp\", \"Find {type} in your files\", \"在文件库中查找{type}\"],",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "    [\"reference.loading\", \"Đang tải tham chiếu thuộc tài khoản…\", \"Loading account-scoped references…\", \"正在加载账户范围内的参考项…\"],",
+      "new": "    [\"reference.loading\", \"Đang tải tệp…\", \"Loading files…\", \"正在加载文件…\"],",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "    [\"reference.failed\", \"Chưa tải được tham chiếu; không dùng dữ liệu thay thế.\", \"References could not be loaded; no fallback data is used.\", \"无法加载参考项；不会使用替代数据。\"],",
+      "new": "    [\"reference.failed\", \"Chưa tải được tệp. Hãy bấm Tìm để tải lại.\", \"Files could not be loaded. Select Find to reload.\", \"无法加载文件，请点击“查找”重新加载。\"],",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "    [\"reference.type.reference\", \"tham chiếu\", \"references\", \"参考项\"],",
+      "new": "    [\"reference.type.reference\", \"Tệp\", \"Files\", \"文件\"],",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-theme.css",
+      "old": "/* Keep PDF split field names and guidance readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-split .portal-field > label {\n  color: var(--portal-text);\n}\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-split .portal-field-help {\n  color: var(--portal-muted);\n}\n",
+      "new": "/* Keep source-file search labels and navigation readable. */\n.portal-operation-reference-picker .portal-operation-reference-copy {\n  display: grid;\n  gap: 6px;\n}\n.portal-operation-reference-picker .portal-operation-reference-copy > span,\n.portal-operation-reference-picker .portal-operation-reference-pagination > span {\n  font-size: 14px;\n  line-height: 1.5;\n}\n.portal-operation-reference-picker .portal-operation-reference-pagination .portal-button {\n  min-height: 44px;\n  font-size: 14px;\n}\n\n/* Keep PDF split field names and guidance readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-split .portal-field > label {\n  color: var(--portal-text);\n}\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-split .portal-field-help {\n  color: var(--portal-muted);\n}\n",
+      "count": 1
+    }
+  ],
+  "vi": {
+    "docPdfReadyUiNoPermission": "Tài khoản này chưa được phép dùng công cụ.",
+    "docPdfReadyUiOpenFiles": "Mở kho tệp",
+    "docPdfReadyUiRefresh": "Làm mới",
+    "docPdfReadyUiHistoryBody": "Xem tiến trình và tải tệp khi xử lý hoàn tất.",
+    "docPdfReadyUiOriginalKept": "Tệp gốc được giữ nguyên.",
+    "docPdfReadyUiChooseOne": "Chọn một PDF trong kho tệp để bắt đầu.",
+    "docPdfReadyUiChooseTwo": "Chọn ít nhất hai PDF trong kho tệp để bắt đầu.",
+    "docPdfReadyUiSplitTitle": "Tách PDF",
+    "docPdfReadyUiSplitDescription": "Chọn một trang hoặc một dải trang liên tiếp trong PDF.",
+    "docPdfReadyUiSplitConfirm": "Tách các trang đã chọn thành tệp PDF mới? Tệp gốc được giữ nguyên.",
+    "docPdfReadyUiSplitHistory": "PDF đã tách",
+    "docPdfReadyUiMergeTitle": "Gộp PDF",
+    "docPdfReadyUiMergeDescription": "Chọn từ hai đến tám PDF theo thứ tự muốn gộp. Mỗi tệp tối đa 20 MB, tổng tối đa 40 MB và 30 trang.",
+    "docPdfReadyUiMergeConfirm": "Gộp các tệp PDF theo đúng thứ tự đã chọn? Các tệp gốc được giữ nguyên.",
+    "docPdfReadyUiMergeHistory": "PDF đã gộp",
+    "docPdfReadyUiOptimizeTitle": "Nén PDF",
+    "docPdfReadyUiOptimizeDescription": "Chọn PDF muốn giảm dung lượng, tối đa 20 MB và 30 trang. Tệp gốc không bị thay đổi.",
+    "docPdfReadyUiOptimizeConfirm": "Nén tệp PDF đã chọn? Tệp gốc được giữ nguyên.",
+    "docPdfReadyUiOptimizeHistory": "PDF đã nén"
+  },
+  "en": {
+    "docPdfReadyUiNoPermission": "This account is not allowed to use this tool.",
+    "docPdfReadyUiOpenFiles": "Open file library",
+    "docPdfReadyUiRefresh": "Refresh",
+    "docPdfReadyUiHistoryBody": "Track progress and download files when processing is complete.",
+    "docPdfReadyUiOriginalKept": "Original files remain unchanged.",
+    "docPdfReadyUiChooseOne": "Choose a PDF from your file library to begin.",
+    "docPdfReadyUiChooseTwo": "Choose at least two PDFs from your file library to begin.",
+    "docPdfReadyUiSplitTitle": "Split PDF",
+    "docPdfReadyUiSplitDescription": "Choose one page or a consecutive page range from the PDF.",
+    "docPdfReadyUiSplitConfirm": "Split the selected pages into a new PDF? The original file remains unchanged.",
+    "docPdfReadyUiSplitHistory": "Split PDFs",
+    "docPdfReadyUiMergeTitle": "Merge PDFs",
+    "docPdfReadyUiMergeDescription": "Choose two to eight PDFs in the order to merge. Each file can be up to 20 MB, with a total limit of 40 MB and 30 pages.",
+    "docPdfReadyUiMergeConfirm": "Merge the PDFs in the selected order? The original files remain unchanged.",
+    "docPdfReadyUiMergeHistory": "Merged PDFs",
+    "docPdfReadyUiOptimizeTitle": "Compress PDF",
+    "docPdfReadyUiOptimizeDescription": "Choose a PDF up to 20 MB and 30 pages to reduce its file size. The original file is not changed.",
+    "docPdfReadyUiOptimizeConfirm": "Compress the selected PDF? The original file remains unchanged.",
+    "docPdfReadyUiOptimizeHistory": "Compressed PDFs"
+  },
+  "zh": {
+    "docPdfReadyUiNoPermission": "此账户尚无权使用此工具。",
+    "docPdfReadyUiOpenFiles": "打开文件库",
+    "docPdfReadyUiRefresh": "刷新",
+    "docPdfReadyUiHistoryBody": "查看处理进度，并在完成后下载文件。",
+    "docPdfReadyUiOriginalKept": "原始文件保持不变。",
+    "docPdfReadyUiChooseOne": "从文件库中选择一个 PDF 以开始。",
+    "docPdfReadyUiChooseTwo": "从文件库中选择至少两个 PDF 以开始。",
+    "docPdfReadyUiSplitTitle": "拆分 PDF",
+    "docPdfReadyUiSplitDescription": "选择 PDF 中的一页或连续页码范围。",
+    "docPdfReadyUiSplitConfirm": "将所选页面拆分为新的 PDF？原始文件保持不变。",
+    "docPdfReadyUiSplitHistory": "已拆分的 PDF",
+    "docPdfReadyUiMergeTitle": "合并 PDF",
+    "docPdfReadyUiMergeDescription": "按合并顺序选择 2 至 8 个 PDF。每个文件不超过 20 MB，总计不超过 40 MB 和 30 页。",
+    "docPdfReadyUiMergeConfirm": "按所选顺序合并 PDF？原始文件保持不变。",
+    "docPdfReadyUiMergeHistory": "已合并的 PDF",
+    "docPdfReadyUiOptimizeTitle": "压缩 PDF",
+    "docPdfReadyUiOptimizeDescription": "选择要减小文件大小的 PDF，文件不超过 20 MB 且不超过 30 页。原始文件不会被更改。",
+    "docPdfReadyUiOptimizeConfirm": "压缩所选的 PDF？原始文件保持不变。",
+    "docPdfReadyUiOptimizeHistory": "已压缩的 PDF"
+  },
+  "reference": {
+    "oldRows": [
+      [
+        "reference.range",
+        "Đang hiển thị {start}–{end} {label}",
+        "Showing {start}–{end} {label}",
+        "正在显示 {start}–{end} {label}"
+      ],
+      [
+        "reference.aria",
+        "Phân trang tham chiếu",
+        "Reference pagination",
+        "参考分页"
+      ],
+      [
+        "reference.title",
+        "Tìm {type} cũ",
+        "Find existing {type}",
+        "查找现有{type}"
+      ],
+      [
+        "reference.loading",
+        "Đang tải tham chiếu thuộc tài khoản…",
+        "Loading account-scoped references…",
+        "正在加载账户范围内的参考项…"
+      ],
+      [
+        "reference.failed",
+        "Chưa tải được tham chiếu; không dùng dữ liệu thay thế.",
+        "References could not be loaded; no fallback data is used.",
+        "无法加载参考项；不会使用替代数据。"
+      ],
+      [
+        "reference.type.reference",
+        "tham chiếu",
+        "references",
+        "参考项"
+      ]
+    ],
+    "newRows": [
+      [
+        "reference.range",
+        "{label}: {start}–{end}",
+        "{label}: {start}–{end}",
+        "{label}：{start}–{end}"
+      ],
+      [
+        "reference.aria",
+        "Trang tệp",
+        "File pages",
+        "文件分页"
+      ],
+      [
+        "reference.title",
+        "Tìm {type} trong kho tệp",
+        "Find {type} in your files",
+        "在文件库中查找{type}"
+      ],
+      [
+        "reference.loading",
+        "Đang tải tệp…",
+        "Loading files…",
+        "正在加载文件…"
+      ],
+      [
+        "reference.failed",
+        "Chưa tải được tệp. Hãy bấm Tìm để tải lại.",
+        "Files could not be loaded. Select Find to reload.",
+        "无法加载文件，请点击“查找”重新加载。"
+      ],
+      [
+        "reference.type.reference",
+        "Tệp",
+        "Files",
+        "文件"
+      ]
+    ],
+    "catalogEntries": {
+      "vi": [
+        {
+          "key": "imageOperationUi.reference.range",
+          "old": "Đang hiển thị {start}–{end} {label}",
+          "new": "{label}: {start}–{end}"
+        },
+        {
+          "key": "imageOperationUi.reference.aria",
+          "old": "Phân trang tham chiếu",
+          "new": "Trang tệp"
+        },
+        {
+          "key": "imageOperationUi.reference.title",
+          "old": "Tìm {type} cũ",
+          "new": "Tìm {type} trong kho tệp"
+        },
+        {
+          "key": "imageOperationUi.reference.loading",
+          "old": "Đang tải tham chiếu thuộc tài khoản…",
+          "new": "Đang tải tệp…"
+        },
+        {
+          "key": "imageOperationUi.reference.failed",
+          "old": "Chưa tải được tham chiếu; không dùng dữ liệu thay thế.",
+          "new": "Chưa tải được tệp. Hãy bấm Tìm để tải lại."
+        },
+        {
+          "key": "imageOperationUi.reference.type.reference",
+          "old": "tham chiếu",
+          "new": "Tệp"
+        }
+      ],
+      "en": [
+        {
+          "key": "imageOperationUi.reference.range",
+          "old": "Showing {start}–{end} {label}",
+          "new": "{label}: {start}–{end}"
+        },
+        {
+          "key": "imageOperationUi.reference.aria",
+          "old": "Reference pagination",
+          "new": "File pages"
+        },
+        {
+          "key": "imageOperationUi.reference.title",
+          "old": "Find existing {type}",
+          "new": "Find {type} in your files"
+        },
+        {
+          "key": "imageOperationUi.reference.loading",
+          "old": "Loading account-scoped references…",
+          "new": "Loading files…"
+        },
+        {
+          "key": "imageOperationUi.reference.failed",
+          "old": "References could not be loaded; no fallback data is used.",
+          "new": "Files could not be loaded. Select Find to reload."
+        },
+        {
+          "key": "imageOperationUi.reference.type.reference",
+          "old": "references",
+          "new": "Files"
+        }
+      ],
+      "zh": [
+        {
+          "key": "imageOperationUi.reference.range",
+          "old": "正在显示 {start}–{end} {label}",
+          "new": "{label}：{start}–{end}"
+        },
+        {
+          "key": "imageOperationUi.reference.aria",
+          "old": "参考分页",
+          "new": "文件分页"
+        },
+        {
+          "key": "imageOperationUi.reference.title",
+          "old": "查找现有{type}",
+          "new": "在文件库中查找{type}"
+        },
+        {
+          "key": "imageOperationUi.reference.loading",
+          "old": "正在加载账户范围内的参考项…",
+          "new": "正在加载文件…"
+        },
+        {
+          "key": "imageOperationUi.reference.failed",
+          "old": "无法加载参考项；不会使用替代数据。",
+          "new": "无法加载文件，请点击“查找”重新加载。"
+        },
+        {
+          "key": "imageOperationUi.reference.type.reference",
+          "old": "参考项",
+          "new": "文件"
+        }
+      ]
+    }
+  },
+  "binding": {
+    "baselinePortal": "c1a4defe7b883d1b182198d60eab4353c3ace61f70d20d36aa4a6d64f30a6358",
+    "candidatePortal": "956937a837b71ba3bde13242365168071d0fccc4c5a694cd90df69633244c932",
+    "baselineI18n": "e52505655b14c640a7a9d68a6da912b78e24f6783fb61486799ff788429c7c8d",
+    "candidateI18n": "dc5e3c54f1a240c9357e2dc8a3c532002b66f0783abbea4858e38c1b653cc4fd",
+    "baselineTheme": "6a5028c129fc78bb701d7fd585fe3eb9776b8902a4948560e6debccbfb412f90",
+    "candidateTheme": "a0691fb0dca191ce51b1cb59f703af8ad94a1faf6aba5d67dd6211caeba62b81",
+    "catalogHashes": {
+      "vi": "f1f08a084b95c0982886b9a6d5dadf52bfa7acfa3576ac0a8a9baea79eff4e26",
+      "en": "30fa48eb36a71761ff99336445014bf3009efa7e29d6f4833686d6fc50a4fdb8",
+      "zh": "b59e9b17ea31c8d538abe2dbbc50dd2e987e5d3485f5a7e8aba03ba8f728116a"
+    }
+  }
+}

@@ -23871,6 +23871,28 @@ html:not([data-portal-theme="dark"]) .portal-chat-workspace-detail .portal-chat-
   color: var(--portal-ink);
 }
 
+/* Keep PDF forms focused on the selected task. */
+.portal-page.portal-pdf-split .portal-document-operation-layout.portal-document-operation-layout--single,
+.portal-page.portal-pdf-merge .portal-document-operation-layout.portal-document-operation-layout--single,
+.portal-page.portal-pdf-optimize .portal-document-operation-layout.portal-document-operation-layout--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Keep source-file search labels and navigation readable. */
+.portal-operation-reference-picker .portal-operation-reference-copy {
+  display: grid;
+  gap: 6px;
+}
+.portal-operation-reference-picker .portal-operation-reference-copy > span,
+.portal-operation-reference-picker .portal-operation-reference-pagination > span {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.portal-operation-reference-picker .portal-operation-reference-pagination .portal-button {
+  min-height: 44px;
+  font-size: 14px;
+}
+
 /* Keep PDF split field names and guidance readable in the light theme. */
 html:not([data-portal-theme="dark"]) .portal-page.portal-pdf-split .portal-field > label {
   color: var(--portal-text);
