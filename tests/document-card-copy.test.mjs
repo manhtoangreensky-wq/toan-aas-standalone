@@ -5,10 +5,11 @@ import {createHash} from 'node:crypto';
 import {documentCardRenderer,documentCardSources} from './helpers/document-card-copy-runtime.mjs';
 import {documentCardHistoricalSnapshot,documentCardHistoricalPortalSource,documentCardHistoricalI18nSource} from './helpers/document-card-copy-snapshot.mjs';
 import {documentPdfHistoricalSnapshot,documentPdfHistoricalPortalSource,documentPdfHistoricalI18nSource} from './helpers/document-pdf-ui-snapshot.mjs';
+import {documentCardDisplayHistoricalPortalSource,documentCardDisplayHistoricalI18nSource} from './helpers/document-card-display-snapshot.mjs';
 const reviewed=JSON.parse(fs.readFileSync(new URL('./fixtures/document-card-copy-reviewed.json',import.meta.url),'utf8'));
 const rawSource=documentCardSources();
 const source={portal:documentPdfHistoricalPortalSource(rawSource.portal),i18n:documentPdfHistoricalI18nSource(rawSource.i18n)};
-const baseline=documentCardSources(true),rawCurrent=await documentCardRenderer(rawSource),before=await documentCardRenderer(baseline);
+const baseline=documentCardSources(true),rawCurrent=await documentCardRenderer({portal:documentCardDisplayHistoricalPortalSource(rawSource.portal),i18n:documentCardDisplayHistoricalI18nSource(rawSource.i18n)}),before=await documentCardRenderer(baseline);
 const rawCatalogueFrozen=Symbol('rawCatalogueFrozen');
 function current(...args){
   const session=rawCurrent(...args),frozen={},messages={};

@@ -2073,3 +2073,29 @@ Evidence:docs/reports/display-clutter-20261115.md/phiênCL,cùngIssue689.
   motioncuối,khôngmởBot/engine/provider/financial/productiondataimplementation.
 
 Evidence:docs/reports/pdf-split-readability-20261116.md/phiênSR,cùngIssue689.
+
+## Thẻ tài liệu —đơn vị16/11/2026
+
+- [x] PR746đãgiao:CI43816413685bothSUCCESS,merge/runtimec40f94ce,
+  tree0a1dde30exact/deploy43817989559SUCCESS/serviceshealth5assetsverified;
+  receiptsIssue6896909231690/PR7466909380328.
+- [x] DOCUMENT-CARD-DISPLAYlocal6literalAGYchanges/2files/19keys57values:
+  tênmặcđịnh/icon/selected/date,DATEreplayFIRSTkhôngoverwriteunitkhác.
+- [x] BASE13RED→onegroup23files503NodePASS0FAIL0SKIP37449.3983ms;
+  actual9kinds/4states/4strictcaps/coercions/datepriority/fallback/hostile/
+  customerliteral/wholeHTMLcontrols/metrics/catalogfreeze/order/unknownguards.
+- [x] Native3actualsignedlocale375LIGHTemptyhistories/1VIcrop,
+  realGETcardsdownloads0;9tables/schema/6plans18scenes/source/evidence/
+  Jobs0/0productwrites,reseed0.Filledcardsnames/selected/dateVM-only.
+- [x] Scopeexit0:6exactreplay/inverse/outside/22protectedLF/allappPython/
+  CIonecommand/nativebytebinding;no engine/financial/productiondatachange.
+- [x] Source-reviewC0/I0/M0/docsTesterREADY/case1403lines151580LFbytes/
+  metadata1PASS32deselected0.42s/PUSH_GATE=READY.
+- [ ] Provenance/exactHEADCI/merge/deploy/runtimeassets/receipt,
+  khôngnhậnđãlênwebtừlocal.
+- [ ] Source/outputmetrics/otherPDFforms/headings/referencehelper/spacing,
+  CompressLIGHT/guardcopy/cataloguehub/lightownerunitsvẫnqueue.
+- [ ] Full locale/AX/responsive/keyboard/auth/device/Safari/signedUI/output/
+  M-FINAL01..06mở,motioncuối;khôngthu hẹpgoal.
+
+Evidence:docs/reports/document-card-display-20261116.md/phiênCD,cùngIssue689.

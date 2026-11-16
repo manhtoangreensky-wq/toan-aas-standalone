@@ -2945,3 +2945,14 @@ darkSplitvàCompresssentinelstyles/geometryexact.9tables/schema/
 6plans18scenes/source/evidence/Jobs0,noproductwrites/reseed.
 [Báo cáo](../docs/reports/pdf-split-readability-20261116.md).
 CompressLIGHTcònnhạtpre-existing,queueđộclập;khôngwholePDF/AXclaim.
+
+## Thẻ tài liệu —16/11/2026, ứng viên tên/mô tả/ngày
+
+SplitreadabilityPR746đãgiao:CI43816413685/deploy43817989559/runtimec40f94ce,
+services/health/5assetsexact;receipts6909231690/6909380328.
+Ứngviênthẻ6exactAGYchanges/19keys57values:6tênmặcđịnh/2iconhumanlabels,
+mô tảthao tácvàngàytheolocale;khôngdịchtêntệpkhách/đổitrạngthái/quyền/tácvụ.
+BASE13RED→503NodePASS/native3actualemptyhistories1crop,
+9tables/schema/6plans18scenes/source/evidence/Jobs0/0productwrites.
+[Báo cáo](../docs/reports/document-card-display-20261116.md).
+Source/outputmetricsotherforms/copycònriêng;khôngnhậntoàncard/PDF/AXđạt.

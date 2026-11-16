@@ -2154,3 +2154,16 @@ NguồnactualCSSBASE44134931vànativecomputedBASE/GREEN6observations.
 |MànCompresscùnglỗinhạt|Giữsentinelvàghiđơnvịkế|KhôngclaimđãfixngoàiSplit|
 |ChatCSSchainkhóakhứ|Exact2ruleinverseFIRST|Oldhash/wholeCSS/assertionsgiữ|
 |DISPLAYchưaghiđãtriểnkhai|PR74544134931đãgiao|CI43737144840/deploy43814377064|
+
+## Thẻ tài liệu —đối chiếu16/11/2026
+
+NguồnactualrenderDocumentOperationCards/datehelper tạiBASEc40f94ce.
+
+|Trước|Ứng viên|Bằng chứng/giới hạn|
+|---|---|---|
+|FallbacknamesnêuOCR/private|6tênmặcđịnh/2nhãnbiểutượng|Têntệpkháchliteral/formatnamesgiữ|
+|Selectedmô tảcứngVI/thuậtngữ|11keysVIENZH|Count/range/languagebranches/coercionsgiữ|
+|UpdatedrawISO/malformedstrings|Dùngdatehelperđãcó|Invalid→emDash/prioritygiữ/nopersistedchange|
+|Carddateproposalwholefunction|ReplayDATEfirstthennames/selected|Khôngghiđècácunit/compoundinverseexact|
+|Cóthểlấynativeemptylàfilledcardproof|FilledfieldactualVM-only|Native0cards/nofakedata/output|
+|SplitCSSchưaghiđãtriểnkhai|PR746c40f94ceđãgiao|CI43816413685/deploy43817989559|
