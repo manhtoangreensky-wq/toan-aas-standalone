@@ -44,8 +44,8 @@
     "note": "Earlier tracker/remote_revalidation fields are historical snapshots; no issue was reopened or created."
   },
   "partial_remote_revalidated_at": "2026-09-12",
-  "local_files_refreshed_at": "2026-11-16",
-  "local_files_refresh_scope": "PDF Merge field copy: canonical cases 1478 lines/158138 LF bytes after eleven scoped rows; local metadata only. Historical remote/P0/48-case/safety fields preserved; tracker Issue689.",
+  "local_files_refreshed_at": "2026-11-17",
+  "local_files_refresh_scope": "Merge light contrast: canonical cases 1492 lines/159271 LF bytes after nine scoped rows; local metadata only, reviewed17Nov. Historical remote/P0/48-case/safety fields preserved; trackerIssue689.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1478,
-      "bytes": 158138,
-      "sha256": "0a632af33ea4a4426fc28b1aa52963c6a58dc826bfef43c0168b8a8f5c969641"
+      "lines": 1492,
+      "bytes": 159271,
+      "sha256": "bffe264e2ba9ec1520e723bbbe3d0ea43ef0e30deab72862a2896f43c80e5089"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

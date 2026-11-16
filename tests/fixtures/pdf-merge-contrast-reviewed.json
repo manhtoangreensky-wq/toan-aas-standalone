@@ -1,0 +1,32 @@
+{
+  "specId": "PDF-MERGE-LIGHT-CONTRAST-20261116",
+  "base": "2c7eba2c65b90ce1dde076b6520d5c892591b603",
+  "proposals": [
+    {
+      "name": "pdf-merge-light-contrast-public-nov16-r1",
+      "sha256": "32a8ad2c51e9dd740aee0d385c7b18fbe58fe1f573c4c4b02d62feab8a5d8eae"
+    }
+  ],
+  "changes": [
+    {
+      "file": "static/portal/portal-theme.css",
+      "count": 1,
+      "old": "/* Keep PDF text controls readable on small screens. */\n@media (max-width: 767px) {\n  .portal-page.portal-pdf-split .portal-document-operation-form :is(input, select, textarea),\n  .portal-page.portal-pdf-merge .portal-document-operation-form :is(input, select, textarea),\n  .portal-page.portal-pdf-optimize .portal-document-operation-form :is(input, select, textarea) {\n    font-size: 16px;\n  }\n}",
+      "new": "/* Keep PDF text controls readable on small screens. */\n@media (max-width: 767px) {\n  .portal-page.portal-pdf-split .portal-document-operation-form :is(input, select, textarea),\n  .portal-page.portal-pdf-merge .portal-document-operation-form :is(input, select, textarea),\n  .portal-page.portal-pdf-optimize .portal-document-operation-form :is(input, select, textarea) {\n    font-size: 16px;\n  }\n}\n\n/* Keep PDF merge field names and guidance readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-merge .portal-field > label {\n  color: var(--portal-text);\n}\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-merge .portal-field-help {\n  color: var(--portal-muted);\n}"
+    }
+  ],
+  "binding": {
+    "baselineTheme": "63af94c70c6f63626e797634f78baf1a6bf502156ebcc1617a235a4300476e09",
+    "candidateTheme": "e30a4b077bbfa89280a44ce482c1411a625b62e96c3d304dcb45b65ac89ef276",
+    "candidatePortal": "135ddb443fde351e8702e0a3bc803a224541b4faa205ad67824c932949fa70ee",
+    "candidateI18n": "30ed9ca9fb0e0eff6c1b0d4eb0bcfd24b014ca0659a885ea9cd2ecc631da4d1b"
+  },
+  "baselineNative": {
+    "summarySha256": "5190bd1b16eae8f3235f800c405764378a7b231fb2f64c1a99c1d46e1797905e",
+    "samples": 48,
+    "lightTargetFailures": 32,
+    "darkSentinels": 16,
+    "labelRatio": 1.26533,
+    "helpRatio": 2.021153
+  }
+}

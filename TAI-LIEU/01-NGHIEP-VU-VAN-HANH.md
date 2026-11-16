@@ -3027,3 +3027,16 @@ requiredstar+screenreadertext giữ,54fontsentinels/2viewedcrops/oneFindClearGET
 [Báo cáo](../docs/reports/pdf-merge-fields-20261116.md).
 KhôngnhậnwholeUI:chữlightMergecònnhạt vàtoastreferencecòntechnical,
 hai phiếuAGYriêng đãgiao. Đơnvịcopynày chưadeploy;fullgoal/motioncònmở.
+
+## Độ rõ chữ Gộp PDF sáng — chốt local17/11/2026
+
+PR752đãgiao:CI43908810643/deploy43911268504/runtime2c7eba2c,
+services/health/5assetsexact;receipts6922389994/6922948333.
+Ứngviênmàuchỉđổi2foregroundMerge lightlabel/help,khôngfont/layout/controls/
+dark. TrueMergeBASE/GREENmỗi3cases48textsamples24controls:
+32lighttargetslabel1.265330→12.351555/help2.021153→5.797099:1.
+16darktextsamples/fonts/geometry/24controlsexact;582NodePASS,
+9tables/schema/6plans18scenes/source/evidence/Jobs0/0productwrites.
+[Báo cáo](../docs/reports/pdf-merge-contrast-20261116.md).
+Crophelp-regionđãxem,stickyheaderchelabel/selecttrongcrop,khôngwholefield
+visual/AXclaim. Màuchưadeploy;referencefeedback/defaultnotes/fullgoal/motioncòn.

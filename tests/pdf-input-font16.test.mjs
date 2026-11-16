@@ -5,12 +5,13 @@ import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {pdfInputFont16HistoricalCss as historicalCss} from "./helpers/pdf-input-font16-snapshot.mjs";
 import {pdfMergeFieldsHistoricalPortalSource,pdfMergeFieldsHistoricalI18nSource} from "./helpers/pdf-merge-fields-snapshot.mjs";
+import {pdfMergeContrastHistoricalCss} from "./helpers/pdf-merge-contrast-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/pdf-input-font16-reviewed.json",import.meta.url),"utf8"));
 assert.match(fixture.base,/^[a-f0-9]{40}$/,"Bind the actual delivered full 40-hex BASE before git; never use a guessed merge SHA");
 const file="static/portal/portal-theme.css",hash=value=>createHash("sha256").update(value).digest("hex");
 const count=(source,part)=>source.split(part).length-1;
 // LF only at the source-read boundary, matching the campaign's reviewed cross-platform hashes.
-const current=fs.readFileSync(file,"utf8").replace(/\r\n/g,"\n");
+const current=pdfMergeContrastHistoricalCss(fs.readFileSync(file,"utf8").replace(/\r\n/g,"\n"));
 const readBase=file=>execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:30e6}).replace(/\r\n/g,"\n");
 const baseline=readBase(file),edit=fixture.changes[0];
 const rule='/* Keep PDF text controls readable on small screens. */\n@media (max-width: 767px) {\n  .portal-page.portal-pdf-split .portal-document-operation-form :is(input, select, textarea),\n  .portal-page.portal-pdf-merge .portal-document-operation-form :is(input, select, textarea),\n  .portal-page.portal-pdf-optimize .portal-document-operation-form :is(input, select, textarea) {\n    font-size: 16px;\n  }\n}';

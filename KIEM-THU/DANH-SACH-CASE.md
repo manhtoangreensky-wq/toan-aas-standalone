@@ -1476,3 +1476,17 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | PM-SEARCH | nặng | FindClearGET/Tab→Find | Fields/history/notesexact |0productwrites |
 | PM-DATA | nặng |9tables/6plans18scenes | Source/evidence/Jobs0giữ | Noreseed/egress/provider/wallet |
 | PM-DELIVERY | nặng | ExactCI/merge/deploy/runtime | Receiptđúngrevision | Contrast/toast/M-FINALcònmở |
+
+## PDF-MERGE-CONTRAST-20261116 — Issue689,local17/11
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| MC-TARGET | nặng |32Mergelighttargets | Foreground≥4.5:1 | Label12.351555/help5.797099:1 |
+| MC-BASE | nặng | TrueMergeBASE3cases |32existingREDđođúng |1.265330/2.021153:1,nobaselinereuse |
+| MC-PAINT | nặng | Actualalpha/filter/blend/image | Opaquebacking trướcSRGBratio |48textsamplesmỗiphase |
+| MC-SENTINEL | nặng |16darksamples24controls | Fonts/geometry/otherstylesexact | No dark/style regression |
+| MC-SCOPE | nặng | OneCSSreplacement | Wholeoutside/24LF/allPython | Exactworkerreplay/inverse |
+| MC-HISTORY | nặng | NewtestrawCSS/oldhashes | ThreefiniteCSSadapters/assertionsgiữ |582NodePASS |
+| MC-DATA | nặng |9tables/6plans18scenes | Source/evidence/Jobs0giữ | [PhiênMC](PHIEN-PDF-MERGE-CONTRAST-20261116.md) |
+| MC-VISUAL | nặng | Help-regioncrop | Khôngnhậnlabel/selectvisualtừcropoccluded | FullUX/AXvẫnmở |
+| MC-DELIVERY | nặng | ExactCI/merge/deploy/runtime | Receiptđúngrevision | Referencefeedback/M-FINALcònmở |

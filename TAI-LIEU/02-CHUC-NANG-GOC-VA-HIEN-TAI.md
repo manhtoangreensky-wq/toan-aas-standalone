@@ -2236,3 +2236,15 @@ Nguồn thực:pdfMergeFormFields tạiBASEb9f714e6,khôngthêm engine/chức n�
 | Cóthểxóadấubắtbuộckhiso tênfield | Mark+screenreadertextgiữriêng | Native3locale/first2required |
 | Fontunitcònghichưadeploy | PR751b9f714e6đãgiao | CI43880993436/deploy43903263914/receipt6918381914 |
 | CopyđúngcóthểbịhiểulàtoànUIđạt | Contrast/toasttechnicalcònriêng | HaiAGYcontracts6922273292/6922273259 |
+
+## Độ rõ chữ Gộp PDF — đối chiếu17/11/2026
+
+Nguồn thực:Merge lightCSS tạiBASE2c7eba2c. Khôngthêmchức nănghayengine.
+
+| Trước | Ứng viên | Bằng chứng/giới hạn |
+|---|---|---|
+| Merge lightlabel/helpnhạt |2semanticforegroundcolors |32targets1.265330/2.021153→12.351555/5.797099:1 |
+| CóthểlấymàutừảnhhoặcSplitbase | TrueMergeactualBASE/GREEN |48textsamplesmỗiphase,opaquepaintproof |
+| Cóthểđổifont/layout/darkké | Chỉforegroundlightđổi |24controlsexact/16darksentinels/wholeoutside |
+| Copyunitcònghichưadeploy | PR7522c7eba2cđãgiao | CI43908810643/deploy43911268504/receipt6922389994 |
+| CropcóthểđượccoinhưfullvisualPASS | Chỉhelp-regionwitness | Label/selectoccluded,wholeUX/AXvẫnmở |
