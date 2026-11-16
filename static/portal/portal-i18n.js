@@ -22322,6 +22322,19 @@
     docMetricUiTxtFile: "TXT 文字文件"
   });
 
+  Object.assign(MESSAGES.vi, {
+    docPdfGuardUiTitle: "Chưa mở được công cụ PDF",
+    docPdfGuardUiBody: "Không thể tải công cụ lúc này. Vui lòng tải lại trang."
+  });
+  Object.assign(MESSAGES.en, {
+    docPdfGuardUiTitle: "PDF tool could not be opened",
+    docPdfGuardUiBody: "The tool could not be loaded right now. Please reload the page."
+  });
+  Object.assign(MESSAGES.zh, {
+    docPdfGuardUiTitle: "无法打开 PDF 工具",
+    docPdfGuardUiBody: "目前无法加载工具，请重新加载页面。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

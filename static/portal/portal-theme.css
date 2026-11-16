@@ -23878,3 +23878,11 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-pdf-split .portal-field
 html:not([data-portal-theme="dark"]) .portal-page.portal-pdf-split .portal-field-help {
   color: var(--portal-muted);
 }
+
+/* Keep PDF compression field names and guidance readable in the light theme. */
+html:not([data-portal-theme="dark"]) .portal-page.portal-pdf-optimize .portal-field > label {
+  color: var(--portal-text);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-pdf-optimize .portal-field-help {
+  color: var(--portal-muted);
+}

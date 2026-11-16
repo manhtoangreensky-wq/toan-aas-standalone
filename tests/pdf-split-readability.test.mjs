@@ -3,8 +3,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {PDF_SPLIT_READABILITY_ADDITION as addition,pdfSplitReadabilityHistoricalCss} from "./helpers/pdf-split-readability-snapshot.mjs";
+import {pdfUsabilityHistoricalCss} from "./helpers/pdf-usability-snapshot.mjs";
 const file="static/portal/portal-theme.css",base=execFileSync("git",["show","44134931e2adb08fecb0cad68c4eac19a6903c7f:"+file],{encoding:"utf8",maxBuffer:3e6}).replace(/\r\n/g,"\n");
-const source=fs.readFileSync(file,"utf8").replace(/\r\n/g,"\n");
+const source=pdfUsabilityHistoricalCss(fs.readFileSync(file,"utf8").replace(/\r\n/g,"\n"));
 test("Split label/help use light semantic colors only, every prior theme byte unchanged",()=>{
   assert.equal(source===base+addition,true,"Exact two-rule EOF append only");
   assert.equal(source.split(addition).length-1,1);
