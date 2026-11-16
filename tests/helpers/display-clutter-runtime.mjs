@@ -3,12 +3,15 @@ import path from "node:path";
 import assert from "node:assert/strict";
 import {execFileSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
+import {documentCardDisplayHistoricalPortalSource,documentCardDisplayHistoricalI18nSource} from "./document-card-display-snapshot.mjs";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../..");
 export const DISPLAY_CLUTTER_BASE="206eccc2eabe546ac11be89c26423eb9bf58df81";
 export function displayClutterSources(historical=false){
-  return Object.fromEntries(Object.entries({portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js"}).map(([key,file])=>[
-    key,(historical?execFileSync("git",["show",DISPLAY_CLUTTER_BASE+":"+file],{cwd:root,encoding:"utf8",maxBuffer:30e6}):
-      fs.readFileSync(path.join(root,file),"utf8")).replace(/\r\n/g,"\n")]));
+  return Object.fromEntries(Object.entries({portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js"}).map(([key,file])=>{
+    const source=(historical?execFileSync("git",["show",DISPLAY_CLUTTER_BASE+":"+file],{cwd:root,encoding:"utf8",maxBuffer:30e6}):
+      fs.readFileSync(path.join(root,file),"utf8")).replace(/\r\n/g,"\n");
+    return [key,key==="portal"?documentCardDisplayHistoricalPortalSource(source):documentCardDisplayHistoricalI18nSource(source)];
+  }));
 }
 export async function displayClutterRenderer(sources=displayClutterSources()){
   let helper=fs.readFileSync(path.join(root,"tests/helpers/chat-page-meta-runtime.mjs"),"utf8");

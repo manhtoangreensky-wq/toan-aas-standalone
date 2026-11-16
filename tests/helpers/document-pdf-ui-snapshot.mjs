@@ -3,9 +3,11 @@ import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {documentPdfSources} from './document-pdf-ui-runtime.mjs';
 import {displayClutterHistoricalPortalSource} from './display-clutter-snapshot.mjs';
+import {documentCardDisplayHistoricalSnapshot,documentCardDisplayHistoricalPortalSource,documentCardDisplayHistoricalI18nSource} from './document-card-display-snapshot.mjs';
 const fixture=JSON.parse(fs.readFileSync(new URL('../fixtures/document-pdf-ui-reviewed.json',import.meta.url),'utf8')),keys=new Set(Object.keys(fixture.vi)),hash=value=>createHash('sha256').update(value).digest('hex');
 assert.equal(keys.size,13);
 export function documentPdfHistoricalSnapshot(entries,locale){
+  entries=documentCardDisplayHistoricalSnapshot(entries,locale);
   const scoped=entries.filter(([key])=>/^(?:docHistoryUi|docPdf(?:Source|Page|Optimize)Ui)/.test(key));if(!scoped.length)return entries;
   const added=entries.filter(([key])=>keys.has(key));assert.equal(scoped.length,added.length,'Unreviewed PDF UI copy: unknown key');assert.equal(added.length,13,'Unreviewed PDF UI copy: missing key');
   assert.equal(hash(JSON.stringify(added)),fixture.binding.catalogHashes[locale],'Unreviewed PDF UI copy: value/order');return entries.filter(([key])=>!keys.has(key));
@@ -15,7 +17,7 @@ const marker='  verifyEqualKeysets();',blocks=fixture.binding.catalogGroups.map(
   assert.equal(hash(block),group.hash,'Exact reviewed PDF UI addition');return block;
 });
 export function documentPdfHistoricalI18nSource(value){
-  let source=value.replace(/\r\n/g,'\n');if(!/(?:docHistoryUi|docPdf(?:Source|Page|Optimize)Ui)/.test(source))return source;
+  let source=documentCardDisplayHistoricalI18nSource(value);if(!/(?:docHistoryUi|docPdf(?:Source|Page|Optimize)Ui)/.test(source))return source;
   for(const block of [...blocks].reverse()){assert.equal(source.split(block).length-1,1,'Unreviewed PDF UI i18n addition');source=source.replace(block,marker);}return source;
 }
 function scope(source,name){
@@ -27,7 +29,7 @@ const original=documentPdfSources(true).portal,oldParts=fixture.binding.chunks.m
   const old=index<3?text:(assert.equal(text.length,1),text[0]);assert.equal(hash(old),edit.oldHash,'Reviewed document-card baseline chunk');return old;
 });
 export function documentPdfHistoricalPortalSource(value){
-  let source=displayClutterHistoricalPortalSource(value),has=/docHistoryUi|docPdf(?:Source|Page|Optimize)Ui/.test(source);
+  let source=displayClutterHistoricalPortalSource(documentCardDisplayHistoricalPortalSource(value)),has=/docHistoryUi|docPdf(?:Source|Page|Optimize)Ui/.test(source);
   if(!has)has=fixture.binding.chunks.slice(3).some(edit=>source.includes('  function '+edit.name+'(')&&scope(source,edit.name).text.split('\n').includes('      ${renderNotes(page)}'));
   if(!has)return source;
   for(let k=fixture.binding.chunks.length-1;k>=0;k--){

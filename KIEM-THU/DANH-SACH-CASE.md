@@ -1387,3 +1387,17 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |SR-CHAIN|nặng|PDFinverseFIRSTChatCSS|7NodePASS/oldhashunknownsretained|Khôngmaskoutside|
 |SR-DATA|nặng|9tables/6plans18scenes/source|0productwrites/reseed/egress/Jobs0|NativeBASE3/GREEN3|
 |SR-DELIVERY|nặng|ExactCI/merge/deploy/runtimeassets|Receipt riêng|WholePDF/AX/auth/M-FINALmở|
+
+## DOCUMENT-CARD-DISPLAY-20261116 —Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|CD-NAMES|nặng|9kindfallback/icon/customername|6names2iconlabelsVIENZH/customerliteral|13RED→503NodePASS|
+|CD-SELECTED|nặng|Count/range/languagebranches|11keys/coercionsbranchordergiữ|Actualfullbundle|
+|CD-DATE|nặng|Priority/empty/invalid/formattererror|Locale/datehelperunchanged/0datachange|IndependentIntl/oneescape|
+|CD-LOCALE|nặng|SAMEVM/fallback/frozenkeyorder|19keys57values/unknownmissingrejected|[Phiên CD](PHIEN-DOCUMENT-CARD-DISPLAY-20261116.md)|
+|CD-CONTROLS|nặng|9kinds/4states/4strictcaps|WholeHTMLoutside4slots/metrics/actions exact|No customertranslation|
+|CD-SOURCE|nặng|6workerreplayDATEfirst|2files/inverse/outside/22LFgiữ|CI+1commandonly|
+|CD-NATIVE|nặng|3signedlocale/docshistory375|ActualemptyGET/1VIcrop/0fakecards|FilledfieldsVM-only|
+|CD-DATA|nặng|9tables/6plans18scenes/source|0productwrites/reseed/egress/Jobs0|15parenthashesretained|
+|CD-DELIVERY|nặng|ExactCI/merge/deploy/runtimeassets|Receipt riêng|WholePDFlocaleAXauthM-FINALmở|

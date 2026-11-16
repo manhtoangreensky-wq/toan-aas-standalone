@@ -22205,6 +22205,77 @@
     docPdfOptimizeUiHelp: "创建保留原内容的副本。只有检查确认文件大小明显减小时才提供文件；原文件保持不变。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    docCardNameUiOcrWord: "Word từ PDF quét",
+    docCardNameUiPdfText: "Văn bản từ PDF",
+    docCardNameUiImageText: "Văn bản từ ảnh",
+    docCardNameUiWord: "Tài liệu Word",
+    docCardNameUiImages: "Ảnh từ PDF",
+    docCardNameUiPdf: "Tài liệu PDF",
+    docCardNameUiTextIcon: "Chữ",
+    docCardNameUiImageIcon: "Ảnh"
+  });
+  Object.assign(MESSAGES.en, {
+    docCardNameUiOcrWord: "Word from scanned PDF",
+    docCardNameUiPdfText: "Text from PDF",
+    docCardNameUiImageText: "Text from image",
+    docCardNameUiWord: "Word document",
+    docCardNameUiImages: "Images from PDF",
+    docCardNameUiPdf: "PDF document",
+    docCardNameUiTextIcon: "Text",
+    docCardNameUiImageIcon: "Image"
+  });
+  Object.assign(MESSAGES.zh, {
+    docCardNameUiOcrWord: "扫描 PDF 转 Word",
+    docCardNameUiPdfText: "PDF 文字",
+    docCardNameUiImageText: "图片文字",
+    docCardNameUiWord: "Word 文档",
+    docCardNameUiImages: "PDF 图片",
+    docCardNameUiPdf: "PDF 文档",
+    docCardNameUiTextIcon: "文字",
+    docCardNameUiImageIcon: "图片"
+  });
+
+  Object.assign(MESSAGES.vi, {
+    docSelectedUiOptimize: "Tệp gốc được giữ nguyên",
+    docSelectedUiMerge: "{count} tệp PDF theo thứ tự đã chọn",
+    docSelectedUiImages: "{count} ảnh theo thứ tự đã chọn",
+    docSelectedUiAllPages: "Chuyển toàn bộ trang PDF thành ảnh ở kích thước gấp đôi",
+    docSelectedUiWord: "Lấy văn bản có thể chọn trong PDF",
+    docSelectedUiScanWord: "Chuyển PDF quét thành Word · {language}",
+    docSelectedUiPdfText: "Đọc chữ từ PDF · {language}",
+    docSelectedUiImageText: "Đọc chữ từ ảnh · {language}",
+    docSelectedUiPage: "Trang {start}",
+    docSelectedUiRange: "Trang {start}–{end}",
+    docSelectedUiChecking: "Đang kiểm tra số trang"
+  });
+  Object.assign(MESSAGES.en, {
+    docSelectedUiOptimize: "The original file is kept unchanged",
+    docSelectedUiMerge: "{count} PDF files in the selected order",
+    docSelectedUiImages: "{count} images in the selected order",
+    docSelectedUiAllPages: "Convert all PDF pages to images at twice the size",
+    docSelectedUiWord: "Extract selectable text from the PDF",
+    docSelectedUiScanWord: "Convert scanned PDF to Word · {language}",
+    docSelectedUiPdfText: "Read text from PDF · {language}",
+    docSelectedUiImageText: "Read text from image · {language}",
+    docSelectedUiPage: "Page {start}",
+    docSelectedUiRange: "Pages {start}–{end}",
+    docSelectedUiChecking: "Checking page numbers"
+  });
+  Object.assign(MESSAGES.zh, {
+    docSelectedUiOptimize: "原文件保持不变",
+    docSelectedUiMerge: "按所选顺序排列的 {count} 个 PDF 文件",
+    docSelectedUiImages: "按所选顺序排列的 {count} 张图片",
+    docSelectedUiAllPages: "将所有 PDF 页面转换为两倍尺寸的图片",
+    docSelectedUiWord: "提取 PDF 中可选择的文字",
+    docSelectedUiScanWord: "将扫描 PDF 转为 Word · {language}",
+    docSelectedUiPdfText: "读取 PDF 文字 · {language}",
+    docSelectedUiImageText: "读取图片文字 · {language}",
+    docSelectedUiPage: "第 {start} 页",
+    docSelectedUiRange: "第 {start}–{end} 页",
+    docSelectedUiChecking: "正在检查页码"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {
