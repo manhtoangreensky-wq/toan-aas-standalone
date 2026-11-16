@@ -3014,3 +3014,16 @@ không tính workerfault và không chạy lại564tests.
 [Báo cáo](../docs/reports/pdf-input-font16-20261116.md).
 Chưa triển khai đơn vị font; không nhận Safari/iOS/wholeAX/signed UI/output.
 Mergefields/defaultnotes/công cụ khác/fullgoal/motion còn theo checklist.
+
+## Nhãn chọn Gộp PDF —16/11/2026, ứng viên riêng
+
+PR751 đã giao:CI43880993436/deploy43903263914/runtimeb9f714e6,
+services/health/5assets exact;receipts6918381914/6921770411.
+Ứng viên dịch label/emptyLabel/help của8ôchọn PDF sangVI/EN/ZH bằng
+7keys21values,giữ thứtự/tên/quyền/validation/cáchgộp vàcustomertext.
+BASE8RED→576NodePASS/29PythonPASS;native6cases48fields144copy slots,
+requiredstar+screenreadertext giữ,54fontsentinels/2viewedcrops/oneFindClearGET.
+9tables/schema/6plans18scenes/source/evidence/Jobs0,0productwrites.
+[Báo cáo](../docs/reports/pdf-merge-fields-20261116.md).
+KhôngnhậnwholeUI:chữlightMergecònnhạt vàtoastreferencecòntechnical,
+hai phiếuAGYriêng đãgiao. Đơnvịcopynày chưadeploy;fullgoal/motioncònmở.

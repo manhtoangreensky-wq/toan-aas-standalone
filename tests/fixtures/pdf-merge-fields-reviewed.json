@@ -1,0 +1,148 @@
+{
+  "specId": "PDF-MERGE-FIELDS-CUSTOMER-20261116",
+  "base": "b9f714e62833e6d3267bf73617db03dd520c15d6",
+  "proposals": [
+    {
+      "name": "pdf-merge-fields-public-nov16-r1",
+      "sha256": "6f0869073217fc91fa1df990ee2315602588b23b3df9f53b4b7f8a42483496e5"
+    }
+  ],
+  "changes": [
+    {
+      "file": "static/portal/portal.js",
+      "count": 1,
+      "old": "        label: `PDF nguồn ${position}${required ? \"\" : \" (tùy chọn)\"}`,",
+      "new": "        label: required\n          ? uiText(\"docPdfMergeUiSourceLabel\", `PDF thứ ${position}`, { position })\n          : uiText(\"docPdfMergeUiSourceOptionalLabel\", `PDF thứ ${position} (tùy chọn)`, { position }),"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "count": 1,
+      "old": "        emptyLabel: required ? `Chọn PDF thứ ${position}` : \"Không thêm PDF\",\n        required,\n        help: position === 1\n          ? \"Thứ tự slot quyết định thứ tự trang output. Chỉ PDF active thuộc signed Web account hiện tại được liệt kê.\"\n          : position === 2\n            ? \"Cần tối thiểu hai nguồn khác nhau. Không dùng URL, path hoặc file browser trong bước này.\"\n            : \"Tùy chọn; để trống nếu không cần thêm nguồn. Một PDF chỉ có thể xuất hiện một lần.\"",
+      "new": "        emptyLabel: required\n          ? uiText(\"docPdfMergeUiSelect\", `Chọn PDF thứ ${position}`, { position })\n          : uiText(\"docPdfMergeUiNoExtra\", \"Không thêm PDF\"),\n        required,\n        help: position === 1\n          ? uiText(\"docPdfMergeUiOrderHelp\", \"PDF được gộp theo thứ tự từ trên xuống dưới. Chọn các tệp trong kho tệp của bạn.\")\n          : position === 2\n            ? uiText(\"docPdfMergeUiMinimumHelp\", \"Chọn ít nhất hai PDF khác nhau.\")\n            : uiText(\"docPdfMergeUiOptionalHelp\", \"Để trống nếu không cần thêm tệp. Mỗi PDF chỉ được chọn một lần.\")"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "count": 1,
+      "old": "  verifyEqualKeysets();",
+      "new": "  Object.assign(MESSAGES.vi, {\n    docPdfMergeUiSourceLabel: \"PDF thứ {position}\",\n    docPdfMergeUiSourceOptionalLabel: \"PDF thứ {position} (tùy chọn)\",\n    docPdfMergeUiSelect: \"Chọn PDF thứ {position}\",\n    docPdfMergeUiNoExtra: \"Không thêm PDF\",\n    docPdfMergeUiOrderHelp: \"PDF được gộp theo thứ tự từ trên xuống dưới. Chọn các tệp trong kho tệp của bạn.\",\n    docPdfMergeUiMinimumHelp: \"Chọn ít nhất hai PDF khác nhau.\",\n    docPdfMergeUiOptionalHelp: \"Để trống nếu không cần thêm tệp. Mỗi PDF chỉ được chọn một lần.\"\n  });\n\n  Object.assign(MESSAGES.en, {\n    docPdfMergeUiSourceLabel: \"PDF {position}\",\n    docPdfMergeUiSourceOptionalLabel: \"PDF {position} (optional)\",\n    docPdfMergeUiSelect: \"Choose PDF {position}\",\n    docPdfMergeUiNoExtra: \"No additional PDF\",\n    docPdfMergeUiOrderHelp: \"PDFs are merged from top to bottom. Choose files from your file vault.\",\n    docPdfMergeUiMinimumHelp: \"Choose at least two different PDFs.\",\n    docPdfMergeUiOptionalHelp: \"Leave this empty if no more files are needed. Each PDF can be selected only once.\"\n  });\n\n  Object.assign(MESSAGES.zh, {\n    docPdfMergeUiSourceLabel: \"第 {position} 个 PDF\",\n    docPdfMergeUiSourceOptionalLabel: \"第 {position} 个 PDF（可选）\",\n    docPdfMergeUiSelect: \"选择第 {position} 个 PDF\",\n    docPdfMergeUiNoExtra: \"不添加 PDF\",\n    docPdfMergeUiOrderHelp: \"PDF 将按从上到下的顺序合并。请从文件库中选择文件。\",\n    docPdfMergeUiMinimumHelp: \"请至少选择两个不同的 PDF。\",\n    docPdfMergeUiOptionalHelp: \"无需添加更多文件时可留空。每个 PDF 只能选择一次。\"\n  });\n\n  verifyEqualKeysets();"
+    }
+  ],
+  "rows": [
+    [
+      "docPdfMergeUiSourceLabel",
+      "PDF thứ {position}",
+      "PDF {position}",
+      "第 {position} 个 PDF"
+    ],
+    [
+      "docPdfMergeUiSourceOptionalLabel",
+      "PDF thứ {position} (tùy chọn)",
+      "PDF {position} (optional)",
+      "第 {position} 个 PDF（可选）"
+    ],
+    [
+      "docPdfMergeUiSelect",
+      "Chọn PDF thứ {position}",
+      "Choose PDF {position}",
+      "选择第 {position} 个 PDF"
+    ],
+    [
+      "docPdfMergeUiNoExtra",
+      "Không thêm PDF",
+      "No additional PDF",
+      "不添加 PDF"
+    ],
+    [
+      "docPdfMergeUiOrderHelp",
+      "PDF được gộp theo thứ tự từ trên xuống dưới. Chọn các tệp trong kho tệp của bạn.",
+      "PDFs are merged from top to bottom. Choose files from your file vault.",
+      "PDF 将按从上到下的顺序合并。请从文件库中选择文件。"
+    ],
+    [
+      "docPdfMergeUiMinimumHelp",
+      "Chọn ít nhất hai PDF khác nhau.",
+      "Choose at least two different PDFs.",
+      "请至少选择两个不同的 PDF。"
+    ],
+    [
+      "docPdfMergeUiOptionalHelp",
+      "Để trống nếu không cần thêm tệp. Mỗi PDF chỉ được chọn một lần.",
+      "Leave this empty if no more files are needed. Each PDF can be selected only once.",
+      "无需添加更多文件时可留空。每个 PDF 只能选择一次。"
+    ]
+  ],
+  "binding": {
+    "baselinePortal": "956937a837b71ba3bde13242365168071d0fccc4c5a694cd90df69633244c932",
+    "candidatePortal": "135ddb443fde351e8702e0a3bc803a224541b4faa205ad67824c932949fa70ee",
+    "baselineI18n": "dc5e3c54f1a240c9357e2dc8a3c532002b66f0783abbea4858e38c1b653cc4fd",
+    "candidateI18n": "30ed9ca9fb0e0eff6c1b0d4eb0bcfd24b014ca0659a885ea9cd2ecc631da4d1b",
+    "candidateTheme": "63af94c70c6f63626e797634f78baf1a6bf502156ebcc1617a235a4300476e09"
+  },
+  "nativeCopySource": {
+    "fixture": "tests/fixtures/pdf-customer-cleanup-reviewed.json",
+    "sha256": "b1cb4719cf92b776a02ceac2e43075a5c035ef01f27e663fb6e316778cd4c521"
+  },
+  "vi": {
+    "docPdfReadyUiNoPermission": "Tài khoản này chưa được phép dùng công cụ.",
+    "docPdfReadyUiOpenFiles": "Mở kho tệp",
+    "docPdfReadyUiRefresh": "Làm mới",
+    "docPdfReadyUiHistoryBody": "Xem tiến trình và tải tệp khi xử lý hoàn tất.",
+    "docPdfReadyUiOriginalKept": "Tệp gốc được giữ nguyên.",
+    "docPdfReadyUiChooseOne": "Chọn một PDF trong kho tệp để bắt đầu.",
+    "docPdfReadyUiChooseTwo": "Chọn ít nhất hai PDF trong kho tệp để bắt đầu.",
+    "docPdfReadyUiSplitTitle": "Tách PDF",
+    "docPdfReadyUiSplitDescription": "Chọn một trang hoặc một dải trang liên tiếp trong PDF.",
+    "docPdfReadyUiSplitConfirm": "Tách các trang đã chọn thành tệp PDF mới? Tệp gốc được giữ nguyên.",
+    "docPdfReadyUiSplitHistory": "PDF đã tách",
+    "docPdfReadyUiMergeTitle": "Gộp PDF",
+    "docPdfReadyUiMergeDescription": "Chọn từ hai đến tám PDF theo thứ tự muốn gộp. Mỗi tệp tối đa 20 MB, tổng tối đa 40 MB và 30 trang.",
+    "docPdfReadyUiMergeConfirm": "Gộp các tệp PDF theo đúng thứ tự đã chọn? Các tệp gốc được giữ nguyên.",
+    "docPdfReadyUiMergeHistory": "PDF đã gộp",
+    "docPdfReadyUiOptimizeTitle": "Nén PDF",
+    "docPdfReadyUiOptimizeDescription": "Chọn PDF muốn giảm dung lượng, tối đa 20 MB và 30 trang. Tệp gốc không bị thay đổi.",
+    "docPdfReadyUiOptimizeConfirm": "Nén tệp PDF đã chọn? Tệp gốc được giữ nguyên.",
+    "docPdfReadyUiOptimizeHistory": "PDF đã nén"
+  },
+  "en": {
+    "docPdfReadyUiNoPermission": "This account is not allowed to use this tool.",
+    "docPdfReadyUiOpenFiles": "Open file library",
+    "docPdfReadyUiRefresh": "Refresh",
+    "docPdfReadyUiHistoryBody": "Track progress and download files when processing is complete.",
+    "docPdfReadyUiOriginalKept": "Original files remain unchanged.",
+    "docPdfReadyUiChooseOne": "Choose a PDF from your file library to begin.",
+    "docPdfReadyUiChooseTwo": "Choose at least two PDFs from your file library to begin.",
+    "docPdfReadyUiSplitTitle": "Split PDF",
+    "docPdfReadyUiSplitDescription": "Choose one page or a consecutive page range from the PDF.",
+    "docPdfReadyUiSplitConfirm": "Split the selected pages into a new PDF? The original file remains unchanged.",
+    "docPdfReadyUiSplitHistory": "Split PDFs",
+    "docPdfReadyUiMergeTitle": "Merge PDFs",
+    "docPdfReadyUiMergeDescription": "Choose two to eight PDFs in the order to merge. Each file can be up to 20 MB, with a total limit of 40 MB and 30 pages.",
+    "docPdfReadyUiMergeConfirm": "Merge the PDFs in the selected order? The original files remain unchanged.",
+    "docPdfReadyUiMergeHistory": "Merged PDFs",
+    "docPdfReadyUiOptimizeTitle": "Compress PDF",
+    "docPdfReadyUiOptimizeDescription": "Choose a PDF up to 20 MB and 30 pages to reduce its file size. The original file is not changed.",
+    "docPdfReadyUiOptimizeConfirm": "Compress the selected PDF? The original file remains unchanged.",
+    "docPdfReadyUiOptimizeHistory": "Compressed PDFs"
+  },
+  "zh": {
+    "docPdfReadyUiNoPermission": "此账户尚无权使用此工具。",
+    "docPdfReadyUiOpenFiles": "打开文件库",
+    "docPdfReadyUiRefresh": "刷新",
+    "docPdfReadyUiHistoryBody": "查看处理进度，并在完成后下载文件。",
+    "docPdfReadyUiOriginalKept": "原始文件保持不变。",
+    "docPdfReadyUiChooseOne": "从文件库中选择一个 PDF 以开始。",
+    "docPdfReadyUiChooseTwo": "从文件库中选择至少两个 PDF 以开始。",
+    "docPdfReadyUiSplitTitle": "拆分 PDF",
+    "docPdfReadyUiSplitDescription": "选择 PDF 中的一页或连续页码范围。",
+    "docPdfReadyUiSplitConfirm": "将所选页面拆分为新的 PDF？原始文件保持不变。",
+    "docPdfReadyUiSplitHistory": "已拆分的 PDF",
+    "docPdfReadyUiMergeTitle": "合并 PDF",
+    "docPdfReadyUiMergeDescription": "按合并顺序选择 2 至 8 个 PDF。每个文件不超过 20 MB，总计不超过 40 MB 和 30 页。",
+    "docPdfReadyUiMergeConfirm": "按所选顺序合并 PDF？原始文件保持不变。",
+    "docPdfReadyUiMergeHistory": "已合并的 PDF",
+    "docPdfReadyUiOptimizeTitle": "压缩 PDF",
+    "docPdfReadyUiOptimizeDescription": "选择要减小文件大小的 PDF，文件不超过 20 MB 且不超过 30 页。原始文件不会被更改。",
+    "docPdfReadyUiOptimizeConfirm": "压缩所选的 PDF？原始文件保持不变。",
+    "docPdfReadyUiOptimizeHistory": "已压缩的 PDF"
+  }
+}

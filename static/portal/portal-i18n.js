@@ -22399,6 +22399,36 @@
     docPdfReadyUiOptimizeHistory: "已压缩的 PDF"
   });
 
+  Object.assign(MESSAGES.vi, {
+    docPdfMergeUiSourceLabel: "PDF thứ {position}",
+    docPdfMergeUiSourceOptionalLabel: "PDF thứ {position} (tùy chọn)",
+    docPdfMergeUiSelect: "Chọn PDF thứ {position}",
+    docPdfMergeUiNoExtra: "Không thêm PDF",
+    docPdfMergeUiOrderHelp: "PDF được gộp theo thứ tự từ trên xuống dưới. Chọn các tệp trong kho tệp của bạn.",
+    docPdfMergeUiMinimumHelp: "Chọn ít nhất hai PDF khác nhau.",
+    docPdfMergeUiOptionalHelp: "Để trống nếu không cần thêm tệp. Mỗi PDF chỉ được chọn một lần."
+  });
+
+  Object.assign(MESSAGES.en, {
+    docPdfMergeUiSourceLabel: "PDF {position}",
+    docPdfMergeUiSourceOptionalLabel: "PDF {position} (optional)",
+    docPdfMergeUiSelect: "Choose PDF {position}",
+    docPdfMergeUiNoExtra: "No additional PDF",
+    docPdfMergeUiOrderHelp: "PDFs are merged from top to bottom. Choose files from your file vault.",
+    docPdfMergeUiMinimumHelp: "Choose at least two different PDFs.",
+    docPdfMergeUiOptionalHelp: "Leave this empty if no more files are needed. Each PDF can be selected only once."
+  });
+
+  Object.assign(MESSAGES.zh, {
+    docPdfMergeUiSourceLabel: "第 {position} 个 PDF",
+    docPdfMergeUiSourceOptionalLabel: "第 {position} 个 PDF（可选）",
+    docPdfMergeUiSelect: "选择第 {position} 个 PDF",
+    docPdfMergeUiNoExtra: "不添加 PDF",
+    docPdfMergeUiOrderHelp: "PDF 将按从上到下的顺序合并。请从文件库中选择文件。",
+    docPdfMergeUiMinimumHelp: "请至少选择两个不同的 PDF。",
+    docPdfMergeUiOptionalHelp: "无需添加更多文件时可留空。每个 PDF 只能选择一次。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

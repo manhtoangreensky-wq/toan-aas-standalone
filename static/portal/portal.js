@@ -25456,16 +25456,20 @@ function renderAutoPostHub(page, context) {
       const required = position <= 2;
       return {
         name: `source_asset_id_${position}`,
-        label: `PDF nguồn ${position}${required ? "" : " (tùy chọn)"}`,
+        label: required
+          ? uiText("docPdfMergeUiSourceLabel", `PDF thứ ${position}`, { position })
+          : uiText("docPdfMergeUiSourceOptionalLabel", `PDF thứ ${position} (tùy chọn)`, { position }),
         control: "select",
         optionsFrom: "pdfVaultAssets", referencePicker: position === 1 ? "document-pdf" : "",
-        emptyLabel: required ? `Chọn PDF thứ ${position}` : "Không thêm PDF",
+        emptyLabel: required
+          ? uiText("docPdfMergeUiSelect", `Chọn PDF thứ ${position}`, { position })
+          : uiText("docPdfMergeUiNoExtra", "Không thêm PDF"),
         required,
         help: position === 1
-          ? "Thứ tự slot quyết định thứ tự trang output. Chỉ PDF active thuộc signed Web account hiện tại được liệt kê."
+          ? uiText("docPdfMergeUiOrderHelp", "PDF được gộp theo thứ tự từ trên xuống dưới. Chọn các tệp trong kho tệp của bạn.")
           : position === 2
-            ? "Cần tối thiểu hai nguồn khác nhau. Không dùng URL, path hoặc file browser trong bước này."
-            : "Tùy chọn; để trống nếu không cần thêm nguồn. Một PDF chỉ có thể xuất hiện một lần."
+            ? uiText("docPdfMergeUiMinimumHelp", "Chọn ít nhất hai PDF khác nhau.")
+            : uiText("docPdfMergeUiOptionalHelp", "Để trống nếu không cần thêm tệp. Mỗi PDF chỉ được chọn một lần.")
       };
     });
   }

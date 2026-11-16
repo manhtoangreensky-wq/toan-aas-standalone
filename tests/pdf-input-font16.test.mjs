@@ -4,6 +4,7 @@ import fs from "node:fs";
 import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {pdfInputFont16HistoricalCss as historicalCss} from "./helpers/pdf-input-font16-snapshot.mjs";
+import {pdfMergeFieldsHistoricalPortalSource,pdfMergeFieldsHistoricalI18nSource} from "./helpers/pdf-merge-fields-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/pdf-input-font16-reviewed.json",import.meta.url),"utf8"));
 assert.match(fixture.base,/^[a-f0-9]{40}$/,"Bind the actual delivered full 40-hex BASE before git; never use a guessed merge SHA");
 const file="static/portal/portal-theme.css",hash=value=>createHash("sha256").update(value).digest("hex");
@@ -40,7 +41,8 @@ test("all prior desktop rules and every outside stylesheet byte remain intact, w
 });
 test("portal and i18n stay byte-identical to delivered BASE and their frozen candidate hashes",()=>{
   for(const [file,key]of [["static/portal/portal.js","candidatePortal"],["static/portal/portal-i18n.js","candidateI18n"]]){
-    const raw=fs.readFileSync(file,"utf8").replace(/\r\n/g,"\n");
+    const inverse=file.endsWith("portal.js")?pdfMergeFieldsHistoricalPortalSource:pdfMergeFieldsHistoricalI18nSource;
+    const raw=inverse(fs.readFileSync(file,"utf8").replace(/\r\n/g,"\n"));
     assert.equal(raw,readBase(file));assert.equal(hash(raw),fixture.binding[key]);
   }
 });

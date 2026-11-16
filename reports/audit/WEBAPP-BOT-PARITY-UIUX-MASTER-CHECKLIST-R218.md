@@ -2195,7 +2195,9 @@ Evidence: docs/superpowers/specs/2026-11-16-pdf-usability.md, cùng Issue #689.
 Evidence: docs/superpowers/specs/2026-11-16-pdf-customer-cleanup.md,
 cùng Issue #689. Không thu hẹp goal hoặc mở checklist cạnh tranh.
 
-- [ ] PDF-INPUT-FONT16-20261116: control PDF hiện15px đã đo từ native
+- [x] PDF-INPUT-FONT16-20261116: finding15px mobileđãsửavàgiaoPR751,
+ 42nativecontrolmobile16px/28desktop15px. Dòng dưới là lịch sử phát hiện:
+  control PDF hiện15px đã đo từ native
   PDF-USABILITY; cleanup R1 phát hiện giả định QA>=16px sai,0case hoàn tất.
   R2 chỉ nghiệm thu floor baseline15px và ghi các control nhỏ; không đóng
   mobile16px/iOS/wholeAX. Giao Antigravity sửa riêng sau đơn vị cleanup,
@@ -2218,9 +2220,42 @@ cùng Issue #689. Không thu hẹp goal hoặc mở checklist cạnh tranh.
 - [x] Scope24LF/allappPython/CI+1/source+evidencebytes/9tables/6plans18scenes
  giữ/0productwrites/reseed/egress;source reviewC0/I0/M0.
 - [x] Docs/Tester READY;case1462lines156827LFbytes/metadata1PASS32deselected0.75s.
-- [ ] Provenance/exactheadCI→release gate.
-- [ ] Provenance/exactheadCI→exactmergedtree/deploy/runtime/receipt.
+- [x] PR751 exactCI43880993436bothSUCCESS/mergedtree70b2151e/whole diff0,
+ merge/runtimeb9f714e62833e6d3267bf73617db03dd520c15d6,
+ deploy43903263914SUCCESS/services/health/5assetsbyteexact;
+ receiptsIssue6918381914/PR6921770411. Safari/iOS/wholeAX khôngnhậntừfont.
 - [ ] MergefieldsR1code0/exact3changes/7keys21values,Issue6917766121;
   NOT_APPLIED/NOT_QA,đợiđúngthứtự. Remaininggoal/M-FINAL giữmở.
 
 Evidence:docs/superpowers/specs/2026-11-16-pdf-input-font16.md,cùngIssue689.
+
+## Nhãn chọn Gộp PDF — đơn vị16/11/2026
+
+- [x] PR751 đã giao trướcBASEb9f714e6;8fieldflow/fontCSSprotected.
+- [x] Antigravity3.8FlashHighR1code0/exact3changes/7keys21values,
+  Issue6917766121,NOT_APPLIED/NOT_QA;khônggọilạiphiếuđãđúng.
+- [x] BASE4PASS8RED2690.3269ms→exact3replay→onegroup29files576PASS/
+ 0FAIL/0SKIP46920.2491ms;Python29PASS0.90s;rights/controls/customertext/
+ locale/fallback/frozen7keys21values/readonly/wholeoutside giữ.
+- [x] NativeR3sixownedcases/48fields144copyslots54fontsentinels/2viewedcrops/
+ oneFindClearGET/Tab→Find/requiredstar+screenreaderlabels đúng;
+ 0overflow/overlap/errors/Jobs0;9tables/6plans18scenes/source/evidencegiữ.
+ R1/R2zeroobs do observercoordinatorghépmarkvàfieldname,khôngworkerfault.
+- [x] Scope23LF/allappPython/CI+1/nativebytebinding và source reviewC0/I0/M0.
+- [x] Docs/Tester READY;case1478lines158138LFbytes,metadata1PASS32deselected0.38s.
+- [ ] Provenance/exactCI/merge/deploy/runtime/receipt.
+- [ ] Defaultnotes/côngcụPDFkhác/catalogue/fullgoal/M-FINAL giữmở,motioncuối.
+
+Evidence:docs/superpowers/specs/2026-11-16-pdf-merge-fields.md,cùngIssue689.
+
+- [ ] PDF-MERGE-LIGHT-CONTRAST-20261116: nativecropMerge375light cho thấy
+  label/help vẫn nhạt từCSS cũ. Chưađonumericratio,khôngnhậnwholeUIđạt.
+  Giaooutput-only1CSSreplacement/two semanticlightcolors,đobaselinepaint
+  trướcapply;giữdark/font/layout/controls/fieldcopy. SauMergefieldsdelivery.
+- [ ] OPERATION-REFERENCE-FEEDBACK-COPY-20261116: cropFind/Clear thực tế
+  vẫn có toastVI “reference riêng tư”,EN/ZH còn VI. Giaooutput-only6edits/
+ 4keys12values;chỉ Document/Image operation referencefeedback fixedcopy,
+ giữhydrate/guard/stale/error/await/return/actions/API vàreadonlystate.
+ Hai phiênđộclập chỉtrảproposal;applytuầntự,khôngchạmcurrentfrozenhashes.
+  CảhaiR1code0/exactexpected/zero genuineworkerfault,NOT_APPLIED/NOT_QA.
+  ContractsIssue6922273292/6922273259;khônggọilạiphiếuđãtrảđúng.

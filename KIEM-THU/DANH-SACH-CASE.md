@@ -1460,3 +1460,19 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | PF-SEARCH | nặng | OneFindClearGET/Tab→Find | Controls/history/notesexact |0productwrites |
 | PF-DATA | nặng |9tables/6plans18scenes | Source/evidence/Jobs0 giữ | [PhiênPF](PHIEN-PDF-INPUT-FONT16-20261116.md) |
 | PF-DELIVERY | nặng | ExactCI/merge/deploy/runtime | Receipt riêng đúngrevision | Fullgoal/M-FINAL cònmở |
+
+## PDF-MERGE-FIELDS-20261116 — Issue689
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| PM-FIELDS | nặng |8fields/3locale | Label/empty/helpđúng |48nativefields144copyslots |
+| PM-POSITION | nặng | Positions/first2required | Names/order/options/referencePicker giữ | Actualfactory24calls |
+| PM-RIGHTS | nặng | Strictview/run/refresh×0,1,2sources | WholeguardedHTML/controls giữ |576NodePASS |
+| PM-CUSTOMER | nặng | Filename/notes/query/HTML | Literal/immutable/escapeonce | Nofiltercustomertext |
+| PM-LOCALE | nặng | SameVM/fallback/freeze |7orderedkeys21values | [PhiênPM](PHIEN-PDF-MERGE-FIELDS-20261116.md) |
+| PM-SOURCE | nặng |3exactworkerchanges | Ownerinverse/outside/23LF/allPython | CI+1/oldassertionsgiữ |
+| PM-AX | nặng | First2requiredmarkers | Star+screenreaderVI/EN/ZHgiữ | NativeR3/khôngwholeAXclaim |
+| PM-NATIVE | nặng |6owned375light1440dark | Nooverflow/overlap/54fontsentinels |2viewedcrops |
+| PM-SEARCH | nặng | FindClearGET/Tab→Find | Fields/history/notesexact |0productwrites |
+| PM-DATA | nặng |9tables/6plans18scenes | Source/evidence/Jobs0giữ | Noreseed/egress/provider/wallet |
+| PM-DELIVERY | nặng | ExactCI/merge/deploy/runtime | Receiptđúngrevision | Contrast/toast/M-FINALcònmở |
