@@ -4,6 +4,7 @@ import path from "node:path";
 import {execFileSync} from "node:child_process";
 import {fileURLToPath,pathToFileURL} from "node:url";
 import {pdfInputFont16HistoricalCss} from "./pdf-input-font16-snapshot.mjs";
+import {pdfMergeFieldsHistoricalPortalSource,pdfMergeFieldsHistoricalI18nSource} from "./pdf-merge-fields-snapshot.mjs";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../..");
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/pdf-customer-cleanup-reviewed.json",import.meta.url),"utf8"));
 const files={portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js",theme:"static/portal/portal-theme.css"};
@@ -13,7 +14,8 @@ export function pdfCustomerCleanupSources(historical=false){
     const value=(historical
     ?execFileSync("git",["show",fixture.base+":"+file],{cwd:root,encoding:"utf8",maxBuffer:30e6})
     :fs.readFileSync(path.join(root,file),"utf8")).replace(/\r\n/g,"\n");
-    return [key,key==="theme"?pdfInputFont16HistoricalCss(value):value];
+    return [key,key==="theme"?pdfInputFont16HistoricalCss(value)
+      :key==="portal"?pdfMergeFieldsHistoricalPortalSource(value):pdfMergeFieldsHistoricalI18nSource(value)];
   }));
 }
 export async function pdfCustomerCleanupRenderer(sources){

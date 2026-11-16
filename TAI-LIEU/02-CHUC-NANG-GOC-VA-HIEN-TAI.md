@@ -2224,3 +2224,15 @@ Nguồn thực: theme CSS tại BASEefe06a29. Không thêm công cụ hay engine
 | QA observer thiếu metadata tham chiếu | Đọc fixture cũ qua boundSHA | R1zeroobs/R2native15cases,khôngworkerfault |
 | Cleanup còn ghi chưa triển khai | PR750efe06a29 đã giao | CI43874550883/deploy43876776533/receipt6917466951 |
 | Có thể nhận font là toàn bộ AX đạt | Chỉ actual owned QA font proof | Safari/iOS/locale/signedUI/output riêng |
+
+## Nhãn Gộp PDF — đối chiếu16/11/2026
+
+Nguồn thực:pdfMergeFormFields tạiBASEb9f714e6,khôngthêm engine/chức năng.
+
+| Trước | Ứng viên | Bằng chứng/giới hạn |
+|---|---|---|
+|8fieldscóVIcứngvàgiải thíchslot/output/signed |7keys21valuesVI/EN/ZH,plainhelp |576NodePASS/native48fields144copyslots |
+| Cóthểmấtpositionkhi fallback | DynamicVItemplateđãresolve | Actualfactoryparams1..8 |
+| Cóthểxóadấubắtbuộckhiso tênfield | Mark+screenreadertextgiữriêng | Native3locale/first2required |
+| Fontunitcònghichưadeploy | PR751b9f714e6đãgiao | CI43880993436/deploy43903263914/receipt6918381914 |
+| CopyđúngcóthểbịhiểulàtoànUIđạt | Contrast/toasttechnicalcònriêng | HaiAGYcontracts6922273292/6922273259 |

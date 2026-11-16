@@ -2,6 +2,7 @@ import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
 import {pdfInputFont16HistoricalCss} from "./pdf-input-font16-snapshot.mjs";
+import {pdfMergeFieldsHistoricalPortalSource,pdfMergeFieldsHistoricalI18nSource,pdfMergeFieldsHistoricalSnapshot} from "./pdf-merge-fields-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/pdf-customer-cleanup-reviewed.json",import.meta.url),"utf8"));
 const edits=fixture.changes,ready=edits.slice(0,8),reference=edits.slice(-11),amendments=edits.slice(8,-11);
 const portal="static/portal/portal.js",i18n="static/portal/portal-i18n.js",theme="static/portal/portal-theme.css";
@@ -24,6 +25,7 @@ function scoped(source,name,old,next){
 const portalSignal=source=>/docPdfReadyUi|portal-document-operation-layout--single|imageOperationText\("reference\.(?:range", "\{label\}: \{start\}–\{end\}|aria", "Trang tệp|title", "Tìm \{type\} trong kho tệp|loading", "Đang tải tệp…|failed", "Chưa tải được tệp)/.test(source);
 export function pdfCustomerCleanupHistoricalPortalSource(source){
   assert.equal(typeof source,"string",fail);
+  source=pdfMergeFieldsHistoricalPortalSource(source);
   if(!portalSignal(source))return source; // Older historical sources need no unrelated baseline chunks.
   let value=source;
   for(const edit of reference.slice(0,4).reverse())value=once(value,edit.new,edit.old);
@@ -36,6 +38,7 @@ export function pdfCustomerCleanupHistoricalPortalSource(source){
 }
 export function pdfCustomerCleanupHistoricalI18nSource(source){
   assert.equal(typeof source,"string",fail);
+  source=pdfMergeFieldsHistoricalI18nSource(source);
   const signals=source.includes("docPdfReadyUi")||reference.slice(4,10).some(edit=>source.includes(edit.new));
   if(!signals)return source;
   let value=source;
@@ -47,6 +50,7 @@ export function pdfCustomerCleanupHistoricalI18nSource(source){
 }
 export function pdfCustomerCleanupHistoricalSnapshot(entries,locale){
   assert.ok(locales.includes(locale),fail+" locale");
+  entries=pdfMergeFieldsHistoricalSnapshot(entries,locale);
   const added=entries.filter(([key])=>key.startsWith("docPdfReadyUi"));
   let result=entries;
   if(added.length){
