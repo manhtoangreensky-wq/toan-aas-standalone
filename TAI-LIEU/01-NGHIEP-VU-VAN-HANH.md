@@ -2984,3 +2984,19 @@ giữ.9tables/schema/6plans18scenes/source/evidence/Jobs0,0productwrites.
 Thông báo guarded chỉ được chứng minh qua actual renderer; QA thực tế là
 ready forms. Ready-page technical copy và reference helper/footer vẫn cần
 xử lý riêng; không nhận toàn PDF/customer-ready hay real output đã đạt.
+
+## PDF tập trung thao tác —16/11/2026, ứng viên cleanup
+
+PR749 đã giao:CI43863230530/deploy43865201248/runtime2b126b40,
+services/health/nămassets exact;receipts6916141029/6916377502.
+Ứng viên mới bỏ intro/aside kỹ thuật ở ba readyPDFpages, giữ form/history/
+notes/quyền/validation, chuyển link kho tệp vàofooter, một cộtkhôngtrống.
+Reference headergap6px/status14px/paginationmin44px;emptycaption bỏ nhưng
+Previous/Next/offsets giữ. Usefullimits giữ ởcopyVI/EN/ZH:20MB30trang,
+Merge2–8nguồn/mỗi20MB/tổng40MB30trang.21workerchanges/19newkeys57values.
+BASE17RED→556NodePASS;native6ownedemptycases/2viewedcrops/1realFindClearGET,
+9tables/schema/6plans18scenes/source/evidence/Jobs0/0productwrites.
+[Báo cáo](../docs/reports/pdf-customer-cleanup-20261116.md).
+LegacyNode/lossless1fail tồn tại cảBASE/branch,khôngnớiassertion.
+Input15px làfinding cótrước,giữriêngPDF-INPUT-FONT16;Mergefields/defaultnotes/
+côngcụkhác/wholelocale/AX/auth/signedUI/output/motioncònmở,chưadeploycleanup.

@@ -1429,3 +1429,20 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | PU-NATIVE | nặng | Compress target/Split sentinels | Three GREEN observations, BASE theme exact reused |10samples/2targets/1crop |
 | PU-DATA | nặng |9tables/6plans18scenes/source/evidence |0productwrites/reseed/egress/Jobs0 | Guarded copy VM-only |
 | PU-DELIVERY | nặng | Exact CI/merge/deploy/runtime/assets | Receipt riêng đúng revision | Whole PDF/AX/auth/M-FINAL mở |
+
+## PDF-CUSTOMER-CLEANUP-20261116 — Issue689
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| PC-READY | nặng | BaPDFready/guarded | Bỏintro/aside,mộtcột;guardedHTMLexact |556NodePASS |
+| PC-LIMITS | nặng | VI/EN/ZHdescription | Useful20MB30trang/Mergelimitsgiữ | AntigravityAMEND2 |
+| PC-RIGHTS | nặng | View/run/refreshđộclập | Stricttrue/nguồn0,1,2/controls giữ | Actualfullrenderer |
+| PC-REFERENCE | nặng | Query/offset/readstates | Gap6px/status14px/Previous hữuíchgiữ | EmptylaterpageVM-only |
+| PC-CUSTOMER | nặng | Tên/notes/HTML | Literal/immutable/escape1lần | Khônglọctừkhách |
+| PC-LOCALE | nặng | SameVM/fallback/freeze |19newkeys57values/6editedrows18values | [PhiênPC](PHIEN-PDF-CUSTOMER-CLEANUP-20261116.md) |
+| PC-SOURCE | nặng |21workerchanges | Exactinverse/outside/22LF/allPython | CI+1/oldassertionsgiữ |
+| PC-NATIVE | nặng |6owned375light1440dark | VI Split/EN Merge/ZH Compress/2crops | Khôngwholelocale/AX |
+| PC-FIND-CLEAR | nặng | QueryPDF→Find→Clear | RealGETq rồiomitq,Tab→Find | Fields/history/notesexact |
+| PC-DATA | nặng |9tables/6plans18scenes |0productwrites/reseed/egress/Jobs0 | Source/evidenceexact |
+| PC-LEGACY | nặng | Python/Nodecomparators |29PythonPASS/3NodePASS1sameBASEFAIL | Khôngnới/lossless |
+| PC-DELIVERY | nặng | CI/merge/deploy/runtime | Receiptđúngrevision | Font16/M-FINAL/goalvẫnmở |

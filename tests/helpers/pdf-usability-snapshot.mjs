@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {pdfCustomerCleanupHistoricalPortalSource,pdfCustomerCleanupHistoricalI18nSource,pdfCustomerCleanupHistoricalSnapshot,pdfCustomerCleanupHistoricalCss} from "./pdf-customer-cleanup-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/pdf-usability-reviewed.json",import.meta.url),"utf8"));
 const keys=["docPdfGuardUiTitle","docPdfGuardUiBody"],locales=["vi","en","zh"];
 const copy={
@@ -29,6 +30,7 @@ assert.deepEqual(fixture.changes,reviewed,"Unreviewed PDF usability fixture chan
 for(const locale of locales)assert.deepEqual(fixture[locale],copy[locale],"Unreviewed PDF usability fixture catalogue");
 const hash=value=>createHash("sha256").update(value).digest("hex"),count=(value,part)=>value.split(part).length-1;
 export function pdfUsabilityHistoricalSnapshot(entries,locale){
+  entries=pdfCustomerCleanupHistoricalSnapshot(entries,locale);
   assert.ok(locales.includes(locale),"Unreviewed PDF usability locale");
   const scoped=entries.filter(([key])=>key.startsWith("docPdfGuardUi"));
   if(!scoped.length)return entries;
@@ -41,6 +43,7 @@ export function pdfUsabilityHistoricalSnapshot(entries,locale){
 }
 function inverse(source,file){
   assert.equal(typeof source,"string","Unreviewed PDF usability source");
+  source=file==="static/portal/portal.js"?pdfCustomerCleanupHistoricalPortalSource(source):pdfCustomerCleanupHistoricalI18nSource(source);
   const edits=reviewed.filter(edit=>edit.file===file);
   const historical=edits.every(edit=>count(source,edit.old)===1&&count(source,edit.new)===0);
   if(historical){assert.equal(source.includes("docPdfGuardUi"),false,"Unreviewed PDF usability residual key");return source;}
@@ -55,6 +58,7 @@ export const pdfUsabilityHistoricalPortalSource=value=>inverse(value,"static/por
 export const pdfUsabilityHistoricalI18nSource=value=>inverse(value,"static/portal/portal-i18n.js");
 export function pdfUsabilityHistoricalCss(source){
   assert.equal(typeof source,"string","Unreviewed PDF usability CSS");
+  source=pdfCustomerCleanupHistoricalCss(source);
   const occurrences=count(source,PDF_USABILITY_COMPRESS_ADDITION);
   if(!occurrences)return source; // Unknown/changed bytes remain visible, never normalized away.
   assert.equal(occurrences,1,"Unreviewed PDF usability CSS duplicate addition");

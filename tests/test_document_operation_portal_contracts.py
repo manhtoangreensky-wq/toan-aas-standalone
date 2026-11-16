@@ -1,10 +1,12 @@
 """Static UI contracts for the independent Web Document Operations surface."""
 
 from pathlib import Path
+import runpy
 
 
 ROOT = Path(__file__).parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+PORTAL = runpy.run_path(str(ROOT / "tests/helpers/pdf_customer_cleanup_static.py"))["historical_portal_source"](PORTAL)
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
 SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")

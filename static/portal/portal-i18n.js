@@ -18438,19 +18438,19 @@
   });
 
   const IMAGE_OPERATION_COPY_ROWS = [
-    ["reference.range", "Đang hiển thị {start}–{end} {label}", "Showing {start}–{end} {label}", "正在显示 {start}–{end} {label}"],
+    ["reference.range", "{label}: {start}–{end}", "{label}: {start}–{end}", "{label}：{start}–{end}"],
     ["reference.empty", "Không có {label} ở trang này", "No {label} on this page", "本页没有{label}"],
     ["reference.previous", "Trang trước", "Previous", "上一页"],
     ["reference.next", "Trang sau", "Next", "下一页"],
-    ["reference.aria", "Phân trang tham chiếu", "Reference pagination", "参考分页"],
-    ["reference.title", "Tìm {type} cũ", "Find existing {type}", "查找现有{type}"],
-    ["reference.loading", "Đang tải tham chiếu thuộc tài khoản…", "Loading account-scoped references…", "正在加载账户范围内的参考项…"],
-    ["reference.failed", "Chưa tải được tham chiếu; không dùng dữ liệu thay thế.", "References could not be loaded; no fallback data is used.", "无法加载参考项；不会使用替代数据。"],
+    ["reference.aria", "Trang tệp", "File pages", "文件分页"],
+    ["reference.title", "Tìm {type} trong kho tệp", "Find {type} in your files", "在文件库中查找{type}"],
+    ["reference.loading", "Đang tải tệp…", "Loading files…", "正在加载文件…"],
+    ["reference.failed", "Chưa tải được tệp. Hãy bấm Tìm để tải lại.", "Files could not be loaded. Select Find to reload.", "无法加载文件，请点击“查找”重新加载。"],
     ["reference.available", "{count} {type} có thể chọn ở trang hiện tại.", "{count} {type} available on this page.", "当前页面有 {count} 个可选{type}。"],
     ["reference.none", "Chưa có {type} phù hợp ở trang này.", "No matching {type} on this page.", "本页没有匹配的{type}。"],
     ["reference.type.image", "ảnh JPEG, PNG hoặc WebP", "JPEG, PNG or WebP images", "JPEG、PNG 或 WebP 图像"],
     ["reference.type.pdf", "PDF", "PDF", "PDF"],
-    ["reference.type.reference", "tham chiếu", "references", "参考项"],
+    ["reference.type.reference", "Tệp", "Files", "文件"],
     ["reference.inputLabel", "Tìm {type}", "Find {type}", "查找{type}"],
     ["reference.placeholder", "Tên hiển thị hoặc tên tệp", "Display name or filename", "显示名称或文件名"],
     ["reference.find", "Tìm", "Find", "查找"],
@@ -22333,6 +22333,70 @@
   Object.assign(MESSAGES.zh, {
     docPdfGuardUiTitle: "无法打开 PDF 工具",
     docPdfGuardUiBody: "目前无法加载工具，请重新加载页面。"
+  });
+
+  Object.assign(MESSAGES.vi, {
+    docPdfReadyUiNoPermission: "Tài khoản này chưa được phép dùng công cụ.",
+    docPdfReadyUiOpenFiles: "Mở kho tệp",
+    docPdfReadyUiRefresh: "Làm mới",
+    docPdfReadyUiHistoryBody: "Xem tiến trình và tải tệp khi xử lý hoàn tất.",
+    docPdfReadyUiOriginalKept: "Tệp gốc được giữ nguyên.",
+    docPdfReadyUiChooseOne: "Chọn một PDF trong kho tệp để bắt đầu.",
+    docPdfReadyUiChooseTwo: "Chọn ít nhất hai PDF trong kho tệp để bắt đầu.",
+    docPdfReadyUiSplitTitle: "Tách PDF",
+    docPdfReadyUiSplitDescription: "Chọn một trang hoặc một dải trang liên tiếp trong PDF.",
+    docPdfReadyUiSplitConfirm: "Tách các trang đã chọn thành tệp PDF mới? Tệp gốc được giữ nguyên.",
+    docPdfReadyUiSplitHistory: "PDF đã tách",
+    docPdfReadyUiMergeTitle: "Gộp PDF",
+    docPdfReadyUiMergeDescription: "Chọn từ hai đến tám PDF theo thứ tự muốn gộp. Mỗi tệp tối đa 20 MB, tổng tối đa 40 MB và 30 trang.",
+    docPdfReadyUiMergeConfirm: "Gộp các tệp PDF theo đúng thứ tự đã chọn? Các tệp gốc được giữ nguyên.",
+    docPdfReadyUiMergeHistory: "PDF đã gộp",
+    docPdfReadyUiOptimizeTitle: "Nén PDF",
+    docPdfReadyUiOptimizeDescription: "Chọn PDF muốn giảm dung lượng, tối đa 20 MB và 30 trang. Tệp gốc không bị thay đổi.",
+    docPdfReadyUiOptimizeConfirm: "Nén tệp PDF đã chọn? Tệp gốc được giữ nguyên.",
+    docPdfReadyUiOptimizeHistory: "PDF đã nén"
+  });
+  Object.assign(MESSAGES.en, {
+    docPdfReadyUiNoPermission: "This account is not allowed to use this tool.",
+    docPdfReadyUiOpenFiles: "Open file library",
+    docPdfReadyUiRefresh: "Refresh",
+    docPdfReadyUiHistoryBody: "Track progress and download files when processing is complete.",
+    docPdfReadyUiOriginalKept: "Original files remain unchanged.",
+    docPdfReadyUiChooseOne: "Choose a PDF from your file library to begin.",
+    docPdfReadyUiChooseTwo: "Choose at least two PDFs from your file library to begin.",
+    docPdfReadyUiSplitTitle: "Split PDF",
+    docPdfReadyUiSplitDescription: "Choose one page or a consecutive page range from the PDF.",
+    docPdfReadyUiSplitConfirm: "Split the selected pages into a new PDF? The original file remains unchanged.",
+    docPdfReadyUiSplitHistory: "Split PDFs",
+    docPdfReadyUiMergeTitle: "Merge PDFs",
+    docPdfReadyUiMergeDescription: "Choose two to eight PDFs in the order to merge. Each file can be up to 20 MB, with a total limit of 40 MB and 30 pages.",
+    docPdfReadyUiMergeConfirm: "Merge the PDFs in the selected order? The original files remain unchanged.",
+    docPdfReadyUiMergeHistory: "Merged PDFs",
+    docPdfReadyUiOptimizeTitle: "Compress PDF",
+    docPdfReadyUiOptimizeDescription: "Choose a PDF up to 20 MB and 30 pages to reduce its file size. The original file is not changed.",
+    docPdfReadyUiOptimizeConfirm: "Compress the selected PDF? The original file remains unchanged.",
+    docPdfReadyUiOptimizeHistory: "Compressed PDFs"
+  });
+  Object.assign(MESSAGES.zh, {
+    docPdfReadyUiNoPermission: "此账户尚无权使用此工具。",
+    docPdfReadyUiOpenFiles: "打开文件库",
+    docPdfReadyUiRefresh: "刷新",
+    docPdfReadyUiHistoryBody: "查看处理进度，并在完成后下载文件。",
+    docPdfReadyUiOriginalKept: "原始文件保持不变。",
+    docPdfReadyUiChooseOne: "从文件库中选择一个 PDF 以开始。",
+    docPdfReadyUiChooseTwo: "从文件库中选择至少两个 PDF 以开始。",
+    docPdfReadyUiSplitTitle: "拆分 PDF",
+    docPdfReadyUiSplitDescription: "选择 PDF 中的一页或连续页码范围。",
+    docPdfReadyUiSplitConfirm: "将所选页面拆分为新的 PDF？原始文件保持不变。",
+    docPdfReadyUiSplitHistory: "已拆分的 PDF",
+    docPdfReadyUiMergeTitle: "合并 PDF",
+    docPdfReadyUiMergeDescription: "按合并顺序选择 2 至 8 个 PDF。每个文件不超过 20 MB，总计不超过 40 MB 和 30 页。",
+    docPdfReadyUiMergeConfirm: "按所选顺序合并 PDF？原始文件保持不变。",
+    docPdfReadyUiMergeHistory: "已合并的 PDF",
+    docPdfReadyUiOptimizeTitle: "压缩 PDF",
+    docPdfReadyUiOptimizeDescription: "选择要减小文件大小的 PDF，文件不超过 20 MB 且不超过 30 页。原始文件不会被更改。",
+    docPdfReadyUiOptimizeConfirm: "压缩所选的 PDF？原始文件保持不变。",
+    docPdfReadyUiOptimizeHistory: "已压缩的 PDF"
   });
 
   verifyEqualKeysets();

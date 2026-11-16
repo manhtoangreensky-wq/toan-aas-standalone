@@ -2157,3 +2157,44 @@ cùng Issue #689. Không tạo checklist cạnh tranh.
   Có crop/source evidence, cần phiếu riêng; không nhận whole PDF đã sạch.
 
 Evidence: docs/superpowers/specs/2026-11-16-pdf-usability.md, cùng Issue #689.
+
+## PDF tập trung vào thao tác — đơn vị16/11/2026
+
+- [x] PR749 đã giao: CI43863230530 hai nhóm SUCCESS; merge/runtime
+ 2b126b40766404e4b5c0520a121d60c02760d168; treeaa5bd7ad exact,
+  deploy43865201248 SUCCESS; ba services/health/năm assets exact.
+  Receipts Issue6916141029/PR6916377502.
+- [x] Hai session Antigravity3.8FlashHigh đã trả19edits: READY8 và
+  REFERENCE11; zero genuine worker faults/retries. Reference chỉ khác
+  common trailing LF boundary, core exact; chưa áp app/QA.
+- [x] Coordinator bổ sung useful Compress limit20MB/30pages vào19-keycopy
+  vàVI fallback qua Antigravity R1A-LIMIT-COPY code0;khôngworkerfault.
+  Composite21edits/3appfiles,fixturebound,appchưađổi.
+- [x] BASE3PASS17RED→exact21replay/function-scopedinverse→một nhóm27files
+ 556NodePASS/0FAIL/0SKIP46920.245ms. LegacyPython29PASSboth;
+ legacyNode3PASS1sameBASE/losslessFAILboth,khôngnớiassertion.
+- [x] NativeR2sixownedemptycases375light1440dark/VI SplitEN MergeZH Compress,
+ 2viewedcrops/1realFindClearGET/Tab→Find/nooverflow/overlap/Jobs0;
+ 9tables/schema/6plans18scenes/source/evidencegiữ/0productwrites/reseed/egress.
+ R1zeroobsassumedfont16sai,prior15pxfindinggiữriêng;khôngworkerfault.
+ Previouslaterpage/44pxVM-onlytrừoffsetthựcquan sát,khôngfakeAPI/output.
+- [x] Scope22LF/allappPython/exactoutside/CI+1/nativebytebinding và
+ source reviewC0/I0/M0. Docshiệntại/đốichiếugốc/TesterPCREADY.
+- [ ] Provenance → exactHEADCI → merge/deploy/
+  runtime/assets/receipt. Catalogue light owner/descriptions/fallback và
+  các PDF tools khác vẫn theo hàng đợi sau.
+- [ ] Full locale/responsive/AX/auth/device/Safari/signedUI/real output/
+  M-FINAL01..06 còn mở; motion cuối, không engine/Bot/provider/financial/
+  ENV/production-data implementation.
+
+Evidence: docs/superpowers/specs/2026-11-16-pdf-customer-cleanup.md,
+cùng Issue #689. Không thu hẹp goal hoặc mở checklist cạnh tranh.
+
+- [ ] PDF-INPUT-FONT16-20261116: control PDF hiện15px đã đo từ native
+  PDF-USABILITY; cleanup R1 phát hiện giả định QA>=16px sai,0case hoàn tất.
+  R2 chỉ nghiệm thu floor baseline15px và ghi các control nhỏ; không đóng
+  mobile16px/iOS/wholeAX. Giao Antigravity sửa riêng sau đơn vị cleanup,
+  không tính lỗi spec/harness của coordinator thành worker fault.
+  ContractIssue6917285933;CLI đãkiểm modelsgemini3.8FlashHigh cao nhất
+  trongdanh sách16/11. R1output-onlycompletion0/exact1CSSreplacement,
+  NOT_APPLIED/NOT_QA;khônglogin/settingsmới,khôngnhậnđãsửafont.

@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import {pdfCustomerCleanupHistoricalPortalSource} from "./helpers/pdf-customer-cleanup-snapshot.mjs";
 
-const portal = readFileSync("static/portal/portal.js", "utf8");
+const portal = pdfCustomerCleanupHistoricalPortalSource(readFileSync("static/portal/portal.js", "utf8").replace(/\r\n/g,"\n"));
 const css = readFileSync("static/portal/portal.css", "utf8");
 const integration = readFileSync("static/portal/integration.js", "utf8");
 

@@ -2195,3 +2195,19 @@ chức năng gốc giữ nguyên, không thêm engine hay khả năng xử lý m
 | Reference-picker header/footer còn chật/dư | Không đổi trong đợt này | Crop Compress thực tế, cần phiếu riêng |
 | Có thể giả trạng thái blocked cho ảnh | Không fake API/quyền | Guarded VM-only, native actual ready |
 | Metrics chưa ghi đã triển khai | PR74838a92641 đã giao | CI43857216020/deploy43859221752/receipt6915066642 |
+
+## PDF tập trung thao tác — đối chiếu16/11/2026
+
+Nguồn thực:ba renderPdf functions/referencepicker/theme tạiBASE2b126b40.
+Danh sáchchức nănggốc giữ,khôngthêm enginehay khả năngxửlýmới.
+
+| Trước | Ứng viên | Bằng chứng/giới hạn |
+|---|---|---|
+| Intro/asidegiải thíchpipeline,nhiềucộttrống | Formmộtcột,linkkhotệpvàofooter | Wholeoutside/guardedHTML/controls exact |
+| Bỏasidecóthểmấtusefullimits | GiữlimitsởdescriptionVI/EN/ZH | CoordinatorAMEND2,khôngworkerfault |
+| Referenceheaderdính,emptyfooterlặp | Gap6px/status14px,giữnavigation |556NodePASS/native6actualemptyforms |
+| Customerfilenamecótừtechnical | Giữliteral,mộtlầnescape | Immutable/hostiletranslationtests |
+| Assumebaselineinputđã16px | Đãđo15px,queuedfont16riêng | NativeR1zeroobs,R2scopeamendment |
+| Legacy/losslessassertionfail | Giữ1samefailBASE/branch | Python29PASSboth;khônghiddenfailure |
+| PUchưaghiđãtriểnkhai | PR7492b126b40đãgiao | CI43863230530/deploy43865201248/receipt6916141029 |
+| CóthểnhậnwholePDFsạchlocale | Mergefields/defaultnotes/toolskháccòn |KhôngwholeAX/signedUI/outputclaim |
