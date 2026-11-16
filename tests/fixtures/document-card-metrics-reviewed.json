@@ -1,0 +1,88 @@
+{
+  "base": "b3c1749fdc0876164cf9b3bedd64290fdf4d9bf4",
+  "revision": "R1A",
+  "specId": "DOCUMENT-CARD-METRICS-20261116",
+  "expectedProposalSha256": "28dc95ddd5751a8db3d940a9e6cce8e6c522ca18441999ab5d81b588f6fad8e4",
+  "changes": [
+    {
+      "file": "static/portal/portal.js",
+      "old": "      const sourceMetric = isOptimize\n        ? (Number.isFinite(Number(item.input_byte_size)) ? vaultBytes(item.input_byte_size) : (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang` : \"Đang kiểm tra\"))\n        : isMerge\n        ? `${safeText(String(sourceCount))} PDF${Number.isInteger(sourcePages) ? ` · ${safeText(String(sourcePages))} trang` : \"\"}`\n        : isImageToPdf\n        ? `${safeText(String(sourceCount))} ảnh${Number.isInteger(sourcePages) ? ` · ${safeText(String(sourcePages))} trang` : \"\"}`\n        : isPdfToImages\n        ? (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang PDF` : \"Đang kiểm tra\")\n        : isPdfToWord\n        ? (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang PDF` : \"Đang kiểm tra\")\n        : isPdfOcrWord\n        ? (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang PDF` : \"Đang kiểm tra\")\n        : isImageOcr\n        ? \"1 ảnh private đã chọn\"\n        : (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang` : \"Đang kiểm tra\");",
+      "new": "      const sourceMetric = isOptimize\n        ? (Number.isFinite(Number(item.input_byte_size)) ? vaultBytes(item.input_byte_size) : (Number.isInteger(sourcePages) ? safeText(uiText(\"docMetricUiPages\", \"{pages} trang\", { pages: String(sourcePages) })) : safeText(uiText(\"docMetricUiChecking\", \"Đang kiểm tra\"))))\n        : isMerge\n        ? `${safeText(uiText(\"docMetricUiPdfCount\", \"{count} tệp PDF\", { count: String(sourceCount) }))}${Number.isInteger(sourcePages) ? safeText(uiText(\"docMetricUiPagesSuffix\", \" · {pages} trang\", { pages: String(sourcePages) })) : \"\"}`\n        : isImageToPdf\n        ? `${safeText(uiText(\"docMetricUiImagesCount\", \"{count} ảnh\", { count: String(sourceCount) }))}${Number.isInteger(sourcePages) ? safeText(uiText(\"docMetricUiPagesSuffix\", \" · {pages} trang\", { pages: String(sourcePages) })) : \"\"}`\n        : isPdfToImages\n        ? (Number.isInteger(sourcePages) ? safeText(uiText(\"docMetricUiPdfPages\", \"{pages} trang PDF\", { pages: String(sourcePages) })) : safeText(uiText(\"docMetricUiChecking\", \"Đang kiểm tra\")))\n        : isPdfToWord\n        ? (Number.isInteger(sourcePages) ? safeText(uiText(\"docMetricUiPdfPages\", \"{pages} trang PDF\", { pages: String(sourcePages) })) : safeText(uiText(\"docMetricUiChecking\", \"Đang kiểm tra\")))\n        : isPdfOcrWord\n        ? (Number.isInteger(sourcePages) ? safeText(uiText(\"docMetricUiPdfPages\", \"{pages} trang PDF\", { pages: String(sourcePages) })) : safeText(uiText(\"docMetricUiChecking\", \"Đang kiểm tra\")))\n        : isImageOcr\n        ? safeText(uiText(\"docMetricUiSelectedImage\", \"1 ảnh đã chọn\"))\n        : (Number.isInteger(sourcePages) ? safeText(uiText(\"docMetricUiPages\", \"{pages} trang\", { pages: String(sourcePages) })) : safeText(uiText(\"docMetricUiChecking\", \"Đang kiểm tra\")));",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "      const thirdMetric = isOptimize\n        ? (Number.isFinite(savedBytes) && savedBytes > 0 ? `${safeText(vaultBytes(savedBytes))}${Number.isFinite(savedPercent) ? ` · ${safeText(String(savedPercent))}%` : \"\"}` : \"Chưa giảm đủ\")\n        : safeText(item.byte_size ? vaultBytes(item.byte_size) : \"Đang kiểm tra\");",
+      "new": "      const thirdMetric = isOptimize\n        ? (Number.isFinite(savedBytes) && savedBytes > 0 ? `${safeText(vaultBytes(savedBytes))}${Number.isFinite(savedPercent) ? ` · ${safeText(String(savedPercent))}%` : \"\"}` : safeText(uiText(\"docMetricUiNotReduced\", \"Chưa giảm được dung lượng\")))\n        : safeText(item.byte_size ? vaultBytes(item.byte_size) : uiText(\"docMetricUiChecking\", \"Đang kiểm tra\"));",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "      const outputMetric = isPdfToWord || isPdfOcrWord\n        ? (status === \"completed\" && downloadPath ? \"DOCX đã xác minh\" : \"Chưa có\")\n        : isPdfToImages\n        ? (status === \"completed\" && downloadPath ? (Number.isInteger(outputPages) && outputPages === 1 ? \"PNG đã xác minh\" : `${safeText(String(outputPages || 0))} PNG trong ZIP`) : \"Chưa có\")\n        : isOcrText\n        ? (status === \"completed\" && downloadPath ? \"TXT đã xác minh\" : \"Chưa có\")\n        : (isOptimize ? safeText(item.byte_size ? vaultBytes(item.byte_size) : \"Chưa có\") : (Number.isInteger(outputPages) ? `${safeText(String(outputPages))} trang` : \"Chưa có\"));",
+      "new": "      const outputMetric = isPdfToWord || isPdfOcrWord\n        ? (status === \"completed\" && downloadPath ? safeText(uiText(\"docMetricUiDocxFile\", \"Tệp DOCX\")) : safeText(uiText(\"docMetricUiNoFile\", \"Chưa có tệp\")))\n        : isPdfToImages\n        ? (status === \"completed\" && downloadPath ? (Number.isInteger(outputPages) && outputPages === 1 ? safeText(uiText(\"docMetricUiPngImage\", \"Ảnh PNG\")) : safeText(uiText(\"docMetricUiPngZip\", \"{count} ảnh PNG trong tệp ZIP\", { count: String(outputPages || 0) }))) : safeText(uiText(\"docMetricUiNoFile\", \"Chưa có tệp\")))\n        : isOcrText\n        ? (status === \"completed\" && downloadPath ? safeText(uiText(\"docMetricUiTxtFile\", \"Văn bản TXT\")) : safeText(uiText(\"docMetricUiNoFile\", \"Chưa có tệp\")))\n        : (isOptimize ? safeText(item.byte_size ? vaultBytes(item.byte_size) : uiText(\"docMetricUiNoFile\", \"Chưa có tệp\")) : (Number.isInteger(outputPages) ? safeText(uiText(\"docMetricUiPages\", \"{pages} trang\", { pages: String(outputPages) })) : safeText(uiText(\"docMetricUiNoFile\", \"Chưa có tệp\"))));",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  verifyEqualKeysets();",
+      "new": "  Object.assign(MESSAGES.vi, {\n    docMetricUiPdfCount: \"{count} tệp PDF\",\n    docMetricUiImagesCount: \"{count} ảnh\",\n    docMetricUiPagesSuffix: \" · {pages} trang\",\n    docMetricUiPdfPages: \"{pages} trang PDF\",\n    docMetricUiPages: \"{pages} trang\",\n    docMetricUiChecking: \"Đang kiểm tra\",\n    docMetricUiSelectedImage: \"1 ảnh đã chọn\",\n    docMetricUiNotReduced: \"Chưa giảm được dung lượng\",\n    docMetricUiNoFile: \"Chưa có tệp\",\n    docMetricUiDocxFile: \"Tệp DOCX\",\n    docMetricUiPngImage: \"Ảnh PNG\",\n    docMetricUiPngZip: \"{count} ảnh PNG trong tệp ZIP\",\n    docMetricUiTxtFile: \"Văn bản TXT\"\n  });\n  Object.assign(MESSAGES.en, {\n    docMetricUiPdfCount: \"PDF files: {count}\",\n    docMetricUiImagesCount: \"Images: {count}\",\n    docMetricUiPagesSuffix: \" · Pages: {pages}\",\n    docMetricUiPdfPages: \"PDF pages: {pages}\",\n    docMetricUiPages: \"Pages: {pages}\",\n    docMetricUiChecking: \"Checking\",\n    docMetricUiSelectedImage: \"1 selected image\",\n    docMetricUiNotReduced: \"File size has not been reduced\",\n    docMetricUiNoFile: \"No file yet\",\n    docMetricUiDocxFile: \"DOCX file\",\n    docMetricUiPngImage: \"PNG image\",\n    docMetricUiPngZip: \"{count} PNG images in a ZIP file\",\n    docMetricUiTxtFile: \"TXT text file\"\n  });\n  Object.assign(MESSAGES.zh, {\n    docMetricUiPdfCount: \"{count} 个 PDF 文件\",\n    docMetricUiImagesCount: \"{count} 张图片\",\n    docMetricUiPagesSuffix: \" · {pages} 页\",\n    docMetricUiPdfPages: \"{pages} 页 PDF\",\n    docMetricUiPages: \"{pages} 页\",\n    docMetricUiChecking: \"正在检查\",\n    docMetricUiSelectedImage: \"已选 1 张图片\",\n    docMetricUiNotReduced: \"文件大小尚未减小\",\n    docMetricUiNoFile: \"暂无文件\",\n    docMetricUiDocxFile: \"DOCX 文件\",\n    docMetricUiPngImage: \"PNG 图片\",\n    docMetricUiPngZip: \"ZIP 文件中包含 {count} 张 PNG 图片\",\n    docMetricUiTxtFile: \"TXT 文字文件\"\n  });\n\n  verifyEqualKeysets();",
+      "count": 1
+    }
+  ],
+  "vi": {
+    "docMetricUiPdfCount": "{count} tệp PDF",
+    "docMetricUiImagesCount": "{count} ảnh",
+    "docMetricUiPagesSuffix": " · {pages} trang",
+    "docMetricUiPdfPages": "{pages} trang PDF",
+    "docMetricUiPages": "{pages} trang",
+    "docMetricUiChecking": "Đang kiểm tra",
+    "docMetricUiSelectedImage": "1 ảnh đã chọn",
+    "docMetricUiNotReduced": "Chưa giảm được dung lượng",
+    "docMetricUiNoFile": "Chưa có tệp",
+    "docMetricUiDocxFile": "Tệp DOCX",
+    "docMetricUiPngImage": "Ảnh PNG",
+    "docMetricUiPngZip": "{count} ảnh PNG trong tệp ZIP",
+    "docMetricUiTxtFile": "Văn bản TXT"
+  },
+  "en": {
+    "docMetricUiPdfCount": "PDF files: {count}",
+    "docMetricUiImagesCount": "Images: {count}",
+    "docMetricUiPagesSuffix": " · Pages: {pages}",
+    "docMetricUiPdfPages": "PDF pages: {pages}",
+    "docMetricUiPages": "Pages: {pages}",
+    "docMetricUiChecking": "Checking",
+    "docMetricUiSelectedImage": "1 selected image",
+    "docMetricUiNotReduced": "File size has not been reduced",
+    "docMetricUiNoFile": "No file yet",
+    "docMetricUiDocxFile": "DOCX file",
+    "docMetricUiPngImage": "PNG image",
+    "docMetricUiPngZip": "{count} PNG images in a ZIP file",
+    "docMetricUiTxtFile": "TXT text file"
+  },
+  "zh": {
+    "docMetricUiPdfCount": "{count} 个 PDF 文件",
+    "docMetricUiImagesCount": "{count} 张图片",
+    "docMetricUiPagesSuffix": " · {pages} 页",
+    "docMetricUiPdfPages": "{pages} 页 PDF",
+    "docMetricUiPages": "{pages} 页",
+    "docMetricUiChecking": "正在检查",
+    "docMetricUiSelectedImage": "已选 1 张图片",
+    "docMetricUiNotReduced": "文件大小尚未减小",
+    "docMetricUiNoFile": "暂无文件",
+    "docMetricUiDocxFile": "DOCX 文件",
+    "docMetricUiPngImage": "PNG 图片",
+    "docMetricUiPngZip": "ZIP 文件中包含 {count} 张 PNG 图片",
+    "docMetricUiTxtFile": "TXT 文字文件"
+  },
+  "binding": {
+    "baselinePortal": "191cb13557503ccc6e6952833eb9c3eedb74178e81b43e196b71a807facc2701",
+    "baselineI18n": "4ea1785e877677b32473f00bf032246b12f62842b5a43c4d949c254126fbae94",
+    "candidatePortal": "027499a7e7ee821b9306d77ec30f2a847817fde83afd127d3d88041192498d00",
+    "candidateI18n": "e2443981bd87f6ef0673b07b129977746a3a6f0d4c895bc64904004839d66968",
+    "catalogHashes": {
+      "vi": "b5d7b457b22deb6cfd379960c626418e1ea2e523a9140c5ede9103db1698d33d",
+      "en": "388f6bbc2b167dcbe4246126c3cb3189cba3e0645e273ed96d0961f97b07fe65",
+      "zh": "da841f3f168c4aeb3d54ec84dcb5f0370365abb6982533d792edaecc265fcbf0"
+    }
+  }
+}

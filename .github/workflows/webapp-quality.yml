@@ -86,6 +86,7 @@ jobs:
 
       - name: Video Studio locale and navigation presentation regressions
         run: |
+          node --test tests/document-card-metrics.test.mjs
           node --test tests/document-card-display.test.mjs
           node --test tests/pdf-split-readability.test.mjs
           node --test tests/display-clutter.test.mjs

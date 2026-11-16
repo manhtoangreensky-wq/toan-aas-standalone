@@ -22276,6 +22276,52 @@
     docSelectedUiChecking: "正在检查页码"
   });
 
+  Object.assign(MESSAGES.vi, {
+    docMetricUiPdfCount: "{count} tệp PDF",
+    docMetricUiImagesCount: "{count} ảnh",
+    docMetricUiPagesSuffix: " · {pages} trang",
+    docMetricUiPdfPages: "{pages} trang PDF",
+    docMetricUiPages: "{pages} trang",
+    docMetricUiChecking: "Đang kiểm tra",
+    docMetricUiSelectedImage: "1 ảnh đã chọn",
+    docMetricUiNotReduced: "Chưa giảm được dung lượng",
+    docMetricUiNoFile: "Chưa có tệp",
+    docMetricUiDocxFile: "Tệp DOCX",
+    docMetricUiPngImage: "Ảnh PNG",
+    docMetricUiPngZip: "{count} ảnh PNG trong tệp ZIP",
+    docMetricUiTxtFile: "Văn bản TXT"
+  });
+  Object.assign(MESSAGES.en, {
+    docMetricUiPdfCount: "PDF files: {count}",
+    docMetricUiImagesCount: "Images: {count}",
+    docMetricUiPagesSuffix: " · Pages: {pages}",
+    docMetricUiPdfPages: "PDF pages: {pages}",
+    docMetricUiPages: "Pages: {pages}",
+    docMetricUiChecking: "Checking",
+    docMetricUiSelectedImage: "1 selected image",
+    docMetricUiNotReduced: "File size has not been reduced",
+    docMetricUiNoFile: "No file yet",
+    docMetricUiDocxFile: "DOCX file",
+    docMetricUiPngImage: "PNG image",
+    docMetricUiPngZip: "{count} PNG images in a ZIP file",
+    docMetricUiTxtFile: "TXT text file"
+  });
+  Object.assign(MESSAGES.zh, {
+    docMetricUiPdfCount: "{count} 个 PDF 文件",
+    docMetricUiImagesCount: "{count} 张图片",
+    docMetricUiPagesSuffix: " · {pages} 页",
+    docMetricUiPdfPages: "{pages} 页 PDF",
+    docMetricUiPages: "{pages} 页",
+    docMetricUiChecking: "正在检查",
+    docMetricUiSelectedImage: "已选 1 张图片",
+    docMetricUiNotReduced: "文件大小尚未减小",
+    docMetricUiNoFile: "暂无文件",
+    docMetricUiDocxFile: "DOCX 文件",
+    docMetricUiPngImage: "PNG 图片",
+    docMetricUiPngZip: "ZIP 文件中包含 {count} 张 PNG 图片",
+    docMetricUiTxtFile: "TXT 文字文件"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {
