@@ -10503,6 +10503,7 @@
         "copyfast_db.py",
         "copyfast_provider_policy.py",
         "docs/AGY-DISPATCH-POINT-20261107.md",
+        "docs/reports/pdf-split-readability-20261116.md",
         "docs/reports/video-inner-first-three-20261110.md",
         "reports/audit/R218-CHECKPOINT-20261021.md",
         "reports/audit/R218-CUSTOMER-UI-REALITY-QA-20261022.json",
@@ -10534,7 +10535,7 @@
         "video.html",
         "video.py"
       ],
-      "occurrences": 52,
+      "occurrences": 53,
       "provider": "Gemini"
     },
     {
@@ -18796,9 +18797,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 539,
-  "source_files_scanned": 539,
-  "source_fingerprint_sha256": "eb289dd3e7a525e3a8dcc16743a088bc3404690d16c29418886da3ecbde37d17",
+  "source_files_discovered": 541,
+  "source_files_scanned": 541,
+  "source_fingerprint_sha256": "f1be7f055cffc2ce2ecf38163de3bf276a4f591fe5260509fe158963e3fd21b8",
   "source_root": "repository-root",
   "ui_path_references": [
     {

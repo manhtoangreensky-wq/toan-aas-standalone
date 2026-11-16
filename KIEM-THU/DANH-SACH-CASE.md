@@ -1375,3 +1375,15 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 |CL-NATIVE|nặng|Catalogue375/family1440×3locale|2actualowners,R4one+R5five|KhôngfakeAPI/khôngcleansixclaim|
 |CL-DATA|nặng|9tables/schema/6plans18scenes|0productwrites/reseed/egress|Jobs0/sourceevidenceexact|
 |CL-DELIVERY|nặng|ExactCI/merge/deploy/runtime/assets|Receipt riêng|Wholelocale/AX/auth/M-FINALmở|
+
+## PDF-SPLIT-READABILITY-20261116 —Issue689
+
+|Mã|Mức|Thao tác|Kết quả cần đạt|Bằng chứng|
+|---|---|---|---|---|
+|SR-RED|nặng|ThiếuhaiLIGHTrules|RED1PASS1FAIL/nativeBASE3|Lỗitrướcsửađãđo|
+|SR-SCOPE|nặng|Exact2ruleEOFworkerpatch|MọibyteCSSngoàiphạmvinguyên|Inverse/protectedsource|
+|SR-LIGHT|nặng|4Splitlabel/help375LIGHT|Contrast12.351555/5.797099:1|Actualpaintchain/RGB|
+|SR-PROTECT|nặng|SplitDARK/Compresssentinel|Font/geometry/controls/stylesexact|[Phiên SR](PHIEN-PDF-SPLIT-READABILITY-20261116.md)|
+|SR-CHAIN|nặng|PDFinverseFIRSTChatCSS|7NodePASS/oldhashunknownsretained|Khôngmaskoutside|
+|SR-DATA|nặng|9tables/6plans18scenes/source|0productwrites/reseed/egress/Jobs0|NativeBASE3/GREEN3|
+|SR-DELIVERY|nặng|ExactCI/merge/deploy/runtimeassets|Receipt riêng|WholePDF/AX/auth/M-FINALmở|

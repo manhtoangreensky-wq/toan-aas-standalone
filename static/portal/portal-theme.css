@@ -23870,3 +23870,11 @@ html:not([data-portal-theme="dark"]) .portal-page:is(.portal-chat-workspace, .po
 html:not([data-portal-theme="dark"]) .portal-chat-workspace-detail .portal-chat-context-edit .portal-field > span {
   color: var(--portal-ink);
 }
+
+/* Keep PDF split field names and guidance readable in the light theme. */
+html:not([data-portal-theme="dark"]) .portal-page.portal-pdf-split .portal-field > label {
+  color: var(--portal-text);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-pdf-split .portal-field-help {
+  color: var(--portal-muted);
+}

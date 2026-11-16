@@ -2142,3 +2142,15 @@ renderCapabilityHubFamilySummary;catalogue-chínhportal-features.js.
 |Cataloguebundlecũkháccatalogue-chính|Kiểmownerthậttừserver|Lightentry135cardskhôngđổitrongunit|
 |PDFchưaghiđãtriểnkhai|PR744206eccc2đãgiao|CI43713208147/deploy43732595353|
 |Readabilitychưacósốđo|4LIGHTfail/4DARKpass|Chỉ2Splitobservations,phiếuCSSriêng|
+
+## Chữ Tách PDF —đối chiếu16/11/2026
+
+NguồnactualCSSBASE44134931vànativecomputedBASE/GREEN6observations.
+
+|Trước|Ứng viên|Bằng chứng/giới hạn|
+|---|---|---|
+|LIGHTlabel1.265330/help2.021153:1|2rulecolorsemantic|12.351555/5.797099:1thựctế|
+|Darkđãđủtươngphản|Khôngđổi|Styles/font/geometryexactBASE|
+|MànCompresscùnglỗinhạt|Giữsentinelvàghiđơnvịkế|KhôngclaimđãfixngoàiSplit|
+|ChatCSSchainkhóakhứ|Exact2ruleinverseFIRST|Oldhash/wholeCSS/assertionsgiữ|
+|DISPLAYchưaghiđãtriểnkhai|PR74544134931đãgiao|CI43737144840/deploy43814377064|
