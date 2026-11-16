@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import {operationReferenceFeedbackHistoricalI18nSource,operationReferenceFeedbackHistoricalSnapshot} from "./operation-reference-feedback-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/pdf-merge-fields-reviewed.json",import.meta.url),"utf8"));
 const rows=[
   ["docPdfMergeUiSourceLabel","PDF thứ {position}","PDF {position}","第 {position} 个 PDF"],
@@ -35,12 +36,13 @@ export function pdfMergeFieldsHistoricalPortalSource(source){
   return restored; // Exact scoped text only; no source normalization or whole-function masking.
 }
 export function pdfMergeFieldsHistoricalI18nSource(source){
-  assert.equal(typeof source,"string",fail);if(!source.includes("docPdfMergeUi"))return source;
+  assert.equal(typeof source,"string",fail);source=operationReferenceFeedbackHistoricalI18nSource(source);if(!source.includes("docPdfMergeUi"))return source;
   const result=once(source,addition,marker);
   assert.equal(result.includes("docPdfMergeUi"),false,fail+" partial/unknown/residual catalogue");return result;
 }
 export function pdfMergeFieldsHistoricalSnapshot(entries,locale){
   assert.ok(locales.includes(locale),fail+" locale");
+  entries=operationReferenceFeedbackHistoricalSnapshot(entries,locale);
   const added=entries.filter(([key])=>key.startsWith("docPdfMergeUi"));if(!added.length)return entries;
   const expected=rows.map(row=>[row[0],row[locales.indexOf(locale)+1]]);
   assert.deepEqual(added,expected,fail+" missing/unknown/value/order/duplicate key");

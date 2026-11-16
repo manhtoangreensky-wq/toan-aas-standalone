@@ -3929,6 +3929,12 @@
     return Number.isInteger(offset) && offset >= 0 && offset <= OPERATION_ASSET_REFERENCE_MAX_LIST_OFFSET ? offset : 0;
   }
 
+  function operationReferenceFeedbackText(key, fallback) {
+    const i18n = window.TOANAASI18n;
+    const value = i18n && typeof i18n.t === "function" ? i18n.t("operationReferenceFeedback." + key) : "";
+    return typeof value === "string" && value ? value : fallback;
+  }
+
   function operationAssetReferenceListPath(kind, filter, offset) {
     const selectedKind = operationAssetReferenceKind(kind);
     const normalized = operationAssetReferenceFilterPayload(filter);
@@ -35785,8 +35791,10 @@
         const filter = action === "document-asset-reference-page" ? undefined : (clear ? { q: "" } : operationAssetReferenceFilterPayload(fields));
         const offset = action === "document-asset-reference-page" ? operationAssetReferenceListOffset(fields.__documentAssetReferenceOffset) : 0;
         const refreshed = await hydrateDocumentAssetReferences(kind, filter, offset, selections);
-        if (!refreshed) throw new Error("Không thể tải reference Document Operations an toàn. Hãy thử lại.");
-        toast(action === "document-asset-reference-page" ? "Đã tải trang reference từ API owner-scoped." : (clear ? "Đã xóa bộ lọc reference riêng tư." : "Đã lọc reference riêng tư."));
+        if (!refreshed) throw new Error(operationReferenceFeedbackText("failed", "Chưa tải được tệp. Hãy thử lại."));
+        toast(action === "document-asset-reference-page"
+          ? operationReferenceFeedbackText("page", "Đã tải danh sách tệp.")
+          : (clear ? operationReferenceFeedbackText("cleared", "Đã xóa bộ lọc.") : operationReferenceFeedbackText("filtered", "Đã lọc danh sách tệp.")));
         return;
       }
       if (["image-operation-asset-reference-filter", "image-operation-asset-reference-filter-clear", "image-operation-asset-reference-page"].includes(action)) {
@@ -35801,8 +35809,10 @@
         const filter = action === "image-operation-asset-reference-page" ? undefined : (clear ? { q: "" } : operationAssetReferenceFilterPayload(fields));
         const offset = action === "image-operation-asset-reference-page" ? operationAssetReferenceListOffset(fields.__imageOperationAssetReferenceOffset) : 0;
         const refreshed = await hydrateImageOperationAssetReferences(filter, offset, selections);
-        if (!refreshed) throw new Error("Không thể tải reference Image Operations an toàn. Hãy thử lại.");
-        toast(action === "image-operation-asset-reference-page" ? "Đã tải trang reference từ API owner-scoped." : (clear ? "Đã xóa bộ lọc reference riêng tư." : "Đã lọc reference riêng tư."));
+        if (!refreshed) throw new Error(operationReferenceFeedbackText("failed", "Chưa tải được tệp. Hãy thử lại."));
+        toast(action === "image-operation-asset-reference-page"
+          ? operationReferenceFeedbackText("page", "Đã tải danh sách tệp.")
+          : (clear ? operationReferenceFeedbackText("cleared", "Đã xóa bộ lọc.") : operationReferenceFeedbackText("filtered", "Đã lọc danh sách tệp.")));
         return;
       }
       if (action === "document-operation-pdf-split") {

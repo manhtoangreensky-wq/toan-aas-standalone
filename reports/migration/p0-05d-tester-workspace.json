@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-17",
-  "local_files_refresh_scope": "Merge light contrast: canonical cases 1492 lines/159271 LF bytes after nine scoped rows; local metadata only, reviewed17Nov. Historical remote/P0/48-case/safety fields preserved; trackerIssue689.",
+  "local_files_refresh_scope": "Operation-reference feedback: canonical cases 1508 lines/160511 LF bytes after eleven scoped rows; local metadata only. Historical remote/P0/48-case/safety fields preserved; trackerIssue689.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1492,
-      "bytes": 159271,
-      "sha256": "bffe264e2ba9ec1520e723bbbe3d0ea43ef0e30deab72862a2896f43c80e5089"
+      "lines": 1508,
+      "bytes": 160511,
+      "sha256": "71b741a2e6b924a62731ee28d4b5a7fed524dfeb301e6a6b2d67a950b8a016a1"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

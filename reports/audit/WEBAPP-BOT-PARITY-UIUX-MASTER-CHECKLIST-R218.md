@@ -2278,8 +2278,43 @@ Evidence:docs/superpowers/specs/2026-11-16-pdf-merge-fields.md,cùngIssue689.
 - [x] Scope24LF/allappPython/CI+1/nativebytebinding;source review17/11C0/I0/M0.
  Onecrophelp-regionđãxem;label/selectoccluded,khôngwholefieldvisualclaim.
 - [x] Docs/Tester READY;case1492lines159271LFbytes/metadata1PASS32deselected0.41s.
-- [ ] Provenance/exactCI/merge/deploy/runtime/receipt.
+- [x] Provenance/exactCI43916771242bothSUCCESS/mergeeb3ab9a7,
+ tree7a75a176/full diff0/deploy43919393644/runtimeexact/serviceshealth/
+ fivepublicassetsbyteexact;Issue6923402077updated/PR6924062786.
 - [ ] Referencefeedback/defaultnotes/otherPDFtools/catalogue/fullgoal/M-FINAL
  giữmở,motioncuối;khôngwholeAX/locale/signedUI/outputclaim.
 
 Evidence:docs/superpowers/specs/2026-11-16-pdf-merge-contrast.md,cùngIssue689.
+
+## Thông báo danh sách tệp — đơn vị17/11/2026
+
+- [x] PR753 đã giao đúng revision trước khi mở nhánh mới.
+- [x] FeedbackcopyAGY3.8FlashHighR1code0/exact6edits/4keys12values;
+ sourceRED1PASS12RED4304.0588ms→exactworkerreplay,zero genuineworkerfault.
+- [x] One31file595test group592PASS/3QA-harnesserrors47851.8794ms;
+ onlyaffectedrechecks:3PASS,then12PASS/1probeerror,thenlast1PASS.
+ Ownedwindowboundaryfixed,realcatalogueexportstillfrozen;noapp/fixture/
+ expectation/timingchange,582unaffectedtestsnotrepeated.
+- [x] Actualowned12caseFind/ClearUI/24toasts/nativeGET/selected+pinned/
+ literalnames/sourcebinding/Jobs0;noegress/productwrites/provider/wallet.
+ Freshsetup3register/3login/12metadata explicit. Originalwrapperfalse only
+ authauditdelta3login;readonlypostcloseverifier originalauditrows+allother
+ tables/schemaexact,no broadmask/no rerun. Tworawtoastcropsviewed;outer
+ technicalheadlines/helpstillqueued,notwholepageclaim.
+- [x] Scope24LF/allappPython/CI+1/currentdocs/source reviewC0/I0/M0;
+ TesterREADY/cases1508lines160511LFbytes/metadata1PASS32deselected0.65s.
+- [ ] Provenance/exactCI/release.
+- [ ] Extra local Python bundle/auth-lifecycle protection INCONCLUSIVE300s;
+ onlyownedpyteststopped,noapp/testchange,noallPythonPASS/BASEfailureclaim.
+ Fullauthlifecycle remainsopen;exactheadCIstillmandatory.
+- [ ] Baselineobsoletealertsconfirmed:28tests8PASS20RED1501.8991ms,
+ route/session/request/logout;separateSTALE-FEEDBACKcontract6924139241.
+ NewAGY3.8FlashHighR1code0/exact2edits,NOT_APPLIED/NOT_QA;
+ applyonlyaftercopydelivery,notcopyworkerfailure.
+- [ ] Permission/unsupported/queryvalidationcopy,defaultnotes/otherPDFtools/
+ catalogue/full locale/AX/auth/device/Safari/signedUI/finaloutputremain.
+- [ ] M-FINAL01..06 stays last; do not narrow goal to this unit.
+
+Evidence:docs/superpowers/specs/2026-11-17-operation-reference-feedback.md,
+singleIssue689. Freshmodels17Nov highestGeminigemini-3.8-flash-high,
+existingloginworking;noOAuth/settingschange.

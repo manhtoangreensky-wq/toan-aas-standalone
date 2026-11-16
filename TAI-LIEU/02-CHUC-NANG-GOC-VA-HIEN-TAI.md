@@ -2248,3 +2248,16 @@ Nguồn thực:Merge lightCSS tạiBASE2c7eba2c. Khôngthêmchức nănghayengin
 | Cóthểđổifont/layout/darkké | Chỉforegroundlightđổi |24controlsexact/16darksentinels/wholeoutside |
 | Copyunitcònghichưadeploy | PR7522c7eba2cđãgiao | CI43908810643/deploy43911268504/receipt6922389994 |
 | CropcóthểđượccoinhưfullvisualPASS | Chỉhelp-regionwitness | Label/selectoccluded,wholeUX/AXvẫnmở |
+
+## Thông báo danh sách tệp — đối chiếu17/11/2026
+
+Nguồn thực: hai nhánh thao tác tham chiếu trong integration.js tại BASEeb3ab9a7.
+
+| Trước | Ứng viên có phạm vi | Bằng chứng/giới hạn |
+|---|---|---|
+| Find/Clear/Page dùng VI cứng và reference/API owner-scoped | Bốn khóa VI/EN/ZH, thông báo gọn theo locale hiện tại | Real handler/hydrator/API/toast trong VM |
+| Có thể coi tải lỗi là thành công | Giữ nguyên tiêu chí cũ, vẫn chỉ alert khi lỗi |36typedGET success/failure scenarios |
+| Có thể dịch cả tên tệp khách | Chỉ fixedcopy, tên/UUID/metadata giữ literal | Selected/pinned/hostiletext tests |
+| Frozen i18n export không thể thay bằng phép gán trong QA | Chỉ đổi ownedwindow test boundary, không sửa app | QA lỗi được ghi rõ, không tính workerfault |
+| Stale data guard bị hiểu là stale feedback đã yên lặng | Baseline alert cũ tái hiện, phiếu riêng2edits |28tests8PASS20RED; copyunit không sửa ké |
+| Contrast còn ghi chưa triển khai | PR753eb3ab9a7 đã giao | CI43916771242/deploy43919393644/receipt6923402077 |
