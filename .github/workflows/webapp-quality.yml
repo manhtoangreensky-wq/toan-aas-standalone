@@ -89,6 +89,7 @@ jobs:
           node --test tests/pdf-customer-cleanup.test.mjs
           node --test tests/pdf-input-font16.test.mjs
           node --test tests/pdf-merge-fields.test.mjs
+          node --test tests/pdf-merge-contrast.test.mjs
           node --test tests/pdf-usability.test.mjs
           node --test tests/document-card-metrics.test.mjs
           node --test tests/document-card-display.test.mjs

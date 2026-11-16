@@ -2243,7 +2243,10 @@ Evidence:docs/superpowers/specs/2026-11-16-pdf-input-font16.md,cùngIssue689.
  R1/R2zeroobs do observercoordinatorghépmarkvàfieldname,khôngworkerfault.
 - [x] Scope23LF/allappPython/CI+1/nativebytebinding và source reviewC0/I0/M0.
 - [x] Docs/Tester READY;case1478lines158138LFbytes,metadata1PASS32deselected0.38s.
-- [ ] Provenance/exactCI/merge/deploy/runtime/receipt.
+- [x] PR752 đã giao:exactCI43908810643bothSUCCESS,
+ merge/runtime2c7eba2c65b90ce1dde076b6520d5c892591b603,
+ tree60e0e200/whole diff0,deploy43911268504SUCCESS/services/health/
+ 5assetsbyteexact;receiptsIssue6922389994/PR6922948333.
 - [ ] Defaultnotes/côngcụPDFkhác/catalogue/fullgoal/M-FINAL giữmở,motioncuối.
 
 Evidence:docs/superpowers/specs/2026-11-16-pdf-merge-fields.md,cùngIssue689.
@@ -2259,3 +2262,24 @@ Evidence:docs/superpowers/specs/2026-11-16-pdf-merge-fields.md,cùngIssue689.
  Hai phiênđộclập chỉtrảproposal;applytuầntự,khôngchạmcurrentfrozenhashes.
   CảhaiR1code0/exactexpected/zero genuineworkerfault,NOT_APPLIED/NOT_QA.
   ContractsIssue6922273292/6922273259;khônggọilạiphiếuđãtrảđúng.
+
+## Độ rõ chữ Gộp PDF sáng — đơn vị16/11/2026
+
+- [x] PR752 đã giao trướcBASE2c7eba2c;khôngchạmfeedbackpatch.
+- [x] AGY3.8FlashHighR1code0/exact1CSSedit;two semanticlightcolorsonly,
+ preflightRAMexactinverse/outside/chưapplyapp.6QA-testdraftssyntax0.
+- [x] Rootđãđọc4nativePREPartifacts;plannedtrueMergeBASE+GREEN,
+ 48textsamples32lighttargets16darksentinels24controls. Chưachạyruntime.
+- [x] NativeactualBASE/GREENmỗi3Mergecases48textsamples24controls,
+ 32lighttargets1.265330/2.021153→12.351555/5.797099:1;
+ 16darktextsamples/fonts/geometry/24controlsexact,source/data/evidence/Jobs0.
+- [x] Source3PASS3RED493.8352ms→exact1replay→onegroup30files582PASS/
+ 0FAIL/0SKIP42339.577ms;khôngrerunBASEhoặcnhómđạt.
+- [x] Scope24LF/allappPython/CI+1/nativebytebinding;source review17/11C0/I0/M0.
+ Onecrophelp-regionđãxem;label/selectoccluded,khôngwholefieldvisualclaim.
+- [x] Docs/Tester READY;case1492lines159271LFbytes/metadata1PASS32deselected0.41s.
+- [ ] Provenance/exactCI/merge/deploy/runtime/receipt.
+- [ ] Referencefeedback/defaultnotes/otherPDFtools/catalogue/fullgoal/M-FINAL
+ giữmở,motioncuối;khôngwholeAX/locale/signedUI/outputclaim.
+
+Evidence:docs/superpowers/specs/2026-11-16-pdf-merge-contrast.md,cùngIssue689.

@@ -23917,3 +23917,11 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-pdf-optimize .portal-fi
     font-size: 16px;
   }
 }
+
+/* Keep PDF merge field names and guidance readable in the light theme. */
+html:not([data-portal-theme="dark"]) .portal-page.portal-pdf-merge .portal-field > label {
+  color: var(--portal-text);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-pdf-merge .portal-field-help {
+  color: var(--portal-muted);
+}
