@@ -6,6 +6,7 @@ import {createHash} from "node:crypto";
 import {operationReferenceFeedbackRuntime as runtime} from "./helpers/operation-reference-feedback-runtime.mjs";
 import {operationReferenceStaleFeedbackHistoricalIntegrationSource as inverse} from "./helpers/operation-reference-stale-feedback-snapshot.mjs";
 import {imageResizeGuidanceHistoricalI18nSource} from "./helpers/image-resize-guidance-snapshot.mjs";
+import {pdfSplitMetaHistoricalPortalSource} from "./helpers/pdf-split-meta-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/operation-reference-stale-feedback-reviewed.json",import.meta.url)));
 const paths={integration:"static/portal/integration.js",i18n:"static/portal/portal-i18n.js",portal:"static/portal/portal.js",theme:"static/portal/portal-theme.css"};
 const lf=value=>value.replace(/\r\n/g,"\n"),hash=value=>createHash("sha256").update(value).digest("hex");
@@ -53,7 +54,7 @@ test("exact two worker edits and scoped inverse bind actual source and every out
   assert.equal(source.integration,expected);assert.equal(hash(source.integration),fixture.binding.candidateIntegration);
   assert.equal(hash(baseline.integration),fixture.binding.baselineIntegration);assert.equal(inverse(source.integration),baseline.integration);
   assert.equal(inverse(baseline.integration),baseline.integration);
-  for(const key of ["i18n","portal","theme"]){const current=key==="i18n"?imageResizeGuidanceHistoricalI18nSource(source[key]):source[key];assert.equal(current,baseline[key]);assert.equal(hash(current),fixture.binding[key]);}
+  for(const key of ["i18n","portal","theme"]){const current=key==="i18n"?imageResizeGuidanceHistoricalI18nSource(source[key]):key==="portal"?pdfSplitMetaHistoricalPortalSource(source[key]):source[key];assert.equal(current,baseline[key]);assert.equal(hash(current),fixture.binding[key]);}
   const prefix="\r\n/* CUSTOMER prefix */\r\n",suffix="\r\n/* CUSTOMER Facebook TikTok suffix */";
   assert.equal(inverse(prefix+source.integration+suffix),prefix+baseline.integration+suffix);
 });

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import {pdfSplitMetaHistoricalI18nSource,pdfSplitMetaHistoricalSnapshot} from "./pdf-split-meta-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/image-resize-guidance-reviewed.json",import.meta.url),"utf8"));
 const fail="Unreviewed Image Resize guidance",locales=["vi","en","zh"];
 const count=(text,part)=>text.split(part).length-1;
@@ -8,6 +9,7 @@ const ordered=order.map(key=>fixture.changes.find(edit=>JSON.parse(edit.old.trim
 assert.ok(ordered.every(Boolean),fail+" three reviewed keys");
 export function imageResizeGuidanceHistoricalI18nSource(source){
   assert.equal(typeof source,"string",fail);
+  source=pdfSplitMetaHistoricalI18nSource(source);
   const present=fixture.changes.map(edit=>({old:count(source,edit.old),next:count(source,edit.new)}));
   const keys=fixture.rows.map(row=>count(source,'["'+row.key+'",'));
   if(keys.every(n=>n===0))return source;
@@ -27,6 +29,7 @@ export function imageResizeGuidanceHistoricalI18nSource(source){
 }
 export function imageResizeGuidanceHistoricalSnapshot(entries,locale){
   assert.ok(locales.includes(locale),fail+" locale");
+  entries=pdfSplitMetaHistoricalSnapshot(entries,locale);
   const keys=fixture.rows.map(row=>"imageOperationUi."+row.key),index=locales.indexOf(locale);
   const found=keys.map(key=>entries.filter(([name])=>name===key));
   if(found.every(values=>values.length===0))return entries;

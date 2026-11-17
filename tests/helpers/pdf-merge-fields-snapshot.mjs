@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import {pdfSplitMetaHistoricalPortalSource} from "./pdf-split-meta-snapshot.mjs";
 import {operationReferenceFeedbackHistoricalI18nSource,operationReferenceFeedbackHistoricalSnapshot} from "./operation-reference-feedback-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/pdf-merge-fields-reviewed.json",import.meta.url),"utf8"));
 const rows=[
@@ -23,6 +24,7 @@ const count=(value,part)=>value.split(part).length-1,fail="Unreviewed PDF Merge 
 const once=(value,old,next)=>{assert.equal(count(value,old),1,fail+" missing/changed/duplicate chunk");return value.replace(old,()=>next);};
 export function pdfMergeFieldsHistoricalPortalSource(source){
   assert.equal(typeof source,"string",fail);
+  source=pdfSplitMetaHistoricalPortalSource(source);
   if(!source.includes("docPdfMergeUi"))return source;
   const anchor="  function pdfMergeFormFields(";assert.equal(count(source,anchor),1,fail+" owner");
   const start=source.indexOf(anchor),end=source.indexOf("\n  function ",start+anchor.length);assert.ok(end>start,fail+" boundary");

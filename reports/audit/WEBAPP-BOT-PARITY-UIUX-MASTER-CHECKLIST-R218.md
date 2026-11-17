@@ -2369,7 +2369,9 @@ existingloginworking;noOAuth/settingschange.
 - [x] Source reviewC0/I0/M0;25protectedpaths/allappPython/CI+1 exact,
  docs/currentoriginalcomparison/TesterREADY;metadata1PASS32deselected0.69s,
  casefile1536lines162792LFbytes/SHA cbbd78eb8f3684974514a68b74bbaae41640d66c0443c5af200f4686d48483ae.
-- [ ] Sourceprovenance/exactCI/release/receipt.
+- [x] PR756 deliveredHEADa9d054cb/CI44031412556bothSUCCESS;
+ merge/runtime4ddd63ce/tree757b514aexact/deploy44033266452SUCCESS,
+ serviceshealth/5assetsexact;Issue6940613584/PR6940932475 receipts.
 - [ ] Resize VIoutertitle/lightlabelhelpcontrast/othertechnicalcopy remain,
  PDFSplitoutermeta proposal returned separately,not applied.
 - [ ] Web↔Bot current-source trace returned. Old TTSbackend actually failed
@@ -2379,3 +2381,26 @@ existingloginworking;noOAuth/settingschange.
  helper/client remainNOT_APPLIED,noBot/provider/wallet/ENV/auth/schemachange.
 - [ ] Whole goal/signedUI/finaloutput/AX/auth/device/Safari/M-FINAL open;
  motion last.
+
+## Tách PDF — tiêu đề/mô tả ngoài, sau PR756
+
+- [x] Actualclient6RED1128.9751ms/server6RED2.56s;exactAGYR1fiveedits
+ across3appfiles/two keys6values,no workerfault/rootapprepair.
+- [x] Oneaffected95Node90PASS5harnessFAIL9543.9399ms→only5affectedPASS
+ 2036.9431ms,not90repeat/notsingle95green.15serverPASS3.41s.
+ Oldlengthprojection/serverlegacykey/fullrollbacktesterrors corrected only
+ inQA;oldassertions/hashes/rawintegrationguard/outside/order preserved.
+- [x] Source reviewC0/I0/M0,exactproposal/fixture/sourcehashes;
+ no routes/forms/rights/customer/styles/engine/auth/data change.
+- [x] Native6VI/EN/ZH×375light/1440dark actualfirstHTML/hydratedcopy/
+ theme/select/range/Tab,no submit/errors/overflow/egress.3freshaccounts/
+ 12metadata/exact3loginaudit/oldregisterhash/otherproductdata/schema/
+ sourcebindingunchanged;22ownedstopped/0active;6screens/tworawviewed.
+- [x] Scope23protectedpaths/allotherPython/CI+2exact;docs/currentoriginal/
+ TesterREADY/metadata1PASS32deselected0.75s;cases1549lines163897LFbytes.
+- [ ] Provenance/exactCI/merge/deploy/runtime/assets/receipt.
+- [ ] Resizeoutermeta/lightcontrast/technicalfooter proposals returned
+ separately,NOT_APPLIED/NOT_QA. Othercopy/catalogue/AX/auth/device/Safari/
+ signedUI/output/M-FINAL remainopen,motionlast.
+- [ ] CurrentgoalUIonly;TTS/engine artifacts held OUTSIDE_ACTIVE_SCOPE,
+ NOT_APPLIED and no Bot/provider/wallet/PayOS/productiondata mutation.
