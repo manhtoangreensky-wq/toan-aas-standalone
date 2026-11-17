@@ -1,0 +1,19 @@
+{
+  "base": "4180d4e2ec0ac4303037b409e55cb5f86106fa84",
+  "baselineThemeLfSha256": "aa9444ec95d2f5ec20feb1db3e0d0eab57f786eeb32536458e0f899b87e045ec",
+  "candidateThemeLfSha256": "153ae3f84afcd2b528ba762d307374df3f188a2e6e7867d51e2d4867329ced56",
+  "rows": [
+    ["field.source.label", "Ảnh trong kho tệp", "Saved image", "已保存的图像"],
+    ["field.source.empty", "Chọn ảnh", "Choose an image", "选择图像"],
+    ["field.source.help", "Chọn ảnh JPEG, PNG hoặc WebP đã lưu. Tệp gốc được giữ nguyên.", "Choose a saved JPEG, PNG or WebP image. The original stays unchanged.", "选择已保存的 JPEG、PNG 或 WebP 图像。原文件将保持不变。"],
+    ["common.openVault", "Mở kho tệp", "Open files", "打开文件库"]
+  ],
+  "changes": [
+    {
+      "file": "static/portal/portal-theme.css",
+      "count": 1,
+      "old": "/* Keep Resize field names and guidance readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-image-resize .portal-field > label {\n  color: var(--portal-text);\n}\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-image-resize .portal-field-help {\n  color: var(--portal-muted);\n}",
+      "new": "/* Keep Resize field names and guidance readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-image-resize .portal-field > label {\n  color: var(--portal-text);\n}\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-image-resize .portal-field-help {\n  color: var(--portal-muted);\n}\n\n/* Keep Resize controls at their natural height beside the source picker. */\n.portal-page.portal-image-resize form[data-portal-action=\"image-operation-resize\"] > .portal-fields > .portal-field {\n  align-content: start;\n}"
+    }
+  ]
+}

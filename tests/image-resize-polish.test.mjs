@@ -7,6 +7,7 @@ import {pageMetaRenderer,pageMetaSources} from "./helpers/chat-page-meta-runtime
 import {resizeReadyContext,RESIZE_CUSTOMER} from "./helpers/image-resize-guidance-runtime.mjs";
 import {resizePlainHistoricalI18nSource} from "./helpers/image-resize-plain-copy-snapshot.mjs";
 import {imageSharedHistoricalPortalSource} from "./helpers/image-shared-plain-copy-snapshot.mjs";
+import {resizeControlHeightHistoricalThemeSource} from "./helpers/image-resize-control-height-snapshot.mjs";
 import {resizePolishHistoricalPortalSource,resizePolishHistoricalI18nSource,
   resizePolishHistoricalPagesSource,resizePolishHistoricalThemeSource,resizePolishHistoricalSnapshot} from "./helpers/image-resize-polish-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-resize-polish-reviewed.json",import.meta.url),"utf8"));
@@ -87,7 +88,7 @@ test("physical application equals exactly seven worker changes and protected int
     assert.equal(expected[key].split(edit.old).length-1,1);expected[key]=expected[key].replace(edit.old,()=>edit.new);
   }
   for(const[key,file]of Object.entries(files)){
-    const physical=lf(fs.readFileSync(file,"utf8")),raw=key==="i18n"?resizePlainHistoricalI18nSource(physical):key==="portal"?imageSharedHistoricalPortalSource(physical):physical,suffix=key[0].toUpperCase()+key.slice(1);
+    const physical=lf(fs.readFileSync(file,"utf8")),raw=key==="i18n"?resizePlainHistoricalI18nSource(physical):key==="portal"?imageSharedHistoricalPortalSource(physical):key==="theme"?resizeControlHeightHistoricalThemeSource(physical):physical,suffix=key[0].toUpperCase()+key.slice(1);
     assert.equal(raw,expected[key]);assert.equal(hash(raw),fixture.binding["candidate"+suffix]);
     assert.equal(hash(baseline[key]),fixture.binding["baseline"+suffix]);
     if(inverses[key]){assert.equal(inverses[key](raw),baseline[key]);assert.equal(inverses[key](baseline[key]),baseline[key]);}

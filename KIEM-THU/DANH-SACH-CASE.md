@@ -1584,5 +1584,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | ISPC-SOURCE | nặng | Đối chiếu hai proposal và mã ngoài | 21 hàng + hai dòng,149 tệp ứng dụng bảo vệ | SHA/forward/inverse |
 | ISPC-HISTORY | nặng | Chạy kiểm tra lịch sử có liên quan | Old assertions/hash/order giữ, không che mã lạ | 304 ca liên quan |
 | ISPC-NATIVE | nặng | VI/EN/ZH375sáng1440tối,select/1080×1920/Tab | Nhãn mới thấy được, không submit/egress | [PhiênISPC](PHIEN-IMAGE-SHARED-PLAIN-COPY-20261118.md) |
+
+## RESIZE-CONTROL-HEIGHT-20261118 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| RCH-RED | vừa | BASE3locale×375/1440×2theme |6desktopRED đúng chiều cao,6mobilePASS | [PhiênRCH](PHIEN-RESIZE-CONTROL-HEIGHT-20261118.md) |
+| RCH-GEOMETRY | vừa | Candidate12tổ hợp |5control44–48px/options/width/limits giữ | [Báo cáo](../docs/reports/image-resize-control-height-20261118.md) |
+| RCH-SCOPE | nặng | Exactaddition/inverse/protected |1CSSrule,150appgiữ,unknownmutationkhông bị che | [PhiênRCH](PHIEN-RESIZE-CONTROL-HEIGHT-20261118.md) |
+| RCH-NATIVE | vừa |6READYVI/EN/ZH375sáng1440tối |30control44–44,5px/chọnảnh/1080×1920/Tab/nosubmit | [PhiênRCH](PHIEN-RESIZE-CONTROL-HEIGHT-20261118.md) |
+| RCH-ISOLATION | nặng |DB/schema/source/ownedprocess |productcoregiữ/exact3loginaudit/0egress/22ownedstopped0 | [PhiênRCH](PHIEN-RESIZE-CONTROL-HEIGHT-20261118.md) |
+| RCH-DELIVERY | nặng |CI/merge/deploy/runtime/assets |ĐúngHEAD/SHA,không suy signedUI/PNG/wholegoal |ReceiptIssue689/PR |
 | ISPC-ISOLATION | nặng | QA mới riêng biệt | Dữ liệu/lược đồ/source giữ,tiến trình sở hữu về0 | Không production/provider/ví |
 | ISPC-DELIVERY | nặng | CI/merge/deploy/runtime | Đúng revision/tệp công khai/receipt | SignedUI/finaloutput/goal riêng |

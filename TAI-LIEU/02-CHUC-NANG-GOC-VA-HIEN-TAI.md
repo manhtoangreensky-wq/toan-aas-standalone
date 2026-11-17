@@ -2357,3 +2357,16 @@ Nguồn thực: IMAGE_OPERATION_COPY_ROWS và renderImageResize tại BASEce40bf
 Các utility khác vẫn có mô tả kỹ thuật ngoài 21 khóa này; phụ đề kết quả còn
 giá trị custom chưa được xử lý trong nhóm. Không nhận toàn locale/UX đã xong.
 Không đổi Bot, đường engine, auth, ENV, dữ liệu, giá/ví/PayOS hoặc provider.
+
+## Ô nhập Resize — đối chiếu18/11/2026
+
+Nguồn gốc: grid .portal-fields/.portal-field trong portal.css và form Resize.
+
+| Hành vi cũ đã đo | Ứng viên | Giữ nguyên |
+|---|---|---|
+| Preset desktop131,828125px theo vùng tìm ảnh | align-content:start;native select44px/input44,5px | Chiều rộng,5field,option/giới hạn/quyền |
+| Mobile44px | Giữ44–44,5px qua3locale | Nội dung,flow,không submit |
+| Comparator lịch sử khóa theme cũ | Đảo hữu hạn đúng addition mới tại biên đọc QA | Assertion/hash/mutation cũ,byte ngoài |
+
+Không thêm công cụ hoặc năng lực tạo ảnh.12geometry và6native chỉ chứng minh
+bố cục/điều khiển được kiểm;CI/deploy/LIVE/PNG cuối là các cổng khác.

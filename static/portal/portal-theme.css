@@ -23933,3 +23933,8 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-image-resize .portal-fi
 html:not([data-portal-theme="dark"]) .portal-page.portal-image-resize .portal-field-help {
   color: var(--portal-muted);
 }
+
+/* Keep Resize controls at their natural height beside the source picker. */
+.portal-page.portal-image-resize form[data-portal-action="image-operation-resize"] > .portal-fields > .portal-field {
+  align-content: start;
+}
