@@ -1,0 +1,89 @@
+{
+  "specId": "IMAGE-RESIZE-GUIDANCE-20261117",
+  "base": "1eefbf298a5526c4db6eb52b9481bf75d22c5e50",
+  "proposals": [
+    {
+      "specId": "IMAGE-RESIZE-READY-COPY-20261117",
+      "revision": "R1",
+      "sha256": "b3bf74f7b4d3f864824a5b5e675b9d5892df460b93e3ae0f816c66bef9882ec8"
+    },
+    {
+      "specId": "IMAGE-RESIZE-FORM-COPY-20261117",
+      "revision": "R1",
+      "sha256": "92ca7c2a8f12136d0b68c20aec3b3733313f4b057e0f639082428fab2e4971b7"
+    },
+    {
+      "specId": "IMAGE-RESIZE-BOUNDARY-COPY-20261117",
+      "revision": "R1",
+      "sha256": "9fa9e2623e82daebf8131c5b333f6174c8bb9074935012d82e352286639d0c6a"
+    }
+  ],
+  "rows": [
+    {
+      "key": "resize.runReason.ready",
+      "old": [
+        "Nguồn → sao chép cô lập → giải mã có giới hạn → PNG được mở lại và xác minh trước khi tải.",
+        "Source → isolated copy → bounded decode → PNG reparsed and verified before download.",
+        "源文件 → 隔离副本 → 受限解码 → 重新解析并验证 PNG 后才能下载。"
+      ],
+      "new": [
+        "Tệp gốc được giữ nguyên. Bạn có thể tải PNG sau khi tạo xong.",
+        "The original stays unchanged. Download the PNG when it is ready.",
+        "原文件将保持不变。PNG 创建完成后即可下载。"
+      ]
+    },
+    {
+      "key": "resize.form.description",
+      "old": [
+        "Trình duyệt chỉ gửi mã tài sản và cấu hình canvas đã chọn.",
+        "The browser sends only the asset ID and selected canvas settings.",
+        "浏览器仅发送资产编号和所选画布设置。"
+      ],
+      "new": [
+        "Chọn ảnh, kích thước và cách đặt ảnh cho tệp PNG mới.",
+        "Choose an image, size and placement for the new PNG.",
+        "为新 PNG 选择图像、尺寸和布局。"
+      ]
+    },
+    {
+      "key": "resize.boundary.description",
+      "old": [
+        "Canvas là thông số có thể kiểm tra, không phải lời hứa AI.",
+        "Canvas settings are verifiable parameters, not an AI promise.",
+        "画布设置是可验证参数，不是 AI 承诺。"
+      ],
+      "new": [
+        "Chọn cách cắt ảnh, thêm nền trắng hoặc làm mờ nền.",
+        "Choose center cropping, white padding or a blurred background.",
+        "选择居中裁剪、白色留边或模糊背景。"
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "file": "static/portal/portal-i18n.js",
+      "count": 1,
+      "old": "    [\"resize.runReason.ready\", \"Nguồn → sao chép cô lập → giải mã có giới hạn → PNG được mở lại và xác minh trước khi tải.\", \"Source → isolated copy → bounded decode → PNG reparsed and verified before download.\", \"源文件 → 隔离副本 → 受限解码 → 重新解析并验证 PNG 后才能下载。\"],",
+      "new": "    [\"resize.runReason.ready\", \"Tệp gốc được giữ nguyên. Bạn có thể tải PNG sau khi tạo xong.\", \"The original stays unchanged. Download the PNG when it is ready.\", \"原文件将保持不变。PNG 创建完成后即可下载。\"],"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "count": 1,
+      "old": "    [\"resize.form.description\", \"Trình duyệt chỉ gửi mã tài sản và cấu hình canvas đã chọn.\", \"The browser sends only the asset ID and selected canvas settings.\", \"浏览器仅发送资产编号和所选画布设置。\"],",
+      "new": "    [\"resize.form.description\", \"Chọn ảnh, kích thước và cách đặt ảnh cho tệp PNG mới.\", \"Choose an image, size and placement for the new PNG.\", \"为新 PNG 选择图像、尺寸和布局。\"],"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "count": 1,
+      "old": "    [\"resize.boundary.description\", \"Canvas là thông số có thể kiểm tra, không phải lời hứa AI.\", \"Canvas settings are verifiable parameters, not an AI promise.\", \"画布设置是可验证参数，不是 AI 承诺。\"],",
+      "new": "    [\"resize.boundary.description\", \"Chọn cách cắt ảnh, thêm nền trắng hoặc làm mờ nền.\", \"Choose center cropping, white padding or a blurred background.\", \"选择居中裁剪、白色留边或模糊背景。\"],"
+    }
+  ],
+  "binding": {
+    "baselineI18n": "791eb992edd38941f159b209cda1f46b7f362419067238f441dbb0cfc79aaff8",
+    "candidateI18n": "b162a48cf2c5557a714d375a3bba7a48109955172dfc19f346eea1406ac7e4f9",
+    "portal": "135ddb443fde351e8702e0a3bc803a224541b4faa205ad67824c932949fa70ee",
+    "integration": "3f94684898da34d513b885c35146828679af481751d398becad081fe99a08a0e",
+    "theme": "e30a4b077bbfa89280a44ce482c1411a625b62e96c3d304dcb45b65ac89ef276"
+  }
+}

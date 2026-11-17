@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import {imageResizeGuidanceHistoricalI18nSource,imageResizeGuidanceHistoricalSnapshot} from "./image-resize-guidance-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/operation-reference-feedback-reviewed.json",import.meta.url),"utf8"));
 const rows=[["failed","Chưa tải được tệp. Hãy thử lại.","Files could not be loaded. Please try again.","无法加载文件。请重试。"],
   ["page","Đã tải danh sách tệp.","File list loaded.","已加载文件列表。"],["cleared","Đã xóa bộ lọc.","Filter cleared.","已清除筛选。"],
@@ -37,11 +38,12 @@ export function operationReferenceFeedbackHistoricalIntegrationSource(source){
   return value; // No whole action-region masking and no newline normalization.
 }
 export function operationReferenceFeedbackHistoricalI18nSource(source){
-  assert.equal(typeof source,"string",fail);if(!source.includes(prefix))return source;
+  assert.equal(typeof source,"string",fail);source=imageResizeGuidanceHistoricalI18nSource(source);if(!source.includes(prefix))return source;
   const value=once(source,catalog,marker);assert.equal(value.includes(prefix),false,fail+" partial/unknown/residual catalogue");return value;
 }
 export function operationReferenceFeedbackHistoricalSnapshot(entries,locale){
-  assert.ok(locales.includes(locale),fail+" locale");const added=entries.filter(([key])=>key.startsWith(prefix));if(!added.length)return entries;
+  assert.ok(locales.includes(locale),fail+" locale");entries=imageResizeGuidanceHistoricalSnapshot(entries,locale);
+  const added=entries.filter(([key])=>key.startsWith(prefix));if(!added.length)return entries;
   const expected=rows.map(row=>[prefix+row[0],row[locales.indexOf(locale)+1]]);
   assert.deepEqual(added,expected,fail+" missing/unknown/changed/duplicate/order keys");assert.deepEqual(entries.slice(-4),expected,fail+" keys must append");
   return entries.slice(0,-4); // Keep every existing or unknown outside entry, in its original order.

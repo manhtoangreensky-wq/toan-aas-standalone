@@ -1521,3 +1521,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | RS-NATIVE | nặng |6actualtwo-searchorders | Same-document/noobsolete toast | [PhiênRS](PHIEN-OPERATION-REFERENCE-STALE-20261117.md) |
 | RS-DATA | nặng | FreshownedQA | Scopedauthaudit/nootherwrites/Jobs0 | Noegress/provider/wallet |
 | RS-DELIVERY | nặng | CI/merge/deploy/runtime | Exactrevisionreceipt | Fullgoal/M-FINALriêng |
+
+## IMAGE-RESIZE-GUIDANCE-20261117 — Issue689
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| IRG-COPY | nặng | Form chạy được VI/EN/ZH | Ba câu hướng dẫn đúng chín giá trị | Renderer vật lý |
+| IRG-OUTSIDE | nặng | So toàn trang với BASE | Ngoài ba chỗ chữ,HTML/control/metadata giữ |20ca mới+61ca bảo vệ |
+| IRG-STATE | nặng | Loading/failed/denied/empty/noRun | Giữ quyền/khóa nút,không hứa sẵn sàng | So hành vi BASE |
+| IRG-CATALOG | nặng | So danh mục đầy đủ | Key/order/outside/freeze giữ | Finite inverse/mutation guards |
+| IRG-SOURCE | nặng | So nguồn và proposal | Đúng ba dòng worker;app khác giữ | SHA/forward/inverse |
+| IRG-NATIVE | nặng |375sáng/1440tối,VI/EN/ZH | Chọn ảnh/nhập kích thước/Tab,không submit | [PhiênIRG](PHIEN-IMAGE-RESIZE-GUIDANCE-20261117.md) |
+| IRG-ISOLATION | nặng | Fresh owned QA | Product/schema/source giữ,auth audit đúng | Không provider/ví/production |
+| IRG-DELIVERY | nặng | CI/merge/deploy/runtime | Exact revision/receipt | SignedUI/output/fullgoal riêng |

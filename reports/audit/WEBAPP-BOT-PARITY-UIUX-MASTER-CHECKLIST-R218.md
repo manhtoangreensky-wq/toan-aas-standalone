@@ -2342,10 +2342,40 @@ existingloginworking;noOAuth/settingschange.
 - [x] Scope25LF/allappPython/guardhydratorbodiesexact/CI+1;
  independentsource reviewC0/I0/M0,currentdocs/TesterREADY;
  metadata1PASS32deselected0.38s,cases1523lines161630LFbytes.
-- [ ] ExactCI/merge/deploy/runtime/assetsreceipt.
-- [ ] HaiImageResizecopyworkers song song đãtrảcode0/exact1roweach,
+- [x] PR755 exactHEAD00c7c58a/CI44025420679bothSUCCESS;
+ merge/runtime1eefbf29/tree5758a04b exact/deploy44026819906SUCCESS,
+ serviceshealth/5assetsexact;Issue6939697009/PR6940142531 receipts posted.
+- [x] HaiImageResizecopyworkers song song đãtrảcode0/exact1roweach,
  contract6924979327;onegroupRAMpreflight2rows6values/outside/syntax0,
  NOT_APPLIED/NOT_QA. Modelactual17Novgemini-3.8-flash-high.
  Readyworkerreportprose córuntime/testzeros khôngđo;khôngnhậnlàevidence.
 - [ ] OutertechnicalPDF/Imagecopy/defaultnotes/otherPDFtools/catalogue/
  full locale/AX/auth/device/Safari/signedUI/output/M-FINAL cònmở,motioncuối.
+
+## Image Resize — hướng dẫn ngắn, sau PR755
+
+- [x] Ba proposal AGY3.8FlashHigh R1 độc lập:ready/form/boundary,
+ exact3existingrows9values.6priorRED giữ,3boundaryRED859.2354ms;
+ correctednestedsection extractor là lỗi harness, khôngworkerfault.
+- [x] Oneaffected81NodePASS0FAIL0SKIP7942.2893ms,
+ 20newraw+61historical.WholeoutsideHTML/catalogue/customer/control/rights/
+ states/oldhashes giữ,finiteinverse không che stale integration guard.
+- [x] Native6VI/EN/ZH×375light/1440dark,actualsource/select/dimensions/Tab,
+ nosubmit/overflow/errors/egress/productwrites;3freshaccounts12metadata,
+ exact3login audit/oldregisterhash/otherproductdata/schema/sourcebinding;
+ 22owned processes stopped,active0.6screenshots/2rawviewed.
+ First60sstartupfail beforeaccounts,source/binding/owned0 retained;
+ same-limitpermission run accepted,firsttimeoutrootcause UNKNOWN.
+- [x] Source reviewC0/I0/M0;25protectedpaths/allappPython/CI+1 exact,
+ docs/currentoriginalcomparison/TesterREADY;metadata1PASS32deselected0.69s,
+ casefile1536lines162792LFbytes/SHA cbbd78eb8f3684974514a68b74bbaae41640d66c0443c5af200f4686d48483ae.
+- [ ] Sourceprovenance/exactCI/release/receipt.
+- [ ] Resize VIoutertitle/lightlabelhelpcontrast/othertechnicalcopy remain,
+ PDFSplitoutermeta proposal returned separately,not applied.
+- [ ] Web↔Bot current-source trace returned. Old TTSbackend actually failed
+ before firstmodelturn on14Nov,no proposal;not code failure. Same ingress
+ spec resumed output-only17Nov,existingCLI3.8FlashHigh,no newlogin,
+ actually returnedcode0/threechanges;structuralreview inprogress;
+ helper/client remainNOT_APPLIED,noBot/provider/wallet/ENV/auth/schemachange.
+- [ ] Whole goal/signedUI/finaloutput/AX/auth/device/Safari/M-FINAL open;
+ motion last.

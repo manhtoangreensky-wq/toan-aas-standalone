@@ -2271,3 +2271,21 @@ Nguồn thực: hai nhánh thao tác tham chiếu trong integration.js tại BAS
 | Có thể nới quyền hoặc đổi hàm tải khi sửa toast | Chỉ2localcapture+postawaitfences,khôngepochmutation | Exactworker/inverse/outside |
 | Unitcopy còn ghi chưa triển khai | PR754cb358cea đã giao | CI43924561893/deploy43926903239/receipt6924690075 |
 | UnitVM có thể bị coi là signedLIVE | NativeSPA/read-onlyruntime có gate riêng | Fullauth/device/output/M-FINAL cònmở |
+
+## Hướng dẫn đổi kích thước ảnh — đối chiếu17/11/2026
+
+Nguồn thực là ba dòng có sẵn tại BASE1eefbf29, không phải chức năng ảnh mới.
+
+| Trước | Ứng viên có phạm vi | Bằng chứng/giới hạn |
+|---|---|---|
+| Mô tả gửi mã tài sản và cấu hình trình duyệt | Hướng dẫn chọn ảnh, kích thước, cách đặt ảnh | Ba locale qua renderer thật |
+| Ghi chú giải mã/sao chép/kiểm tra nội bộ | Tệp gốc giữ nguyên, tải PNG khi hoàn tất | Không hứa tác vụ đã hoàn tất |
+| Giải thích kỹ thuật về canvas/AI | Cắt giữa, thêm nền trắng hoặc làm mờ nền | Giữ nguyên ba chức năng/nút |
+| Có thể dịch cả tên tệp khách hoặc nới quyền | Chỉ chín giá trị chữ cố định | Whole-HTML/control/data/rights comparators |
+| Sửa chữ làm hỏng hash lịch sử | Khôi phục hữu hạn đúng ba dòng tại chỗ đọc kiểm tra cũ | Assertions và stale guard giữ |
+| Có thể suy kiểm tra chữ thành cả trang đạt | Sáu native ca có giới hạn | Header VI/light contrast còn lỗi cũ; không wholeUI/LIVE |
+| PR755 còn ghi chờ triển khai | Đã giao runtime1eefbf29 | CI44025420679/deploy44026819906/receipt6939697009 |
+
+Không coi81Node/sáu native ca là bằng chứng tạo PNG, kết nối Bot hoặc
+signedLIVE. Các câu giải thích khác, thiết bị/Safari, vòng đời đăng nhập
+và motion vẫn theo checklist riêng.

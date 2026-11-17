@@ -3070,3 +3070,23 @@ phiên, đăng xuất hoặc yêu cầu mới hơn. Lượt tải hiện tại v
 công/thất bại. Yêu cầu mạng cũ không bị hủy; dữ liệu vẫn dùng chốt hiện hành
 đã có, không mở quyền hay thay cách tải.43Node/8Python đạt; giao diện chuyển
 trang chậm đang có gate riêng, chưa triển khai ứng viên này.
+
+## Hướng dẫn đổi kích thước ảnh —17/11/2026
+
+PR755 đã giao: CI44025420679, merge/runtime1eefbf29,
+deploy44026819906; ba dịch vụ chạy, health và năm tệp giao diện công khai
+khớp. ReceiptIssue6939697009/PR6940142531 thay trạng thái chờ ở mốc trước.
+Đây không phải bằng chứng đầu ra tạo nội dung thực tế.
+
+Ứng viên kế tiếp thay đúng ba câu trong trang đổi kích thước ảnh, ở đủ
+VI/EN/ZH: chọn ảnh/kích thước/cách đặt ảnh; tệp gốc được giữ nguyên và tải
+PNG sau khi tạo xong; cắt giữa, thêm nền trắng hoặc làm mờ nền. Không đổi
+thao tác xử lý, nút, quyền, bố cục, tên tệp khách hoặc hạn mức.
+Một lượt kiểm tra gộp81Node đạt, gồm20ca mới và61ca bảo vệ trực tiếp.
+Native6ca VI/EN/ZH tại375sáng/1440tối đã chọn nguồn, nhập1080×1920 và Tab
+bằng điều khiển thật, không submit. Nguồn/lược đồ/dữ liệu sản phẩm giữ;
+chỉ thêm đúng ba đăng nhập của tài khoản giả,22tiến trình sở hữu dọn về0.
+Không nhận toàn bộ trang đã sạch chữ kỹ thuật: header tiếng Việt và chữ
+màu sáng còn lỗi có sẵn, giữ theo hàng đợi riêng, không sửa ké.
+[Báo cáo](../docs/reports/image-resize-guidance-20261117.md),
+[phiên kiểm tra](../KIEM-THU/PHIEN-IMAGE-RESIZE-GUIDANCE-20261117.md).
