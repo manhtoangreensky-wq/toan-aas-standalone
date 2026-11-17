@@ -2435,3 +2435,29 @@ existingloginworking;noOAuth/settingschange.
 - [ ] OtherCanvas/preset/technicalcopy/twelve-rownewproposal/Compressmeta/
  wholelocale/AX/auth/device/Safari/signedUI/output/M-FINAL remainopen.
  Motionlast;separateconnectionREADdoesnotapplyengineartifacts.
+
+## Resize —33dòng chữ dễ hiểu,17/11/2026
+
+- [x] PR758delivered:exactCI44081274590bothSUCCESS,merge/runtimeb6c717bc/
+ tree2c2c37b8/full diff0/deploy44083777023SUCCESS/serviceshealth/assets5exact;
+ Issue6947295414updated/PR6948150496receipt.
+- [x] ThreeAGYR1proposals12+9+12rows exactreplay/onei18nappfile,
+ no rootapplicationrepair/zero genuineworkerfaults.
+- [x] Baseline36prior33content3readererrors;only3submitBASEcorrected3RED
+ 1142.4129ms. New63=2PASS49contentRED12readererrors2496.7397ms;
+ only12help corrected12contentRED1713.0199ms. No workerfault.
+- [x] One36file789Nodegroup786PASS3submitreadererrors231474.7303ms;
+ only3submitGREEN2129.071ms;3newhistoryPASS2450.3292ms. No786rerun.
+- [x] NativeR1typedGETtimeout/R2scrollportproofzerocases;R3unique6VI/EN/ZH×
+ 375light/1440darkaccepted,144READYcopy/120real-scrolledvisibility/
+ 9:16↔custom/actualGET1items2/1080×1920/Tab,nosubmit/errors/overflow/egress.
+ Fresh3register/3login/12metadata/noblobs/exactregisterhash+3loginaudit/
+ otherdata/schema/sourcebindings;22ownedstopped0active.
+- [x] Scope143protectedapplicationfiles/allPython/CI+1exact;
+ rootapplicationdiffreviewC0/I0/M0.
+- [x] Currentdocs/originalcomparison/TesterREADY/cases1575lines166341LFbytes;
+ metadatagate1PASS32deselected1.44s,historicalremote/P0kept.
+- [ ] Provenance/exactCI/merge/deploy/runtime/assets/receipt của nhóm33dòng.
+- [ ] Sharedsource/common/resultsubtitle/technicalmetadatachips/
+ Compressmeta/wholelocale/AX/auth/device/Safari/signedUI/output/M-FINAL
+ remainopen. Motionlast,no enginecandidateapply.

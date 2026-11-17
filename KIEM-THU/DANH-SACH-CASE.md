@@ -1560,3 +1560,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | IRP-SOURCE | nặng | So nguồn và bảy substitutions |4appfiles,ngoài phạm vi giữ,oldassertions/hashes giữ | Fixture/proposal/scope proof |
 | IRP-NATIVE | nặng | Fresh owned QA,select/1080×1920/Tab | No submit/egress,DB/audit/source giữ,owned0 | [PhiênIRP](PHIEN-IMAGE-RESIZE-POLISH-20261117.md) |
 | IRP-DELIVERY | nặng | CI/merge/deploy/runtime | Exact revision/receipt | SignedUI/finalPNG/fullgoal riêng |
+
+## IMAGE-RESIZE-PLAIN-COPY-20261117 — Issue689
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| IRPC-COPY | nặng | Guard/read/form/field/result ba ngôn ngữ |33reviewedrows đúng99consumer slots | Rawphysicalrenderer |
+| IRPC-STATE | nặng | Denied/loading/failed/empty/noRun/disabled | State/control/permission giữ | BASE/currentsemantics |
+| IRPC-SELECT | nặng | Chọn9:16 rồicustom | Scalaroptions/128–4096/required/disabled đúng | Rawcontrols vànative |
+| IRPC-HISTORY | nặng | Lịch sử có tác vụResize | Ba labels đồng bộ,ngoài chữ nguyên |3wholeHTMLcomparators |
+| IRPC-CATALOG | nặng | So toàn danh mục | Key/order/freeze/outside/custtext giữ | Finiteinverse/mutations |
+| IRPC-SOURCE | nặng |33substitutions/mọi appfile khác | Onlyi18nchanged,143protectedfiles | Fixture/proposal/scope |
+| IRPC-NATIVE | nặng | VI/EN/ZH375sáng1440tối,select/Tab |144copy/120visibletext,no submit/egress/owned0 | [PhiênIRPC](PHIEN-IMAGE-RESIZE-PLAIN-COPY-20261117.md) |
+| IRPC-DELIVERY | nặng | ExactCI/merge/deploy/runtime | Receipt và bản chạy đúng | SignedUI/output/goal riêng |
