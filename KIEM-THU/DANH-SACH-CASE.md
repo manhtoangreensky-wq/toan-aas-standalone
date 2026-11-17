@@ -1534,3 +1534,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | IRG-NATIVE | nặng |375sáng/1440tối,VI/EN/ZH | Chọn ảnh/nhập kích thước/Tab,không submit | [PhiênIRG](PHIEN-IMAGE-RESIZE-GUIDANCE-20261117.md) |
 | IRG-ISOLATION | nặng | Fresh owned QA | Product/schema/source giữ,auth audit đúng | Không provider/ví/production |
 | IRG-DELIVERY | nặng | CI/merge/deploy/runtime | Exact revision/receipt | SignedUI/output/fullgoal riêng |
+
+## PDF-SPLIT-OUTER-META-20261117 — Issue689
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| PSM-SERVER | nặng | Mở HTML đầu VI/EN/ZH | Title/bootstrap/description đồng nhất | Actual render_portal |
+| PSM-CLIENT | nặng | Dựng giao diện ba ngôn ngữ | Header/hero/documenttitle đúng | Raw physical bundles |
+| PSM-OUTSIDE | nặng | So route khác và tên khách | HTML/title/data không đổi | BASE/current comparators |
+| PSM-CATALOG | nặng | So hai key mới | Frozen/order/outside/mutation giữ | Finite source/catalogue inverses |
+| PSM-SOURCE | nặng | So năm worker substitutions | Ba appfiles,ngoài phạm vi byte-exact | Fixture/proposal SHA |
+| PSM-NATIVE | nặng |375sáng/1440tối,VI/EN/ZH | HTML thật→hydrate→select/range/Tab | [PhiênPSM](PHIEN-PDF-SPLIT-META-20261117.md) |
+| PSM-DATA | nặng | Fresh owned QA | Audit chính xác/product/schema/source giữ | No submit/provider/ví |
+| PSM-DELIVERY | nặng | CI/merge/deploy/runtime | Exact revision và receipt | SignedUI/output/fullgoal riêng |

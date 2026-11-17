@@ -3090,3 +3090,21 @@ Không nhận toàn bộ trang đã sạch chữ kỹ thuật: header tiếng Vi
 màu sáng còn lỗi có sẵn, giữ theo hàng đợi riêng, không sửa ké.
 [Báo cáo](../docs/reports/image-resize-guidance-20261117.md),
 [phiên kiểm tra](../KIEM-THU/PHIEN-IMAGE-RESIZE-GUIDANCE-20261117.md).
+
+## Tiêu đề Tách PDF theo ngôn ngữ —17/11/2026
+
+Nhóm hướng dẫn ảnh của PR756 đã giao: CI44031412556 hai nhóm đạt,
+merge/runtime4ddd63ce,deploy44033266452;ba dịch vụ/health/năm tệp giao diện
+khớp. ReceiptIssue6940613584/PR6940932475 cập nhật mốc ứng viên phía trên.
+
+Ứng viên Tách PDF chỉ đổi tiêu đề/mô tả ở HTML đầu tiên, tiêu đề trình duyệt,
+đầu trang và phần giới thiệu theo VI/EN/ZH. Không đổi biểu mẫu, chọn tệp,
+khoảng trang, quyền, lịch sử, cách tạo PDF hoặc tên tệp khách. Hai khóa chữ,
+sáu giá trị; đúng năm thay thế AntigravityR1 ở ba tệp ứng dụng.
+Trước sửa có sáu ca giao diện và sáu ca HTML đầu tiên lỗi đúng nội dung.
+Kiểm tra gộp95Node gồm90đạt và5lỗi bộ so sánh; sửa đúng bộ so sánh rồi
+chỉ chạy lại5ca đạt, không lặp90ca.15ca server-shell đạt riêng.
+Giao diện thực và phát hành là cổng riêng; chưa nhận toàn ứng dụng hết chữ
+kỹ thuật hoặc chức năng xử lý PDF đã được chạy.
+[Báo cáo](../docs/reports/pdf-split-meta-20261117.md),
+[phiên kiểm tra](../KIEM-THU/PHIEN-PDF-SPLIT-META-20261117.md).

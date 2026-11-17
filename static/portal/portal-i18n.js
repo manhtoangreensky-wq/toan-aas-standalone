@@ -22450,6 +22450,21 @@
     "operationReferenceFeedback.filtered": "已筛选文件列表。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    docPdfMetaUiSplitTitle: "Tách PDF",
+    docPdfMetaUiSplitDescription: "Tạo tệp PDF từ một trang hoặc dải trang liên tiếp trong tài liệu đã lưu."
+  });
+
+  Object.assign(MESSAGES.en, {
+    docPdfMetaUiSplitTitle: "Split PDF",
+    docPdfMetaUiSplitDescription: "Create a PDF from one page or a consecutive page range in a saved document."
+  });
+
+  Object.assign(MESSAGES.zh, {
+    docPdfMetaUiSplitTitle: "拆分 PDF",
+    docPdfMetaUiSplitDescription: "从已保存的文档中提取单页或连续页面，创建 PDF。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

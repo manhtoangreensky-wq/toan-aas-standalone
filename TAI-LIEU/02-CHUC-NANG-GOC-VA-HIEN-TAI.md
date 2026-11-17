@@ -2289,3 +2289,19 @@ Nguồn thực là ba dòng có sẵn tại BASE1eefbf29, không phải chức n
 Không coi81Node/sáu native ca là bằng chứng tạo PNG, kết nối Bot hoặc
 signedLIVE. Các câu giải thích khác, thiết bị/Safari, vòng đời đăng nhập
 và motion vẫn theo checklist riêng.
+
+## Tiêu đề Tách PDF — đối chiếu17/11/2026
+
+Nguồn thực:metadata của `/documents/split` tại BASE4ddd63ce.
+
+| Trước | Ứng viên có phạm vi | Bằng chứng/giới hạn |
+|---|---|---|
+| HTML đầu dùng tên ứng dụng/mô tả chung | Tên/mô tả riêng ở VI/EN/ZH |6actualserverRED→targetedPASS |
+| Giao diện Anh/Trung còn nhãn Việt và thuật ngữ nội bộ | Hai khóa theo ngôn ngữ giao diện |6rawrendererRED→PASS |
+| Có thể đổi nhầm công cụ khác hoặc tên tệp khách | Chỉ hai nhánh route chính xác | Other-route wholeHTML/header/customer comparators |
+| So sánh cũ không hiểu hai khóa mới | Projection hữu hạn đúng phần metadata | Oldassertions/hashes/order giữ |
+| Lỗi bộ đo bị tính thành lỗi worker | Ba lỗi harness được ghi riêng |90PASS/5FAIL→chỉ5affectedPASS |
+| Nhóm hướng dẫn ảnh còn ghi ứng viên | PR756 đã giao | CI44031412556/deploy44033266452/receipt6940613584 |
+
+Không thêm tính năng, không chạy xử lý PDF hoặc mở quyền/backend/engine.
+Native/exactCI/phát hành/signedLIVE và toàn bộ goal có bằng chứng riêng.

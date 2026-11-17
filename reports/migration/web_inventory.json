@@ -10382,6 +10382,7 @@
       "files": [
         "KIEM-THU/DANH-SACH-CASE.md",
         "KIEM-THU/HUONG-DAN-TESTER.md",
+        "KIEM-THU/PHIEN-PDF-SPLIT-META-20261117.md",
         "README.md",
         "TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md",
         "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
@@ -10418,10 +10419,9 @@
         "copyfast_mfa.py",
         "copyfast_music_media.py",
         "copyfast_pages.py",
-        "copyfast_partner_readiness.py",
-        "copyfast_pricing_policy.py"
+        "copyfast_partner_readiness.py"
       ],
-      "occurrences": 1214,
+      "occurrences": 1217,
       "provider": "PayOS"
     },
     {
@@ -18798,39 +18798,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 561,
-  "source_files_scanned": 561,
-  "source_fingerprint_sha256": "47b687ae520acd9f40d246c58707a8258d2bcb42f0fdceca4f9362b0db1f317c",
+  "source_files_discovered": 563,
+  "source_files_scanned": 563,
+  "source_fingerprint_sha256": "91501102a322d8234ab99ada2244ce1da12fafa56440915b1d9b18caac0a8d92",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 36080,
+      "line": 36082,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36396,
+      "line": 36398,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35744,
+      "line": 35746,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35993,
+      "line": 35995,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35365,
+      "line": 35367,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35657,
+      "line": 35659,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -19045,7 +19045,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 37516,
+      "line": 37518,
       "path": "/features"
     },
     {

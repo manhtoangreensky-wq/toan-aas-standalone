@@ -5,6 +5,7 @@ import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {resizeGuidanceRenderer,resizeGuidanceSources,resizeReadyContext,resizeVisibleGuidance,RESIZE_CUSTOMER} from "./helpers/image-resize-guidance-runtime.mjs";
 import {imageResizeGuidanceHistoricalI18nSource as inverse,imageResizeGuidanceHistoricalSnapshot as catalogBack} from "./helpers/image-resize-guidance-snapshot.mjs";
+import {pdfSplitMetaHistoricalI18nSource,pdfSplitMetaHistoricalPortalSource,pdfSplitMetaHistoricalSnapshot} from "./helpers/pdf-split-meta-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-resize-guidance-reviewed.json",import.meta.url),"utf8"));
 const source=resizeGuidanceSources(),lf=value=>value.replace(/\r\n/g,"\n"),hash=value=>createHash("sha256").update(value).digest("hex");
 assert.match(fixture.base,/^[a-f0-9]{40}$/);
@@ -56,7 +57,7 @@ for(const locale of locales){
   test(locale+" frozen catalogue keeps every key/order/outside value and rejects partial mutations",()=>{
     const now=render(locale,"/image/resize",resizeReadyContext()),old=beforeRender(locale,"/image/resize",resizeReadyContext());
     assert.ok(Object.isFrozen(now.messages[locale]));
-    const entries=Object.entries(now.messages[locale]),prior=Object.entries(old.messages[locale]);
+    const entries=pdfSplitMetaHistoricalSnapshot(Object.entries(now.messages[locale]),locale),prior=Object.entries(old.messages[locale]);
     assert.deepEqual(catalogBack(entries,locale),prior);assert.deepEqual(catalogBack(prior,locale),prior);
     assert.equal(entries.length,prior.length);
     for(const row of fixture.rows){
@@ -73,11 +74,13 @@ test("the actual full catalogue is exactly the three worker rows and all other a
   assert.equal(fixture.changes.length,3);assert.equal(fixture.rows.length,3);
   let expectedSource=baseline.i18n;
   for(const edit of fixture.changes){assert.equal(edit.file,"static/portal/portal-i18n.js");assert.equal(edit.count,1);assert.equal(expectedSource.split(edit.old).length-1,1);expectedSource=expectedSource.replace(edit.old,()=>edit.new);}
-  assert.equal(source.i18n,expectedSource);assert.equal(hash(source.i18n),fixture.binding.candidateI18n);
+  const historicalI18n=pdfSplitMetaHistoricalI18nSource(source.i18n);
+  assert.equal(historicalI18n,expectedSource);assert.equal(hash(historicalI18n),fixture.binding.candidateI18n);
   assert.equal(hash(baseline.i18n),fixture.binding.baselineI18n);assert.equal(inverse(source.i18n),baseline.i18n);assert.equal(inverse(baseline.i18n),baseline.i18n);
   for(const[file,key]of [["static/portal/portal.js","portal"],["static/portal/integration.js","integration"],["static/portal/portal-theme.css","theme"]]){
     const raw=lf(fs.readFileSync(file,"utf8")),old=lf(execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:15e6}));
-    assert.equal(raw,old);assert.equal(hash(raw),fixture.binding[key]);
+    const current=key==="portal"?pdfSplitMetaHistoricalPortalSource(raw):raw;
+    assert.equal(current,old);assert.equal(hash(current),fixture.binding[key]);
   }
 });
 test("finite source projection rejects changed, partial, duplicate, moved or reordered rows and preserves CRLF outside",()=>{

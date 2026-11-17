@@ -1,0 +1,64 @@
+{
+  "specId": "PDF-SPLIT-OUTER-META-20261117",
+  "revision": "R1",
+  "base": "4ddd63ceed828cafefaef0f148d2de527b86192e",
+  "proposalSha256": "664983c8a4a92c495bfc647d44e7fb7d99c57e6a5394d83be26e330f3e56f00e",
+  "rows": [
+    [
+      "docPdfMetaUiSplitTitle",
+      "Tách PDF",
+      "Split PDF",
+      "拆分 PDF"
+    ],
+    [
+      "docPdfMetaUiSplitDescription",
+      "Tạo tệp PDF từ một trang hoặc dải trang liên tiếp trong tài liệu đã lưu.",
+      "Create a PDF from one page or a consecutive page range in a saved document.",
+      "从已保存的文档中提取单页或连续页面，创建 PDF。"
+    ]
+  ],
+  "changes": [
+    {
+      "file": "copyfast_pages.py",
+      "count": 1,
+      "old": "_PORTAL_SHELL_TITLES = {",
+      "new": "_PORTAL_SHELL_TITLES = {\n    \"/documents/split\": {\"vi\": \"Tách PDF · TOAN AAS\", \"en\": \"Split PDF · TOAN AAS\", \"zh\": \"拆分 PDF · TOAN AAS\"},"
+    },
+    {
+      "file": "copyfast_pages.py",
+      "count": 1,
+      "old": "_PORTAL_SHELL_DESCRIPTIONS = {",
+      "new": "_PORTAL_SHELL_DESCRIPTIONS = {\n    \"/documents/split\": {\n        \"vi\": \"Tạo tệp PDF từ một trang hoặc dải trang liên tiếp trong tài liệu đã lưu.\",\n        \"en\": \"Create a PDF from one page or a consecutive page range in a saved document.\",\n        \"zh\": \"从已保存的文档中提取单页或连续页面，创建 PDF。\",\n    },"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "count": 1,
+      "old": "    if (path === \"/documents\") {\n      return uiText(\"workspaceMenu.card.documents.title\", fallback);\n    }",
+      "new": "    if (path === \"/documents\") {\n      return uiText(\"workspaceMenu.card.documents.title\", fallback);\n    }\n    if (path === \"/documents/split\") return uiText(\"docPdfMetaUiSplitTitle\", \"Tách PDF\");"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "count": 1,
+      "old": "    if (path === \"/documents\") {\n      return uiText(\"featureCatalog.entry.documents.description\", fallback);\n    }",
+      "new": "    if (path === \"/documents\") {\n      return uiText(\"featureCatalog.entry.documents.description\", fallback);\n    }\n    if (path === \"/documents/split\") return uiText(\"docPdfMetaUiSplitDescription\", \"Tạo tệp PDF từ một trang hoặc dải trang liên tiếp trong tài liệu đã lưu.\");"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "count": 1,
+      "old": "  verifyEqualKeysets();",
+      "new": "  Object.assign(MESSAGES.vi, {\n    docPdfMetaUiSplitTitle: \"Tách PDF\",\n    docPdfMetaUiSplitDescription: \"Tạo tệp PDF từ một trang hoặc dải trang liên tiếp trong tài liệu đã lưu.\"\n  });\n\n  Object.assign(MESSAGES.en, {\n    docPdfMetaUiSplitTitle: \"Split PDF\",\n    docPdfMetaUiSplitDescription: \"Create a PDF from one page or a consecutive page range in a saved document.\"\n  });\n\n  Object.assign(MESSAGES.zh, {\n    docPdfMetaUiSplitTitle: \"拆分 PDF\",\n    docPdfMetaUiSplitDescription: \"从已保存的文档中提取单页或连续页面，创建 PDF。\"\n  });\n\n  verifyEqualKeysets();"
+    }
+  ],
+  "binding": {
+    "baselinePages": "d1baa0dc1faf5d130ab3e28ef44bde469da3aa078fa5be45529e374c87c59deb",
+    "candidatePages": "46f08b26e68823778f29e53698d87d7b70b21b5ee5cabe005eaa06b05bc3b77d",
+    "baselinePortal": "135ddb443fde351e8702e0a3bc803a224541b4faa205ad67824c932949fa70ee",
+    "candidatePortal": "2f29fd50f9838d06d37ccc5000092354a3f37efcbe4a7cc16296742ec9dad8af",
+    "baselineI18n": "b162a48cf2c5557a714d375a3bba7a48109955172dfc19f346eea1406ac7e4f9",
+    "candidateI18n": "5b446f754c239c6d3e9782bc9c98b6ef50bd341b279f2acc90f920eaaaacc908",
+    "baselineIntegration": "3f94684898da34d513b885c35146828679af481751d398becad081fe99a08a0e",
+    "candidateIntegration": "3f94684898da34d513b885c35146828679af481751d398becad081fe99a08a0e",
+    "baselineTheme": "e30a4b077bbfa89280a44ce482c1411a625b62e96c3d304dcb45b65ac89ef276",
+    "candidateTheme": "e30a4b077bbfa89280a44ce482c1411a625b62e96c3d304dcb45b65ac89ef276"
+  }
+}

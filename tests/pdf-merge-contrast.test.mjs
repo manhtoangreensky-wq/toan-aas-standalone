@@ -5,6 +5,7 @@ import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {pdfMergeContrastHistoricalCss as inverse} from "./helpers/pdf-merge-contrast-snapshot.mjs";
 import {operationReferenceFeedbackHistoricalI18nSource} from "./helpers/operation-reference-feedback-snapshot.mjs";
+import {pdfSplitMetaHistoricalPortalSource} from "./helpers/pdf-split-meta-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/pdf-merge-contrast-reviewed.json",import.meta.url),"utf8"));
 assert.match(fixture.base,/^[a-f0-9]{40}$/,"Bind the delivered full BASE before any git show");
 const file="static/portal/portal-theme.css",edit=fixture.changes[0],lf=value=>value.replace(/\r\n/g,"\n");
@@ -30,7 +31,7 @@ test("all font16, desktop, controls, dark and outside stylesheet bytes remain un
 });
 test("portal and locale catalogue stay byte-identical to delivered BASE",()=>{
   for(const[file,key]of [["static/portal/portal.js","candidatePortal"],["static/portal/portal-i18n.js","candidateI18n"]]){
-    const value=lf(fs.readFileSync(file,"utf8")),current=file.endsWith("portal-i18n.js")?operationReferenceFeedbackHistoricalI18nSource(value):value,base=lf(execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:12e6}));
+    const value=lf(fs.readFileSync(file,"utf8")),current=file.endsWith("portal-i18n.js")?operationReferenceFeedbackHistoricalI18nSource(value):pdfSplitMetaHistoricalPortalSource(value),base=lf(execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:12e6}));
     assert.equal(current,base);assert.equal(hash(current),fixture.binding[key]);
   }
 });

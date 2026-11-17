@@ -107,6 +107,7 @@ _PORTAL_SHELL_COPY = {
     },
 }
 _PORTAL_SHELL_TITLES = {
+    "/documents/split": {"vi": "Tách PDF · TOAN AAS", "en": "Split PDF · TOAN AAS", "zh": "拆分 PDF · TOAN AAS"},
     "/admin/commercial": {"vi": "Trung tâm Thương mại · TOAN AAS", "en": "Commercial Command Center · TOAN AAS", "zh": "商业指挥中心 · TOAN AAS"},
     "/admin/customers": {"vi": "Khách hàng Web · TOAN AAS", "en": "Web Customers · TOAN AAS", "zh": "Web 客户 · TOAN AAS"},
     "/admin/finance": {"vi": "Tài chính & Giao dịch · TOAN AAS", "en": "Finance & Transactions · TOAN AAS", "zh": "财务与交易 · TOAN AAS"},
@@ -215,6 +216,11 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/documents/split": {
+        "vi": "Tạo tệp PDF từ một trang hoặc dải trang liên tiếp trong tài liệu đã lưu.",
+        "en": "Create a PDF from one page or a consecutive page range in a saved document.",
+        "zh": "从已保存的文档中提取单页或连续页面，创建 PDF。",
+    },
     "/subdub": {
         "vi": "Hành trình sản phẩm phụ đề & lồng tiếng 4 bước chuẩn: Tạo phụ đề, Dịch phụ đề, Lồng tiếng, Phụ đề + lồng tiếng.",
         "en": "Authoritative 4-stage SubDub product journey: Subtitle only, Translated subtitle, Dubbing only, Subtitles & Dubbing.",
