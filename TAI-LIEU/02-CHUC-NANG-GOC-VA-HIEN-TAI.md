@@ -2322,3 +2322,20 @@ Nguồn thực:renderImageResize và metadata của `/image/resize` tại BASE93
 Không gọi toàn bộ trang đã sạch thuật ngữ:canvas/preset và phần chữ còn lại
 thuộc phiếu tiếp theo. Không thêm tính năng hoặc đổi engine/quyền/giá/ví.
 SignedUI/finalPNG/device/Safari/auth/motion và wholegoal vẫn mở.
+
+## Câu chữ Resize — đối chiếu17/11/2026
+
+Nguồn thực:IMAGE_OPERATION_COPY_ROWS và các consumer Resize tạiBASEb6c717bc.
+
+| Trước | Ứng viên có phạm vi | Bằng chứng/giới hạn |
+|---|---|---|
+| Câu tải/lỗi kể cơ chế nội bộ | Thông báo ngắn,hướng dẫn thử lại,giữ trạng thái thật |Rawguard/loading/failed/permissioncases |
+| Canvas/preset/AI disclaimer trong hướng dẫn | Kích thước ảnh,tùy chỉnh,cắt/thêm nền |33rows/raw99slots/native144consumerchecks |
+| Đề xuất câu “tự điền ô” không đúng nguồn | Kích thước có sẵn không cần nhập ô tùy chỉnh |Actual9:16clears+disables/customrestoreschecks |
+| Cùng nhãn Resize xuất hiện trong Lịch sử ảnh | Ba intendedlabels cập nhật đồng bộ,không đổi hành vi |3wholeHTMLinverses/controls/title comparators |
+| Test cắt form ở section tìm ảnh lồng | Chỉ sửa reader,nút thật vẫn kiểm đủ |3BASE RED→3GREEN,noapprepair |
+| Text chưa cuộn tới bị tính là cắt | Scroll thật từng node rồi đo |120nativevisibilitychecks,no threshold widening |
+| PR758 còn ghi ứng viên | Đã giao runtimeb6c717bc |CI44081274590/deploy44083777023/receipt6947295414 |
+
+Không thêm tính năng,không tạo PNG,không đổi engine/auth/giá/ví.
+Sharedsource/commoncopy và metadatachips còn được ghi riêng,không giấu thiếu sót.

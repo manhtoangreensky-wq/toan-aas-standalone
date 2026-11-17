@@ -5,10 +5,11 @@ import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {pageMetaRenderer,pageMetaSources} from "./helpers/chat-page-meta-runtime.mjs";
 import {resizeReadyContext,RESIZE_CUSTOMER} from "./helpers/image-resize-guidance-runtime.mjs";
+import {resizePlainHistoricalI18nSource} from "./helpers/image-resize-plain-copy-snapshot.mjs";
 import {resizePolishHistoricalPortalSource,resizePolishHistoricalI18nSource,
   resizePolishHistoricalPagesSource,resizePolishHistoricalThemeSource,resizePolishHistoricalSnapshot} from "./helpers/image-resize-polish-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-resize-polish-reviewed.json",import.meta.url),"utf8"));
-const source=pageMetaSources(),render=await pageMetaRenderer(source),lf=x=>x.replace(/\r\n/g,"\n"),hash=x=>createHash("sha256").update(x).digest("hex");
+const live=pageMetaSources(),source={...live,i18n:resizePlainHistoricalI18nSource(live.i18n)},render=await pageMetaRenderer(source),lf=x=>x.replace(/\r\n/g,"\n"),hash=x=>createHash("sha256").update(x).digest("hex");
 const files={pages:"copyfast_pages.py",portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js",theme:"static/portal/portal-theme.css",integration:"static/portal/integration.js"};
 const baseline=Object.fromEntries(Object.entries(files).map(([key,file])=>[key,lf(execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:30e6}))]));
 const beforeRender=await pageMetaRenderer(baseline),locales=["vi","en","zh"];
@@ -85,7 +86,7 @@ test("physical application equals exactly seven worker changes and protected int
     assert.equal(expected[key].split(edit.old).length-1,1);expected[key]=expected[key].replace(edit.old,()=>edit.new);
   }
   for(const[key,file]of Object.entries(files)){
-    const raw=lf(fs.readFileSync(file,"utf8")),suffix=key[0].toUpperCase()+key.slice(1);
+    const physical=lf(fs.readFileSync(file,"utf8")),raw=key==="i18n"?resizePlainHistoricalI18nSource(physical):physical,suffix=key[0].toUpperCase()+key.slice(1);
     assert.equal(raw,expected[key]);assert.equal(hash(raw),fixture.binding["candidate"+suffix]);
     assert.equal(hash(baseline[key]),fixture.binding["baseline"+suffix]);
     if(inverses[key]){assert.equal(inverses[key](raw),baseline[key]);assert.equal(inverses[key](baseline[key]),baseline[key]);}

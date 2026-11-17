@@ -3131,3 +3131,20 @@ toàn trang/ứng dụng đã sạch locale hoặc đã tạo được PNG. Phá
 và toàn bộ goal phải có bằng chứng riêng.
 [Báo cáo](../docs/reports/image-resize-polish-20261117.md),
 [phiên kiểm tra](../KIEM-THU/PHIEN-IMAGE-RESIZE-POLISH-20261117.md).
+
+## Câu chữ đổi kích thước ảnh —17/11/2026
+
+Nhóm trước đã giao bằngPR758:CI44081274590 hai nhóm đạt,
+runtimeb6c717bc,deploy44083777023;nguồn/dịch vụ/health/năm tệp giao diện
+khớp. ReceiptIssue6947295414/PR6948150496.
+Ứng viên kế tiếp chỉ thay33dòng chữ cố định VI/EN/ZH trong một tệp từ điển:
+giải thích tải/lỗi/quyền,hướng dẫn nhập kích thước,cắt/thêm nền,kết quả.
+Không đổi khóa,quyền,giới hạn,thao tác,tên tệp khách hoặc xử lý ảnh.
+Một nhóm789Node có786đạt và3lỗi reader;chỉ3ca sửa reader chạy lại đều đạt.
+Ba ca lịch sử ảnh bổ sung đạt riêng,không chạy lại nhóm đã đạt.
+NativeR3sáu ca có144kiểm tra chữ/120kiểm tra thấy chữ,đổi kích thước có
+sẵn/tùy chỉnh/chọn ảnh/1080×1920/Tab,không tạo ảnh. Môi trường mới giữ dữ
+liệu/lược đồ/source;chỉ ba đăng nhập được thêm vào audit;22tiến trình dọn0.
+Một số chữ chung và chip kỹ thuật vẫn chờ scope riêng,không nhận toàn trang
+đã sạch. [Báo cáo](../docs/reports/image-resize-plain-copy-20261117.md),
+[Tester](../KIEM-THU/PHIEN-IMAGE-RESIZE-PLAIN-COPY-20261117.md).

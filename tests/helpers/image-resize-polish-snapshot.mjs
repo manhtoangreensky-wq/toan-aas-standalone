@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import {resizePlainHistoricalI18nSource,resizePlainHistoricalSnapshot} from "./image-resize-plain-copy-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/image-resize-polish-reviewed.json",import.meta.url),"utf8"));
 const failure="Unreviewed Image Resize polish",prefix="imageResizeMetaUi",locales=["vi","en","zh"];
 const count=(source,part)=>source.split(part).length-1;
@@ -28,6 +29,7 @@ export function resizePolishHistoricalPortalSource(source){
   return restored.slice(0,end)+footer.old+restored.slice(end);
 }
 export function resizePolishHistoricalI18nSource(source){
+  source=resizePlainHistoricalI18nSource(source);
   assert.equal(typeof source,"string",failure);if(!source.includes(prefix))return source;
   const edit=editsFor("static/portal/portal-i18n.js")[0],restored=once(source,edit.new,edit.old);
   assert.equal(restored.includes(prefix),false,failure+" partial/unknown catalogue");return restored;
@@ -50,6 +52,7 @@ export function resizePolishHistoricalThemeSource(source){
   return once(source,edit.new,edit.old);
 }
 export function resizePolishHistoricalSnapshot(entries,locale){
+  entries=resizePlainHistoricalSnapshot(entries,locale);
   assert.ok(locales.includes(locale),failure+" locale");const added=entries.filter(([key])=>key.startsWith(prefix));
   if(!added.length)return entries;
   const expected=fixture.rows.map(row=>[row[0],row[locales.indexOf(locale)+1]]);

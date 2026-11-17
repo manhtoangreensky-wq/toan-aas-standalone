@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-17",
-  "local_files_refresh_scope": "Image Resize polish: canonical cases 1562 lines/165154 LF bytes after eight scoped rows; local metadata only, historical remote/P0/48case/safety fields preserved, trackerIssue689.",
+  "local_files_refresh_scope": "Image Resize plain copy: canonical cases 1575 lines/166341 LF bytes after eight scoped rows; local metadata only, historical remote/P0/48case/safety fields preserved, trackerIssue689.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1562,
-      "bytes": 165154,
-      "sha256": "b7fb645daa5e0835f2b0b085c949e8afbb1ad560df367933dd0a416850148461"
+      "lines": 1575,
+      "bytes": 166341,
+      "sha256": "7dfcf6316b424aea2bc8f7d690f2b2dfa7f9b139b50421da20749bc97b8c184a"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
