@@ -4,15 +4,19 @@ import path from "node:path";
 import vm from "node:vm";
 import {execFileSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
+import {operationReferenceStaleFeedbackHistoricalIntegrationSource} from "./operation-reference-stale-feedback-snapshot.mjs";
 const files={integration:"static/portal/integration.js",i18n:"static/portal/portal-i18n.js",portal:"static/portal/portal.js",theme:"static/portal/portal-theme.css"};
 export const REFERENCE_CUSTOMER='CUSTOMER Bot provider media CSRF Facebook TikTok <img src=x onerror="alert(1)">&';
 export const REFERENCE_IDS=Object.freeze(["11111111-1111-4111-8111-111111111111","22222222-2222-4222-8222-222222222222","33333333-3333-4333-8333-333333333333"]);
 export function operationReferenceFeedbackSources(base){
   if(base!==undefined)assert.match(base,/^[a-f0-9]{40}$/,"Bind actual delivered full 40-hex reference-feedback BASE before git");
   const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../..");
-  return Object.fromEntries(Object.entries(files).map(([key,file])=>[key,(base===undefined
+  return Object.fromEntries(Object.entries(files).map(([key,file])=>{
+    const value=(base===undefined
     ?fs.readFileSync(path.join(root,file),"utf8")
-    :execFileSync("git",["show",base+":"+file],{cwd:root,encoding:"utf8",maxBuffer:30e6})).replace(/\r\n/g,"\n")]));
+    :execFileSync("git",["show",base+":"+file],{cwd:root,encoding:"utf8",maxBuffer:30e6})).replace(/\r\n/g,"\n");
+    return [key,key==="integration"?operationReferenceStaleFeedbackHistoricalIntegrationSource(value):value];
+  }));
 }
 const metadata=(id,kind)=>({id,display_name:REFERENCE_CUSTOMER,original_filename:REFERENCE_CUSTOMER+(kind==="pdf"?".pdf":".png"),
   extension:kind==="pdf"?".pdf":".png",content_type:kind==="pdf"?"application/pdf":"image/png",state:"active",byte_size:1024,updated_at:"2026-11-16T16:00:00Z"});

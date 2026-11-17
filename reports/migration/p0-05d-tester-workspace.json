@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-17",
-  "local_files_refresh_scope": "Operation-reference feedback: canonical cases 1508 lines/160511 LF bytes after eleven scoped rows; local metadata only. Historical remote/P0/48-case/safety fields preserved; trackerIssue689.",
+  "local_files_refresh_scope": "Operation-reference stale feedback: canonical cases 1523 lines/161630 LF bytes after ten scoped rows; local metadata only. Historical remote/P0/48-case/safety fields preserved; trackerIssue689.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1508,
-      "bytes": 160511,
-      "sha256": "71b741a2e6b924a62731ee28d4b5a7fed524dfeb301e6a6b2d67a950b8a016a1"
+      "lines": 1523,
+      "bytes": 161630,
+      "sha256": "e4e378502768c6ace969eb87e25a2b45093d34ee0d7c9e59b3589610c07e2ae7"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
