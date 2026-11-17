@@ -6,8 +6,9 @@ import {execFileSync} from "node:child_process";
 import {resizeGuidanceRenderer,resizeGuidanceSources,resizeReadyContext,resizeVisibleGuidance,RESIZE_CUSTOMER} from "./helpers/image-resize-guidance-runtime.mjs";
 import {imageResizeGuidanceHistoricalI18nSource as inverse,imageResizeGuidanceHistoricalSnapshot as catalogBack} from "./helpers/image-resize-guidance-snapshot.mjs";
 import {pdfSplitMetaHistoricalI18nSource,pdfSplitMetaHistoricalPortalSource,pdfSplitMetaHistoricalSnapshot} from "./helpers/pdf-split-meta-snapshot.mjs";
+import {resizePolishHistoricalPortalSource,resizePolishHistoricalI18nSource,resizePolishHistoricalThemeSource} from "./helpers/image-resize-polish-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-resize-guidance-reviewed.json",import.meta.url),"utf8"));
-const source=resizeGuidanceSources(),lf=value=>value.replace(/\r\n/g,"\n"),hash=value=>createHash("sha256").update(value).digest("hex");
+const live=resizeGuidanceSources(),source={portal:resizePolishHistoricalPortalSource(live.portal),i18n:resizePolishHistoricalI18nSource(live.i18n)},lf=value=>value.replace(/\r\n/g,"\n"),hash=value=>createHash("sha256").update(value).digest("hex");
 assert.match(fixture.base,/^[a-f0-9]{40}$/);
 const baseline=Object.fromEntries([["portal","static/portal/portal.js"],["i18n","static/portal/portal-i18n.js"]]
   .map(([key,file])=>[key,lf(execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:15e6}))]));
@@ -79,7 +80,7 @@ test("the actual full catalogue is exactly the three worker rows and all other a
   assert.equal(hash(baseline.i18n),fixture.binding.baselineI18n);assert.equal(inverse(source.i18n),baseline.i18n);assert.equal(inverse(baseline.i18n),baseline.i18n);
   for(const[file,key]of [["static/portal/portal.js","portal"],["static/portal/integration.js","integration"],["static/portal/portal-theme.css","theme"]]){
     const raw=lf(fs.readFileSync(file,"utf8")),old=lf(execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:15e6}));
-    const current=key==="portal"?pdfSplitMetaHistoricalPortalSource(raw):raw;
+    const current=key==="portal"?pdfSplitMetaHistoricalPortalSource(raw):key==="theme"?resizePolishHistoricalThemeSource(raw):raw;
     assert.equal(current,old);assert.equal(hash(current),fixture.binding[key]);
   }
 });

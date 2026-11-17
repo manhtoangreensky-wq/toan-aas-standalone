@@ -1547,3 +1547,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | PSM-NATIVE | nặng |375sáng/1440tối,VI/EN/ZH | HTML thật→hydrate→select/range/Tab | [PhiênPSM](PHIEN-PDF-SPLIT-META-20261117.md) |
 | PSM-DATA | nặng | Fresh owned QA | Audit chính xác/product/schema/source giữ | No submit/provider/ví |
 | PSM-DELIVERY | nặng | CI/merge/deploy/runtime | Exact revision và receipt | SignedUI/output/fullgoal riêng |
+
+## IMAGE-RESIZE-POLISH-20261117 — Issue689
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| IRP-META | nặng | HTML đầu và giao diện VI/EN/ZH | Title/bootstrap/header/hero/description đúng | Raw client/server và native6/phase |
+| IRP-FOOTER | nặng | Trang Resize chạy được | Bỏ nguyên notice/notes,không section rỗng,lịch sử cuối | Actual DOM và source inverse |
+| IRP-CONTRAST | nặng |375sáng,ba ngôn ngữ | Từng label/help≥4.5:1,không đoán nền |30actuallightpainttargets |
+| IRP-KEEP | nặng |1440tối và control hai theme | Dark/font/geometry/options/actions giữ |30darkpairs/30controlpairs |
+| IRP-STATE | nặng | Denied/loading/failed/empty/noRun | Khóa nút và trạng thái không đổi | RawrendererBASE/current |
+| IRP-SOURCE | nặng | So nguồn và bảy substitutions |4appfiles,ngoài phạm vi giữ,oldassertions/hashes giữ | Fixture/proposal/scope proof |
+| IRP-NATIVE | nặng | Fresh owned QA,select/1080×1920/Tab | No submit/egress,DB/audit/source giữ,owned0 | [PhiênIRP](PHIEN-IMAGE-RESIZE-POLISH-20261117.md) |
+| IRP-DELIVERY | nặng | CI/merge/deploy/runtime | Exact revision/receipt | SignedUI/finalPNG/fullgoal riêng |

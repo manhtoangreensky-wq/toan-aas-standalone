@@ -1,0 +1,61 @@
+{
+  "specId": "IMAGE-RESIZE-POLISH-20261117",
+  "base": "93b41f523f2811b8934a61e4b4db8681572ad14c",
+  "proposalSha256": {
+    "meta": "ca34e77e69bbac57bbf631bc990cb5cbaf6533a46361ff15743495fac039de1c",
+    "contrast": "498daaaa41fed16d75efa324d6cdda4e7533916b02e1724cfd0084cd0d29cf07",
+    "footer": "8c0389f91a9a0b5e177070d3bce03f1ed881a499f63f2c9f12a8c8ea368ad8fd"
+  },
+  "rows": [
+    ["imageResizeMetaUiTitle", "Đổi kích thước ảnh", "Resize images", "调整图像尺寸"],
+    ["imageResizeMetaUiDescription", "Chọn ảnh đã lưu, đặt kích thước và tạo bản PNG mới. Tệp gốc được giữ nguyên.", "Choose a saved image, set its size and create a new PNG. The original stays unchanged.", "选择已保存的图像，设置尺寸并创建新的 PNG。原文件将保持不变。"]
+  ],
+  "binding": {
+    "baselinePages": "46f08b26e68823778f29e53698d87d7b70b21b5ee5cabe005eaa06b05bc3b77d",
+    "candidatePages": "80cff1d10c4f1af9c85b61e92d04f59528156de014a6856734442bb3a0fe53f4",
+    "baselinePortal": "2f29fd50f9838d06d37ccc5000092354a3f37efcbe4a7cc16296742ec9dad8af",
+    "candidatePortal": "6abdee89781ff3f81925b3fd3db2145039934f4d02839de6aeaf727efb97b16c",
+    "baselineI18n": "5b446f754c239c6d3e9782bc9c98b6ef50bd341b279f2acc90f920eaaaacc908",
+    "candidateI18n": "c51844cc1afe8d14d401fab78edd73d86c4c3d3885614183fd8839eecb9c1a01",
+    "baselineIntegration": "3f94684898da34d513b885c35146828679af481751d398becad081fe99a08a0e",
+    "candidateIntegration": "3f94684898da34d513b885c35146828679af481751d398becad081fe99a08a0e",
+    "baselineTheme": "e30a4b077bbfa89280a44ce482c1411a625b62e96c3d304dcb45b65ac89ef276",
+    "candidateTheme": "aa9444ec95d2f5ec20feb1db3e0d0eab57f786eeb32536458e0f899b87e045ec"
+  },
+  "changes": [
+    {
+      "file": "copyfast_pages.py", "count": 1,
+      "old": "_PORTAL_SHELL_TITLES = {",
+      "new": "_PORTAL_SHELL_TITLES = {\n    \"/image/resize\": {\"vi\": \"Đổi kích thước ảnh · TOAN AAS\", \"en\": \"Resize images · TOAN AAS\", \"zh\": \"调整图像尺寸 · TOAN AAS\"},"
+    },
+    {
+      "file": "copyfast_pages.py", "count": 1,
+      "old": "_PORTAL_SHELL_DESCRIPTIONS = {",
+      "new": "_PORTAL_SHELL_DESCRIPTIONS = {\n    \"/image/resize\": {\n        \"vi\": \"Chọn ảnh đã lưu, đặt kích thước và tạo bản PNG mới. Tệp gốc được giữ nguyên.\",\n        \"en\": \"Choose a saved image, set its size and create a new PNG. The original stays unchanged.\",\n        \"zh\": \"选择已保存的图像，设置尺寸并创建新的 PNG。原文件将保持不变。\",\n    },"
+    },
+    {
+      "file": "static/portal/portal.js", "count": 1,
+      "old": "    if (path === \"/documents\") {\n      return uiText(\"workspaceMenu.card.documents.title\", fallback);\n    }",
+      "new": "    if (path === \"/documents\") {\n      return uiText(\"workspaceMenu.card.documents.title\", fallback);\n    }\n    if (path === \"/image/resize\") return uiText(\"imageResizeMetaUiTitle\", \"Đổi kích thước ảnh\");"
+    },
+    {
+      "file": "static/portal/portal.js", "count": 1,
+      "old": "    if (path === \"/documents\") {\n      return uiText(\"featureCatalog.entry.documents.description\", fallback);\n    }",
+      "new": "    if (path === \"/documents\") {\n      return uiText(\"featureCatalog.entry.documents.description\", fallback);\n    }\n    if (path === \"/image/resize\") return uiText(\"imageResizeMetaUiDescription\", \"Chọn ảnh đã lưu, đặt kích thước và tạo bản PNG mới. Tệp gốc được giữ nguyên.\");"
+    },
+    {
+      "file": "static/portal/portal-i18n.js", "count": 1,
+      "old": "  verifyEqualKeysets();",
+      "new": "  Object.assign(MESSAGES.vi, {\n    imageResizeMetaUiTitle: \"Đổi kích thước ảnh\",\n    imageResizeMetaUiDescription: \"Chọn ảnh đã lưu, đặt kích thước và tạo bản PNG mới. Tệp gốc được giữ nguyên.\"\n  });\n\n  Object.assign(MESSAGES.en, {\n    imageResizeMetaUiTitle: \"Resize images\",\n    imageResizeMetaUiDescription: \"Choose a saved image, set its size and create a new PNG. The original stays unchanged.\"\n  });\n\n  Object.assign(MESSAGES.zh, {\n    imageResizeMetaUiTitle: \"调整图像尺寸\",\n    imageResizeMetaUiDescription: \"选择已保存的图像，设置尺寸并创建新的 PNG。原文件将保持不变。\"\n  });\n\n  verifyEqualKeysets();"
+    },
+    {
+      "file": "static/portal/portal-theme.css", "count": 1,
+      "old": "html:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-merge .portal-field-help {\n  color: var(--portal-muted);\n}",
+      "new": "html:not([data-portal-theme=\"dark\"]) .portal-page.portal-pdf-merge .portal-field-help {\n  color: var(--portal-muted);\n}\n\n/* Keep Resize field names and guidance readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-image-resize .portal-field > label {\n  color: var(--portal-text);\n}\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-image-resize .portal-field-help {\n  color: var(--portal-muted);\n}"
+    },
+    {
+      "file": "static/portal/portal.js", "count": 1, "new": "",
+      "old": "       <section class=\"portal-card portal-card-pad\"><div class=\"portal-notice portal-notice--info\"><span class=\"portal-notice-icon\" aria-hidden=\"true\">i</span><div><strong>${safeText(t(\"notice.title\", \"Tiện ích Web độc lập\"))}</strong><p>${safeText(t(\"notice.body\", \"Đổi canvas không tạo tác vụ Bot, không gọi nhà cung cấp, không trừ/cộng Xu, không tạo đơn PayOS và không dùng webhook thanh toán.\"))}</p></div></div>${renderNotes(page)}</section>\n"
+    }
+  ]
+}

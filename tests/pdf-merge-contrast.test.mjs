@@ -6,10 +6,11 @@ import {execFileSync} from "node:child_process";
 import {pdfMergeContrastHistoricalCss as inverse} from "./helpers/pdf-merge-contrast-snapshot.mjs";
 import {operationReferenceFeedbackHistoricalI18nSource} from "./helpers/operation-reference-feedback-snapshot.mjs";
 import {pdfSplitMetaHistoricalPortalSource} from "./helpers/pdf-split-meta-snapshot.mjs";
+import {resizePolishHistoricalThemeSource} from "./helpers/image-resize-polish-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/pdf-merge-contrast-reviewed.json",import.meta.url),"utf8"));
 assert.match(fixture.base,/^[a-f0-9]{40}$/,"Bind the delivered full BASE before any git show");
 const file="static/portal/portal-theme.css",edit=fixture.changes[0],lf=value=>value.replace(/\r\n/g,"\n");
-const raw=lf(fs.readFileSync(file,"utf8")),before=lf(execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:12e6}));
+const raw=resizePolishHistoricalThemeSource(lf(fs.readFileSync(file,"utf8"))),before=lf(execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:12e6}));
 const hash=value=>createHash("sha256").update(value).digest("hex"),count=(value,part)=>value.split(part).length-1;
 const addition='\n\n/* Keep PDF merge field names and guidance readable in the light theme. */\nhtml:not([data-portal-theme="dark"]) .portal-page.portal-pdf-merge .portal-field > label {\n  color: var(--portal-text);\n}\nhtml:not([data-portal-theme="dark"]) .portal-page.portal-pdf-merge .portal-field-help {\n  color: var(--portal-muted);\n}';
 function once(value,old,next){assert.equal(count(value,old),1,"Unique reviewed Merge contrast slot");return value.replace(old,()=>next);}

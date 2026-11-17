@@ -2407,3 +2407,31 @@ existingloginworking;noOAuth/settingschange.
  signedUI/output/M-FINAL remainopen,motionlast.
 - [ ] CurrentgoalUIonly;TTS/engine artifacts held OUTSIDE_ACTIVE_SCOPE,
  NOT_APPLIED and no Bot/provider/wallet/PayOS/productiondata mutation.
+
+## Resize — metadata, độ rõ chữ và bỏ khối dư,17/11/2026
+
+- [x] PR757 đã giao:exactCI44071806148 bothSUCCESS,merge/runtime93b41f52,
+ deploy44074756251SUCCESS/tree9f68ac25/full diff0/serviceshealth/
+ fivepublicassetsbyteexact;Issue6941948619updated/PR6946921723receipt.
+- [x] ThreeexistingAGYR1proposals/meta5+contrast1+footer1 exact replay,
+ fourappfiles/no rootapprepair/zero genuineworkerfaults.
+- [x] Client9RED1287.7261ms giữ,không rerun;actualserver6RED1.53s.
+ Onegroup35files679PASS0FAIL0SKIP115005.6486ms;
+ server12PASS3.34s và riêng9ChatPASS2.32s.
+- [x] NativeBASE6/GREEN6 VI/EN/ZH×375light/1440dark;actualHTML/bootstrap/
+ header/hero/theme/sourceSelect/1080×1920/Tab,no submit/error/overflow/egress.
+ Mỗiphase3register/3login/12metadata/noblobs,oldregisterhash/exact3login
+ audit/schema/otherdata/sourcebindingexact;22ownedstopped/active0.
+- [x] Light30targets1.265330–2.021153→5.797099–12.351555:1;
+ dark30pairs/control30pairs/font/fieldrelativegeometry exact.
+ Initialcomparatorfalsepositive border0pxnone currentColor corrected only
+ inQA,rerunonlysaved-data comparator;no native/679group rerun.
+- [x] Scope140protectedappfiles/allotherPython/CI+2exact,fullappdiffreview
+ C0/I0/M0,currentoperations/originalcomparison/TesterREADY;
+ cases1562lines165154LFbytes.
+- [x] Metadatafinalgate1PASS32deselected0.69s,historicalremote/P0fieldskept.
+- [ ] Provenance/exactCI/merge/deploy/runtime/fiveassets/
+ receipts của nhóm Resize này.
+- [ ] OtherCanvas/preset/technicalcopy/twelve-rownewproposal/Compressmeta/
+ wholelocale/AX/auth/device/Safari/signedUI/output/M-FINAL remainopen.
+ Motionlast;separateconnectionREADdoesnotapplyengineartifacts.
