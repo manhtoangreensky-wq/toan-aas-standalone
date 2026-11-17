@@ -2339,3 +2339,21 @@ Nguồn thực:IMAGE_OPERATION_COPY_ROWS và các consumer Resize tạiBASEb6c71
 
 Không thêm tính năng,không tạo PNG,không đổi engine/auth/giá/ví.
 Sharedsource/commoncopy và metadatachips còn được ghi riêng,không giấu thiếu sót.
+
+## Nhãn công cụ ảnh dùng chung — đối chiếu18/11/2026
+
+Nguồn thực: IMAGE_OPERATION_COPY_ROWS và renderImageResize tại BASEce40bf40.
+Đây là thay chữ/bớt phần giải thích dư, không thêm năng lực xử lý ảnh.
+
+| Trước | Ứng viên đúng phạm vi | Bằng chứng và giới hạn |
+|---|---|---|
+| Canvas, Asset Vault, PNG riêng tư trong thao tác thường | Kích thước ảnh, kho tệp, ảnh PNG; VI/EN/ZH riêng | 21 hàng/63 giá trị, khóa và thứ tự giữ |
+| Tải dữ liệu kể cơ chế riêng tư và bảo vệ nội bộ | Đang tải/chưa tải được/thử lại, giữ lỗi thật | Dựng full bundle ở trạng thái thật của renderer |
+| Hai cụm ba nhãn xác thực/cache/fallback lặp ở Resize | Bỏ nguyên div, không thêm khung trống | Chín ca VI/EN/ZH giữ h2/p/state/quyền/retry |
+| Một khóa openVault có bản giống ở mảng khác | Chỉ đổi bản thuộc IMAGE_OPERATION_COPY_ROWS | Neo mảng/OLD khớp một lần, đối chiếu byte ngoài |
+| Test đếm mọi div rỗng và xem hero-actions là khung mới | So danh sách div rỗng với BASE, không nới điều kiện xóa chip | Chín ca chạy lại, không đổi ứng dụng |
+| PR759 còn mô tả ứng viên | Đã giao runtimece40bf40 | CI44089896015/deploy44092746398/receipt6949503144 |
+
+Các utility khác vẫn có mô tả kỹ thuật ngoài 21 khóa này; phụ đề kết quả còn
+giá trị custom chưa được xử lý trong nhóm. Không nhận toàn locale/UX đã xong.
+Không đổi Bot, đường engine, auth, ENV, dữ liệu, giá/ví/PayOS hoặc provider.

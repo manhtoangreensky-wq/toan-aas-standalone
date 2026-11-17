@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {execFileSync} from "node:child_process";
+import {imageSharedHistoricalI18nSource,imageSharedHistoricalSnapshot} from "./image-shared-plain-copy-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/image-resize-plain-copy-reviewed.json",import.meta.url),"utf8"));
 const baseline=execFileSync("git",["show",fixture.base+":static/portal/portal-i18n.js"],{encoding:"utf8",maxBuffer:30e6}).replace(/\r\n/g,"\n");
 const fail="Unreviewed Image Resize plain copy",locales=["vi","en","zh"],count=(s,p)=>s.split(p).length-1;
@@ -10,6 +11,7 @@ export const resizePlainChanges=fixture.rows.map(row=>{
 });
 assert.equal(resizePlainChanges.length,33);
 export function resizePlainHistoricalI18nSource(source){
+  source=imageSharedHistoricalI18nSource(source);
   assert.equal(typeof source,"string",fail);
   const keys=resizePlainChanges.map(e=>count(source,'["'+e.key+'",'));
   if(keys.every(n=>n===0))return source;
@@ -25,6 +27,7 @@ export function resizePlainHistoricalI18nSource(source){
   return resizePlainChanges.reduce((text,e)=>text.replace(e.new,()=>e.old),source);
 }
 export function resizePlainHistoricalSnapshot(entries,locale){
+  entries=imageSharedHistoricalSnapshot(entries,locale);
   assert.ok(locales.includes(locale),fail+" locale");
   const index=locales.indexOf(locale)+1,keys=resizePlainChanges.map(e=>"imageOperationUi."+e.key);
   const found=keys.map(key=>entries.filter(([name])=>name===key));

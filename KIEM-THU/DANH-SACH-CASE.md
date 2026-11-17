@@ -1573,3 +1573,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | IRPC-SOURCE | nặng |33substitutions/mọi appfile khác | Onlyi18nchanged,143protectedfiles | Fixture/proposal/scope |
 | IRPC-NATIVE | nặng | VI/EN/ZH375sáng1440tối,select/Tab |144copy/120visibletext,no submit/egress/owned0 | [PhiênIRPC](PHIEN-IMAGE-RESIZE-PLAIN-COPY-20261117.md) |
 | IRPC-DELIVERY | nặng | ExactCI/merge/deploy/runtime | Receipt và bản chạy đúng | SignedUI/output/goal riêng |
+
+## IMAGE-SHARED-PLAIN-COPY-20261118 — Issue689
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| ISPC-COPY | nặng | Chọn/tải/lưu/chuyển tiếp ảnh VI/EN/ZH | 21 hàng có sẵn rõ nghĩa, 63 giá trị đúng | Frozen catalogue và consumer thực |
+| ISPC-STATE | nặng | Resize chưa mở/đang tải/tải lỗi | Bỏ hai div ba nhãn, giữ thông báo/quyền/retry | Chín ca renderer |
+| ISPC-KEEP | nặng | Ready/empty/noRun/disabled/card | Route/control/giới hạn/tên tệp khách không đổi | BASE/current đầy đủ |
+| ISPC-SOURCE | nặng | Đối chiếu hai proposal và mã ngoài | 21 hàng + hai dòng,149 tệp ứng dụng bảo vệ | SHA/forward/inverse |
+| ISPC-HISTORY | nặng | Chạy kiểm tra lịch sử có liên quan | Old assertions/hash/order giữ, không che mã lạ | 304 ca liên quan |
+| ISPC-NATIVE | nặng | VI/EN/ZH375sáng1440tối,select/1080×1920/Tab | Nhãn mới thấy được, không submit/egress | [PhiênISPC](PHIEN-IMAGE-SHARED-PLAIN-COPY-20261118.md) |
+| ISPC-ISOLATION | nặng | QA mới riêng biệt | Dữ liệu/lược đồ/source giữ,tiến trình sở hữu về0 | Không production/provider/ví |
+| ISPC-DELIVERY | nặng | CI/merge/deploy/runtime | Đúng revision/tệp công khai/receipt | SignedUI/finaloutput/goal riêng |

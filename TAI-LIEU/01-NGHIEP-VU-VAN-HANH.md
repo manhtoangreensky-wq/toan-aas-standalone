@@ -3148,3 +3148,28 @@ liệu/lược đồ/source;chỉ ba đăng nhập được thêm vào audit;22t
 Một số chữ chung và chip kỹ thuật vẫn chờ scope riêng,không nhận toàn trang
 đã sạch. [Báo cáo](../docs/reports/image-resize-plain-copy-20261117.md),
 [Tester](../KIEM-THU/PHIEN-IMAGE-RESIZE-PLAIN-COPY-20261117.md).
+
+## Nhãn dùng chung của công cụ ảnh —18/11/2026
+
+Nhóm 33 dòng trước đã lên web qua PR759: cả hai job CI44089896015 đạt,
+deploy44092746398 thành công, runtimece40bf40; ba dịch vụ/health và năm
+tệp giao diện công khai khớp. Receipt PR6949503144, Issue6948335094.
+
+Ứng viên tiếp theo thay đúng 21 hàng chữ có sẵn VI/EN/ZH về kho tệp,
+chọn ảnh, lưu/tải/chuyển tiếp và phản hồi tải dữ liệu; giữ khóa, điều kiện
+và chức năng. Chỉ màn Đổi kích thước ảnh bỏ hai cụm gồm ba nhãn kỹ thuật
+trong trạng thái chưa mở/đang tải/tải lỗi; lỗi thật và nút thử lại vẫn còn,
+không thêm khung thay thế.
+
+Hai proposal Antigravity độc lập được đối chiếu chung một lượt. Một lượt
+85 ca có 76 đạt và chín lỗi phép đo do vùng hero-actions rỗng có sẵn;
+chỉ chín ca sau sửa phép đo đạt. Hai comparator nguồn bổ sung đạt sau khi
+sửa cách sắp neo ở đúng mảng chứa khóa trùng. 304 ca liên quan đạt trong
+một lượt riêng. Đây không phải một lượt toàn bộ 391 ca cùng xanh.
+149 tệp ứng dụng được bảo vệ và toàn bộ Python giữ nguyên; ứng dụng chỉ
+đổi i18n và hai dòng renderer đã được worker trả.
+
+Không suy kết quả nguồn thành PNG thật, toàn ứng dụng sạch chữ, signed UI,
+thiết bị thật, Safari hoặc chuyển động đã đạt. Phiên đối chiếu receiver
+Web–Bot chỉ dùng nguồn công khai, không thay Bot/engine hoặc gọi tạo giọng.
+[Phiên kiểm tra](../KIEM-THU/PHIEN-IMAGE-SHARED-PLAIN-COPY-20261118.md).

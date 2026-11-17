@@ -97,6 +97,7 @@ jobs:
           python -m pytest --noconftest -q tests/test_pdf_split_meta_shell.py
           node --test tests/image-resize-polish.test.mjs
           node --test tests/image-resize-plain-copy.test.mjs
+          node --test tests/image-shared-plain-copy.test.mjs
           python -m pytest --noconftest -q tests/test_image_resize_polish_shell.py
           node --test tests/pdf-usability.test.mjs
           node --test tests/document-card-metrics.test.mjs

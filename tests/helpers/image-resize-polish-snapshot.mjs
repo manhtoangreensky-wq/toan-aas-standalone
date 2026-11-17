@@ -1,12 +1,14 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {resizePlainHistoricalI18nSource,resizePlainHistoricalSnapshot} from "./image-resize-plain-copy-snapshot.mjs";
+import {imageSharedHistoricalPortalSource} from "./image-shared-plain-copy-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/image-resize-polish-reviewed.json",import.meta.url),"utf8"));
 const failure="Unreviewed Image Resize polish",prefix="imageResizeMetaUi",locales=["vi","en","zh"];
 const count=(source,part)=>source.split(part).length-1;
 const editsFor=file=>fixture.changes.filter(e=>e.file===file);
 const once=(source,old,next)=>{assert.equal(count(source,old),1,failure+" missing/changed/duplicate chunk");return source.replace(old,()=>next);};
 export function resizePolishHistoricalPortalSource(source){
+  source=imageSharedHistoricalPortalSource(source);
   assert.equal(typeof source,"string",failure);
   const edits=editsFor("static/portal/portal.js"),footer=edits.find(e=>e.new==="");
   if(!source.includes(prefix)){

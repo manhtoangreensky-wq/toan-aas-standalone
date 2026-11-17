@@ -28874,7 +28874,7 @@ function renderAutoPostHub(page, context) {
     const canRunCapability = Boolean(context.capabilities && context.capabilities["image-operation-resize"] === true);
     const canRefresh = Boolean(context.capabilities && context.capabilities["image-operation-refresh"] === true);
     if (!canViewCapability) {
-      return `<article class="portal-page portal-image-resize">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>${safeText(t("guard.title", "Xưởng đổi canvas đang ở chế độ an toàn"))}</h2><p>${safeText(t("guard.body", "Tiện ích chỉ bật khi Kho tài sản, kho đầu ra riêng tư và Pillow được máy chủ xác nhận. Web không dùng canvas trình duyệt, tác vụ Bot, nhà cung cấp hoặc đầu ra giả thay thế."))}</p><div class="portal-state-meta"><span>${safeText(common("guard.session", "Phiên đã xác thực"))}</span><span>${safeText(common("guard.storage", "Kho lưu trữ riêng"))}</span><span>${safeText(common("guard.noAi", "Không tạo AI giả"))}</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-image-resize">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>${safeText(t("guard.title", "Xưởng đổi canvas đang ở chế độ an toàn"))}</h2><p>${safeText(t("guard.body", "Tiện ích chỉ bật khi Kho tài sản, kho đầu ra riêng tư và Pillow được máy chủ xác nhận. Web không dùng canvas trình duyệt, tác vụ Bot, nhà cung cấp hoặc đầu ra giả thay thế."))}</p></div></div></section></article>`;
     }
     const assetReadState = String(context.assetVaultReadState || "loading");
     const operationReadState = String(context.imageOperationsReadState || "loading");
@@ -28888,7 +28888,7 @@ function renderAutoPostHub(page, context) {
       const retry = !loading && canRefresh
         ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-operation-refresh" data-portal-route="/image/resize">${safeText(common("formRetry", "Thử lại dữ liệu riêng tư"))}</button></div>`
         : "";
-      return `<article class="portal-page portal-image-resize">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>${safeText(common("state.loadingMeta", "Phiên đã xác thực"))}</span><span>${safeText(common("state.noCache", "Không lưu bộ nhớ đệm riêng tư"))}</span><span>${safeText(common("state.noBrowserFallback", "Không dùng dữ liệu thay thế từ trình duyệt"))}</span></div>${retry}</div></div></section></article>`;
+      return `<article class="portal-page portal-image-resize">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p>${retry}</div></div></section></article>`;
     }
     const sources = imageVaultItems(context);
     const operations = imageOperationItems(context);

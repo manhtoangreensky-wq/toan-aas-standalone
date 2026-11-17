@@ -2430,8 +2430,9 @@ existingloginworking;noOAuth/settingschange.
  C0/I0/M0,currentoperations/originalcomparison/TesterREADY;
  cases1562lines165154LFbytes.
 - [x] Metadatafinalgate1PASS32deselected0.69s,historicalremote/P0fieldskept.
-- [ ] Provenance/exactCI/merge/deploy/runtime/fiveassets/
- receipts của nhóm Resize này.
+- [x] Nhóm Resize này đã giaoPR758:CI44081274590bothSUCCESS,
+  merge/runtimeb6c717bc/tree2c2c37b8exact/deploy44083777023SUCCESS,
+  serviceshealth/5assetsexact;Issue6947295414/PR6948150496receipt.
 - [ ] OtherCanvas/preset/technicalcopy/twelve-rownewproposal/Compressmeta/
  wholelocale/AX/auth/device/Safari/signedUI/output/M-FINAL remainopen.
  Motionlast;separateconnectionREADdoesnotapplyengineartifacts.
@@ -2457,7 +2458,45 @@ existingloginworking;noOAuth/settingschange.
  rootapplicationdiffreviewC0/I0/M0.
 - [x] Currentdocs/originalcomparison/TesterREADY/cases1575lines166341LFbytes;
  metadatagate1PASS32deselected1.44s,historicalremote/P0kept.
-- [ ] Provenance/exactCI/merge/deploy/runtime/assets/receipt của nhóm33dòng.
+- [x] Nhóm33dòng đã giaoPR759:CI44089896015bothSUCCESS,
+  merge/runtimece40bf40/tree5edb7f32exact/deploy44092746398SUCCESS,
+  serviceshealth/5assetsexact;Issue6948335094/PR6949503144receipt.
 - [ ] Sharedsource/common/resultsubtitle/technicalmetadatachips/
  Compressmeta/wholelocale/AX/auth/device/Safari/signedUI/output/M-FINAL
  remainopen. Motionlast,no enginecandidateapply.
+
+## Nhãn dùng chung ảnh — tiếp tục18/11/2026
+
+- [x] Nhóm33dòng trước đã giaoPR759:HEAD96fb285c/CI44089896015
+  bothSUCCESS,merge/runtimece40bf40/tree5edb7f32 exact,
+  deploy44092746398SUCCESS/serviceshealth/5assetsexact,
+  Issue6948335094updated/PR6949503144receipt.
+- [x] HaiAntigravitysessionđộc lập3.8FlashHigh đãtrả:
+  common21rows/10blocks,Resizechip2wholelines;Rootđọc chung mộtlượt,
+  exactOLDNEW/forwardinverse/BASEce40applies;0worker-codefailures.
+- [x] BASE85ca7PASS78contentRED7484.2387ms. Candidate85ca76PASS9QA
+  emptyhero-actionsfalsepositives11152.9626ms;only9correctedPASS2838.9496ms.
+- [x] Sourcecomparators2QAorderfail→only2correctedPASS3051.7252ms;
+  duplicatekeyneođúngmảng,khôngsửacodeapp.3completedactionsPASS2446.4402ms.
+- [x] 304ca liênquan14tệpPASS25845.6079ms;khônglặpnhómđãđạt.
+  Oldassertions/hash/order/outside/rawintegrationguards giữ.
+- [x] Appchỉi18n21rowsvàportal2lines;149protectedappfiles/allPython/
+  auth/engine/provider/ví/PayOS/styles/motion/templates giữ exactBASE.
+- [x] NativeR2accepted6VI/EN/ZH×375light/1440dark,24copy/18visibletext/
+  30control/GET1items2/select1080×1920Tab,nosubmit/errors/overflow/egress;
+  fresh3register3login12metadata/noblobs/exactregister+3loginaudit/schema/
+  otherdata/source151/binding,22ownedstopped0active. R1zeroacceptedlabel
+  required/sr-onlyreader,13owned0;QA-onlyfix,noapp/timeoutwidening.
+- [x] FullappreviewC0/I0/M0,currentoperations/originalcomparison/TesterREADY,
+  metadata1PASS32deselected0.69s,casefile1588lines167715LFbytes.
+- [ ] Sourcefreeze/provenance/exactCI/merge/deploy/runtime/assets/
+  receiptcủanhómnày.
+- [ ] RESIZE-DESKTOP-CONTROL-HEIGHT:actualnativepresetselect131.828125px
+  at1440darkVI/EN/ZH vs44pxat375light. Ghi backlogbố cụcriêng,cầnRED/
+  phiếuAntigravity/verify;khôngnhậntoànUIđạt từcopygroup.
+- [x] PhiênreceiverWeb–Botchỉđọcnguồncôngkhaiđãtrảcode0,baquestionmap:
+  createID/callsite/savedcallback/artifactgates. KhôngthấysaiIDởđườnginsert
+  đãcungcấp;mọireplay/currentBotrevision/transport/finalaudiochưađượcchứngminh.
+  Khôngápenginecandidate,khôngproduction/provider/financialmutation.
+- [ ] Utilitykhác/phụđềcustom/Compressmeta/wholelocale/AX/auth/device/
+  Safari/signedUI/finaloutput/M-FINAL01..06 vẫn mở,motioncuối.

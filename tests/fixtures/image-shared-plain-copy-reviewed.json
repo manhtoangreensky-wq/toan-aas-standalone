@@ -1,0 +1,26 @@
+{
+  "base": "ce40bf4089701d0ba47f46845e7061cb92d5bba1",
+  "rows": [
+    ["common.canvas", "Kích thước ảnh", "Image size", "图像尺寸"],
+    ["common.privatePng", "Ảnh PNG", "PNG image", "PNG 图像"],
+    ["common.downloadPng", "Tải ảnh PNG", "Download PNG image", "下载 PNG 图像"],
+    ["common.saveVault", "Lưu vào kho tệp", "Save to files", "保存到文件库"],
+    ["common.continueResize", "Lưu và đổi kích thước ảnh", "Save and resize image", "保存并调整图像尺寸"],
+    ["common.exportConfirm", "Lưu ảnh PNG này vào kho tệp của bạn?", "Save this PNG image to your files?", "将此 PNG 图像保存到您的文件库？"],
+    ["common.handoffConfirm", "Lưu ảnh PNG vào kho tệp và mở bản nháp chuyển tiếp? Phiếu chuyển tiếp chỉ được tạo khi bạn gửi biểu mẫu.", "Save the PNG to your files and open a handoff draft? The handoff is created only when you submit the form.", "将 PNG 保存到文件库并打开交接草稿？只有提交表单后才会创建交接记录。"],
+    ["common.continueConfirm", "Lưu ảnh PNG vào kho tệp rồi mở công cụ tiếp theo? Ảnh đã lưu được chọn sẵn; các thông số cũ không được giữ.", "Save the PNG to your files and open the next tool? The saved image is selected; previous settings are not kept.", "将 PNG 保存到文件库并打开下一个工具？已保存的图像将被选中，但不会保留之前的设置。"],
+    ["common.openVault", "Mở kho tệp", "Open files", "打开文件库"],
+    ["common.formRetry", "Thử lại", "Retry", "重试"],
+    ["common.state.loadingTitle", "Đang tải dữ liệu", "Loading data", "正在加载数据"],
+    ["common.state.failedTitle", "Chưa tải được dữ liệu", "Data could not be loaded", "无法加载数据"],
+    ["common.downloadFailed", "Chưa có ảnh PNG để tải. Hãy kiểm tra ảnh gốc và tạo lại.", "No PNG image is available. Check the original image and try again.", "暂无可下载的 PNG 图像。请检查原图并重试。"],
+    ["common.downloadGuarded", "Chưa tải được ảnh này. Vui lòng thử lại sau.", "This image cannot be downloaded right now. Please try again later.", "暂时无法下载此图像，请稍后重试。"],
+    ["common.downloadVerified", "Bạn có thể tải ảnh sau khi xử lý hoàn tất.", "You can download the image when processing is complete.", "处理完成后即可下载图像。"],
+    ["field.source.label", "Ảnh trong kho tệp", "Saved image", "已保存的图像"],
+    ["field.source.empty", "Chọn ảnh", "Choose an image", "选择图像"],
+    ["field.source.help", "Chọn ảnh JPEG, PNG hoặc WebP đã lưu. Tệp gốc được giữ nguyên.", "Choose a saved JPEG, PNG or WebP image. The original stays unchanged.", "选择已保存的 JPEG、PNG 或 WebP 图像。原文件将保持不变。"],
+    ["pagination.resize.label", "lịch sử đổi kích thước ảnh", "image-resize history", "图像尺寸调整记录"],
+    ["pagination.resize.aria", "Phân trang lịch sử đổi kích thước ảnh", "Image-resize history pages", "图像尺寸调整记录分页"],
+    ["common.prepareHandoff", "Lưu và chuyển tiếp", "Save and hand off", "保存并交接"]
+  ]
+}
