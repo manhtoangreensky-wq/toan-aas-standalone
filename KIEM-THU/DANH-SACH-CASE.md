@@ -1506,3 +1506,18 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | RF-NATIVE | nặng |12locale/route/viewportcases |24realFindCleartoasts | [PhiênRF](PHIEN-OPERATION-REFERENCE-FEEDBACK-20261117.md) |
 | RF-ISOLATION | nặng | FreshownedQA | Setupseparate/productwrites0/Jobs0 | Noprovider/wallet |
 | RF-DELIVERY | nặng | CI/merge/deploy/runtime | Exactrevisionreceipt | SignedUI/fullgoal/M-FINALriêng |
+
+## OPERATION-REFERENCE-STALE-20261117 — Issue689
+
+| Mã | Mức | Thao tác | Kết quả cần đạt | Bằng chứng |
+|---|---|---|---|---|
+| RS-OLD | nặng | Route/session/request/logout oldGET | Khôngobsoletealert/status |16VMcases |
+| RS-ORDER | nặng | Newcomplete→oldcomplete | Chỉcurrenttoast/data |8orders |
+| RS-CURRENT | nặng | Current success/failure | Truthfulstatus/alertgiữ |4sentinels |
+| RS-RAW | nặng | Actualguardedsource | Newrawtests/khôngprojection |30newtests |
+| RS-COPY | nặng | Previouscopycontracts | Oldhashes/assertionsgiữ |13comparators |
+| RS-SOURCE | nặng |2exactworkeredits | Wholeoutside/guards/hydratorsgiữ | Noepochmutation |
+| RS-PYTHON | nặng | Reference/lifecyclecontracts | Sourceprotectiongiữ |8PythonPASS |
+| RS-NATIVE | nặng |6actualtwo-searchorders | Same-document/noobsolete toast | [PhiênRS](PHIEN-OPERATION-REFERENCE-STALE-20261117.md) |
+| RS-DATA | nặng | FreshownedQA | Scopedauthaudit/nootherwrites/Jobs0 | Noegress/provider/wallet |
+| RS-DELIVERY | nặng | CI/merge/deploy/runtime | Exactrevisionreceipt | Fullgoal/M-FINALriêng |

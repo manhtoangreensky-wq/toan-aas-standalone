@@ -35790,7 +35790,11 @@
         const clear = action === "document-asset-reference-filter-clear";
         const filter = action === "document-asset-reference-page" ? undefined : (clear ? { q: "" } : operationAssetReferenceFilterPayload(fields));
         const offset = action === "document-asset-reference-page" ? operationAssetReferenceListOffset(fields.__documentAssetReferenceOffset) : 0;
+        const feedbackSessionEpoch = assetVaultSessionEpoch;
+        const feedbackPath = currentPortalPath();
+        const feedbackEpoch = (documentAssetReferenceHydrationEpoch[kind] || 0) + 1;
         const refreshed = await hydrateDocumentAssetReferences(kind, filter, offset, selections);
+        if (!documentAssetReferenceRequestIsCurrent(kind, feedbackEpoch, feedbackSessionEpoch, feedbackPath)) return;
         if (!refreshed) throw new Error(operationReferenceFeedbackText("failed", "Chưa tải được tệp. Hãy thử lại."));
         toast(action === "document-asset-reference-page"
           ? operationReferenceFeedbackText("page", "Đã tải danh sách tệp.")
@@ -35808,7 +35812,11 @@
         const clear = action === "image-operation-asset-reference-filter-clear";
         const filter = action === "image-operation-asset-reference-page" ? undefined : (clear ? { q: "" } : operationAssetReferenceFilterPayload(fields));
         const offset = action === "image-operation-asset-reference-page" ? operationAssetReferenceListOffset(fields.__imageOperationAssetReferenceOffset) : 0;
+        const feedbackSessionEpoch = assetVaultSessionEpoch;
+        const feedbackPath = currentPortalPath();
+        const feedbackEpoch = imageOperationAssetReferenceHydrationEpoch + 1;
         const refreshed = await hydrateImageOperationAssetReferences(filter, offset, selections);
+        if (!imageOperationAssetReferenceRequestIsCurrent(feedbackEpoch, feedbackSessionEpoch, feedbackPath)) return;
         if (!refreshed) throw new Error(operationReferenceFeedbackText("failed", "Chưa tải được tệp. Hãy thử lại."));
         toast(action === "image-operation-asset-reference-page"
           ? operationReferenceFeedbackText("page", "Đã tải danh sách tệp.")

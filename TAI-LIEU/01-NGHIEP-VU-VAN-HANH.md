@@ -3058,3 +3058,15 @@ gate riêng. Không gọi tạo PDF/ảnh hoặc dịch vụ có phí.
 Một lỗi cũ được tái hiện riêng: phản hồi đã cũ sau đổi trang/phiên vẫn có
 thể hiện báo lỗi, dù dữ liệu đã được chặn. Phiếu riêng xử lý sau đơn vị chữ;
 không nhận sửa câu chữ là đã sửa hành vi này hoặc toàn UI đã sạch.
+
+## Phản hồi tải tệp đã cũ —17/11/2026
+
+PR754 đã giao: CI43924561893, merge/runtimecb358cea, deploy43926903239;
+ba dịch vụ và năm tệp giao diện khớp, receiptIssue6924690075/PR6925143910.
+Thông báo tìm/xóa bộ lọc tệp đã có chữ VI/EN/ZH theo bản phát hành này.
+
+Ứng viên tiếp theo chỉ ngừng thông báo từ lượt tải tệp đã cũ sau đổi trang,
+phiên, đăng xuất hoặc yêu cầu mới hơn. Lượt tải hiện tại vẫn báo đúng thành
+công/thất bại. Yêu cầu mạng cũ không bị hủy; dữ liệu vẫn dùng chốt hiện hành
+đã có, không mở quyền hay thay cách tải.43Node/8Python đạt; giao diện chuyển
+trang chậm đang có gate riêng, chưa triển khai ứng viên này.

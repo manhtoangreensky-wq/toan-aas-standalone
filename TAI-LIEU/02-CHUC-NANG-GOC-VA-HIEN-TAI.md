@@ -2261,3 +2261,13 @@ Nguồn thực: hai nhánh thao tác tham chiếu trong integration.js tại BAS
 | Frozen i18n export không thể thay bằng phép gán trong QA | Chỉ đổi ownedwindow test boundary, không sửa app | QA lỗi được ghi rõ, không tính workerfault |
 | Stale data guard bị hiểu là stale feedback đã yên lặng | Baseline alert cũ tái hiện, phiếu riêng2edits |28tests8PASS20RED; copyunit không sửa ké |
 | Contrast còn ghi chưa triển khai | PR753eb3ab9a7 đã giao | CI43916771242/deploy43919393644/receipt6923402077 |
+
+## Phản hồi đã cũ — đối chiếu17/11/2026
+
+| Trước | Ứng viên | Bằng chứng/giới hạn |
+|---|---|---|
+| Chốt dữ liệu đã bỏ phản hồi cũ nhưng action vẫn báo lỗi | Dùng lại chính chốt hiện hành trước thông báo |28realVMcases8PASS20RED→newraw30tests |
+| Lượt mới hoàn tất trước lượt cũ vẫn có thể thêm alert | Lượt cũ im lặng, không đổi dữ liệu/lượt mới |43NodePASS/8staticPythonPASS |
+| Có thể nới quyền hoặc đổi hàm tải khi sửa toast | Chỉ2localcapture+postawaitfences,khôngepochmutation | Exactworker/inverse/outside |
+| Unitcopy còn ghi chưa triển khai | PR754cb358cea đã giao | CI43924561893/deploy43926903239/receipt6924690075 |
+| UnitVM có thể bị coi là signedLIVE | NativeSPA/read-onlyruntime có gate riêng | Fullauth/device/output/M-FINAL cònmở |

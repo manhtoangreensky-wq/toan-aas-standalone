@@ -2303,7 +2303,10 @@ Evidence:docs/superpowers/specs/2026-11-16-pdf-merge-contrast.md,cùngIssue689.
  technicalheadlines/helpstillqueued,notwholepageclaim.
 - [x] Scope24LF/allappPython/CI+1/currentdocs/source reviewC0/I0/M0;
  TesterREADY/cases1508lines160511LFbytes/metadata1PASS32deselected0.65s.
-- [ ] Provenance/exactCI/release.
+- [x] Provenance/exactCI43924561893bothSUCCESS/mergecb358cea,
+ tree5322bcb3/full diff0/deploy43926903239SUCCESS/runtimeexact/
+ serviceshealth/5publicassetsbyteexact;Issue6924690075updated/
+ PR6925143910. SignedUI/output riêng, khôngwholegoalclaim.
 - [ ] Extra local Python bundle/auth-lifecycle protection INCONCLUSIVE300s;
  onlyownedpyteststopped,noapp/testchange,noallPythonPASS/BASEfailureclaim.
  Fullauthlifecycle remainsopen;exactheadCIstillmandatory.
@@ -2318,3 +2321,31 @@ Evidence:docs/superpowers/specs/2026-11-16-pdf-merge-contrast.md,cùngIssue689.
 Evidence:docs/superpowers/specs/2026-11-17-operation-reference-feedback.md,
 singleIssue689. Freshmodels17Nov highestGeminigemini-3.8-flash-high,
 existingloginworking;noOAuth/settingschange.
+
+## Phản hồi danh sách tệp đã cũ —17/11/2026
+
+- [x] PR754 đã giao trướcBASEcb358ceaf110982dbe61aea317d7c85c7470558a.
+- [x] AGY3.8FlashHighR1code0/exact2edits,contract6924139241.
+ Precopy28realVMcases8PASS20RED1501.8991ms;copyunit exactinverse đãgiữ
+ branchbehavior,khôngrerun28baseline. NewexactBASEsource2tests0PASS2RED
+ 623.6188ms,khônginfrastructureerror.
+- [x] Exactworkerreplay/newraw30tests+oldcopy13comparators:
+ onegroup43PASS0FAIL0SKIP7297.0027ms;8staticPythonPASS1.29s.
+- [x] Native6same-document two-search ordering witnesses VI/EN/ZH×two routes.
+ Currentstate/listing/selected/pins/sourceSelect/toasts/timeOriginexact,
+ actualoldGETreturned0/newGET1,noreplyfake;2rawcropsviewed.
+ Fresh3accounts12metadata3login/exactauthaudit/allotherdata/sourcebinding/
+ Jobs0,egress/provider/wallet/productwrites0.
+ Nativeplan corrected BEFOREexecution:sidebarhardnavigation,notSPA;
+ actualolderGETheld/newerGETfirst,thenreleaseolder;noportalstate/history/
+ response substitution. Coordinator spec correction,notworkerfault.
+- [x] Scope25LF/allappPython/guardhydratorbodiesexact/CI+1;
+ independentsource reviewC0/I0/M0,currentdocs/TesterREADY;
+ metadata1PASS32deselected0.38s,cases1523lines161630LFbytes.
+- [ ] ExactCI/merge/deploy/runtime/assetsreceipt.
+- [ ] HaiImageResizecopyworkers song song đãtrảcode0/exact1roweach,
+ contract6924979327;onegroupRAMpreflight2rows6values/outside/syntax0,
+ NOT_APPLIED/NOT_QA. Modelactual17Novgemini-3.8-flash-high.
+ Readyworkerreportprose córuntime/testzeros khôngđo;khôngnhậnlàevidence.
+- [ ] OutertechnicalPDF/Imagecopy/defaultnotes/otherPDFtools/catalogue/
+ full locale/AX/auth/device/Safari/signedUI/output/M-FINAL cònmở,motioncuối.

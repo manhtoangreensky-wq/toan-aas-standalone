@@ -1,0 +1,26 @@
+{
+  "specId": "OPERATION-REFERENCE-STALE-FEEDBACK-20261117",
+  "base": "cb358ceaf110982dbe61aea317d7c85c7470558a",
+  "proposalSha256": "00e32fd5f676698f2421145941800d3a78e104c180b1a9a088a9b3d47836221c",
+  "changes": [
+    {
+      "file": "static/portal/integration.js",
+      "count": 1,
+      "old": "        const refreshed = await hydrateDocumentAssetReferences(kind, filter, offset, selections);\n        if (!refreshed) throw new Error(operationReferenceFeedbackText(\"failed\", \"Chưa tải được tệp. Hãy thử lại.\"));",
+      "new": "        const feedbackSessionEpoch = assetVaultSessionEpoch;\n        const feedbackPath = currentPortalPath();\n        const feedbackEpoch = (documentAssetReferenceHydrationEpoch[kind] || 0) + 1;\n        const refreshed = await hydrateDocumentAssetReferences(kind, filter, offset, selections);\n        if (!documentAssetReferenceRequestIsCurrent(kind, feedbackEpoch, feedbackSessionEpoch, feedbackPath)) return;\n        if (!refreshed) throw new Error(operationReferenceFeedbackText(\"failed\", \"Chưa tải được tệp. Hãy thử lại.\"));"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "count": 1,
+      "old": "        const refreshed = await hydrateImageOperationAssetReferences(filter, offset, selections);\n        if (!refreshed) throw new Error(operationReferenceFeedbackText(\"failed\", \"Chưa tải được tệp. Hãy thử lại.\"));",
+      "new": "        const feedbackSessionEpoch = assetVaultSessionEpoch;\n        const feedbackPath = currentPortalPath();\n        const feedbackEpoch = imageOperationAssetReferenceHydrationEpoch + 1;\n        const refreshed = await hydrateImageOperationAssetReferences(filter, offset, selections);\n        if (!imageOperationAssetReferenceRequestIsCurrent(feedbackEpoch, feedbackSessionEpoch, feedbackPath)) return;\n        if (!refreshed) throw new Error(operationReferenceFeedbackText(\"failed\", \"Chưa tải được tệp. Hãy thử lại.\"));"
+    }
+  ],
+  "binding": {
+    "baselineIntegration": "bb7563da32e717697445bb0bd941539b42d01411dbeeff2b6b6ae4dbcc55cf5f",
+    "candidateIntegration": "3f94684898da34d513b885c35146828679af481751d398becad081fe99a08a0e",
+    "i18n": "791eb992edd38941f159b209cda1f46b7f362419067238f441dbb0cfc79aaff8",
+    "portal": "135ddb443fde351e8702e0a3bc803a224541b4faa205ad67824c932949fa70ee",
+    "theme": "e30a4b077bbfa89280a44ce482c1411a625b62e96c3d304dcb45b65ac89ef276"
+  }
+}
