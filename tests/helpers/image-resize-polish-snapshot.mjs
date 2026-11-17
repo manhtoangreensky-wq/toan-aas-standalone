@@ -2,6 +2,7 @@ import fs from "node:fs";
 import assert from "node:assert/strict";
 import {resizePlainHistoricalI18nSource,resizePlainHistoricalSnapshot} from "./image-resize-plain-copy-snapshot.mjs";
 import {imageSharedHistoricalPortalSource} from "./image-shared-plain-copy-snapshot.mjs";
+import {resizeControlHeightHistoricalThemeSource} from "./image-resize-control-height-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/image-resize-polish-reviewed.json",import.meta.url),"utf8"));
 const failure="Unreviewed Image Resize polish",prefix="imageResizeMetaUi",locales=["vi","en","zh"];
 const count=(source,part)=>source.split(part).length-1;
@@ -47,6 +48,7 @@ export function resizePolishHistoricalPagesSource(source){
   return edits.reduce((value,e)=>once(value,e.new,e.old),source);
 }
 export function resizePolishHistoricalThemeSource(source){
+  source=resizeControlHeightHistoricalThemeSource(source);
   assert.equal(typeof source,"string",failure);const edit=editsFor("static/portal/portal-theme.css")[0];
   if(!source.includes("/* Keep Resize field names and guidance readable in the light theme. */")){
     assert.equal(source.includes(".portal-page.portal-image-resize .portal-field > label"),false,failure+" partial light selector");return source;

@@ -3173,3 +3173,15 @@ Không suy kết quả nguồn thành PNG thật, toàn ứng dụng sạch ch�
 thiết bị thật, Safari hoặc chuyển động đã đạt. Phiên đối chiếu receiver
 Web–Bot chỉ dùng nguồn công khai, không thay Bot/engine hoặc gọi tạo giọng.
 [Phiên kiểm tra](../KIEM-THU/PHIEN-IMAGE-SHARED-PLAIN-COPY-20261118.md).
+
+## Chiều cao ô nhập Đổi kích thước ảnh —18/11/2026
+
+PR760 đã giao runtime4180d4e2: nhãn chung và bỏ hai cụm kỹ thuật Resize.
+Ứng viên tiếp theo chỉ thêm một rule riêng form Resize, giữ ô chọn kích
+thước cao tự nhiên dù vùng chọn ảnh có tìm kiếm. Chrome12 tổ hợp đạt;
+native6 ca VI/EN/ZH375sáng/1440tối đo30control44–44,5px. Chọn ảnh,
+1080×1920/Tab/options/giới hạn giữ,không submit.150 nguồn ứng dụng khác
+khớp BASE,22 tiến trình QA đã dừng,còn0. Không sửa engine/auth/tiền.
+Phát hành mới phải đối chiếu CI/runtime/assets riêng;không nhận PNG cuối
+hoặc toàn UI/motion đã xong.
+[Bằng chứng](../docs/reports/image-resize-control-height-20261118.md).

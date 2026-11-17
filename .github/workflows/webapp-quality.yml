@@ -98,6 +98,8 @@ jobs:
           node --test tests/image-resize-polish.test.mjs
           node --test tests/image-resize-plain-copy.test.mjs
           node --test tests/image-shared-plain-copy.test.mjs
+          node --test tests/image-resize-control-height-source.test.mjs
+          python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_image_resize_control_height.py
           python -m pytest --noconftest -q tests/test_image_resize_polish_shell.py
           node --test tests/pdf-usability.test.mjs
           node --test tests/document-card-metrics.test.mjs
