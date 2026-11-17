@@ -6,7 +6,8 @@ import {pageMetaRenderer,pageMetaSources} from './helpers/chat-page-meta-runtime
 import {pageMetaHistoricalSnapshot,pageMetaHistoricalPortalSource,pageMetaFragments} from './helpers/chat-page-meta-snapshot.mjs';
 import {chatDateHistoricalPortalSource} from './helpers/chat-date-snapshot.mjs';
 import {documentCardHistoricalSnapshot,documentCardHistoricalI18nSource} from './helpers/document-card-copy-snapshot.mjs';
-const live=pageMetaSources(),source={...live,portal:chatDateHistoricalPortalSource(live.portal),i18n:documentCardHistoricalI18nSource(live.i18n)},baseline=pageMetaSources(true);
+import {pdfSplitMetaHistoricalPagesSource} from './helpers/pdf-split-meta-snapshot.mjs';
+const live=pageMetaSources(),source={...live,portal:chatDateHistoricalPortalSource(live.portal),i18n:documentCardHistoricalI18nSource(live.i18n),pages:pdfSplitMetaHistoricalPagesSource(live.pages)},baseline=pageMetaSources(true);
 const actual=await pageMetaRenderer(source),before=await pageMetaRenderer(baseline);
 const current=(...args)=>{
   const result=actual(...args);

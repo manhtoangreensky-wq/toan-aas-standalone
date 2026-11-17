@@ -2398,7 +2398,10 @@ existingloginworking;noOAuth/settingschange.
  sourcebindingunchanged;22ownedstopped/0active;6screens/tworawviewed.
 - [x] Scope23protectedpaths/allotherPython/CI+2exact;docs/currentoriginal/
  TesterREADY/metadata1PASS32deselected0.75s;cases1549lines163897LFbytes.
-- [ ] Provenance/exactCI/merge/deploy/runtime/assets/receipt.
+- [ ] ExactHEADCI/merge/deploy/runtime/assets/receipt. FirstCI44040904566
+ had1oldChatpageshashfailureafter35siblingsPASS;onlyfinitepagesreadboundary
+ projectionadded,oldassertions/hashkept,affected1PASS3998.0573ms.
+ App/source/nativebindingexact,noworkerfault/rootapprepair;newCIrequired.
 - [ ] Resizeoutermeta/lightcontrast/technicalfooter proposals returned
  separately,NOT_APPLIED/NOT_QA. Othercopy/catalogue/AX/auth/device/Safari/
  signedUI/output/M-FINAL remainopen,motionlast.

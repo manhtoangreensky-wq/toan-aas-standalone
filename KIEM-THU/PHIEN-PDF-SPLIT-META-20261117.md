@@ -35,6 +35,12 @@ Scope23protectedpaths/allotherPython/CI+2exact.
 Metadata1PASS32deselected0.75s;cases1549lines163897LFbytes,
 SHAaa026a92c727466a4663d020802b369ba5f51ec871d369bb18739205cf308f37.
 
+FirstCI44040904566 foundonehistoricalChatwhole-pageshashcomparison after
+35siblingspassed. Addonlytheexistingtwo-entrypagesinverse at that oldtest
+sourceboundary;rawnewSplitserver/clienttestsareunchanged. Alloldhashes/
+assertionskept. SingleaffectedcasePASS3998.0573ms;do notrerunnativeor95group.
+Applicationhashesidenticaltotheacceptednative/source-reviewcandidate.
+
 No generated PDF,wholeUIlocale/AX/device/Safari/authlifecycle/motion or signed
 production output acceptance. Current active scope excludes Bot/route-engine/
 provider/wallet/PayOS/production data changes.

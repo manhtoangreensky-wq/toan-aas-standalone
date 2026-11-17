@@ -41,4 +41,11 @@ motion or productiondata change. All Python except shell dictionaries protected.
 PROVIDER_CALLS=0;WALLET_MUTATIONS=0;PRODUCTION_DATA_WRITES=0.
 DEPLOY=NO;LIVE_PASS=NOT_TESTEDsignedproductionUI/finaloutput.
 BLOCKERS=Provenance/CI/release gates;goalACTIVE.
+FirstexactHEADCI44040904566 failed oneoldChatmetadata whole-pages hash;
+its35siblingchecks passed. The newtwo shell dictionary entries had not been
+projected at thisspecifichistoricalreadboundary. Added onlytheexistingfinite
+pagesprojection/import in chat-page-meta.test.mjs;alloldassertions/hasheskept.
+Onlythatcase rerun:1PASS3998.0573ms. App/source/nativebindingunchanged,
+noworkerfault/rootapprepair. Originalindependentappreviewkept;this2line
+testamendmentreviewedbyroot. Newexact-headCIstillrequired.
 LESSON_CANDIDATE=NONE.
