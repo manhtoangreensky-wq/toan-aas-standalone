@@ -22465,6 +22465,21 @@
     docPdfMetaUiSplitDescription: "从已保存的文档中提取单页或连续页面，创建 PDF。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    imageResizeMetaUiTitle: "Đổi kích thước ảnh",
+    imageResizeMetaUiDescription: "Chọn ảnh đã lưu, đặt kích thước và tạo bản PNG mới. Tệp gốc được giữ nguyên."
+  });
+
+  Object.assign(MESSAGES.en, {
+    imageResizeMetaUiTitle: "Resize images",
+    imageResizeMetaUiDescription: "Choose a saved image, set its size and create a new PNG. The original stays unchanged."
+  });
+
+  Object.assign(MESSAGES.zh, {
+    imageResizeMetaUiTitle: "调整图像尺寸",
+    imageResizeMetaUiDescription: "选择已保存的图像，设置尺寸并创建新的 PNG。原文件将保持不变。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

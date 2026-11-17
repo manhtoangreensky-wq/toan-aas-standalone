@@ -7,6 +7,7 @@ import {fileURLToPath} from "node:url";
 import {operationReferenceStaleFeedbackHistoricalIntegrationSource} from "./operation-reference-stale-feedback-snapshot.mjs";
 import {imageResizeGuidanceHistoricalI18nSource} from "./image-resize-guidance-snapshot.mjs";
 import {pdfSplitMetaHistoricalPortalSource} from "./pdf-split-meta-snapshot.mjs";
+import {resizePolishHistoricalThemeSource} from "./image-resize-polish-snapshot.mjs";
 const files={integration:"static/portal/integration.js",i18n:"static/portal/portal-i18n.js",portal:"static/portal/portal.js",theme:"static/portal/portal-theme.css"};
 export const REFERENCE_CUSTOMER='CUSTOMER Bot provider media CSRF Facebook TikTok <img src=x onerror="alert(1)">&';
 export const REFERENCE_IDS=Object.freeze(["11111111-1111-4111-8111-111111111111","22222222-2222-4222-8222-222222222222","33333333-3333-4333-8333-333333333333"]);
@@ -17,7 +18,7 @@ export function operationReferenceFeedbackSources(base){
     const value=(base===undefined
     ?fs.readFileSync(path.join(root,file),"utf8")
     :execFileSync("git",["show",base+":"+file],{cwd:root,encoding:"utf8",maxBuffer:30e6})).replace(/\r\n/g,"\n");
-    return [key,key==="integration"?operationReferenceStaleFeedbackHistoricalIntegrationSource(value):key==="i18n"?imageResizeGuidanceHistoricalI18nSource(value):key==="portal"?pdfSplitMetaHistoricalPortalSource(value):value];
+    return [key,key==="integration"?operationReferenceStaleFeedbackHistoricalIntegrationSource(value):key==="i18n"?imageResizeGuidanceHistoricalI18nSource(value):key==="portal"?pdfSplitMetaHistoricalPortalSource(value):resizePolishHistoricalThemeSource(value)];
   }));
 }
 const metadata=(id,kind)=>({id,display_name:REFERENCE_CUSTOMER,original_filename:REFERENCE_CUSTOMER+(kind==="pdf"?".pdf":".png"),

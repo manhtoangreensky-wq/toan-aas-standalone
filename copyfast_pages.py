@@ -107,6 +107,7 @@ _PORTAL_SHELL_COPY = {
     },
 }
 _PORTAL_SHELL_TITLES = {
+    "/image/resize": {"vi": "Đổi kích thước ảnh · TOAN AAS", "en": "Resize images · TOAN AAS", "zh": "调整图像尺寸 · TOAN AAS"},
     "/documents/split": {"vi": "Tách PDF · TOAN AAS", "en": "Split PDF · TOAN AAS", "zh": "拆分 PDF · TOAN AAS"},
     "/admin/commercial": {"vi": "Trung tâm Thương mại · TOAN AAS", "en": "Commercial Command Center · TOAN AAS", "zh": "商业指挥中心 · TOAN AAS"},
     "/admin/customers": {"vi": "Khách hàng Web · TOAN AAS", "en": "Web Customers · TOAN AAS", "zh": "Web 客户 · TOAN AAS"},
@@ -216,6 +217,11 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/image/resize": {
+        "vi": "Chọn ảnh đã lưu, đặt kích thước và tạo bản PNG mới. Tệp gốc được giữ nguyên.",
+        "en": "Choose a saved image, set its size and create a new PNG. The original stays unchanged.",
+        "zh": "选择已保存的图像，设置尺寸并创建新的 PNG。原文件将保持不变。",
+    },
     "/documents/split": {
         "vi": "Tạo tệp PDF từ một trang hoặc dải trang liên tiếp trong tài liệu đã lưu.",
         "en": "Create a PDF from one page or a consecutive page range in a saved document.",

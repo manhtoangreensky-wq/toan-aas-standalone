@@ -2305,3 +2305,20 @@ Nguồn thực:metadata của `/documents/split` tại BASE4ddd63ce.
 
 Không thêm tính năng, không chạy xử lý PDF hoặc mở quyền/backend/engine.
 Native/exactCI/phát hành/signedLIVE và toàn bộ goal có bằng chứng riêng.
+
+## Đổi kích thước ảnh — đối chiếu17/11/2026
+
+Nguồn thực:renderImageResize và metadata của `/image/resize` tại BASE93b41f52.
+
+| Trước | Ứng viên có phạm vi | Bằng chứng/giới hạn |
+|---|---|---|
+| Header/HTML đầu dùng tên tiếng Anh hoặc mô tả chung | Hai khóa/sáu giá trị metadata VI/EN/ZH |9clientRED và6serverRED;rawsource/nativeHTML |
+| Nhãn/hướng dẫn sáng quá nhạt | Hai rule màu semantic đúng route, không đổi tối/font/layout |30lighttargets1.265330–2.021153→5.797099–12.351555 |
+| Khối cuối kể Bot/provider/ví/PayOS/webhook | Xóa toàn bộ notice/notes section, lịch sử vẫn là phần cuối |DOM/wholeoutside/control comparators |
+| Có thể đổi tên/nội dung khách hoặc quyền khi dọn chữ | Ngoài bảy substitutions giữ nguyên |679Node,30nativecontrolpairs/exactsource |
+| Màu chữ đổi kéo theo currentColor border không nhìn thấy | Bộ so sánh phân biệt border0pxnone với border thật |Chỉ sửa QA comparator,không sửa app/rerun native |
+| PR757 còn ghi ứng viên | Đã giao runtime93b41f52 |CI44071806148/deploy44074756251/receipt6941948619 |
+
+Không gọi toàn bộ trang đã sạch thuật ngữ:canvas/preset và phần chữ còn lại
+thuộc phiếu tiếp theo. Không thêm tính năng hoặc đổi engine/quyền/giá/ví.
+SignedUI/finalPNG/device/Safari/auth/motion và wholegoal vẫn mở.

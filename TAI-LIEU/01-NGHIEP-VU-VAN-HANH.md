@@ -3108,3 +3108,26 @@ Giao diện thực và phát hành là cổng riêng; chưa nhận toàn ứng d
 kỹ thuật hoặc chức năng xử lý PDF đã được chạy.
 [Báo cáo](../docs/reports/pdf-split-meta-20261117.md),
 [phiên kiểm tra](../KIEM-THU/PHIEN-PDF-SPLIT-META-20261117.md).
+
+## Đổi kích thước ảnh dễ đọc —17/11/2026
+
+PR757 đã giao trước nhóm này:CI44071806148 hai nhóm đạt,
+merge/runtime93b41f52,deploy44074756251 thành công; ba dịch vụ/health và
+năm tệp giao diện công khai khớp. ReceiptIssue6941948619/PR6946921723.
+
+Ứng viên kế tiếp đưa tiêu đề/mô tả đổi kích thước ảnh về đúng VI/EN/ZH,
+làm rõ nhãn/hướng dẫn ở giao diện sáng và bỏ nguyên khối giải thích kỹ thuật
+cuối trang, không để ô trống. Bảy thay thế từ ba proposal AntigravityR1,
+bốn tệp ứng dụng; không đổi cách xử lý ảnh, biểu mẫu, quyền hoặc dữ liệu khách.
+Một lượt35tệp679Node đạt. Server12ca đạt và chín ca Chat bảo vệ đạt riêng.
+Native BASE6/GREEN6ca:30mẫu sáng1.265330–2.021153 tăng thành
+5.797099–12.351555:1;30mẫu tối,30cặp control và hình học/font giữ nguyên.
+Chọn ảnh thật của tài khoản QA mới, nhập1080×1920/Tab, không submit.
+Mỗi phase ba đăng ký/ba đăng nhập/12metadata; dữ liệu/lược đồ/source giữ,
+22tiến trình sở hữu dọn về0, không kết nối ra ngoài.
+
+Vẫn còn chữ canvas/preset và câu kỹ thuật khác theo phiếu riêng, không nhận
+toàn trang/ứng dụng đã sạch locale hoặc đã tạo được PNG. Phát hành, signedUI
+và toàn bộ goal phải có bằng chứng riêng.
+[Báo cáo](../docs/reports/image-resize-polish-20261117.md),
+[phiên kiểm tra](../KIEM-THU/PHIEN-IMAGE-RESIZE-POLISH-20261117.md).
