@@ -2701,3 +2701,26 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   RootrawVI375History/EN1440Resize/ZH375Resize;28ownedstopped0.
 - [ ] Currentdocs/Tester/prepush/provenance/review/CI/merge/deploy/receipts.
 - [ ] Historystatecopy→broadercoverage;motionLAST/fullgoalACTIVE.
+
+### Đối chiếu giao PR770 và bắt đầu thông báo Lịch sử ảnh
+
+- [x] PR770CI44349479232bothSUCCESS9m36s/4m41s;merge-runtime
+  d0a2ba128df320230141a65da2a455490f599294/fulltreee371fdc5…diff0;
+  deploy44352534552SUCCESS72s;3servicesactive-running/health/5assets/
+  5normalversionassetsbyteexact/publicbuildlocal-689b8c1b19aa10bd250a.
+  FixedIssue6984238821/PR6985446633final/readbackexact.
+- [x] History6statecopyAGYR1accepted;branchfromdeliveredPR770.
+- [x] PhysicalBASE21cases13RED8PASS3651.8615ms→exact6rowi18n
+  1appchanged150protected→61filegroup1590PASS0FAIL146067.7254ms.
+- [x] NativeR3actualloading/error/retry/ready:6pages/18states/36paint/
+  18shots;4failedGET/fifthretry200each;24ownedresourceerrorsexact,
+  audit/schema/core/sourceheld27owned0;guardunitonly;nooutput.
+- [ ] Currentdocs/Tester/prepush/review/provenance/CI/merge/deploy/receipts.
+- [ ] READY8row/STRUCTURE2editAGYR1returnedexact/reviewedonce,
+  NOT_APPLIED;theirQA/shipgatesseparate.WholegoalACTIVE,motionLAST.
+- [ ] ObservedpreexistingHistoryrefreshtoastVIonlyinEN/ZH:
+  “Đã làm mới lịch sử ảnh Web.”;sourceintegrationaction36874/toast843.
+  Fixafterready/structure,notfoldedintocurrent6statecopyorclaimedlocalePASS.
+- [ ] NativeobservedHistoryhero/headerVIcopyandZHfallbacknotlocalized;
+  portal.js1947metadata remainsseparateAGYscopeafterready/structure,
+  notmaskedbycurrent6statePASS.Wholelocale/goalstillOPEN.

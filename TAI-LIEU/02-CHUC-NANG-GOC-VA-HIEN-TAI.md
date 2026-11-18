@@ -2527,3 +2527,19 @@ Nguồn đối chiếu là hai dòng `result.resize.subtitle` và
 BASE7RED/7PASS; ứng viên1566PASS/0FAIL; native12màn/48caption/48ảnh.
 Không nhận processing-output/signedproduction hoặc toàn trang đã sạch.
 CI/merge/deploy/runtime/assets phải có bằng chứng riêng.
+
+## Lịch sử ảnh — thông báo trạng thái, 19/11/2026
+
+Đối chiếu sáu dòng history.guard/loading/failed.title/body hiện hữu,
+không thêm chức năng hoặc đổi thứ tự nhánh.
+
+| Chữ/hành vi cũ | Ứng viên | Ranh giới giữ |
+|---|---|---|
+| Giải thích nội bộ khi chưa đọc được lịch sử |Thông báo ngắn, hướng dẫn chờ/thử lại |Quyền/nhãn phụ/retry/dữ liệu |
+| GET tự thử lại tối đa3lượt |Giữ nguyên, không phải chức năng mới |Một lỗi tạm thời có thể tự hồi phục |
+| Golden nguồn lịch sử |Inverse hữu hạn đúng6dòng |Hash cũ/assertions/unknownoutside giữ |
+| Danh sách sẵn sàng và trang bên cạnh |Toàn HTML không đổi |Customer/UUID/state/downloads/form |
+
+BASE13RED/8PASS;candidate1590PASS/0FAIL. NativeR1lỗi kỳ vọng bài kiểm tra,
+không tính Antigravity sai;R2đi hết4failedGETrồiretry thật.
+Các chữ ready/empty và khung thừa là đơn vị tiếp theo,không nhận đã xong.

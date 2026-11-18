@@ -1,0 +1,65 @@
+{
+  "review": {
+    "specId": "IMAGE-HISTORY-PLAIN-STATE-COPY-20261118",
+    "conversation": "c48dbd20-b769-452f-9ecb-ed98578c853d",
+    "rawSha256": "e7d894dfdd28dd9d451d222407389d59567f1a97ae7adbaee7a4b05c28b2862d",
+    "schemaValid": true,
+    "proposalExact": true,
+    "handoffRound": 1,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "note": "Root reviewed structured output and exact rows once. Release remains dependency-ordered; no execution claim accepted."
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.guard.title\", \"Chưa thể mở lịch sử ảnh\", \"Image history can't be opened yet\", \"暂时无法打开图像记录\"],",
+        "old": "    [\"history.guard.title\", \"Lịch sử ảnh đang ở chế độ an toàn\", \"Image history is protected\", \"图像记录处于保护状态\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.guard.body\", \"Hãy kiểm tra quyền truy cập hoặc thử lại sau để xem lịch sử ảnh của bạn.\", \"Check your access or try again later to view your image history.\", \"请检查访问权限或稍后重试以查看您的图像记录。\"],",
+        "old": "    [\"history.guard.body\", \"Máy chủ chỉ mở lịch sử ảnh Web sau khi phiên đã xác thực, Kho tài sản và thao tác ảnh được kiểm tra. Không dùng danh sách Asset, tác vụ Bot hoặc đầu ra nhà cung cấp thay thế.\", \"The server opens Web image history only after the authenticated session, Asset Vault and image operations are verified. Asset lists, Bot jobs and provider output are not used as substitutes.\", \"仅在验证已验证会话、Asset Vault 和图像操作后，服务器才会打开 Web 图像记录。不会使用资产列表、Bot 任务或服务商输出替代。\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.loading.title\", \"Đang tải lịch sử ảnh\", \"Loading image history\", \"正在加载图像记录\"],",
+        "old": "    [\"history.loading.title\", \"Đang xác minh lịch sử ảnh riêng tư\", \"Verifying private image history\", \"正在验证私有图像记录\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.loading.body\", \"Vui lòng chờ trong khi tải danh sách ảnh của bạn.\", \"Please wait while your image list loads.\", \"正在加载您的图像列表，请稍候。\"],",
+        "old": "    [\"history.loading.body\", \"Không gian làm việc Web đang tải các thao tác ảnh thuộc tài khoản hiện tại. Không hiển thị dữ liệu route cũ, bộ nhớ trình duyệt hoặc danh sách Bot trong lúc chờ.\", \"The Web Workspace is loading image operations for the current account. Old route data, browser cache and Bot lists are not shown while waiting.\", \"Web Workspace 正在加载当前账户的图像操作。等待期间不显示旧路由数据、浏览器缓存或 Bot 列表。\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.failed.title\", \"Chưa tải được lịch sử ảnh\", \"Couldn't load image history\", \"未能加载图像记录\"],",
+        "old": "    [\"history.failed.title\", \"Chưa thể tải lịch sử ảnh riêng tư\", \"Private image history is unavailable\", \"无法加载私有图像记录\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.failed.body\", \"Hãy thử lại để tải danh sách ảnh mới nhất.\", \"Try again to load your latest image list.\", \"请重试以加载最新的图像列表。\"],",
+        "old": "    [\"history.failed.body\", \"Projection theo phạm vi tài khoản chưa trả dữ liệu an toàn. Web không thay thế bằng Asset Vault, Bot, nhà cung cấp hoặc bản xem trước công khai.\", \"The account-scoped projection did not return safe data. The Web App does not substitute Asset Vault, Bot, provider or public-preview data.\", \"按账户范围的投影未返回安全数据。Web 不会使用 Asset Vault、Bot、服务商或公开预览数据替代。\"],"
+      }
+    ],
+    "report": "Proposal only; application NOT_APPLIED. No discrepancies found (LỆCH: không có). Test not created yet; verify: NOT_RUN; no inferred PASS. Application order: PR768 delivered -> accepted Enhance headings -> Resize result copy -> History state copy -> separate broader coverage; motion LAST.",
+    "revision": "R1",
+    "specId": "IMAGE-HISTORY-PLAIN-STATE-COPY-20261118",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}
