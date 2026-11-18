@@ -3385,3 +3385,16 @@ Native cô lập 12 màn/48 phụ đề/48 ảnh giữ metadata, biểu mẫu v�
 Đây là kiểm tra đọc metadata thao tác thất bại, không chứng minh ảnh
 đã được xử lý. Phát hành/runtime/signed UI được chốt riêng trên Issue689.
 [Báo cáo](../docs/reports/image-resize-result-label-20261118.md).
+
+## Lịch sử ảnh — thông báo trạng thái, 19/11/2026
+
+Ứng viên chỉ đổi tiêu đề/nội dung khi chưa mở được, đang tải và tải lỗi,
+đủVI/EN/ZH;giữ nhánh quyền,nút thử lại,nhãn phụ và dữ liệu sẵn sàng.
+BASE21ca13RED/8PASS;nhóm ứng viên61tệp1590PASS/0FAIL.
+Nguồn151tệpđúng6dòngi18n/150tệpbảo vệ.
+
+Ứng dụng đã có3lượt tự thử lại GET. Một lần ngắt có thể tự hồi phục;
+bài kiểm tra lỗi phải đi hết4lượt đọc trước khi quan sát lỗi và bấm thử lại.
+Không thay chính sách đang chạy để ép bài kiểm tra đạt.
+Native/CI/delivery/signed UI được chốt riêng trên Issue689.
+[Báo cáo](../docs/reports/image-history-state-copy-20261118.md).

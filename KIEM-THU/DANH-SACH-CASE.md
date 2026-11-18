@@ -1696,3 +1696,14 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | RRL-SOURCE | nặng |Đúng hai dòng i18n |1 tệp đổi/150 bảo vệ; golden/assertions giữ |Scope/3 source/59 tệp ảnh hưởng |
 | RRL-NATIVE | vừa |12 màn, 48 phụ đề |Đọc đủ chữ/History type/ownership/audit/egress/owned0 |48 ảnh;28 tiến trình dừng về0 |
 | RRL-DELIVERY | nặng |CI/merge/deploy/runtime/assets |Đúng HEAD, không suy đầu ra thật hoặc toàn goal |Receipt Issue689/PR |
+
+## IMAGE-HISTORY-PLAIN-STATE-COPY-20261118 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| HSC-RED | vừa |21 ca renderer vật lý |BASE13RED/8PASS đúng nhãn cũ |[Phiên HSC](PHIEN-IMAGE-HISTORY-STATE-COPY-20261118.md) |
+| HSC-COPY | vừa |VI/EN/ZH guard/loading/failed±refresh |Sáu dòng mới đúng; cùng VM đổi locale |21ca mới trong1590PASS |
+| HSC-PRESERVE | nặng |Toàn HTML ngoài h2/p trạng thái |Stale rows ẩn; retry/rights/customer/ready/neighbor giữ |[Báo cáo](../docs/reports/image-history-state-copy-20261118.md) |
+| HSC-SOURCE | nặng |Đúng6rowi18n |1appđổi150bảo vệ/goldenhash/assertions giữ |3source/61tệpảnhhưởng |
+| HSC-NATIVE | vừa |Loading→4failedGET→retryfifthGET200 |18state/36paint/ownership/audit/egress/owned0 |NativeR3đạt6pages/18states/36paint/18shots;guardunitonly |
+| HSC-DELIVERY | nặng |CI/merge/deploy/runtime/assets |ExactHEAD/từngcổngđạt,không suy ảnh đầu ra hoặc toàn goal |ReceiptIssue689/PR |

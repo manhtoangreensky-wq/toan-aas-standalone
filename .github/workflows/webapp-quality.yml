@@ -111,6 +111,7 @@ jobs:
           node --test tests/image-resize-subtitle-wrap-source.test.mjs
           node --test tests/image-enhance-headings.test.mjs tests/image-enhance-headings-source.test.mjs tests/documents-product-controls.test.mjs
           node --test tests/image-resize-result-label.test.mjs tests/image-resize-result-label-source.test.mjs
+          node --test tests/image-history-state-copy.test.mjs tests/image-history-state-copy-source.test.mjs
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_image_enhance_meta_shell.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_pdf_compress_meta_shell.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_image_resize_control_height.py
