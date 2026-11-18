@@ -10421,7 +10421,7 @@
         "copyfast_mfa.py",
         "copyfast_music_media.py"
       ],
-      "occurrences": 1225,
+      "occurrences": 1227,
       "provider": "PayOS"
     },
     {
@@ -18798,9 +18798,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 602,
-  "source_files_scanned": 602,
-  "source_fingerprint_sha256": "cd75002fba61a58e3a94f490bece3ee95961e14e751cba824f34f1c535a551f5",
+  "source_files_discovered": 605,
+  "source_files_scanned": 605,
+  "source_fingerprint_sha256": "505c6c7791378830814732dbba016bb26e9dc41d2821c9864879167fceeae370",
   "source_root": "repository-root",
   "ui_path_references": [
     {
