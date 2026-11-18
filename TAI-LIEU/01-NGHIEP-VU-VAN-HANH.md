@@ -3350,3 +3350,24 @@ Nghiệm thu cuối R5 đạt12màn ba ngôn ngữ,hai cỡ màn hình,hai trang
 không dùng ởHistory;chỉ sửa hai điều kiện kiểm tra,không đổi ứng dụng.
 Audit cũ+3login/schema/core/source151giữ;28tiến trình sở hữu dừng về0.
 CI/delivery/signedproduction/finalPNG vẫn có cổng và bằng chứng riêng.
+
+## Sáu tiêu đề Chỉnh ảnh —18/11/2026
+
+Nhãn lựa chọn và phụ đề Đổi kích thước đã giaoPR768,runtimebe8015ad,
+CI44301447174bothSUCCESS/deploy44304009103SUCCESS62s/treeeq/
+3servicesactive-running/health/5assetsbyteexact,
+Issue6978177942/PR6978598883readbackexact.
+
+Ứng viên tiếp theo chỉ đổi sáu tiêu đề hướng dẫn Chỉnh ảnh thành câu chữ
+dễ hiểu trongVI/EN/ZH. Sáu đoạn hướng dẫn và biểu mẫu/quyền giữ nguyên.
+BASE21tests7RED14PASS đã đo;ứng viên đúng6rowi18n/150appfilesbảo vệ.
+Các mục đang chờ kiểm tra và phát hành không được coi là đã chạy ngoài web.
+[Báo cáo](../docs/reports/image-enhance-headings-20261118.md).
+
+Ứng viên54filegroup1525PASS/1oldreaderPDFBASE-equivalentFAIL;
+chỉsửareaderbằngexistingfinitehelper,giữmọiassertion,4PASS.
+NativeR2đủ6views/54metadatahelp+36headingwitness/18shots,
+0errors/egress/overflow,audit/schema/core/source151held,22ownedstopped0.
+RootxemVIENZHraw;R1edge-scrollhitFAIL giữ lịch sử,khôngworkerfault.
+Không nhận toàntrang hết chữ kỹ thuật hoặc menu mobile đã gọn;
+CI/merge/deploy/runtime/assets vẫn chốt riêng.

@@ -1674,3 +1674,14 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | RSC-WRAP | vừa |Hai route/actualsubtitle |Khôngcắtcuối,normal/anywhere/visible/clip;naturalheightgrowth |NativeR5:12views/48captions/source56PASS |
 | RSC-NATIVE | vừa |12actualviews4failedmetadata/account |Nooutput/cardpaint/ownership/egress/audit/owned0 |R5:48shots/28ownedstopped0/PhiênRSC |
 | RSC-DELIVERY | nặng |CI/merge/deploy/runtime/assets |ĐúngHEAD/từngphầnchốt,khôngsuyPNGcuối |ReceiptIssue689/PR |
+
+## IMAGE-ENHANCE-PLAIN-HEADINGS-20261118 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| EPH-RED | vừa |21actualrenderer cases |BASE7headingRED14protectedPASS |[PhiênEPH](PHIEN-IMAGE-ENHANCE-HEADINGS-20261118.md) |
+| EPH-COPY | vừa |3locale5states/sameVM |Sáuheading mới chỉ hiện đúng empty/ready |21actual+3source trong1525PASS |
+| EPH-PRESERVE | nặng |WholeHTMLoutside6fixednodes |Sáubody/control/meta/context/customerliteral giữ |[Báo cáo](../docs/reports/image-enhance-headings-20261118.md) |
+| EPH-SOURCE | nặng |Exact6i18nrows |1appchanged150protected/goldenassertions/outsidebytes giữ |Scope/source/affectedchecks |
+| EPH-NATIVE | vừa |6actualviews/36headings |Fulltextpaint/clipping/hit/ancestor/formrights/audit/owned0 |R2:54metadatahelp+36headings/18shots/22ownedstopped0 |
+| EPH-DELIVERY | nặng |CI/merge/deploy/runtime/assets |ExactHEAD/từngcổngđạt,khôngsuyPNGcuối/wholegoal |ReceiptIssue689/PR |

@@ -2489,3 +2489,25 @@ Nghiệm thuR5đủ12màn/48phụđề đọcđủ/48ảnh,giữmetadata/form/ri
 ownership/audit/schema/core/source151;28tiếntrìnhsởhữudừng0.
 R4lỗiđiềukiệnchờKho tài sản ởHistory đượcRoot sửađúng2điềukiệnQA;
 khôngđổiapp hoặc nớivisibility. CI/runtime/signedUI/finalPNG vẫnriêng.
+
+## Chỉnh ảnh — tiêu đề hướng dẫn18/11/2026
+
+Nguồn hiện hữu: sáu heading trongrenderImageEnhance và
+IMAGE_OPERATION_COPY_ROWS;không đổi chức năng chỉnh ảnh.
+
+| Tài liệu/chữ cũ | Hành vi ứng viên | Ranh giới giữ |
+|---|---|---|
+| Tiêu đề mô tả Web/verifiability/private delivery | Sáu headingVI/EN/ZH viết cho người dùng | Sixbodyparagraphs/meta/form/rights |
+| Metadata Chỉnh ảnh đã dịch | Giữ nguyên tên trang/mô tả/header | Customerliteral/keys/order/route |
+| Heading trùng tên ảnh do khách đặt | Chỉ đổi sáu node cố định | Không thay chuỗi toàn cục trong tên ảnh |
+| Snapshot nguồn cũ | Finite6rowleaf tại biên lịch sử | Goldenhash/assertions/unknownoutside |
+| Resize còn ghi chờ phát hành | PR768đã giao runtimebe8015ad | CI44301447174/deploy44304009103/receipts |
+
+BASE21cases7RED14PASS;source1changed150protected6edits.
+Nhóm ứng viên/native/CI/delivery vẫn phải có output riêng.
+
+Ứng viên đã đo1525PASS/1BASE-equivalentoldreaderFAIL;
+reader-onlyfix giữassertions,4PASS,no passinggrouprerun.
+NativeR2đủ6views/54metadatahelp+36headingpaint/18shots,22ownedstopped0,
+rights/body/source/audit/schema/coreheld. R1edgehit→realcenter-scrollQA,
+khôngđổiapp. Khôngsuycandidategeometry thànhBASEequality hoặcwholepage.
