@@ -1,0 +1,35 @@
+{
+  "review": {
+    "specId": "IMAGE-HISTORY-RETRY-LABEL-20261119",
+    "conversation": "d524969c-a91f-409f-bc14-730f13405a9b",
+    "rawSha256": "387c9c2029867069b5a795d9fc8261d544c08f024d790f52917926c7098b1c9c",
+    "schemaValid": true,
+    "proposalExact": true,
+    "handoffRound": 1,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "note": "Root reviewed the exact one-row supplement once. Apply only inside cohesive History customer cleanup after physical baseline; no runtime/whole-page/output claim."
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.retry\", \"Thử lại\", \"Try again\", \"重试\"],",
+        "old": "    [\"history.retry\", \"Thử lại dữ liệu riêng tư\", \"Retry private data\", \"重试私有数据\"],"
+      }
+    ],
+    "report": "Application NOT_APPLIED. Verify: NOT_RUN (tests/image-history-retry-label.test.mjs not created yet). LỆCH: Không có. Bounded supplement updating the failed-state button label to customer wording without technical filler, separate VI/EN/ZH across static/portal/portal-i18n.js. Appended to existing cohesive History batch, not a separate PR. FullgoalACTIVE, motionLAST.",
+    "revision": "R1",
+    "specId": "IMAGE-HISTORY-RETRY-LABEL-20261119",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}

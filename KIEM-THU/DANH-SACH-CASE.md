@@ -1707,3 +1707,15 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | HSC-SOURCE | nặng |Đúng6rowi18n |1appđổi150bảo vệ/goldenhash/assertions giữ |3source/61tệpảnhhưởng |
 | HSC-NATIVE | vừa |Loading→4failedGET→retryfifthGET200 |18state/36paint/ownership/audit/egress/owned0 |NativeR3đạt6pages/18states/36paint/18shots;guardunitonly |
 | HSC-DELIVERY | nặng |CI/merge/deploy/runtime/assets |ExactHEAD/từngcổngđạt,không suy ảnh đầu ra hoặc toàn goal |ReceiptIssue689/PR |
+
+## IMAGE-HISTORY-CUSTOMER-CLEANUP-20261119 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| HCC-BASE | vừa |94Node/3Python trước sửa |TargetRED rõ,QA fallback giữ riêng |[Phiên HCC](PHIEN-IMAGE-HISTORY-CUSTOMER-CLEANUP-20261119.md) |
+| HCC-COPY | vừa |READY/META/RETRY/FEEDBACK ởVIENZH |Chữ cố định đúng locale,customerliteral giữ |[Báo cáo](../docs/reports/image-history-customer-cleanup-20261119.md) |
+| HCC-STRUCTURE | vừa |Empty/full,metric/footer |Một số đếm,không boundarycard,đủ3toolhrefs |15physicalstructurecases |
+| HCC-SOURCE | nặng |19canonicaledits/4files |147protected/oldhash/assertions/currentness giữ |Source151/finiteinverse/1904+3Node/12Python |
+| HCC-EMPTY | vừa |6trangVIENZH375light1440dark |90witness/12ảnh,0errors/egress/22owned0 |NativeEMPTYR2 |
+| HCC-FULL | vừa |4GETlỗi→retry4GETlỗi→alert→retryGET9success |Hai toast dịch/tự tắt,4ownedfailedrows,nooutput/cleanup |FULLR6:6pages24states162witness+12toast78ảnh27owned0;filenameellipsis khôngfullpaint |
+| HCC-DELIVERY | nặng |CI/merge/treeeq/deploy/runtime/assets |ĐúngHEAD,từngcổng riêng,không nhận wholelocale/PNG/motion |ReceiptIssue689/PRpending |

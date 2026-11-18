@@ -3,9 +3,10 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {resizeSubtitleHistoricalPortalSource as inverse} from "./helpers/image-resize-subtitle-snapshot.mjs";
+import {historyCustomerCleanupHistoricalSource} from "./helpers/image-history-customer-cleanup-snapshot.mjs";
 const raw=fs.readFileSync(new URL("./fixtures/image-resize-subtitle-reviewed.json",import.meta.url)),fixture=JSON.parse(raw),edits=fixture.proposal.changes;
 const base="979b80d22a90368ec97547937e219ccbd3a02deb",file="static/portal/portal.js",lf=value=>value.replace(/\r\n/g,"\n");
-const before=lf(execFileSync("git",["show",base+":"+file],{encoding:"utf8",maxBuffer:12e6})),current=lf(fs.readFileSync(file,"utf8"));
+const before=lf(execFileSync("git",["show",base+":"+file],{encoding:"utf8",maxBuffer:12e6})),current=historyCustomerCleanupHistoricalSource(lf(fs.readFileSync(file,"utf8")),file);
 test("Resize subtitle source equals exactly the two accepted inline substitutions with every outside byte unchanged",()=>{
   assert.equal(fixture.proposal.specId,"IMAGE-RESIZE-CUSTOM-SUBTITLE-20261118");assert.equal(fixture.review.conversation,"c9f5fcd9-c2aa-4200-a99c-0bd07455af77");
   let expected=before;

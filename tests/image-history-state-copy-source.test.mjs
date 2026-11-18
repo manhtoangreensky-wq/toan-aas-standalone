@@ -3,9 +3,10 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {historyStateCopyHistoricalI18nSource as inverse,historyStateCopyHistoricalSnapshot as snapshot} from "./helpers/image-history-state-copy-snapshot.mjs";
+import {historyCustomerCleanupHistoricalSource} from "./helpers/image-history-customer-cleanup-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-history-state-copy-reviewed.json",import.meta.url),"utf8")),edits=fixture.proposal.changes;
 const file="static/portal/portal-i18n.js",base="d0a2ba128df320230141a65da2a455490f599294",lf=value=>value.replace(/\r\n/g,"\n");
-const before=lf(execFileSync("git",["show",base+":"+file],{encoding:"utf8",maxBuffer:12e6})),current=lf(fs.readFileSync(file,"utf8"));
+const before=lf(execFileSync("git",["show",base+":"+file],{encoding:"utf8",maxBuffer:12e6})),current=historyCustomerCleanupHistoricalSource(lf(fs.readFileSync(file,"utf8")),file);
 test("Physical i18n equals exactly six accepted History state rows with every outside byte unchanged",()=>{
   assert.equal(fixture.proposal.specId,"IMAGE-HISTORY-PLAIN-STATE-COPY-20261118");assert.equal(fixture.review.conversation,"c48dbd20-b769-452f-9ecb-ed98578c853d");
   let expected=before;for(const edit of edits){assert.equal(edit.file,file);assert.equal(edit.count,1);assert.equal(expected.split(edit.old).length-1,1);expected=expected.replace(edit.old,()=>edit.new);}

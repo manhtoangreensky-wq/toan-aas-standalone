@@ -107,6 +107,7 @@ _PORTAL_SHELL_COPY = {
     },
 }
 _PORTAL_SHELL_TITLES = {
+    "/image/history": {"vi": "Lịch sử ảnh · TOAN AAS", "en": "Image history · TOAN AAS", "zh": "图像记录 · TOAN AAS"},
     "/image/edit": {"vi": "Chỉnh ảnh · TOAN AAS", "en": "Edit images · TOAN AAS", "zh": "调整图像 · TOAN AAS"},
     "/documents/image-to-pdf": {"vi": "Ảnh thành PDF · TOAN AAS", "en": "Images to PDF · TOAN AAS", "zh": "图像转 PDF · TOAN AAS"},
     "/documents/compress": {"vi": "Nén PDF · TOAN AAS", "en": "Compress PDF · TOAN AAS", "zh": "压缩 PDF · TOAN AAS"},
@@ -220,6 +221,11 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/image/history": {
+        "vi": "Xem lại các lần chỉnh ảnh và tải ảnh đã hoàn tất.",
+        "en": "Review your image edits and download completed images.",
+        "zh": "查看您的图像编辑记录并下载已完成的图像。",
+    },
     "/image/edit": {
         "vi": "Chọn ảnh đã lưu, chỉnh màu và độ nét rồi tải bản PNG mới. Tệp gốc được giữ nguyên.",
         "en": "Choose a saved image, adjust color and sharpness, then download a new PNG. The original file stays unchanged.",

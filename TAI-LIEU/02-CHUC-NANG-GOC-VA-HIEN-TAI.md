@@ -1,5 +1,24 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 19/11/2026 — Lịch sử ảnh không cần giải thích triển khai
+
+Nguồn gốc:customerPage("/image/history"),renderImageOperationHistory,
+IMAGE_OPERATION_COPY_ROWS và image-history-refresh trong integration.js.
+
+| Chức năng gốc | Ứng viên đã đo | Ranh giới giữ nguyên |
+|---|---|---|
+| Lịch sử riêng theo tài khoản | Tiêu đề/hướng dẫn/trống đúngVIENZH | Quyền,UUID,phân trang,dữ liệu,tải xuống giữ |
+| Khung giải thích ranh giới và hai chỉ số | Giữ một số đếm,ba liên kết công cụ gọn | Không xóa hoặc thay chức năng công cụ |
+| Làm mới/thử lại | Nhãn gọn,ba thông báo theo locale | API/tự thử lại/timer6500ms/dedup/role giữ |
+| Tài liệu cũ dùng chữ về nguồn nội bộ | Source19edits/4files/147protected,kiểm tra vật lý | Hai khối renderNotes cuối trang vẫn là việc kế tiếp |
+
+1904Node+3ca reader sửa đúng biên đạt;12Python shell đạt.
+NativeEMPTY6trang vàFULLR6sáutrang/24states/54GET/27owned0 đã đo;
+FULLhai toastdịch/tự tắt có12pixelảnhRootđãxem. CI/merge/deploy/runtime
+là các cổng riêng;filenameellipsis giữ vàkhôngnhậnfulltextpaint.
+Không chứng minh ảnh cuối đã được tạo hoặc toànứngdụng/motion hoàn tất.
+[Phiên kiểm tra](../KIEM-THU/PHIEN-IMAGE-HISTORY-CUSTOMER-CLEANUP-20261119.md).
+
 ## 11/11/2026 — Nội dung đang nhập và lưu kế hoạch không trùng
 
 |Chức năng đang có|Hành vi ứng viên đã kiểm tra|Ranh giới giữ nguyên|

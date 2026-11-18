@@ -18785,22 +18785,22 @@
     ["history.loading.body", "Vui lòng chờ trong khi tải danh sách ảnh của bạn.", "Please wait while your image list loads.", "正在加载您的图像列表，请稍候。"],
     ["history.failed.title", "Chưa tải được lịch sử ảnh", "Couldn't load image history", "未能加载图像记录"],
     ["history.failed.body", "Hãy thử lại để tải danh sách ảnh mới nhất.", "Try again to load your latest image list.", "请重试以加载最新的图像列表。"],
-    ["history.intro.kicker", "Lịch sử ảnh riêng tư", "Private image history", "私有图像记录"],
-    ["history.intro.title", "Một lịch sử PNG đã xác minh, không trộn nguồn", "One verified PNG history without mixed authority", "单一已验证 PNG 记录，不混用来源"],
-    ["history.intro.body", "Chỉ đầu ra từ các công cụ ảnh của tài khoản hiện tại xuất hiện. Mỗi lần tải xuống đều được máy chủ kiểm tra lại quyền sở hữu, tính toàn vẹn và trạng thái hoàn tất.", "Only outputs from this account's image tools are shown. Every download is rechecked by the server for ownership, integrity and completion.", "仅显示当前账户图像工具的输出。每次下载都会由服务器重新检查所有权、完整性和完成状态。"],
-    ["history.metric.count", "PNG Web ở trang này", "Web PNGs on this page", "本页 Web PNG"],
+    ["history.intro.kicker", "Lịch sử ảnh", "Image history", "图像记录"],
+    ["history.intro.title", "Ảnh đã xử lý của bạn", "Your processed images", "您已处理的图像"],
+    ["history.intro.body", "Xem lại các lần chỉnh ảnh và tải ảnh đã hoàn tất.", "Review your image edits and download completed images.", "查看您的图像编辑记录并下载已完成的图像。"],
+    ["history.metric.count", "Ảnh ở trang này", "Images on this page", "本页图像"],
     ["history.metric.outOfScope", "Ngoài phạm vi", "Out of scope", "不在范围内"],
     ["history.metric.outOfScopeBody", "Tác vụ Bot và đầu ra nhà cung cấp không được truy vấn", "Bot jobs and provider output are not queried", "不会查询 Bot 任务和服务商输出"],
-    ["history.results.title", "PNG đã xử lý", "Processed PNG files", "已处理的 PNG"],
-    ["history.results.description", "Không dùng URL tĩnh, bản xem trước công khai, bộ nhớ đệm PWA hoặc lịch sử Asset/Bot thay thế khi một lần đọc riêng tư thất bại.", "Static URLs, public previews, PWA cache and Asset/Bot history are not used as substitutes when a private read fails.", "私有读取失败时，不使用静态 URL、公开预览、PWA 缓存或 Asset/Bot 记录替代。"],
+    ["history.results.title", "Kết quả chỉnh ảnh", "Image editing results", "图像编辑结果"],
+    ["history.results.description", "Chọn ảnh đã hoàn tất để tải xuống. Nếu chưa tải được, hãy làm mới danh sách.", "Choose a completed image to download. If you can't download it, refresh the list.", "选择已完成的图像进行下载。如果无法下载，请刷新列表。"],
     ["history.boundary.title", "Ranh giới dữ liệu", "Data boundaries", "数据边界"],
     ["history.boundary.body", "Đây là kho đầu ra riêng của không gian làm việc Web, không phải trung tâm giao tệp chung.", "This is the Web Workspace's private output store, not a shared delivery center.", "这是 Web Workspace 的私有输出存储，不是共享交付中心。"],
     ["history.boundary.item.one", "Không gọi Bot/Core Bridge, nhà cung cấp, PayOS, ví Xu hoặc webhook.", "No Bot/Core Bridge, provider, PayOS, Xu wallet or webhook calls.", "不调用 Bot/Core Bridge、服务商、PayOS、Xu 钱包或 webhook。"],
     ["history.boundary.item.two", "Không ghi đè file gốc, không tạo bản xem trước và không suy đoán đầu ra từ Asset Vault.", "Original files are not overwritten; no preview or Asset Vault-derived output is fabricated.", "不覆盖原文件；不会创建预览或根据 Asset Vault 推测输出。"],
     ["history.boundary.item.three", "Muốn tạo bản mới, mở đúng công cụ ảnh tương ứng.", "To create a new copy, open the corresponding image tool.", "要创建新副本，请打开对应的图像工具。"],
-    ["history.retry", "Thử lại dữ liệu riêng tư", "Retry private data", "重试私有数据"],
-    ["history.empty.title", "Chưa có PNG Web đã xác minh", "No verified Web PNG files yet", "暂无已验证的 Web PNG"],
-    ["history.empty.body", "Lịch sử này chỉ hiển thị đầu ra từ các công cụ ảnh của tài khoản hiện tại. Nó không suy đoán từ Kho tài sản, Bot, nhà cung cấp hay trình duyệt.", "This history shows only outputs from this account's image tools. It does not infer data from Asset Vault, Bot, providers or the browser.", "此记录仅显示当前账户图像工具的输出。不会从 Asset Vault、Bot、服务商或浏览器推测数据。"],
+    ["history.retry", "Thử lại", "Try again", "重试"],
+    ["history.empty.title", "Chưa có ảnh đã xử lý", "No processed images yet", "暂无已处理的图像"],
+    ["history.empty.body", "Ảnh bạn chỉnh bằng các công cụ ảnh sẽ xuất hiện tại đây.", "Images you edit with the image tools will appear here.", "您使用图像工具编辑的图像将显示在这里。"],
     ["history.fallback.background", "PNG nền trong suốt riêng tư", "Private transparent-background PNG", "私有透明背景 PNG"],
     ["result.meta.pending", "Chưa có", "Not available", "暂无"],
     ["result.meta.checking", "Đang kiểm tra", "Checking", "正在检查"]
@@ -22523,6 +22523,39 @@
   Object.assign(MESSAGES.zh, {
     imageEnhanceMetaUiTitle: "调整图像",
     imageEnhanceMetaUiDescription: "选择已保存的图像，调整色彩和锐度，然后下载新的 PNG 文件。原文件保持不变。"
+  });
+
+  Object.assign(MESSAGES.vi, {
+    imageHistoryMetaUiTitle: "Lịch sử ảnh",
+    imageHistoryMetaUiDescription: "Xem lại các lần chỉnh ảnh và tải ảnh đã hoàn tất."
+  });
+
+  Object.assign(MESSAGES.en, {
+    imageHistoryMetaUiTitle: "Image history",
+    imageHistoryMetaUiDescription: "Review your image edits and download completed images."
+  });
+
+  Object.assign(MESSAGES.zh, {
+    imageHistoryMetaUiTitle: "图像记录",
+    imageHistoryMetaUiDescription: "查看您的图像编辑记录并下载已完成的图像。"
+  });
+
+  Object.assign(MESSAGES.vi, {
+    "customerBridgeFeedback.imageHistoryRefreshed": "Đã làm mới lịch sử ảnh.",
+    "customerBridgeFeedback.imageHistoryRefreshFailed": "Chưa làm mới được lịch sử ảnh. Hãy thử lại.",
+    "customerBridgeFeedback.imageHistoryAccessDenied": "Hãy kiểm tra quyền truy cập để xem lịch sử ảnh."
+  });
+
+  Object.assign(MESSAGES.en, {
+    "customerBridgeFeedback.imageHistoryRefreshed": "Image history refreshed.",
+    "customerBridgeFeedback.imageHistoryRefreshFailed": "Couldn't refresh image history. Try again.",
+    "customerBridgeFeedback.imageHistoryAccessDenied": "Check your access to view image history."
+  });
+
+  Object.assign(MESSAGES.zh, {
+    "customerBridgeFeedback.imageHistoryRefreshed": "图像记录已刷新。",
+    "customerBridgeFeedback.imageHistoryRefreshFailed": "未能刷新图像记录。请重试。",
+    "customerBridgeFeedback.imageHistoryAccessDenied": "请检查您的访问权限以查看图像记录。"
   });
 
   verifyEqualKeysets();

@@ -1,5 +1,23 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 19/11/2026 — Tiêu đề, danh sách và thông báo Lịch sử ảnh
+
+Ứng viên dùng đúngVI/EN/ZH cho tiêu đề trang, hướng dẫn danh sách, màn trống,
+nút thử lại và thông báo làm mới. Bỏ chỉ số không phục vụ thao tác và khung
+giải thích ranh giới;giữ ba liên kết công cụ gọn. Không đổi quyền hoặc dữ liệu.
+Đã đo19điểm chỉnh/4tệp ứng dụng đổi/147tệp bảo vệ.97ca hành vi mới có BASE;
+1904Node đạt và ba reader nguồn cũ được sửa biên hữu hạn,3/3đạt;12Python đạt.
+EMPTYnative6trang/90witness/12ảnh/22owned0. FULLR6đạt6trang/24states/
+162witness+12toast/78ảnh/27owned0,54GETthật48lỗicókiểmsoát.
+CI/runtime chốt riêng;không nhậnfullfilenamepaint doellipsis chủ ý.
+
+Ứng dụng tự thử lạiGET ba lần;muốn quan sát lỗi phải đi hết bốn lượt.
+Thông báo thật tự tắt sau6500ms và không nhận chuột theo thiết kế;ảnh chụp
+pixel và text-range dùng để kiểm việc nhìn thấy,không sửaCSS cho bài kiểm.
+Hai khối giải thích kỹ thuật cuối History còn là việc kế tiếp,không nhận toàn
+trang sạch. Không tạo ảnh hoặc thay dữ liệu khách.
+[Báo cáo](../docs/reports/image-history-customer-cleanup-20261119.md).
+
 ## 11/11/2026 — Giữ nội dung hiện hành và thử lại đúng lần lưu
 
 Bản sửa ứng viên cho công cụ kế hoạch từ tham chiếu giữ nội dung đã có khi tạo

@@ -1,0 +1,47 @@
+{
+  "review": {
+    "specId": "IMAGE-HISTORY-REFRESH-FEEDBACK-20261119",
+    "conversation": "11cba0b5-2678-4a9c-ae4e-cae51aa2479f",
+    "rawSha256": "5688cae51110c7f45b79f16e272cd391b20c4d528ae6aa22748c7a65ec810175",
+    "schemaValid": true,
+    "proposalExact": true,
+    "handoffRound": 1,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "note": "Root read structured output and reviewed exact proposed edits once as a pair. Serial application waits for PR771 delivery, History ready copy and customer structure; metadata then feedback. No runtime/whole-page/output claim."
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/integration.js",
+        "new": "    const legacyStatusMap = {\n      \"Đã làm mới lịch sử ảnh Web.\": \"imageHistoryRefreshed\",\n      \"Không thể làm mới lịch sử ảnh Web.\": \"imageHistoryRefreshFailed\",\n      \"Bạn không có quyền xem lịch sử ảnh Web.\": \"imageHistoryAccessDenied\",",
+        "old": "    const legacyStatusMap = {"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/integration.js",
+        "new": "    const viFallbacks = {\n      imageHistoryRefreshed: \"Đã làm mới lịch sử ảnh.\",\n      imageHistoryRefreshFailed: \"Chưa làm mới được lịch sử ảnh. Hãy thử lại.\",\n      imageHistoryAccessDenied: \"Hãy kiểm tra quyền truy cập để xem lịch sử ảnh.\",",
+        "old": "    const viFallbacks = {"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "  Object.assign(MESSAGES.vi, {\n    \"customerBridgeFeedback.imageHistoryRefreshed\": \"Đã làm mới lịch sử ảnh.\",\n    \"customerBridgeFeedback.imageHistoryRefreshFailed\": \"Chưa làm mới được lịch sử ảnh. Hãy thử lại.\",\n    \"customerBridgeFeedback.imageHistoryAccessDenied\": \"Hãy kiểm tra quyền truy cập để xem lịch sử ảnh.\"\n  });\n\n  Object.assign(MESSAGES.en, {\n    \"customerBridgeFeedback.imageHistoryRefreshed\": \"Image history refreshed.\",\n    \"customerBridgeFeedback.imageHistoryRefreshFailed\": \"Couldn't refresh image history. Try again.\",\n    \"customerBridgeFeedback.imageHistoryAccessDenied\": \"Check your access to view image history.\"\n  });\n\n  Object.assign(MESSAGES.zh, {\n    \"customerBridgeFeedback.imageHistoryRefreshed\": \"图像记录已刷新。\",\n    \"customerBridgeFeedback.imageHistoryRefreshFailed\": \"未能刷新图像记录。请重试。\",\n    \"customerBridgeFeedback.imageHistoryAccessDenied\": \"请检查您的访问权限以查看图像记录。\"\n  });\n\n  verifyEqualKeysets();",
+        "old": "  verifyEqualKeysets();"
+      }
+    ],
+    "report": "Application NOT_APPLIED. LỆCH: Không có. Verification NOT_RUN (test not created yet, do not infer PASS). Bounded proposal prepared strictly per packet.md without modifying files or executing runtime commands.",
+    "revision": "R1",
+    "specId": "IMAGE-HISTORY-REFRESH-FEEDBACK-20261119",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}

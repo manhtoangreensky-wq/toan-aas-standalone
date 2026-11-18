@@ -2724,3 +2724,26 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
 - [ ] NativeobservedHistoryhero/headerVIcopyandZHfallbacknotlocalized;
   portal.js1947metadata remainsseparateAGYscopeafterready/structure,
   notmaskedbycurrent6statePASS.Wholelocale/goalstillOPEN.
+
+### Lịch sử ảnh — đợt làm sạch chung,19/11/2026
+
+- [x] PR771 đã chốt CI44358221360/merge-runtime7af6e2f8/treeeq/
+  deploy44361420223SUCCESS66s/3services/health/5public+5normalassets;
+  fixedIssue6985513485/PR6986671627readbackexact.
+- [x] Nhánh mới từ đúng bản đã giao;4proposalAGYR1đãreview,reusekhônggọilại.
+- [x] Bổ sung nhãn HistoryretryAGYR1d524969c;5phiếu/19edits4appfilesđođúng.
+- [x] BASE30+64Node/3Python→exactpatchserial→70files1904PASS/3legacyreaderFAIL;
+  finiteleaf tại3reader cũ giữ mọiassertions/hash,3ca chạy lại3PASS;
+  12PythonshellPASS.147appfilesbảo vệ,không chạy lại1904ca đã đạt.
+- [x] NativeEMPTYR2:6pages/90witness/12shots/22owned0,source/core/audit/egressgiữ.
+- [x] NativeEMPTYR2+FULLR6:12pages/30states/264witness/90ảnh;
+  FULL54GET48controlledfailures/48resourceerrors exact,12toastdịch/tựtắt;
+  core/schema/audit/sourceheld22+27owned0;24filenamewitnessellipsis
+  khôngfullpaint. Rootxem12toast+VIENZHready,không giả đầu ra.
+- [x] IndependentreviewC0I0M0;khôngsửamãthêm,khôngrerun1904pass.
+- [ ] Docs/Tester/prepush/review/provenance/onePR/exactCI/merge/deploy/receipt.
+- [ ] Sauđợtnày:hai khối renderNotes và3cụmstate-meta còn ởHistory;
+  haiAGYoutput-onlyR1đãgiao(song song/3.8FlashHigh/CLIexistinglogin),
+  contractIssue6992944109;khôngápdụngtrướcreleasehiệntại/khôngnhậntoàntrangsạch.
+- [ ] Wholeapp/coverage/AX/auth/responsive/device/Safari/signedUI/output
+  vẫn mở;motionM-FINAL01..06LAST.

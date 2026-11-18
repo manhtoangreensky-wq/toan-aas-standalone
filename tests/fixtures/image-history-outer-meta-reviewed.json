@@ -1,0 +1,59 @@
+{
+  "review": {
+    "specId": "IMAGE-HISTORY-OUTER-META-20261119",
+    "conversation": "98527f67-e77f-47a1-95aa-521c06aa2c58",
+    "rawSha256": "e79709bc238eba2cb14159422404c7c64e4f73e1df05816928ab0edf76253752",
+    "schemaValid": true,
+    "proposalExact": true,
+    "handoffRound": 1,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "note": "Root read structured output and reviewed exact proposed edits once as a pair. Serial application waits for PR771 delivery, History ready copy and customer structure; metadata then feedback. No runtime/whole-page/output claim."
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "copyfast_pages.py",
+        "new": "_PORTAL_SHELL_TITLES = {\n    \"/image/history\": {\"vi\": \"Lịch sử ảnh · TOAN AAS\", \"en\": \"Image history · TOAN AAS\", \"zh\": \"图像记录 · TOAN AAS\"},",
+        "old": "_PORTAL_SHELL_TITLES = {"
+      },
+      {
+        "count": 1,
+        "file": "copyfast_pages.py",
+        "new": "_PORTAL_SHELL_DESCRIPTIONS = {\n    \"/image/history\": {\n        \"vi\": \"Xem lại các lần chỉnh ảnh và tải ảnh đã hoàn tất.\",\n        \"en\": \"Review your image edits and download completed images.\",\n        \"zh\": \"查看您的图像编辑记录并下载已完成的图像。\",\n    },",
+        "old": "_PORTAL_SHELL_DESCRIPTIONS = {"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "    if (path === \"/image/edit\") return uiText(\"imageEnhanceMetaUiTitle\", \"Chỉnh ảnh\");\n    if (path === \"/image/history\") return uiText(\"imageHistoryMetaUiTitle\", \"Lịch sử ảnh\");",
+        "old": "    if (path === \"/image/edit\") return uiText(\"imageEnhanceMetaUiTitle\", \"Chỉnh ảnh\");"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "    if (path === \"/image/edit\") return uiText(\"imageEnhanceMetaUiDescription\", \"Chọn ảnh đã lưu, chỉnh màu và độ nét rồi tải bản PNG mới. Tệp gốc được giữ nguyên.\");\n    if (path === \"/image/history\") return uiText(\"imageHistoryMetaUiDescription\", \"Xem lại các lần chỉnh ảnh và tải ảnh đã hoàn tất.\");",
+        "old": "    if (path === \"/image/edit\") return uiText(\"imageEnhanceMetaUiDescription\", \"Chọn ảnh đã lưu, chỉnh màu và độ nét rồi tải bản PNG mới. Tệp gốc được giữ nguyên.\");"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "  Object.assign(MESSAGES.vi, {\n    imageHistoryMetaUiTitle: \"Lịch sử ảnh\",\n    imageHistoryMetaUiDescription: \"Xem lại các lần chỉnh ảnh và tải ảnh đã hoàn tất.\"\n  });\n\n  Object.assign(MESSAGES.en, {\n    imageHistoryMetaUiTitle: \"Image history\",\n    imageHistoryMetaUiDescription: \"Review your image edits and download completed images.\"\n  });\n\n  Object.assign(MESSAGES.zh, {\n    imageHistoryMetaUiTitle: \"图像记录\",\n    imageHistoryMetaUiDescription: \"查看您的图像编辑记录并下载已完成的图像。\"\n  });\n\n  verifyEqualKeysets();",
+        "old": "  verifyEqualKeysets();"
+      }
+    ],
+    "report": "Application: NOT_APPLIED.\nExecution/Verification: NOT_RUN.\nLỆCH: Không có (0 lệch kỳ vọng).\nRoot serial order: PR771 state-copy delivery -> accepted ready8rows -> accepted structure2edits -> metadata -> refreshfeedback -> broadercoverage.\nNo competing source writes or earlyPR. FullgoalACTIVE/motionLAST. PROVIDER_CALLS=0, WALLET_MUTATIONS=0.",
+    "revision": "R1",
+    "specId": "IMAGE-HISTORY-OUTER-META-20261119",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}
