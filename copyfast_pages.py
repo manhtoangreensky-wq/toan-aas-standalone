@@ -107,6 +107,7 @@ _PORTAL_SHELL_COPY = {
     },
 }
 _PORTAL_SHELL_TITLES = {
+    "/documents/compress": {"vi": "Nén PDF · TOAN AAS", "en": "Compress PDF · TOAN AAS", "zh": "压缩 PDF · TOAN AAS"},
     "/image/resize": {"vi": "Đổi kích thước ảnh · TOAN AAS", "en": "Resize images · TOAN AAS", "zh": "调整图像尺寸 · TOAN AAS"},
     "/documents/split": {"vi": "Tách PDF · TOAN AAS", "en": "Split PDF · TOAN AAS", "zh": "拆分 PDF · TOAN AAS"},
     "/admin/commercial": {"vi": "Trung tâm Thương mại · TOAN AAS", "en": "Commercial Command Center · TOAN AAS", "zh": "商业指挥中心 · TOAN AAS"},
@@ -217,6 +218,11 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/documents/compress": {
+        "vi": "Giảm dung lượng PDF khi có thể. Tệp gốc được giữ nguyên.",
+        "en": "Reduce a PDF's file size where possible. The original stays unchanged.",
+        "zh": "在可行时减小 PDF 文件大小。原文件将保持不变。",
+    },
     "/image/resize": {
         "vi": "Chọn ảnh đã lưu, đặt kích thước và tạo bản PNG mới. Tệp gốc được giữ nguyên.",
         "en": "Choose a saved image, set its size and create a new PNG. The original stays unchanged.",

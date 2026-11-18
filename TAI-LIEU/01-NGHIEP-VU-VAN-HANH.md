@@ -3185,3 +3185,19 @@ khớp BASE,22 tiến trình QA đã dừng,còn0. Không sửa engine/auth/ti�
 Phát hành mới phải đối chiếu CI/runtime/assets riêng;không nhận PNG cuối
 hoặc toàn UI/motion đã xong.
 [Bằng chứng](../docs/reports/image-resize-control-height-20261118.md).
+
+## Tiêu đề Nén PDF —18/11/2026
+
+Resizeheight đã giaoPR761:CI44156742967/deploy44160017763 đạt,
+runtime560377ad,3dịchvụ/health/5assetsexact. Khôngtriểnkhailạiphầnđãđạt.
+ỨngviênNénPDFdùnglạiproposalworker5addition,đúngtiêuđề/môtảVI/EN/ZH
+từtảiđầuđếnheader/hero.22renderer/3HTMLResponse/12neighborPythonđạt;
+127sourceassertionsđạt,chỉ1QAreaderđượcsửa/chạylạivàđạt.
+Khôngđổiform/nguồntệp/quyền/xửlýPDF,148nguồnkhácgiữ. Nativefullshell/
+CI/pháthànhcònriêng;6ChromefixturekhôngchứngminhPDFcuốihoặcproductionUI.
+[Báo cáo](../docs/reports/pdf-compress-meta-20261118.md).
+
+Fullshellnative6READYđãđạtfirstHTML/header/hero/chọnPDF/Tab,nosubmit.
+12h2hiệnđúngmàusáng/tối,khôngsửaCSStheofixturethiếushell.
+Fresh3register/3login/12metadata/noassetbytes,schema/coredata/source/
+bindinggiữ,22ownedprocessdừngcòn0. CI/runtimecủaNénPDFvẫnchốt riêng.

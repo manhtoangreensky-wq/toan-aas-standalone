@@ -1584,6 +1584,8 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | ISPC-SOURCE | nặng | Đối chiếu hai proposal và mã ngoài | 21 hàng + hai dòng,149 tệp ứng dụng bảo vệ | SHA/forward/inverse |
 | ISPC-HISTORY | nặng | Chạy kiểm tra lịch sử có liên quan | Old assertions/hash/order giữ, không che mã lạ | 304 ca liên quan |
 | ISPC-NATIVE | nặng | VI/EN/ZH375sáng1440tối,select/1080×1920/Tab | Nhãn mới thấy được, không submit/egress | [PhiênISPC](PHIEN-IMAGE-SHARED-PLAIN-COPY-20261118.md) |
+| ISPC-ISOLATION | nặng | QA mới riêng biệt | Dữ liệu/lược đồ/source giữ,tiến trình sở hữu về0 | Không production/provider/ví |
+| ISPC-DELIVERY | nặng | CI/merge/deploy/runtime | Đúng revision/tệp công khai/receipt | SignedUI/finaloutput/goal riêng |
 
 ## RESIZE-CONTROL-HEIGHT-20261118 — Issue689
 
@@ -1595,5 +1597,14 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | RCH-NATIVE | vừa |6READYVI/EN/ZH375sáng1440tối |30control44–44,5px/chọnảnh/1080×1920/Tab/nosubmit | [PhiênRCH](PHIEN-RESIZE-CONTROL-HEIGHT-20261118.md) |
 | RCH-ISOLATION | nặng |DB/schema/source/ownedprocess |productcoregiữ/exact3loginaudit/0egress/22ownedstopped0 | [PhiênRCH](PHIEN-RESIZE-CONTROL-HEIGHT-20261118.md) |
 | RCH-DELIVERY | nặng |CI/merge/deploy/runtime/assets |ĐúngHEAD/SHA,không suy signedUI/PNG/wholegoal |ReceiptIssue689/PR |
-| ISPC-ISOLATION | nặng | QA mới riêng biệt | Dữ liệu/lược đồ/source giữ,tiến trình sở hữu về0 | Không production/provider/ví |
-| ISPC-DELIVERY | nặng | CI/merge/deploy/runtime | Đúng revision/tệp công khai/receipt | SignedUI/finaloutput/goal riêng |
+
+## PDF-COMPRESS-OUTER-META-20261117 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| PCM-FIRST | vừa | Tải đầuVI/EN/ZH | Title/description/bootstrapđúngNénPDF,khôngtêngiớithiệuchung |3HTMLResponse |
+| PCM-RENDER | vừa |3locale×5state | Header/hero/title/descriptionđúng,nguồn/control/quyềngiữ |22Node |
+| PCM-SOURCE | nặng |5additiontrong3file | Exactproposal,148nguồnkhácgiữ,kểcảResizeCSS |Scope/comparator |
+| PCM-HISTORY | nặng |13fileảnh/PDF/tàiliệu | Oldhash/assertion/outside/mutationgiữ |127PASS+1readerrecheck |
+| PCM-BROWSER | vừa |375sáng/1440tốiVI/EN/ZH | Chữđúng/chọnPDF/nosubmit;offlinekhôngthaynative |6Chromeviews |
+| PCM-DELIVERY | nặng |Native/CI/merge/deploy/runtime |ĐúngHEAD,từngphầngộpvàdeploydứtđiểm |ReceiptIssue689/PR |

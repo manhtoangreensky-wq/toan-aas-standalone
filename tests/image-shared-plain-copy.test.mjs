@@ -7,9 +7,10 @@ import {pageMetaSources,pageMetaRenderer} from "./helpers/chat-page-meta-runtime
 import {resizeCopyContext} from "./helpers/image-resize-plain-copy-runtime.mjs";
 import {resizeDecode} from "./helpers/image-resize-guidance-runtime.mjs";
 import {imageSharedChanges,imageSharedHistoricalI18nSource,imageSharedHistoricalPortalSource,imageSharedHistoricalSnapshot} from "./helpers/image-shared-plain-copy-snapshot.mjs";
+import {pdfCompressMetaHistoricalSources} from "./helpers/pdf-compress-meta-snapshot.mjs";
 
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-shared-plain-copy-reviewed.json",import.meta.url),"utf8"));
-const physical=pageMetaSources(),render=await pageMetaRenderer(physical);
+const physical=pdfCompressMetaHistoricalSources(pageMetaSources()),render=await pageMetaRenderer(physical);
 const files={portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js",pages:"copyfast_pages.py"};
 const baseline=Object.fromEntries(Object.entries(files).map(([key,file])=>[key,
   execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:12e6}).replace(/\r\n/g,"\n")]));

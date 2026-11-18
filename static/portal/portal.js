@@ -10108,6 +10108,7 @@
     }
     if (path === "/image/resize") return uiText("imageResizeMetaUiTitle", "Đổi kích thước ảnh");
     if (path === "/documents/split") return uiText("docPdfMetaUiSplitTitle", "Tách PDF");
+    if (path === "/documents/compress") return uiText("pdfCompressMetaUiTitle", "Nén PDF");
     if (path === "/video-studio/reference-format-planner") return uiText("videoPlannerHeaderCUi.reference-format-planner.title", "Lập định dạng tham chiếu");
     if (path === "/video-studio/storyboard-composer") return uiText("videoPlannerHeaderCUi.storyboard-composer.title", "Soạn bảng phân cảnh và mô tả");
     if (path === "/video-studio/script-to-screen-planner") return uiText("videoPlannerHeaderBUi.script-to-screen-planner.title", "Từ kịch bản đến phân cảnh");
@@ -10242,6 +10243,7 @@
     }
     if (path === "/image/resize") return uiText("imageResizeMetaUiDescription", "Chọn ảnh đã lưu, đặt kích thước và tạo bản PNG mới. Tệp gốc được giữ nguyên.");
     if (path === "/documents/split") return uiText("docPdfMetaUiSplitDescription", "Tạo tệp PDF từ một trang hoặc dải trang liên tiếp trong tài liệu đã lưu.");
+    if (path === "/documents/compress") return uiText("pdfCompressMetaUiDescription", "Giảm dung lượng PDF khi có thể. Tệp gốc được giữ nguyên.");
     if (path === "/video-studio/reference-format-planner") return uiText("videoPlannerHeaderCUi.reference-format-planner.description", "Từ định dạng video tham chiếu đã chọn, lập kế hoạch ba cảnh nguyên bản có mục tiêu kênh rõ ràng, rồi xác nhận lưu thành kế hoạch video riêng tư.");
     if (path === "/video-studio/storyboard-composer") return uiText("videoPlannerHeaderCUi.storyboard-composer.description", "Từ chủ đề, lập ba định hướng sáng tạo, quy tắc hình ảnh nhất quán, trình tự cảnh và bộ mô tả để rà soát trước khi dùng trong quy trình khác.");
     if (path === "/video-studio/script-to-screen-planner") return uiText("videoPlannerHeaderBUi.script-to-screen-planner.description", "Từ mô tả, lập kịch bản, bảng phân cảnh và mô tả tạo hình ảnh, video để rà soát; không tạo tệp đa phương tiện, bản dựng hoặc đầu ra.");

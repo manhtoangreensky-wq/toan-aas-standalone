@@ -2370,3 +2370,17 @@ Nguồn gốc: grid .portal-fields/.portal-field trong portal.css và form Resiz
 
 Không thêm công cụ hoặc năng lực tạo ảnh.12geometry và6native chỉ chứng minh
 bố cục/điều khiển được kiểm;CI/deploy/LIVE/PNG cuối là các cổng khác.
+
+## Nén PDF — đối chiếu18/11/2026
+
+Nguồnhiệnhữu:/documents/compress,renderPdfOptimize,shellmetadata dictionaries.
+
+| Trước | Ứng viên | Phần giữ nguyên |
+|---|---|---|
+| Shell còn tiêu đề workspace chung |3locale cóNénPDF/title/descriptiontừtảiđầu |Route/bootstrapallowlist/auth |
+| Helper chưa mapping riêng Compress |2exactroutebranches/twokey6values |Signature/order/cácroutekhác |
+| Formnénđãvận hành |Metadatađúngkhôngthayform |Controls/options/limits/source/customertext |
+| Goldennguồnđãkhóa3tệp |Đảohữuhạn5additionởbiênđọctest |Oldassertions/hash/unknownoutside/mutations |
+
+Không thêmkhảnăngnén,khôngtạokếtquảPDFtrongQAhoặcgọiprovider.
+Browserfixturemetadatađạt khôngthaynativefullshell/CI/deploy/finaloutput.
