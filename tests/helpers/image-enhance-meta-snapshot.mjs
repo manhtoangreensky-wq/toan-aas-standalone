@@ -2,6 +2,7 @@ import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
 import {resizeSubtitleHistoricalPortalSource} from "./image-resize-subtitle-snapshot.mjs";
+import {enhanceHeadingsHistoricalI18nSource,enhanceHeadingsHistoricalSnapshot} from "./image-enhance-headings-snapshot.mjs";
 const raw=fs.readFileSync(new URL("../fixtures/image-enhance-meta-reviewed.json",import.meta.url));
 assert.equal(createHash("sha256").update(raw).digest("hex"),"10b19e6677caea6c2f70b213aab524580321dcd07e6dbf6a4c48b0d41199d83e");
 const fixture=JSON.parse(raw),edits=fixture.proposal.changes;
@@ -39,9 +40,10 @@ function inverse(source,file){
   return result;
 }
 export const imageEnhanceMetaHistoricalPortalSource=source=>inverse(resizeSubtitleHistoricalPortalSource(source),"static/portal/portal.js");
-export const imageEnhanceMetaHistoricalI18nSource=source=>inverse(source,"static/portal/portal-i18n.js");
+export const imageEnhanceMetaHistoricalI18nSource=source=>inverse(enhanceHeadingsHistoricalI18nSource(source),"static/portal/portal-i18n.js");
 export const imageEnhanceMetaHistoricalPagesSource=source=>inverse(source,"copyfast_pages.py");
 export function imageEnhanceMetaHistoricalSnapshot(entries,locale){
+  entries=enhanceHeadingsHistoricalSnapshot(entries,locale);
   const copies={vi:["Chỉnh ảnh","Chọn ảnh đã lưu, chỉnh màu và độ nét rồi tải bản PNG mới. Tệp gốc được giữ nguyên."],
     en:["Edit images","Choose a saved image, adjust color and sharpness, then download a new PNG. The original file stays unchanged."],
     zh:["调整图像","选择已保存的图像，调整色彩和锐度，然后下载新的 PNG 文件。原文件保持不变。"]};

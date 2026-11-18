@@ -1,0 +1,65 @@
+{
+  "review": {
+    "specId": "IMAGE-ENHANCE-PLAIN-HEADINGS-20261118",
+    "conversation": "424e9071-a3d6-436a-98a8-d2594edb0d33",
+    "rawSha256": "66fbf587f4475a67ad0804837a2f792e13227ff328bc2c46fa2fce45350042c3",
+    "schemaValid": true,
+    "proposalExact": true,
+    "changes": 6,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "reportCorrection": "Final structured_output matches requested schema; early response text has extra key fields, not used. No runtime or execution claim accepted."
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"enhance.intro.kicker\", \"Hướng dẫn chỉnh ảnh\", \"Image editing guide\", \"图像编辑指南\"],",
+        "old": "    [\"enhance.intro.kicker\", \"Tiện ích xử lý ảnh trên Web\", \"Web image utility\", \"Web 图像工具\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"enhance.intro.title\", \"Chỉnh màu và độ nét\", \"Adjust color and sharpness\", \"调整色彩和锐度\"],",
+        "old": "    [\"enhance.intro.title\", \"Làm ảnh sạch, rõ và nhất quán — không hứa hẹn AI\", \"Clean and clarify images without promising AI\", \"清洁并增强图像，不承诺 AI\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"enhance.boundary.title\", \"Trước khi lưu ảnh\", \"Before saving\", \"保存之前\"],",
+        "old": "    [\"enhance.boundary.title\", \"Giới hạn trung thực\", \"Honest limits\", \"真实边界\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"enhance.step.order.title\", \"Thứ tự điều chỉnh\", \"Adjustment order\", \"调整顺序\"],",
+        "old": "    [\"enhance.step.order.title\", \"Thứ tự có thể kiểm tra\", \"Verifiable order\", \"可验证顺序\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"enhance.step.upscale.title\", \"Giới hạn phóng ảnh\", \"Enlargement limits\", \"放大限制\"],",
+        "old": "    [\"enhance.step.upscale.title\", \"Nâng kích thước cơ bản có trần\", \"Bounded basic upscaling\", \"受限的基础放大\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"enhance.step.delivery.title\", \"Tải ảnh sau khi xử lý\", \"Download after processing\", \"处理后下载图像\"],",
+        "old": "    [\"enhance.step.delivery.title\", \"Phát tệp riêng tư\", \"Private delivery\", \"私有交付\"],"
+      }
+    ],
+    "report": "Proposal only; no execution claim. Application is NOT_APPLIED and verification is NOT_RUN.",
+    "revision": "R1",
+    "specId": "IMAGE-ENHANCE-PLAIN-HEADINGS-20261118",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}

@@ -2649,6 +2649,34 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   captionpaintwitness/48shots;normal-anywhere-visible-clip exact,
   metadata/forms/ownership/0errors/egress/audit/schema/core/sourceheld,
   28ownedstopped0;RootviewVI375Resize/EN1440History/ZH375History.
-- [ ] Docs/Tester/prepush/provenance/CI/merge/deploy/runtime/assetsreceipt.
+- [x] Docs/Tester/prepush/provenancefinal13d2ef7c/CI44301447174both
+  SUCCESS9m20s+5m8s;PR768merge-runtimebe8015ad/fulltreeeq/
+  deploy44304009103SUCCESS62s/3active-runningservices/health/
+  5publicassetsbyteexact;Issue6978177942/PR6978598883readbackexact.
 - [ ] VIoutercanvas/otherlocaleclutter/wholeAX/auth/responsive/device/
   Safari/signedUI/finaloutput stillopen;motionLAST/fullgoalACTIVE.
+
+### Chỉnh ảnh — sáu tiêu đề dễ hiểu18/11/2026
+
+- [x] PR768delivery khép trước newbranchfrombe8015ad.
+- [x] AcceptedAGYR1 exact6i18nrows/18values reused;không giao lại.
+- [x] ActualBASE21renderer cases7RED14PASS3291.5626ms;
+  sixemptyreadyheading/sameVMRED,protectedoutsideHTML/body/controlPASS.
+- [x] Exact6rowapplication/1changed150protected;fullphysicalcandidate
+  renderer/sixbodyparagraphs/controls/context/customerliteral held.
+- [x] Source/finitehistoricalleaf/54fileaffectedgroup1525PASS/
+  1BASE-equivalentoldPDFreaderFAIL;Rootcomposeexistingexactreaderleaf,
+  alloldassertionsheld,affectedreaderfile4PASS/no1525rerun.
+- [x] NativeR2:6views/54metadatahelp+36headingpaint/6bodyperview/forms/rights/source/
+  naturalheadingheightcontract/audit/schema/core/owned0.
+  R1edge-hit0caseFAIL→QArealcenter-scrollonly,R2prehitVI/ZH
+  portal-mobile-nav-label;strictvisibilityheld,18shots/Rootrawreview,
+  22ownedstopped0;noBASEgeometryequality/nativeimageexecutionclaim.
+- [ ] Currentdocs/originalcomparison/Tester/prepush/provenance/
+  onePR/exactCI/merge/treeeq/deploy/runtime/assets/fixedreceipts.
+- [ ] Resizeplainresultcopy→Historystatecopy→fourroutebroadercoverage;
+  wholelocale/AX/auth/responsive/device/Safari/signedUI/output remain;
+  motionM-FINAL01..06LAST,fullgoalACTIVE.
+- [ ] Observedseparategap:mobile4image-workspacemodecards pushworkbelow
+  firstviewport;othertechnicalcopyremains. Need ownsource/RED/AGYscope,
+  notsilentlyfoldintoheadingsorclaimwholepageready.
