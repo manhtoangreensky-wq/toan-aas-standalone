@@ -107,6 +107,7 @@ _PORTAL_SHELL_COPY = {
     },
 }
 _PORTAL_SHELL_TITLES = {
+    "/image/edit": {"vi": "Chỉnh ảnh · TOAN AAS", "en": "Edit images · TOAN AAS", "zh": "调整图像 · TOAN AAS"},
     "/documents/image-to-pdf": {"vi": "Ảnh thành PDF · TOAN AAS", "en": "Images to PDF · TOAN AAS", "zh": "图像转 PDF · TOAN AAS"},
     "/documents/compress": {"vi": "Nén PDF · TOAN AAS", "en": "Compress PDF · TOAN AAS", "zh": "压缩 PDF · TOAN AAS"},
     "/image/resize": {"vi": "Đổi kích thước ảnh · TOAN AAS", "en": "Resize images · TOAN AAS", "zh": "调整图像尺寸 · TOAN AAS"},
@@ -219,6 +220,11 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/image/edit": {
+        "vi": "Chọn ảnh đã lưu, chỉnh màu và độ nét rồi tải bản PNG mới. Tệp gốc được giữ nguyên.",
+        "en": "Choose a saved image, adjust color and sharpness, then download a new PNG. The original file stays unchanged.",
+        "zh": "选择已保存的图像，调整色彩和锐度，然后下载新的 PNG 文件。原文件保持不变。",
+    },
     "/documents/image-to-pdf": {
         "vi": "Chọn ảnh và ghép thành một tệp PDF. Ảnh gốc được giữ nguyên.",
         "en": "Choose images and combine them into one PDF file. The original images stay unchanged.",

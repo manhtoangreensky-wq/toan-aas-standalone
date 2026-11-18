@@ -2432,3 +2432,18 @@ localizedPageTitle/Description và shellmetadata dictionaries.
 
 Không thêm khả năng tạo PDF.18Python và399+22Nodeca chỉ chứng minh
 phạm vi đã kiểm; native/live/thiết bị/Safari/PDF cuối là gate riêng.
+
+## Chỉnh ảnh — tiêu đề/mô tả18/11/2026
+
+Nguồn hiện hữu:/image/edit,renderImageEnhance,localizedPageTitle/Description,
+shell dictionaries. Không thêm năng lực hoặc thay engine.
+
+| Trước | Ứng viên đã đo | Giữ nguyên |
+|---|---|---|
+| FirstHTML là workspace chung | VI/EN/ZH có title/description riêng | Bootstrapallowlist/lang/auth |
+| HeroVI còn Image Enhance Studio/EN/ZH lẫn ngôn ngữ | Hai exactroutebranches/two keys sixvalues | Chữ ký helper/thứ tự route |
+| Sáu hướng dẫn PR764 đã giao | WholeHTML ngoài hai hero nodes không đổi | Form/controls/quyền/ảnh nguồn/customer |
+| Golden metadata cũ đã khóa | Đảo đúng fiveaddition/two keys ở biên lịch sử | Hash/assertion/unknownoutside/mutations |
+| Ảnh thành PDF còn ghi chờ phát hành | PR765 đã giao runtimeb9815725 | Receipt6971500533/deploy44256934807 |
+
+423Node và30Python đạt;native/CI/runtime riêng,không chứng minh PNG cuối.

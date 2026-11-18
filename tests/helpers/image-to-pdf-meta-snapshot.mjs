@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {imageEnhanceMetaHistoricalPortalSource,imageEnhanceMetaHistoricalI18nSource,imageEnhanceMetaHistoricalPagesSource,imageEnhanceMetaHistoricalSnapshot} from "./image-enhance-meta-snapshot.mjs";
 const raw=fs.readFileSync(new URL("../fixtures/image-to-pdf-meta-reviewed.json",import.meta.url));
 assert.equal(createHash("sha256").update(raw).digest("hex"),"6168254dabd2ba87f5364368ea3bf6383bb1a00cb3d746bb9250af913516c08f");
 const fixture=JSON.parse(raw),edits=fixture.proposal.changes;
@@ -37,10 +38,11 @@ function inverse(source,file){
   if(!file.endsWith(".py"))assert.equal(result.includes(prefix),false,fail+" unknown namespace");
   return result;
 }
-export const imageToPdfMetaHistoricalPortalSource=source=>inverse(source,"static/portal/portal.js");
-export const imageToPdfMetaHistoricalI18nSource=source=>inverse(source,"static/portal/portal-i18n.js");
-export const imageToPdfMetaHistoricalPagesSource=source=>inverse(source,"copyfast_pages.py");
+export const imageToPdfMetaHistoricalPortalSource=source=>inverse(imageEnhanceMetaHistoricalPortalSource(source),"static/portal/portal.js");
+export const imageToPdfMetaHistoricalI18nSource=source=>inverse(imageEnhanceMetaHistoricalI18nSource(source),"static/portal/portal-i18n.js");
+export const imageToPdfMetaHistoricalPagesSource=source=>inverse(imageEnhanceMetaHistoricalPagesSource(source),"copyfast_pages.py");
 export function imageToPdfMetaHistoricalSnapshot(entries,locale){
+  entries=imageEnhanceMetaHistoricalSnapshot(entries,locale);
   const copies={vi:["Ảnh thành PDF","Chọn ảnh và ghép thành một tệp PDF. Ảnh gốc được giữ nguyên."],
     en:["Images to PDF","Choose images and combine them into one PDF file. The original images stay unchanged."],
     zh:["图像转 PDF","选择图像并合成为一个 PDF 文件。原图像保持不变。"]};

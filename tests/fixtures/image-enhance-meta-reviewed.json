@@ -1,0 +1,59 @@
+{
+  "review": {
+    "specId": "IMAGE-ENHANCE-OUTER-META-20261118",
+    "conversation": "92163194-4b60-4827-bdaa-436b0f8cfdf4",
+    "rawSha256": "a231974f303fde5b942ad7fd4e11058c2675a78f2d114710e2bd8207daa17126",
+    "schemaValid": true,
+    "proposalExact": true,
+    "changes": 5,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "reportCorrection": "Worker correctly reports proposed/NOT_RUN; no execution claim."
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "copyfast_pages.py",
+        "new": "_PORTAL_SHELL_TITLES = {\n    \"/image/edit\": {\"vi\": \"Chỉnh ảnh · TOAN AAS\", \"en\": \"Edit images · TOAN AAS\", \"zh\": \"调整图像 · TOAN AAS\"},",
+        "old": "_PORTAL_SHELL_TITLES = {"
+      },
+      {
+        "count": 1,
+        "file": "copyfast_pages.py",
+        "new": "_PORTAL_SHELL_DESCRIPTIONS = {\n    \"/image/edit\": {\n        \"vi\": \"Chọn ảnh đã lưu, chỉnh màu và độ nét rồi tải bản PNG mới. Tệp gốc được giữ nguyên.\",\n        \"en\": \"Choose a saved image, adjust color and sharpness, then download a new PNG. The original file stays unchanged.\",\n        \"zh\": \"选择已保存的图像，调整色彩和锐度，然后下载新的 PNG 文件。原文件保持不变。\",\n    },",
+        "old": "_PORTAL_SHELL_DESCRIPTIONS = {"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "    if (path === \"/documents/compress\") return uiText(\"pdfCompressMetaUiTitle\", \"Nén PDF\");\n    if (path === \"/image/edit\") return uiText(\"imageEnhanceMetaUiTitle\", \"Chỉnh ảnh\");",
+        "old": "    if (path === \"/documents/compress\") return uiText(\"pdfCompressMetaUiTitle\", \"Nén PDF\");"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "    if (path === \"/documents/compress\") return uiText(\"pdfCompressMetaUiDescription\", \"Giảm dung lượng PDF khi có thể. Tệp gốc được giữ nguyên.\");\n    if (path === \"/image/edit\") return uiText(\"imageEnhanceMetaUiDescription\", \"Chọn ảnh đã lưu, chỉnh màu và độ nét rồi tải bản PNG mới. Tệp gốc được giữ nguyên.\");",
+        "old": "    if (path === \"/documents/compress\") return uiText(\"pdfCompressMetaUiDescription\", \"Giảm dung lượng PDF khi có thể. Tệp gốc được giữ nguyên.\");"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "  Object.assign(MESSAGES.vi, {\n    imageEnhanceMetaUiTitle: \"Chỉnh ảnh\",\n    imageEnhanceMetaUiDescription: \"Chọn ảnh đã lưu, chỉnh màu và độ nét rồi tải bản PNG mới. Tệp gốc được giữ nguyên.\"\n  });\n\n  Object.assign(MESSAGES.en, {\n    imageEnhanceMetaUiTitle: \"Edit images\",\n    imageEnhanceMetaUiDescription: \"Choose a saved image, adjust color and sharpness, then download a new PNG. The original file stays unchanged.\"\n  });\n\n  Object.assign(MESSAGES.zh, {\n    imageEnhanceMetaUiTitle: \"调整图像\",\n    imageEnhanceMetaUiDescription: \"选择已保存的图像，调整色彩和锐度，然后下载新的 PNG 文件。原文件保持不变。\"\n  });\n\n  verifyEqualKeysets();",
+        "old": "  verifyEqualKeysets();"
+      }
+    ],
+    "report": "Đã hoàn thành đọc gói IMAGE-ENHANCE-OUTER-META-20261118 R1. Đề xuất gồm đúng 5 thay đổi count-1 trên 3 tệp (copyfast_pages.py, static/portal/portal.js, static/portal/portal-i18n.js). Lệnh kiểm thử NOT_RUN: node --test tests/image-enhance-meta.test.mjs chưa chạy; không tự suy ra ĐẠT. LỆCH: Không có. PROVIDER_CALLS=0; WALLET_MUTATIONS=0; DEPLOY=NO.",
+    "revision": "R1",
+    "specId": "IMAGE-ENHANCE-OUTER-META-20261118",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}

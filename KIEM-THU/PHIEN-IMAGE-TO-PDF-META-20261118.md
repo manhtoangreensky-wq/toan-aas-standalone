@@ -16,7 +16,9 @@ TRACKER=Issue689;CASE_SOURCE=DANH-SACH-CASE.md,sáuIPMrows.
   oldauditexact+3login/schema/core/source151giữ,22ownedstopped0.
 - [x] Case1643lines172490LFbytes/metadata1PASS32deselected0.45s/
   syntaxdiff0/currentoperations/originalcomparison/Tester/prepushREADY.
-- [ ] CIexactHEAD/merge/deploy/runtime/assetsreceipt.
+- [x] CI44255182929bothSUCCESSexact52af9235/PR765merge-runtimeb9815725/
+  treeeq/deploy44256934807SUCCESS/serviceshealth5assetsexact;
+  Issue6971500533/PR6971984449readbackexact.
 - [ ] SignedproductionUI/finalPDF/device/Safari/wholelocale/motion.
 
 Không chạy lại399ca đã đạt nếu nguồn tương ứng không đổi.
