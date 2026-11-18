@@ -2462,3 +2462,30 @@ Nguồn hiện hữu:.portal-project-steps,strong/span vàsemantic --portal-ink.
 
 Không thêm công cụ hoặc xử lý ảnh. Không suy semanticcolor equality thành
 toàn AX hoặc tỷ lệ tương phản trên nền gradient đã được chứng minh.
+
+## Đổi kích thước — nhãn lựa chọn18/11/2026
+
+Nguồn hiện hữu:renderImageOperationCards,renderImageHistoryOperationCards,
+field.resize.preset.custom. Không đổi preset/fit_mode được lưu.
+
+| Trước đã đo | Thay đổi được giao | Giữ nguyên |
+|---|---|---|
+| Stringcustom hiển thịraw cả3ngônngữ | Tokenknowncustom/fallback qua existingkeyVI/EN/ZH | Chín tỷ lệ/unknown/customerliteral |
+| Hai consumer current/history khác vị trí | Hai inlineconditional cùng logic | NonResizehistoryconstpreset |
+| Fullrenderer8case4RED4protectedPASS | Bổ sungGREEN/source/negativecases | UUID/state/dates/geometry/downloads/form/context |
+| Golden nguồn trước thay đổi | Finiteleaf đúng hai substitutions | Hash/assertions/byte ngoài |
+| Màu Chỉnh ảnh còn ghi chờ phát hành | PR767 đã giao runtime979b80d2 | Receipt6976220745/deploy44290989110 |
+
+Không gọi xử lý ảnh hoặc nhậnđầu PNG/signedUI/wholelocale/AX/motion.
+
+Phụlục cùng lỗi:actualnativeVI375đãdịchnhãnnhưngCSSBASE1241
+nowrap/hidden/ellipsis cắtphầncuối. Parentchưapháthành.
+Thêm1CSSrule AntigravityR1 scopedResize/historycard-subtitle để
+normal/anywhere/visible/clip;khôngđổitext/font/width/dữliệu.
+NonResizehistorysubtitle cũngđượcphéptăngchiềucaotựnhiên đểđọcđủ,
+khôngđổiHTML/content/state/download. Combined2appfiles149protected,
+3canonicaledits;56CSSaffectedPASS.
+Nghiệm thuR5đủ12màn/48phụđề đọcđủ/48ảnh,giữmetadata/form/rights/
+ownership/audit/schema/core/source151;28tiếntrìnhsởhữudừng0.
+R4lỗiđiềukiệnchờKho tài sản ởHistory đượcRoot sửađúng2điềukiệnQA;
+khôngđổiapp hoặc nớivisibility. CI/runtime/signedUI/finalPNG vẫnriêng.

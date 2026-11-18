@@ -73,3 +73,14 @@ computedstyle evidence,không tái dùng auth/account/DB/log/session.
 Không nhận wholelocale/AX/default-light-without-attribute runtime/
 signedproductionUI/finalPNG/device/Safari/motion hoặc toàngoal.
 PROVIDER_CALLS=0;WALLET_MUTATIONS=0;ENV_PRODUCTION_CHANGES=0.
+
+## Delivery18/11/2026 đã chốt
+
+PR767merged2026-11-18T11:02:21Z;CI44288326900bothSUCCESSexact7e337e77.
+Merge/runtime979b80d22a90368ec97547937e219ccbd3a02deb;
+tested/mergedtree42c75fa6e25b53102cca402d42755968b11325e8/fulltreediff0.
+ExclusiveexactSHAdeploy44290989110SUCCESS68s.
+Threeexistingreadonlyverifiersexit0/runtime/trackedclean/protectedsource/
+3servicesactive-running/healthok/5publicassetsbyteexact.
+Issue689fixed6976220745updated/readbackexact;onePR767receipt6976710710.
+Khôngrerun357/native/CI/deploy;khôngclaimwholeAX/finalPNG/wholegoal.

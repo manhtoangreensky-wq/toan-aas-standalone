@@ -17,8 +17,10 @@ TRACKER=Issue689;CASE_SOURCE=DANH-SACH-CASE.md,nămEHCrows.
   source/audit/schema/coredataheld,22ownedstopped0.
 - [x] Case1664lines174217LFbytes/metadata1PASS32deselected0.66s/
   syntaxdiff0/currentdocs/originalcomparison/Tester/prepushREADY.
-- [ ] SourceprovenancefinalHEAD.
-- [ ] CIexactHEAD/merge/treeeq/deploy/runtime/assetsreceipt.
+- [x] Sourceprovenancefinal7e337e77/fingerprint fef4247b.
+- [x] CI44288326900bothSUCCESS/PR767merge-runtime979b80d2/treeeq/
+  deploy44290989110SUCCESS68s/serviceshealth5assetsbyteexact/
+  Issue6976220745/PR6976710710readbackexact.
 - [ ] Wholelocale/AX/default-light runtime/signedproductionUI/finalPNG/
   device/Safari/motion.
 

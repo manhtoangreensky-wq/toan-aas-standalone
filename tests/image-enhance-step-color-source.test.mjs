@@ -3,11 +3,12 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {enhanceStepColorHistoricalThemeSource as inverse} from "./helpers/image-enhance-step-color-snapshot.mjs";
+import {resizeSubtitleWrapHistoricalThemeSource} from "./helpers/image-resize-subtitle-wrap-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-enhance-step-color-reviewed.json",import.meta.url),"utf8"));
 const [edit]=fixture.proposal.changes,file="static/portal/portal-theme.css",base="c1fdd4bf35c8563d8dd15dc27619022d3e1b7350";
 const lf=value=>value.replace(/\r\n/g,"\n"),before=lf(execFileSync("git",["show",base+":"+file],{encoding:"utf8",maxBuffer:2e6}));
 assert.equal(before.split(edit.old).length-1,1);
-const expected=before.replace(edit.old,()=>edit.new),current=lf(fs.readFileSync(file,"utf8"));
+const expected=before.replace(edit.old,()=>edit.new),current=resizeSubtitleWrapHistoricalThemeSource(lf(fs.readFileSync(file,"utf8")));
 test("Actual theme equals the sole reviewed light Enhance step color addition and preserves every outside byte",()=>{
   assert.equal(current,expected);assert.equal(inverse(current),before);assert.equal(inverse(before),before);
 });

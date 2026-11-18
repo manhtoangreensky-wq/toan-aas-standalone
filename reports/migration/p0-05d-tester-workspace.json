@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-18",
-  "local_files_refresh_scope": "Enhance light step color: canonical cases 1664 lines/174217 LF bytes after five scoped EHC rows; local metadata only, historical remote/P0/48case/safety fields preserved, trackerIssue689. PR766 delivery recorded separately.",
+  "local_files_refresh_scope": "Resize custom subtitle and readability prerequisite: canonical cases 1676 lines/175312 LF bytes after seven scoped RSC rows; local metadata only, historical remote/P0/48case/safety fields preserved, trackerIssue689. PR767 delivery recorded separately.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1664,
-      "bytes": 174217,
-      "sha256": "a888e07e5d1c9d65ee3fe15a67774e68586683c2416ab2d717e15728c9eec73c"
+      "lines": 1676,
+      "bytes": 175312,
+      "sha256": "4edcaf5271dd32eb25885269f454ca2b0b1ddaaac4a14b337e22a5ed557faf29"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

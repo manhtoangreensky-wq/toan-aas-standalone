@@ -2620,6 +2620,35 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   RootviewVIENZHraw,0errors/egress,audit/schema/coreheld,22ownedstopped0.
 - [x] Currentdocs/originalcomparison/Tester/prepushREADY/
   case1664lines174217LFbytes/metadata1PASS32deselected0.66s/syntaxdiff0.
-- [ ] Provenance/CI/merge/deploy/runtime/assetsreceipt.
+- [x] Colorprovenancefinal7e337e77/fef4247b/CI44288326900bothSUCCESS/
+  PR767merge-runtime979b80d2/treeeq/deploy44290989110SUCCESS68s/
+  3active-runningservices/health/5assetsbyteexact/
+  fixedIssue6976220745/onePRreceipt6976710710readbackexact.
 - [ ] Wholelocale/AX/default-light lifecycle/device/Safari/signedUI/
   finalPNG/motion vẫn riêng;Resize kế tiếp,motioncuối.
+
+### Đổi kích thước — nhãn lựa chọn18/11/2026
+
+- [x] ColorPR767receipt chốt trước newbranchfrom979b80d2.
+- [x] BASE8actualtests4PASS4RED2510.3674ms,RSC01/02/03/06.
+- [x] AGYR1c9f5fcd9exact2inlinechanges,1app150protected;no newkey/helper.
+- [x]8GREEN+2source/negative trong436NodePASS/0FAIL38860.0317ms;
+  fullphysicalrenderer/finiteleaf;nooldassertion/goldenweakening.
+- [x] Native12actualviews/4failedmetadata-account/nooutput/noegress/
+  cardpaint/ownership/audit/schema/core/source/owned0.
+- [x] RSC-READABILITY prerequisite:actualVI375customcaption clipped
+  byBASEnowrap/ellipsis;R1/R2/R3nativeFAILED retained. OneAGYCSSrule
+  forResize/historycard-subtitles wrapping before parentcanrelease;
+  combined2appfiles/149protected,alltext/font/width/nonResizedataheld,
+  naturalcaption/cardheightgrowth allowed. No weakenedvisibilitygate.
+- [x] ChildAGYR1fd4ec668exactoneCSSaddition/Rootreviewonce/applied;
+  combinedscope2app149protected3editsb02219db…;new/affectedCSS56PASS,
+  19071.8945ms,no436rerun;authorityQAwrongsourcefixedonlyfailed1PASS.
+- [x] R4oneviewthenQAwrongassetwaitonHistory;RootcorrectedtwoQA
+  conditions only afteractualsourceproof. FreshR5all12views/48full
+  captionpaintwitness/48shots;normal-anywhere-visible-clip exact,
+  metadata/forms/ownership/0errors/egress/audit/schema/core/sourceheld,
+  28ownedstopped0;RootviewVI375Resize/EN1440History/ZH375History.
+- [ ] Docs/Tester/prepush/provenance/CI/merge/deploy/runtime/assetsreceipt.
+- [ ] VIoutercanvas/otherlocaleclutter/wholeAX/auth/responsive/device/
+  Safari/signedUI/finaloutput stillopen;motionLAST/fullgoalACTIVE.
