@@ -92,5 +92,18 @@ Một lượt review độc lập:0Critical0Important1Minor,trùngcaseID với
 SHA3920ace9096bdda90730f9bc6f4a1f65136ed6b63054c3f5961167603e4573d3.
 Không đổi ứng dụng hoặc chạy lại1525/reader4/native.
 
+## CI follow-up cùng PR769 — không đổi ứng dụng
+
+HEADc0c1fabf/CI44337091286FAILED ở historical catalogue case01 của
+image-enhance-help.test.mjs:13PASS1FAIL,expectedTABLE_SHA87fa777c…
+khác269250a7…. Test này tự kiểm bảng bằng inline hash,không đi qua
+importgraph54tệp. Các consumer/body/inverse/guard/customer khác đạt.
+Root tái hiện đúng case local0PASS1FAIL340.6598ms.
+Chỉ importexistingenhanceHeadingsHistoricalI18nSource và áp tại
+initial.outside trước historicaltablehash. TABLE_SHA/mọiassertions giữ;
+physicalsources/actualrenderer không đổi. Selectedcase1PASS320.6619ms.
+Không chạy lại1525/reader4/native6;không tính QA omission thành lỗi AGY.
+Vẫn cần CI mới exactHEAD trên cùngPR trước merge/deploy.
+
 PROVIDER_CALLS=0;WALLET_MUTATIONS=0;ENV_CHANGES=0;PRODUCT_SUBMIT=NO.
 DEPLOY=NO;LIVE_PASS=NOT_TESTED;fullgoalACTIVE,motionLAST.

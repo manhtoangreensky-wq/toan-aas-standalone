@@ -40,3 +40,11 @@ Independent review0Critical0Important1Minor: new case IDs reused EHH from
 the earlier help unit. Root changed ONLY six new IDs to unique EPH-*,
 measured six occurrences/six unique, refreshed casehash/metadata;
 no application change or repeated passing renderer/reader/native group.
+
+CI follow-up: PR769/c0c1fabf/run44337091286 FAILED one inline historical
+image-help tablehash (13PASS1FAIL). Local selected0PASS1FAIL340.6598ms.
+Root two-line QA correction composes existing finite heading inverse ONLY
+at tablehash boundary; old TABLE_SHA/assertions and physical renderer held.
+Selectedcase1PASS320.6619ms. No app/native/passinggrouprerun.
+Refresh source provenance and require both jobs at new exact HEAD;
+update SAME PR769, no duplicate or merge/deploy on failed run.

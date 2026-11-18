@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto';
 import {test} from 'node:test';
 import {fileURLToPath} from 'node:url';
 import {pageMetaRenderer} from './helpers/chat-page-meta-runtime.mjs';
+import {enhanceHeadingsHistoricalI18nSource} from './helpers/image-enhance-headings-snapshot.mjs';
 
 // Preparation only: 12 declared tests. No application source is written here.
 const R = fileURLToPath(new URL('../', import.meta.url));
@@ -211,7 +212,7 @@ test('01 canonical six-row authority and protected Enhance consumers remain unch
       assert.ok(cells.every(value => typeof value === 'string' && value.length > 0));
     }
   }
-  const tableSource = initial.outside.replace(/\r\n/g, '\n');
+  const tableSource = enhanceHeadingsHistoricalI18nSource(initial.outside.replace(/\r\n/g, '\n'));
   const range = tableRange(tableSource);
   assert.equal(digest(tableSource.slice(range.start, range.end)), TABLE_SHA, 'No extra catalogue keys or mutations');
   const portal = sources.portal.replace(/\r\n/g, '\n');

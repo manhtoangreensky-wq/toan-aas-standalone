@@ -31,4 +31,8 @@ pre-center hitVI/ZH=portal-mobile-nav-label,không đổiapp hoặc hạgate.
 18shots/RootviewVI375topEN1440topZH375form;
 auditoldexact+3login/schema/core/source151held,22ownedstopped0.
 Native83e9d333…/isolation51df9cda…;candidategeometryonly.
+PR769firstCI44337091286FAILED oldinlinecataloguehashcase01.
+QA-only existingfiniteleaf at hash boundary,allassertions/rendererheld;
+localRED0/1→GREEN1/0,320.6619ms. NewexactHEADCIstillrequired;
+no1525/reader4/native6rerun.
 [Báo cáo](../docs/reports/image-enhance-headings-20261118.md).
