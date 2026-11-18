@@ -1,0 +1,28 @@
+{
+  "review": {
+    "specId": "IMAGE-TO-PDF-GUARD-CUSTOMER-COPY-20261118",
+    "conversation": "e778f7d8-a7b8-48d5-b0f5-67c89624517b",
+    "rawSha256": "565bee03d9b6a5148750cc74e4e1e10e90d6a2daf422cb44b6f255f4c5ab48d0",
+    "schemaValid": true,
+    "proposalExact": true,
+    "changes": 1,
+    "applicationApplied": false,
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED"
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "      return `<article class=\"portal-page portal-image-to-pdf\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText(\"docPdfGuardUiTitle\", \"Chưa mở được công cụ PDF\"))}</h2><p>${safeText(uiText(\"docPdfGuardUiBody\", \"Không thể tải công cụ lúc này. Vui lòng tải lại trang.\"))}</p></div></div></section></article>`;",
+        "old": "      return `<article class=\"portal-page portal-image-to-pdf\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>Document Operations đang ở chế độ an toàn</h2><p>Ảnh sang PDF chỉ bật khi Asset Vault và storage output cô lập, persistent của Web được server xác nhận. Không fallback sang static, browser storage, Bot job hoặc provider.</p><div class=\"portal-state-meta\"><span>Signed session</span><span>Storage riêng</span><span>Không có output giả</span></div></div></div></section></article>`;"
+      }
+    ],
+    "deviations": [],
+    "specId": "IMAGE-TO-PDF-GUARD-CUSTOMER-COPY-20261118",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}

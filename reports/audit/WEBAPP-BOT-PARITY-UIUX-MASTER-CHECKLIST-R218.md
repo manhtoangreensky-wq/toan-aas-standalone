@@ -2514,7 +2514,10 @@ existingloginworking;noOAuth/settingschange.
   148protected;BASE15Node+3PythonRED→22Node+3PythonPASS,12neighborPASS.
 - [x] Compressaffected127PASS/1QAreaderfail→only1correctedPASS,
   noapprepair/nooldassertionweakening;6ChromefixtureviewsmetadataPASS.
-- [ ] CompressCIexactHEAD/merge/deploy/runtime/assets.
+- [x] CompressPR762/CI44239130889bothSUCCESSatexact87f2071b/
+  merge6c8e2b22/fulltreeeqc1e157bc/deploy44241082812SUCCESS;
+  runtimeexact/3dịchvụactive/health/5assetsexact;
+  fixedIssuecomment6969229851/PRreceipt6969611901.
 - [x] Compressnativefullshell6READY/firstHTML/header/hero/typedPDFGET1items2/
   select/Tab/nosubmit,zeroerrors/overflow/egress;3freshregister3login12metadata/
   audit/schema/core/source151giữ,22ownedstopped0;12h2đúngtheme,khôngCSSfix.
@@ -2530,3 +2533,23 @@ existingloginworking;noOAuth/settingschange.
 
 MộtIssue689,mỗiphầnđãđạtthìmerge/deploydứtđiểmtrướcphầnsau. Khôngtạo
 Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
+
+## Image-to-PDF guard —18/11/2026
+
+- [x] Exact one-return AGY proposal reused; một app đổi/150 protected.
+- [x] BASE9ca6PASS/3localeRED; candidate nine copy/form tests GREEN.
+- [x] Nhóm383ca381PASS/hai QA inverse failures; Root sửa đúng helper
+  comment-only, chỉ ba ca liên quan chạy lại3PASS; oldassertion/hash giữ.
+- [x] Native6 actualguarded VI/EN/ZH375light/1440dark: đúngtitle/body,
+ 0form/chips/ô rỗng/overflow/errors/egress; child-onlydocumentflagfalse,
+  không fake response. READY full renderer parity, không nativeREADYclaim.
+- [x] Fresh3register3login12metadata/noblobs/auditexact+3login/schema/
+  coredata/source151/binding giữ;22ownedstopped0; ba rawscreens đã xem.
+- [ ] Sourcefreeze/provenance/CIexactHEAD/merge/deploy/runtime/assetsreceipt.
+- [ ] Enhance6rows acceptedNOT_APPLIED; QA prep12declared/NOT_RUN,
+  chỉ mở áp sau guard delivery, không gọi lại worker.
+- [ ] IMAGE-TO-PDF-OUTER-META: native đã thấy heroVI/EN còn tiêu đề Việt,
+  ZH về workspace chung; mô tả cả ba còn chữ kỹ thuật. Phiếu metadata
+  riêng sau Enhance, trước bounded Resize subtitle; không sửa ké guard.
+- [ ] Resize custom subtitle/wholelocale/AX/auth/responsive/device/Safari/
+  signedUI/finaloutput vẫn mở; M-FINAL01..06 cuối; fullgoalACTIVE.

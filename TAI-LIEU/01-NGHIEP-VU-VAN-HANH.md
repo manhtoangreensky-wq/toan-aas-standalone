@@ -3201,3 +3201,25 @@ Fullshellnative6READYđãđạtfirstHTML/header/hero/chọnPDF/Tab,nosubmit.
 12h2hiệnđúngmàusáng/tối,khôngsửaCSStheofixturethiếushell.
 Fresh3register/3login/12metadata/noassetbytes,schema/coredata/source/
 bindinggiữ,22ownedprocessdừngcòn0. CI/runtimecủaNénPDFvẫnchốt riêng.
+
+## Thông báo Ảnh thành PDF —18/11/2026
+
+Nén PDF đã giao PR762, CI44239130889 và deploy44241082812 đạt;
+runtime6c8e2b227ba635d81dc713f6c25c77d260002e61, năm tệp giao diện
+khớp từng byte, ba dịch vụ hoạt động. Không để phần đã giao ở trạng thái chờ.
+
+Ứng viên tiếp theo chỉ đổi một return của renderImageToPdf khi quyền xem
+false: dùng hai khóa VI/EN/ZH sẵn có và bỏ ba nhãn kỹ thuật. Không mở form
+khi quyền bị từ chối. Form sẵn sàng, tám trường ảnh, thao tác, nguồn và dữ liệu
+khách giữ nguyên toàn bộ HTML/context trong kiểm tra ba ngôn ngữ.
+150 tệp ứng dụng khác khớp BASE. Một lượt native mới: sáu trang guarded
+VI/EN/ZH375sáng/1440tối, trạng thái thật từ server QA tạm đã tắt công cụ;
+không giả phản hồi. Không tràn, lỗi trang, thông báo thừa hoặc mạng ngoài.
+22 tiến trình sở hữu dừng, còn0; schema/dữ liệu nghiệp vụ/audit đăng ký giữ,
+chỉ thêm đúng ba bản ghi đăng nhập QA. Không tạo PDF hoặc gọi dịch vụ trả phí.
+
+Đã quan sát riêng phần tiêu đề/mô tả ngoài thông báo còn sai ngôn ngữ và có
+chữ kỹ thuật. Đưa vào phiếu metadata tiếp theo, không nhận cả trang đã sạch.
+Không sửa ké metadata vào bản một-return đã khóa. Chưa nhận signed production
+UI, PDF đầu ra, thiết bị thật/Safari hoặc motion.
+[Báo cáo](../docs/reports/image-to-pdf-guard-20261118.md).

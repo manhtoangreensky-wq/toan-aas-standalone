@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
+import {imageToPdfGuardHistoricalPortalSource} from "./helpers/image-to-pdf-guard-snapshot.mjs";
 import {
   pdfCompressMetaHistoricalPortalSource,pdfCompressMetaHistoricalI18nSource,
   pdfCompressMetaHistoricalPagesSource,pdfCompressMetaHistoricalSnapshot
@@ -17,13 +18,15 @@ test("Compress source equals five reviewed additions and preserves every other s
     for(const edit of edits.filter(value=>value.file===file)){
       assert.equal(expected.split(edit.old).length-1,1);expected=expected.replace(edit.old,()=>edit.new);
     }
-    const current=lf(fs.readFileSync(file,"utf8"));
+    const physical=lf(fs.readFileSync(file,"utf8"));
+    const current=file==="static/portal/portal.js"?imageToPdfGuardHistoricalPortalSource(physical):physical;
     assert.equal(current,expected);assert.equal(inverse(current),baseline);assert.equal(inverse(baseline),baseline);
   }
 });
 test("Compress source inverse rejects unknown/partial/duplicate/moved additions without masking outside changes",()=>{
   for(const[file,inverse]of Object.entries(inverses)){
-    const source=lf(fs.readFileSync(file,"utf8")),selected=edits.filter(value=>value.file===file);
+    const physical=lf(fs.readFileSync(file,"utf8"));
+    const source=file==="static/portal/portal.js"?imageToPdfGuardHistoricalPortalSource(physical):physical,selected=edits.filter(value=>value.file===file);
     const edit=selected[0],addition=file.endsWith("portal-i18n.js")?edit.new.slice(0,-edit.old.length):edit.new.slice(edit.old.length);
     const baseline=inverse(source),prefix="\r\n/* CUSTOMER Facebook TikTok */\r\n",suffix="\r\n# outside customer";
     assert.equal(inverse(prefix+source+suffix),prefix+baseline+suffix);

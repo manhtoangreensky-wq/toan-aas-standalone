@@ -1608,3 +1608,14 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | PCM-HISTORY | nặng |13fileảnh/PDF/tàiliệu | Oldhash/assertion/outside/mutationgiữ |127PASS+1readerrecheck |
 | PCM-BROWSER | vừa |375sáng/1440tốiVI/EN/ZH | Chữđúng/chọnPDF/nosubmit;offlinekhôngthaynative |6Chromeviews |
 | PCM-DELIVERY | nặng |Native/CI/merge/deploy/runtime |ĐúngHEAD,từngphầngộpvàdeploydứtđiểm |ReceiptIssue689/PR |
+
+## IMAGE-TO-PDF-GUARD-CUSTOMER-COPY-20261118 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| IPG-RED | vừa | GuardVI/EN/ZH | BASE3copyRED/6protectedPASS | [PhiênIPG](PHIEN-IMAGE-TO-PDF-GUARD-20261118.md) |
+| IPG-COPY | vừa | Ba ngôn ngữ guard | Đúng1title/1body,0chips/ô rỗng/form | Chín renderer tests |
+| IPG-PRESERVE | nặng | READY/disabled/empty | FullHTML/control/context/customer/quyền/támnguồngiữ | [Báo cáo](../docs/reports/image-to-pdf-guard-20261118.md) |
+| IPG-SOURCE | nặng | Exactreturn/inverse | Mộtappđổi/150giữ,oldhash/assertion/outsidekhôngche | Source/scope/affectedgroup |
+| IPG-NATIVE | vừa |6guardedlocalhost | Actualserverdeny,3locale375/1440,0errors/egress;owned0 | PhiênIPG |
+| IPG-DELIVERY | nặng |CI/merge/deploy/runtime/assets | ĐúngHEAD/từngphầngiaoxong;khôngnhậnmetadata/PDFcuối | ReceiptIssue689/PR |

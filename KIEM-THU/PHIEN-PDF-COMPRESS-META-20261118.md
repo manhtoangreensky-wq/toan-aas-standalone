@@ -19,7 +19,9 @@ Nguồncase:6PCMrows trong DANH-SACH-CASE.md.
   zeroegr/ownedprocess0/source/schema/productcoreprotected.
 - [x] Fullshell12h2visibleopacity1/light7,58,69/dark243,251,252;
   rawscreenskhôngcóh2nhạttrêntrắngnhưfixture,khôngsửaCSSké.
-- [ ] CIexactHEAD/merge/deploy/runtime/assetsreceipt.
+- [x] CI44239130889/exactHEAD87f2071b/PR762/treeexact/
+  deploy44241082812/runtime6c8e2b22/5assetsexact/3servicesactive;
+  receiptIssue6969229851/PR6969611901.
 - [ ] SignedproductionUI/finalPDFoutputnếucầnkếtluậnLIVEchức năng.
 
 Không chạy lại nhóm đã đạt nếu nguồn tương ứng không đổi. Không đổiengine/
