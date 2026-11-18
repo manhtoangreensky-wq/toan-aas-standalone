@@ -2400,3 +2400,19 @@ Nguồn hiện hữu: renderImageToPdf; không thêm công cụ hoặc sửa x�
 Sáu lượt native guarded là trạng thái server QA tạm thật; không chứng minh
 READY native hoặc PDF đầu ra. READY được khóa bằng renderer parity ba ngôn ngữ.
 Tiêu đề/mô tả ngoài guard còn thiếu bản địa hóa, ghi backlog metadata riêng.
+
+## Hướng dẫn chỉnh ảnh — đối chiếu18/11/2026
+
+Nguồn hiện hữu: IMAGE_OPERATION_COPY_ROWS, renderImageEnhance và các
+consumer sẵn có. Không bổ sung công cụ/năng lực xử lý.
+
+| Trước | Ứng viên đã đo | Giữ nguyên |
+|---|---|---|
+| Sáu đoạn nói ID/thuật toán/băm/phiên/cache | Sáu hướng dẫn thao tácVI/EN/ZH | Sáu khóa/vị trí,18giá trị có nội dung |
+| Lẫn giải thích triển khai vào giới hạn | Vẫn2x/4096/16triệu điểm ảnh, không thêm chi tiết | Tệp gốc và thứ tự xử lý |
+| Form/nguồn/giá trị tùy chọn sẵn có | FullHTML/context3locale×8state giữ ngoài sáu đoạn | Controls/giới hạn/quyền/tên riêng/customer |
+| Catalogue cũ bị khóa | Đảo hữu hạn đúng sáu dòng/giá trị tại biên đọc QA | Hash/assertion/order/byte ngoài/mutation cũ |
+| Guard Image-to-PDF còn chờ cập nhật | PR763 đã giao runtime39a3fb9e | Receipt6969883472/deploy44245453666 |
+
+12ca mục tiêu và385ca liên quan đạt. Native/CI/runtime của ứng viên vẫn
+riêng; không suy UI thành xử lý ảnh hoặc PNG cuối.

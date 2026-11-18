@@ -102,6 +102,7 @@ jobs:
           node --test tests/pdf-compress-meta.test.mjs
           node --test tests/pdf-compress-meta-source.test.mjs
           node --test tests/image-to-pdf-guard.test.mjs tests/image-to-pdf-guard-source.test.mjs
+          node --test tests/image-enhance-help.test.mjs tests/image-enhance-help-source.test.mjs
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_pdf_compress_meta_shell.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_image_resize_control_height.py
           python -m pytest --noconftest -q tests/test_image_resize_polish_shell.py

@@ -1619,3 +1619,14 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | IPG-SOURCE | nặng | Exactreturn/inverse | Mộtappđổi/150giữ,oldhash/assertion/outsidekhôngche | Source/scope/affectedgroup |
 | IPG-NATIVE | vừa |6guardedlocalhost | Actualserverdeny,3locale375/1440,0errors/egress;owned0 | PhiênIPG |
 | IPG-DELIVERY | nặng |CI/merge/deploy/runtime/assets | ĐúngHEAD/từngphầngiaoxong;khôngnhậnmetadata/PDFcuối | ReceiptIssue689/PR |
+
+## IMAGE-ENHANCE-STATIC-HELP-20261118-R1A — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| EHH-RED | vừa | Fullrenderer3locale | BASE8PASS/4copyRED,khôngnhậnGREENgiả | [PhiênEHH](PHIEN-IMAGE-ENHANCE-HELP-20261118.md) |
+| EHH-COPY | vừa | Sáu đoạn/18giá trị | ĐúngNEW,đủcontrols/PNG/gốc/order/limits,nokỹthuậtthừa |12tests |
+| EHH-PRESERVE | nặng |3locale×8state | FullHTML/context/customer/options/actions/downloadgiữ ngoài6bodies | [Báo cáo](../docs/reports/image-enhance-help-20261118.md) |
+| EHH-SOURCE | nặng | Exactrows/inverse | Mộtappđổi/150giữ,oldhash/assertion/unknownkhôngche |385affectedPASS |
+| EHH-NATIVE | vừa |6localhostviews | Actualhelp/capability/source/layout/noegress/audit/owned0 | PhiênEHH |
+| EHH-DELIVERY | nặng |CI/merge/deploy/runtime/assets | ĐúngHEAD,từngphầnchốt;khôngsuyPNG/cuốingoal | ReceiptIssue689/PR |
