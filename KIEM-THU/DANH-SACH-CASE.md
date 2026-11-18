@@ -1630,3 +1630,14 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | EHH-SOURCE | nặng | Exactrows/inverse | Mộtappđổi/150giữ,oldhash/assertion/unknownkhôngche |385affectedPASS |
 | EHH-NATIVE | vừa |6localhostviews | Actualhelp/capability/source/layout/noegress/audit/owned0 | PhiênEHH |
 | EHH-DELIVERY | nặng |CI/merge/deploy/runtime/assets | ĐúngHEAD,từngphầnchốt;khôngsuyPNG/cuốingoal | ReceiptIssue689/PR |
+
+## IMAGE-TO-PDF-OUTER-META-20261118 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| IPM-RED | vừa |3locale/firstpaint+renderer | BASE15Node+3PythonRED/7protectedPASS | [PhiênIPM](PHIEN-IMAGE-TO-PDF-META-20261118.md) |
+| IPM-META | vừa |5stateVI/EN/ZH | Title/description/header/hero/bootstrapđúng |22Node/3Python |
+| IPM-SCOPE | nặng | Exact5addition3file |148appfilesgiữ/oldguard+8fields+rights giữ | [Báo cáo](../docs/reports/image-to-pdf-meta-20261118.md) |
+| IPM-HISTORY | nặng |Affectedsource/readers |399PASS+failedreader22PASS,oldhash/assertion/outside giữ | PhiênIPM |
+| IPM-NATIVE | vừa |6actualguardedviews | Firstpaint/header/hero/realpaint/noform/egress/owned0 | PhiênIPM |
+| IPM-DELIVERY | nặng |CI/merge/deploy/runtime/assets | ĐúngHEAD/từngphầnchốt,khôngsuyPDFcuối | ReceiptIssue689/PR |

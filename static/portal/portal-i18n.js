@@ -22495,6 +22495,21 @@
     pdfCompressMetaUiDescription: "在可行时减小 PDF 文件大小。原文件将保持不变。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    imageToPdfMetaUiTitle: "Ảnh thành PDF",
+    imageToPdfMetaUiDescription: "Chọn ảnh và ghép thành một tệp PDF. Ảnh gốc được giữ nguyên."
+  });
+
+  Object.assign(MESSAGES.en, {
+    imageToPdfMetaUiTitle: "Images to PDF",
+    imageToPdfMetaUiDescription: "Choose images and combine them into one PDF file. The original images stay unchanged."
+  });
+
+  Object.assign(MESSAGES.zh, {
+    imageToPdfMetaUiTitle: "图像转 PDF",
+    imageToPdfMetaUiDescription: "选择图像并合成为一个 PDF 文件。原图像保持不变。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

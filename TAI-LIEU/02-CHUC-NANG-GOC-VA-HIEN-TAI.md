@@ -2416,3 +2416,19 @@ consumer sẵn có. Không bổ sung công cụ/năng lực xử lý.
 
 12ca mục tiêu và385ca liên quan đạt. Native/CI/runtime của ứng viên vẫn
 riêng; không suy UI thành xử lý ảnh hoặc PNG cuối.
+
+## Ảnh thành PDF — tiêu đề/mô tả18/11/2026
+
+Nguồn hiện hữu: /documents/image-to-pdf,renderImageToPdf,
+localizedPageTitle/Description và shellmetadata dictionaries.
+
+| Trước | Ứng viên đã đo | Giữ nguyên |
+|---|---|---|
+| FirstHTML là workspace chung | VI/EN/ZH có title/description riêng | Bootstrapallowlist/auth/lang |
+| Hero còn tiếng Việt/thuật ngữ trên EN/ZH | Hai exactroutebranches/two keys sixvalues | Helper signature/order/route khác |
+| Guard đã bản địa hóa PR763 | Whole HTML ngoài hero giữ,0mởformkhi bị từ chối | Hai khóa guard và ba chip đã bỏ |
+| Formtámnguồn/rights/actions sẵn có | Controls/context/customer giữ | Không mở xử lý PDF hoặc provider |
+| ReaderCompress dựa toànOLD+addition | Chỉ đảo năm addition của chính Compress trong RAM | Source vật lý/newmetadata/authority/hash/assertions |
+
+Không thêm khả năng tạo PDF.18Python và399+22Nodeca chỉ chứng minh
+phạm vi đã kiểm; native/live/thiết bị/Safari/PDF cuối là gate riêng.

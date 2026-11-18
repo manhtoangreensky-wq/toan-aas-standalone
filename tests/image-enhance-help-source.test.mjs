@@ -3,9 +3,10 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {imageEnhanceHelpHistoricalI18nSource as inverse,imageEnhanceHelpHistoricalSnapshot as snapshot} from "./helpers/image-enhance-help-snapshot.mjs";
+import {imageToPdfMetaHistoricalI18nSource} from "./helpers/image-to-pdf-meta-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-enhance-help-reviewed.json",import.meta.url),"utf8")),edits=fixture.proposal.changes;
 const base="39a3fb9ebda84f5fed7b582839040ada54b1cc0e",file="static/portal/portal-i18n.js",lf=value=>value.replace(/\r\n/g,"\n");
-const source=lf(fs.readFileSync(file,"utf8"));
+const source=imageToPdfMetaHistoricalI18nSource(lf(fs.readFileSync(file,"utf8")));
 test("Enhance help source equals exactly six reviewed rows with every outside byte unchanged",()=>{
   const before=lf(execFileSync("git",["show",base+":"+file],{encoding:"utf8",maxBuffer:12e6}));let expected=before;
   for(const edit of edits){assert.equal(edit.count,1);assert.equal(edit.file,file);assert.equal(expected.split(edit.old).length-1,1);expected=expected.replace(edit.old,()=>edit.new);}

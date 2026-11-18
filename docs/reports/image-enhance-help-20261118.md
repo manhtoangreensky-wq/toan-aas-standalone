@@ -64,3 +64,15 @@ CI/exactHEAD/merge/deploy/runtime/assetsreceipt vẫn riêng.
 Không nhận signedproductionUI/PNGcuối/device/Safari/toàngoal/motion.
 PROVIDER_CALLS=0;WALLET_MUTATIONS=0;ENV_PRODUCTION_CHANGES=0.
 FullgoalACTIVE/incomplete; motion M-FINAL01..06cuối.
+
+## Đã giao18/11/2026
+
+PR764merged2026-11-18T06:34:15Z sau CI44250426132bothSUCCESS tại
+0682913029fd02fb69decb88bf5f71696d9dc5fa. Merge/runtime
+c584e4f80db09b5418b104cbc1629d5e322fd8d4; fulltested/mergedtree
+45c8287032353042623a790c49e231845eaa67eb,diffexit0.
+Deploy44252326794SUCCESS1m8s. Ba verifier chỉ-đọc exit0: đúngruntime/
+trackedsource/protectedTTSvideo/health/3dịch vụactive-running/5assetsbyteexact.
+Issue689fixedcomment6970832913updated/readbackexact;PRreceipt6971158282.
+Chỉ delivery sáu body được đóng; các gap metadata/chữnhạt/wholeUI/
+signedUI/PNGcuối/device/Safari/motion vẫn riêng.

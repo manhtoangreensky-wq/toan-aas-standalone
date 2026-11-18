@@ -4,6 +4,7 @@ import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {imageToPdfGuardHistoricalPortalSource} from "./helpers/image-to-pdf-guard-snapshot.mjs";
 import {imageEnhanceHelpHistoricalI18nSource} from "./helpers/image-enhance-help-snapshot.mjs";
+import {imageToPdfMetaHistoricalPortalSource,imageToPdfMetaHistoricalI18nSource,imageToPdfMetaHistoricalPagesSource} from "./helpers/image-to-pdf-meta-snapshot.mjs";
 import {
   pdfCompressMetaHistoricalPortalSource,pdfCompressMetaHistoricalI18nSource,
   pdfCompressMetaHistoricalPagesSource,pdfCompressMetaHistoricalSnapshot
@@ -12,6 +13,7 @@ const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/pdf-compress-meta-r
 const edits=JSON.parse(fixture.expectedRaw),lf=value=>value.replace(/\r\n/g,"\n");
 const inverses={"static/portal/portal.js":pdfCompressMetaHistoricalPortalSource,
   "static/portal/portal-i18n.js":pdfCompressMetaHistoricalI18nSource,"copyfast_pages.py":pdfCompressMetaHistoricalPagesSource};
+const newer={"static/portal/portal.js":imageToPdfMetaHistoricalPortalSource,"static/portal/portal-i18n.js":imageToPdfMetaHistoricalI18nSource,"copyfast_pages.py":imageToPdfMetaHistoricalPagesSource};
 test("Compress source equals five reviewed additions and preserves every other source byte",()=>{
   for(const[file,inverse]of Object.entries(inverses)){
     const baseline=lf(execFileSync("git",["show",fixture.sourceBase+":"+file],{encoding:"utf8",maxBuffer:12e6}));
@@ -19,14 +21,14 @@ test("Compress source equals five reviewed additions and preserves every other s
     for(const edit of edits.filter(value=>value.file===file)){
       assert.equal(expected.split(edit.old).length-1,1);expected=expected.replace(edit.old,()=>edit.new);
     }
-    const physical=lf(fs.readFileSync(file,"utf8"));
+    const physical=newer[file](lf(fs.readFileSync(file,"utf8")));
     const current=file==="static/portal/portal.js"?imageToPdfGuardHistoricalPortalSource(physical):file==="static/portal/portal-i18n.js"?imageEnhanceHelpHistoricalI18nSource(physical):physical;
     assert.equal(current,expected);assert.equal(inverse(current),baseline);assert.equal(inverse(baseline),baseline);
   }
 });
 test("Compress source inverse rejects unknown/partial/duplicate/moved additions without masking outside changes",()=>{
   for(const[file,inverse]of Object.entries(inverses)){
-    const physical=lf(fs.readFileSync(file,"utf8"));
+    const physical=newer[file](lf(fs.readFileSync(file,"utf8")));
     const source=file==="static/portal/portal.js"?imageToPdfGuardHistoricalPortalSource(physical):file==="static/portal/portal-i18n.js"?imageEnhanceHelpHistoricalI18nSource(physical):physical,selected=edits.filter(value=>value.file===file);
     const edit=selected[0],addition=file.endsWith("portal-i18n.js")?edit.new.slice(0,-edit.old.length):edit.new.slice(edit.old.length);
     const baseline=inverse(source),prefix="\r\n/* CUSTOMER Facebook TikTok */\r\n",suffix="\r\n# outside customer";

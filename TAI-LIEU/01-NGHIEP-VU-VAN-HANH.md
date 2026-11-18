@@ -3250,3 +3250,25 @@ schema/coredata/source151 giữ,22ownedstopped0. R1ảnh chưa cuộn không
 được nhận UI, giữ lịch sử;không sửa app hoặc chạy lại397Nodeca.
 Hero ngoài sáu đoạn vẫn có tiếng Anh/kỹ thuật và nhãn bước sáng quá nhạt;
 đó là gap riêng cần sửa,không coi toàn trang/AX đã đạt.
+
+## Tiêu đề Ảnh thành PDF —18/11/2026
+
+Sáu hướng dẫn Chỉnh ảnh đã giao PR764/CI44250426132/deploy44252326794,
+runtimec584e4f8/3dịchvụ/health/5assetsexact,receipt6970832913.
+Ứng viên tiếp theo chỉ thêm tiêu đề/mô tả cho /documents/image-to-pdf
+trong shell lần tải đầu và helper giao diện,hai khóa/sáu giá trị VI/EN/ZH.
+Không đổi form,quyền,tám ảnh nguồn hoặc thông báo guard đã giao trước.
+Ba appfile đổi đúng năm addition,148tệp khác giữ.
+
+BASE22Node7PASS15metadataRED và3HTMLResponseRED; ứng viên
+22metadata+2source tests đạt trong nhóm399PASS/mộtQAreaderfail,
+chỉ tệp reader Compress được chỉnh/chạy lại22PASS.18Pythonfirstpaint/
+neighbor đạt. Không chạy lại399ca hoặc sửa app để qua kiểm.
+Native/CI/delivery vẫn riêng; không nhận PDF cuối hoặc toàn trang đã sạch.
+[Báo cáo](../docs/reports/image-to-pdf-meta-20261118.md).
+
+Native6actualguardedđạt title/description/bootstrap/header/hero đúng
+VI/EN/ZH375sáng/1440tối,24witnesssaucuộn/ancestorpaint và18shots;
+Rootxem ba rawảnh.0form/chips/ô rỗng/overflow/errors/egress,
+oldauditexact+3login/schema/coredata/source151/bindinggiữ,
+22ownedstopped0. Đây là metadata/guarded,khôngnativeREADY/PDFcuối.

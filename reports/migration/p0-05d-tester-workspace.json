@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-18",
-  "local_files_refresh_scope": "Image Enhance help: canonical cases 1632 lines/171590 LF bytes after six scoped EHH rows; local metadata only, historical remote/P0/48case/safety fields preserved, trackerIssue689. PR763 delivery recorded separately.",
+  "local_files_refresh_scope": "Image-to-PDF metadata: canonical cases 1643 lines/172490 LF bytes after six scoped IPM rows; local metadata only, historical remote/P0/48case/safety fields preserved, trackerIssue689. PR764 delivery recorded separately.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1632,
-      "bytes": 171590,
-      "sha256": "13327b0b524ebcd871ba105ddb1f60b37a22e0961a9056fd7e07a5700ac69bf8"
+      "lines": 1643,
+      "bytes": 172490,
+      "sha256": "3fd0bc1c066cecd0904639f69c3039f03e8f2d3acd990ae7a0a35b708ee27d54"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
