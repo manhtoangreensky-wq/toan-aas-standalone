@@ -23938,3 +23938,9 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-image-resize .portal-fi
 .portal-page.portal-image-resize form[data-portal-action="image-operation-resize"] > .portal-fields > .portal-field {
   align-content: start;
 }
+
+/* Keep Enhance step text readable in the light theme. */
+html:not([data-portal-theme="dark"]) .portal-page.portal-image-enhance .portal-project-steps strong,
+html:not([data-portal-theme="dark"]) .portal-page.portal-image-enhance .portal-project-steps span {
+  color: var(--portal-ink);
+}

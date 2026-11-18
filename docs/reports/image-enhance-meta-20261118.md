@@ -68,3 +68,16 @@ services/publicassets vàreceipt riêng.
 Không nhận signedproductionUI/PNGcuối/device/Safari/wholelocale/AX/motion.
 FullgoalACTIVE/incomplete;motionM-FINAL01..06cuối.
 PROVIDER_CALLS=0;WALLET_MUTATIONS=0;ENV_PRODUCTION_CHANGES=0.
+
+## Delivery18/11/2026 đã chốt
+
+PR766merged2026-11-18T10:16:11Z;CI44263659873bothSUCCESSexact23a55606.
+Merge/runtimec1fdd4bf35c8563d8dd15dc27619022d3e1b7350;
+tested/mergedtree76de10bfb04276ab4ffb54d7061d105641885b6e/fulltreediff0.
+ExclusiveexactSHAdeploy44283897180SUCCESS60s.
+Threeexistingreadonlyverifiersexit0/runtime/trackedclean/protectedsource/
+3servicesactive-running/healthok/5publicassetsbyteexact.
+InitialwrongSHAverifierargumentfailedlocalgitshowbeforeSSH/HTTPS;
+correctedfromgitrev-parsegithub/main;onlyfailedchecks rerun.
+Issue689fixed6972711440updated/readbackexact;onePR766receipt6975682890.
+Khôngrerun423/30/native/CI/deploy;khôngclaimfinalPNG/wholegoal.

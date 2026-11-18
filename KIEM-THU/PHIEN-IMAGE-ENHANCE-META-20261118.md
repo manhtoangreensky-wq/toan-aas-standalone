@@ -17,8 +17,10 @@ TRACKER=Issue689;CASE_SOURCE=DANH-SACH-CASE.md,sáuEHMrows.
   samecode/binding/boundsR2approvedexecution đạt;khôngappfailure.
 - [x] Currentdocs/case1654lines173392LFbytes/metadata1PASS32deselected/
   syntaxdiff0/prepushREADY.
-- [ ] SourceprovenancefinalHEAD.
-- [ ] CIexactHEAD/merge/deploy/runtime/assetsreceipt.
+- [x] SourceprovenancefinalHEAD23a55606/fingerprint f37264b7.
+- [x] CI44263659873bothSUCCESS/PR766merge-runtimec1fdd4bf/treeeq/
+  deploy44283897180SUCCESS/serviceshealth5assetsbyteexact/
+  Issue6972711440/PR6975682890readbackexact.
 - [ ] SignedproductionUI/finalPNG/device/Safari/wholelocale/motion.
 
 Không chạy lại423/30ca đã đạt nếu nguồn tương ứng không đổi.

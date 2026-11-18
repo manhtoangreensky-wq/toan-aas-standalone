@@ -2447,3 +2447,18 @@ shell dictionaries. Không thêm năng lực hoặc thay engine.
 | Ảnh thành PDF còn ghi chờ phát hành | PR765 đã giao runtimeb9815725 | Receipt6971500533/deploy44256934807 |
 
 423Node và30Python đạt;native/CI/runtime riêng,không chứng minh PNG cuối.
+
+## Chỉnh ảnh — màu chữ ba bước18/11/2026
+
+Nguồn hiện hữu:.portal-project-steps,strong/span vàsemantic --portal-ink.
+
+| Trước đã đo | Thay đổi được giao | Giữ nguyên |
+|---|---|---|
+| Ba lightviews có18mismatches,headingrgb236251255/bodyrgb143169181 | Một rule scopedEnhance/light dùng token#073a45 đo tại node | Text/font/geometry/layout |
+| Dark3views có màu riêng | Selector không áp dụng dark | Sáu màu tối/textfill |
+| Form và nguồn ảnh sẵn có | Không đổi HTML hoặc hàm xử lý | Capabilities/readstates/controls/customer |
+| Comparator theme cũ khóa hash trước addition | Đảo hữu hạn đúng addition tại biên lịch sử | Goldenhash/assertions/outsidebytes/mutations |
+| Metadata còn ghi chờ phát hành | PR766 đã giao runtimec1fdd4bf | Receipt6972711440/deploy44283897180 |
+
+Không thêm công cụ hoặc xử lý ảnh. Không suy semanticcolor equality thành
+toàn AX hoặc tỷ lệ tương phản trên nền gradient đã được chứng minh.

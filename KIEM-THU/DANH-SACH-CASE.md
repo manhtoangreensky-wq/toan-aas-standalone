@@ -1652,3 +1652,13 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | EHM-HISTORY | nặng |Affectedsource/readers |423Node/30Python,oldhash/assertion/outside giữ | PhiênEHM |
 | EHM-NATIVE | vừa |6actualreadonlyviews | Firstpaint/header/hero/realpaint/noerrors/egress/owned0 | PhiênEHM |
 | EHM-DELIVERY | nặng |CI/merge/deploy/runtime/assets | ĐúngHEAD/từngphầnchốt,khôngsuyPNGcuối | ReceiptIssue689/PR |
+
+## IMAGE-ENHANCE-LIGHT-STEP-COLOR-20261118 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| EHC-BASE | vừa |6actualviews |18lightmismatchesđo,36known/0unknown;darkcaptured | [PhiênEHC](PHIEN-IMAGE-ENHANCE-STEP-COLOR-20261118.md) |
+| EHC-COLOR | vừa |3locale375light1440dark |6lightnodes/viewđúngtoken,darkcolorsgiữ | NativeBASE/GREEN |
+| EHC-PRESERVE | nặng |Capturedstyle/geometry/form |Textfontdocgeometrylayout/rights/controls giữ | [Báo cáo](../docs/reports/image-enhance-step-color-20261118.md) |
+| EHC-SOURCE | nặng |1CSSaddition |150appfiles/outsidebytes/goldenassertions giữ | Source/affectedchecks |
+| EHC-DELIVERY | nặng |CI/merge/deploy/runtime/assets |ĐúngHEAD,từngphầnchốt;khôngsuywholeAX/PNGcuối |ReceiptIssue689/PR |

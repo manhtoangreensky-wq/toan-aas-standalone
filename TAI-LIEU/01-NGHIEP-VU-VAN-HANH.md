@@ -3298,3 +3298,23 @@ oldregisterauditexact+3login/schema/core/source151giữ,22ownedstopped0.
 R1startupchưađếnapp,3ownedstopped0;samecodeR2đạt,khôngsửaapp.
 Tiêu đề/nội dung kỹ thuật khác ngoài hai node metadata vẫn thuộc
 checklist tổng;không coi toàn trang đã sạch.
+
+## Màu chữ hướng dẫn Chỉnh ảnh —18/11/2026
+
+Tên/mô tả Chỉnh ảnh đã giao PR766/CI44263659873bothSUCCESS/
+deploy44283897180SUCCESS,runtimec1fdd4bf35c8563d8dd15dc27619022d3e1b7350;
+3dịchvụ/health/5publicassetsbyteexact,Issue6972711440/PR6975682890.
+
+Mục kế tiếp chỉ thêm một rule CSS cho sáu nút chữ của ba bước ở giao
+diện sáng. BASEactualfullserverVI/EN/ZH375light có18màu nhạt khác token
+chữ chuẩn;dark3views giữ làm comparator. Không thay chữ,phông,kích
+thước,form,quyền hoặc xử lý ảnh.150tệp ứng dụng khác giữ nguyên.
+NativeGREEN/affectedchecks/phát hành là cổng riêng;không coi đồng nhất
+màu token là bằng chứng toàn bộ khả năng tiếp cận đã đạt.
+[Báo cáo](../docs/reports/image-enhance-step-color-20261118.md).
+
+Ứng viên đã đoGREEN6views:18nút sáng khớp token,18nút tối giữ nguyên;
+text/font/documentgeometry/listlayout/form/rights exact.357Node đạt.
+54metadatahelp+36stepwitness/24shots,RootxemVIENZHraw;0errors/egress/
+overflow,audit/schema/core/source151giữ,22ownedstopped0.
+CI/merge/deploy/runtime/assets/receipt vẫn chốt riêng trước mục tiếp theo.
