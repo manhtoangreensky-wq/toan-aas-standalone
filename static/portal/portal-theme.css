@@ -23944,3 +23944,11 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-image-enhance .portal-p
 html:not([data-portal-theme="dark"]) .portal-page.portal-image-enhance .portal-project-steps span {
   color: var(--portal-ink);
 }
+
+/* Keep image result subtitles readable in Resize and history. */
+.portal-page:is(.portal-image-resize, .portal-image-operation-history) .portal-document-operation-card .portal-document-operation-title .portal-card-subtitle {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  overflow: visible;
+  text-overflow: clip;
+}

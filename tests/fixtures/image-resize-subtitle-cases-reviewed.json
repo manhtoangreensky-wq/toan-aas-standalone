@@ -1,0 +1,84 @@
+{
+  "review": {
+    "specId": "RESIZE-SUBTITLE-READ-CONTRACT-20261118",
+    "conversation": "d79bbf98-6651-4c28-adb6-8711d3985573",
+    "rawSha256": "a4d95682932f7e2bbca45f0274c23f6a0a0eaf2e1661dcd7f63b767223650c99",
+    "schemaValid": true,
+    "proposalExact": false,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "SOURCE_CASE_PLAN_ACCEPTED_NOT_RUNTIME",
+    "corrections": [
+      "Function names are authoritative source references; returned line39/73/etc are fragment-relative, not repository line numbers. Actual consumers are renderImageOperationCards at26158 and renderImageHistoryOperationCards at26266 on supplied BASE.",
+      "EN Custom and ZH 自定义 in expected describe only the preset token, not the entire subtitle. Tests must preserve the translated outer subtitle and fit label in each locale.",
+      "RSC-08 fixture uses actual state/download_ready fields and generated download helper; do not invent status/downloadPath fields as production authority. Deep-freeze input/context and compare actual controls/links/attributes."
+    ]
+  },
+  "proposal": {
+    "cases": [
+      {
+        "expected": "Subtitle preset token resolves via field.resize.preset.custom instead of leaking raw English 'custom': VI='Đổi canvas · Cắt giữa khung · lấp đầy canvas, có thể cắt rìa · Tùy chỉnh', EN='Custom', ZH='自定义'. Identical resolution across both /image/resize and /image/history result cards.",
+        "id": "RSC-01",
+        "input": "{ id: 'op-1', kind: 'image_resize', fit_mode: 'crop', preset: 'custom' }, rendered under VI, EN, ZH locales in both renderImageOperationCards and renderImageHistoryOperationCards",
+        "notProven": "Runtime test not executed (verify command NOT_RUN). Static fragment analysis confirms current code interpolates raw String(item.preset || 'custom'), leaking literal 'custom', but runtime RED/GREEN witness awaits Root execution. Zero inferred PASS.",
+        "sourceRef": "static/portal/portal.js:renderImageOperationCards (line 39) & static/portal/portal.js:renderImageHistoryOperationCards (line 73)"
+      },
+      {
+        "expected": "Empty string preset is treated as custom preset: resolves to localized custom label (VI='Đổi canvas · Đệm nền trắng · giữ trọn ảnh, không cắt · Tùy chỉnh', EN='Custom', ZH='自定义') without leaking raw 'custom' fallback string.",
+        "id": "RSC-02",
+        "input": "{ id: 'op-2', kind: 'image_resize', fit_mode: 'pad', preset: '' }, rendered in both renderImageOperationCards and renderImageHistoryOperationCards",
+        "notProven": "Runtime test not executed (verify command NOT_RUN). Current source fallback item.preset || 'custom' evaluates '' to raw 'custom'; fix behavior unverified in runtime. Zero inferred PASS.",
+        "sourceRef": "static/portal/portal.js:renderImageOperationCards (line 39) & static/portal/portal.js:renderImageHistoryOperationCards (line 73)"
+      },
+      {
+        "expected": "Absent or undefined preset defaults to localized custom label (VI='Đổi canvas · Nền mờ · giữ trọn ảnh ở giữa, nền mờ · Tùy chỉnh', EN='Custom', ZH='自定义') via field.resize.preset.custom rather than unlocalized 'custom' string.",
+        "id": "RSC-03",
+        "input": "{ id: 'op-3', kind: 'image_resize', fit_mode: 'blur' } (preset omitted or undefined), rendered in both renderImageOperationCards and renderImageHistoryOperationCards",
+        "notProven": "Runtime test not executed (verify command NOT_RUN). Source analysis shows String(undefined || 'custom') yields raw 'custom'; runtime behavior awaiting Root test suite. Zero inferred PASS.",
+        "sourceRef": "static/portal/portal.js:renderImageOperationCards (line 39) & static/portal/portal.js:renderImageHistoryOperationCards (line 73)"
+      },
+      {
+        "expected": "Non-custom ratio scalar '16:9' is preserved exactly and unchanged in subtitle: 'Đổi canvas · Cắt giữa khung · lấp đầy canvas, có thể cắt rìa · 16:9'. Must not be overwritten or mapped to 'Tùy chỉnh'.",
+        "id": "RSC-04",
+        "input": "{ id: 'op-4', kind: 'image_resize', fit_mode: 'crop', preset: '16:9' }, rendered in both renderImageOperationCards and renderImageHistoryOperationCards",
+        "notProven": "Runtime test not executed (verify command NOT_RUN). Preserving non-custom ratios without regressions across locales is not proven at runtime. Zero inferred PASS.",
+        "sourceRef": "static/portal/portal.js:renderImageOperationCards (line 39) & static/portal/portal.js:renderImageHistoryOperationCards (line 73)"
+      },
+      {
+        "expected": "Unknown scalar 'CUSTOMER Facebook TikTok <img src=x>' is preserved verbatim as the preset string, and properly escaped in HTML output via safeText/sanitization ('&lt;img src=x&gt;'). Must not be replaced by 'Tùy chỉnh' and must not execute HTML.",
+        "id": "RSC-05",
+        "input": "{ id: 'op-5', kind: 'image_resize', fit_mode: 'pad', preset: 'CUSTOMER Facebook TikTok <img src=x>' }, rendered in both renderImageOperationCards and renderImageHistoryOperationCards",
+        "notProven": "Runtime test not executed (verify command NOT_RUN). Escaping and exact scalar preservation under browser/Node DOM renderer is not verified at runtime. Zero inferred PASS.",
+        "sourceRef": "static/portal/portal.js:renderImageOperationCards (line 39) & static/portal/portal.js:renderImageHistoryOperationCards (line 73)"
+      },
+      {
+        "expected": "Live locale switch dynamically updates subtitle custom label: VI resolves to 'Tùy chỉnh', EN resolves to 'Custom', ZH resolves to '自定义' across both renderImageOperationCards and renderImageHistoryOperationCards without caching stale locale strings.",
+        "id": "RSC-06",
+        "input": "{ id: 'op-6', kind: 'image_resize', fit_mode: 'crop', preset: 'custom' } re-rendered after switching current locale across VI -> EN -> ZH",
+        "notProven": "Runtime test not executed (verify command NOT_RUN). Dynamic reactivity to locale switch without page reload is not proven in runtime. Zero inferred PASS.",
+        "sourceRef": "static/portal/portal-i18n.js:field.resize.preset.custom & static/portal/portal.js (locale switching)"
+      },
+      {
+        "expected": "Non-resize history cards maintain their exact subtitles and labels: brand uses result('brand.subtitle'), background uses result('background.subtitle'), enhance uses result('enhance.subtitle'). Subtitles and metadata remain strictly unchanged; zero parity regression.",
+        "id": "RSC-07",
+        "input": "Array containing non-resize history items: [{ id: 'br-1', kind: 'image_brand_overlay' }, { id: 'bg-1', kind: 'image_background_cleanup' }, { id: 'enh-1', kind: 'image_enhance', preset: 'balanced' }] rendered in renderImageHistoryOperationCards",
+        "notProven": "Runtime test not executed (verify command NOT_RUN). Non-resize card rendering invariance not verified in live browser DOM. Zero inferred PASS.",
+        "sourceRef": "static/portal/portal.js:renderImageHistoryOperationCards (lines 74-78, 86-87)"
+      },
+      {
+        "expected": "Pure render contract: input items array, individual item objects, context, action handlers, download paths, data-image-operation attributes, and status badges remain strictly immutable and unmutated before and after card rendering.",
+        "id": "RSC-08",
+        "input": "Object.freeze(item) with complete metadata (id, original_filename, source_width, source_height, target_width, target_height, byte_size, fit_mode, preset, status, downloadPath) and context passed to render functions",
+        "notProven": "Runtime test not executed (verify command NOT_RUN). Absence of accidental mutations or side effects on input objects is not proven at runtime. Zero inferred PASS.",
+        "sourceRef": "static/portal/portal.js:renderImageOperationCards & static/portal/portal.js:renderImageHistoryOperationCards"
+      }
+    ],
+    "report": "# RESIZE-SUBTITLE-READ-CONTRACT-20261118 R1 REPORT\n\n## Scope & Execution Status\n- Spec ID: RESIZE-SUBTITLE-READ-CONTRACT-20261118\n- Revision: R1\n- Base Commit: 6c8e2b227ba635d81dc713f6c25c77d260002e61\n- Status: ANALYZED\n- Verification Command: node --test tests/image-resize-subtitle.test.mjs (Status: NOT_RUN)\n- External calls: PROVIDER_CALLS=0, WALLET_MUTATIONS=0, DEPLOY=NO\n- Inferred PASS: ZERO (all cases flagged notProven until Root executes RED/GREEN witness)\n\n## Findings\n1. Target Consumers:\n   - `/image/resize`: `renderImageOperationCards` in `static/portal/portal.js` (line 39)\n   - `/image/history`: `renderImageHistoryOperationCards` in `static/portal/portal.js` (line 73)\n2. Defect:\n   - Both consumers interpolate `${String(item.preset || \"custom\")}` directly into subtitle parameter `{ preset: ... }`.\n   - When preset is \"custom\", \"\", or absent, the raw English string \"custom\" leaks into the UI across all locales (VI, EN, ZH).\n3. Desired Resolution:\n   - Map known custom/empty/missing presets via existing translation key `field.resize.preset.custom` (VI: \"Tùy chỉnh\", EN: \"Custom\", ZH: \"自定义\").\n   - Preserve non-custom ratios (e.g., \"16:9\") and unknown customer scalars verbatim, escaped via `safeText`.\n   - Maintain strict non-Resize history parity and input immutability.",
+    "revision": "R1",
+    "specId": "RESIZE-SUBTITLE-READ-CONTRACT-20261118",
+    "status": "ANALYZED",
+    "verify": "NOT_RUN"
+  }
+}

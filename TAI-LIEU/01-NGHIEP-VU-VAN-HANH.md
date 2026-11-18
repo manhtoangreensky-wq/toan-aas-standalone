@@ -3318,3 +3318,35 @@ text/font/documentgeometry/listlayout/form/rights exact.357Node đạt.
 54metadatahelp+36stepwitness/24shots,RootxemVIENZHraw;0errors/egress/
 overflow,audit/schema/core/source151giữ,22ownedstopped0.
 CI/merge/deploy/runtime/assets/receipt vẫn chốt riêng trước mục tiếp theo.
+
+## Nhãn lựa chọn đổi kích thước —18/11/2026
+
+Màu chữ Chỉnh ảnh đã giao PR767/CI44288326900bothSUCCESS/
+deploy44290989110SUCCESS,runtime979b80d22a90368ec97547937e219ccbd3a02deb,
+3dịchvụ/health/5assetsbyteexact,Issue6976220745/PR6976710710readbackexact.
+
+Mục tiếp theo chỉ thay tokencustom trong phụ đề kết quả và lịch sử:
+VI Tùy chỉnh,EN Custom,ZH 自定义,qua khóa dịch sẵn có.
+Custom/rỗng/thiếu được dịch;chín tỷ lệ và unknown/customertext giữ.
+BASE8tests4PASS4RED chỉ ra đúng lỗi;150tệp ứng dụng ngoàiportal giữ.
+Không đổi dữ liệu ảnh/quyền/form/engine hoặc tạo PNG trong kiểm tra.
+VIouter"Đổi canvas" và các chữ dư khác vẫn là mục riêng,chưa nhận
+toàn trang đã sạch. Native/CI/delivery của ứng viên chốt riêng.
+[Báo cáo](../docs/reports/image-resize-subtitle-20261118.md).
+
+Ứng viên8RSC+2source đạt trong nhóm24tệp436NodePASS,0FAIL;
+localeVM/controls/context/ratios/customer/nonResize/downloads giữ.
+Không chạy lại nhóm đã đạt;native và phát hành vẫn riêng.
+
+Nativephát hiện phụ đề bị rulecũnowrap/ellipsis cắt ở375px dù nhãn
+đãdịchđúng. Chưa phát hành parent. Phụlục chỉ thêm1CSSrule cho
+phụđềthẻResize/history xuốngdòng;chữ/phông/chiềurộng/quyền/dữliệugiữ,
+chiềucaophụđề/thẻ tăngtựnhiênđượcchấpnhận.
+AntigravityR1trảexact,combined2appfiles149protected;
+nhómCSSaffected56PASS,khôngrerun436.
+
+Nghiệm thu cuối R5 đạt12màn ba ngôn ngữ,hai cỡ màn hình,hai trang;
+48phụ đề đọc đủ/48ảnh thẻ,không tràn ngang/lỗi. R4 chờ sai danh sách
+không dùng ởHistory;chỉ sửa hai điều kiện kiểm tra,không đổi ứng dụng.
+Audit cũ+3login/schema/core/source151giữ;28tiến trình sở hữu dừng về0.
+CI/delivery/signedproduction/finalPNG vẫn có cổng và bằng chứng riêng.

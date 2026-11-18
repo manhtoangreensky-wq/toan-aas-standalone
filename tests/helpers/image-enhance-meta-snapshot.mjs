@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {resizeSubtitleHistoricalPortalSource} from "./image-resize-subtitle-snapshot.mjs";
 const raw=fs.readFileSync(new URL("../fixtures/image-enhance-meta-reviewed.json",import.meta.url));
 assert.equal(createHash("sha256").update(raw).digest("hex"),"10b19e6677caea6c2f70b213aab524580321dcd07e6dbf6a4c48b0d41199d83e");
 const fixture=JSON.parse(raw),edits=fixture.proposal.changes;
@@ -37,7 +38,7 @@ function inverse(source,file){
   if(!file.endsWith(".py"))assert.equal(result.includes(prefix),false,fail+" unknown namespace");
   return result;
 }
-export const imageEnhanceMetaHistoricalPortalSource=source=>inverse(source,"static/portal/portal.js");
+export const imageEnhanceMetaHistoricalPortalSource=source=>inverse(resizeSubtitleHistoricalPortalSource(source),"static/portal/portal.js");
 export const imageEnhanceMetaHistoricalI18nSource=source=>inverse(source,"static/portal/portal-i18n.js");
 export const imageEnhanceMetaHistoricalPagesSource=source=>inverse(source,"copyfast_pages.py");
 export function imageEnhanceMetaHistoricalSnapshot(entries,locale){

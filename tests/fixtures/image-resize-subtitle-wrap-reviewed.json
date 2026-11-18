@@ -1,0 +1,35 @@
+{
+  "review": {
+    "specId": "IMAGE-RESIZE-SUBTITLE-READABILITY-20261118",
+    "parentSpecId": "IMAGE-RESIZE-CUSTOM-SUBTITLE-20261118",
+    "conversation": "fd4ec668-6b48-4bbf-8726-848d3c2f37ee",
+    "rawSha256": "e10107a6efec74727188da5e7333adee514a25fa3ef3418ef5fb69bcab080bbf",
+    "schemaValid": true,
+    "proposalExact": true,
+    "changes": 1,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED"
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal-theme.css",
+        "new": "/* Keep Enhance step text readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-image-enhance .portal-project-steps strong,\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-image-enhance .portal-project-steps span {\n  color: var(--portal-ink);\n}\n\n/* Keep image result subtitles readable in Resize and history. */\n.portal-page:is(.portal-image-resize, .portal-image-operation-history) .portal-document-operation-card .portal-document-operation-title .portal-card-subtitle {\n  white-space: normal;\n  overflow-wrap: anywhere;\n  overflow: visible;\n  text-overflow: clip;\n}",
+        "old": "/* Keep Enhance step text readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-image-enhance .portal-project-steps strong,\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-image-enhance .portal-project-steps span {\n  color: var(--portal-ink);\n}"
+      }
+    ],
+    "report": "Task: IMAGE-RESIZE-SUBTITLE-READABILITY-20261118 R1\nPhạm vi: Đề xuất 1 CSS change duy nhất trong static/portal/portal-theme.css để bọc phụ đề (wrap subtitle) trên 2 route Resize và operation history, bảo toàn toàn bộ bố cục, font, width khác.\nThực thi: NOT_RUN (output-only, không chạy test, không gọi lệnh, không sửa file, không network/browser/login/VPS).\nKiểm chứng: NOT_RUN (cấm tự suy đoán PASS, chờ root-only verify).\nLỆCH: Không.\nPROVIDER_CALLS=0; WALLET_MUTATIONS=0.",
+    "revision": "R1",
+    "specId": "IMAGE-RESIZE-SUBTITLE-READABILITY-20261118",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}

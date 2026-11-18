@@ -1,0 +1,40 @@
+{
+  "review": {
+    "specId": "IMAGE-RESIZE-CUSTOM-SUBTITLE-20261118",
+    "conversation": "c9f5fcd9-c2aa-4200-a99c-0bd07455af77",
+    "rawSha256": "9a1d56f677a751a8d0181072b2efd533eede09a85d6141684ff6e5ff986c01d3",
+    "schemaValid": true,
+    "proposalExact": true,
+    "changes": 2,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED"
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "preset: `${fitLabel} · ${String(item.preset || \"custom\") === \"custom\" ? imageOperationText(\"field.resize.preset.custom\", \"Tùy chỉnh\") : String(item.preset || \"custom\")}`",
+        "old": "preset: `${fitLabel} · ${String(item.preset || \"custom\")}`"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "preset: `${resizeLabel} · ${String(item.preset || \"custom\") === \"custom\" ? imageOperationText(\"field.resize.preset.custom\", \"Tùy chỉnh\") : String(item.preset || \"custom\")}`",
+        "old": "preset: `${resizeLabel} · ${String(item.preset || \"custom\")}`"
+      }
+    ],
+    "report": "MỤC TIÊU: Bản địa hóa token \"custom\" thông qua key \"field.resize.preset.custom\" trong subtitle preset của renderImageOperationCards và renderImageHistoryOperationCards.\nTHỰC THI: Output-only, đề xuất chính xác 2 phép thay thế nội dòng trong static/portal/portal.js theo packet contract. Không chỉnh sửa file, không gọi lệnh ngoài.\nKIỂM THỬ: NOT_RUN (Cấm tự suy ra ĐẠT. Worker tuân thủ output-only; việc kiểm định 8 PASS thuộc Root replay).\nLỆCH: Không có lệnh nào được thực thi (NOT_RUN theo yêu cầu bounded task).\nTRẠNG THÁI: PROPOSED (revision R1).",
+    "revision": "R1",
+    "specId": "IMAGE-RESIZE-CUSTOM-SUBTITLE-20261118",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}
