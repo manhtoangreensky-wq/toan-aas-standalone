@@ -2500,3 +2500,33 @@ existingloginworking;noOAuth/settingschange.
   Khôngápenginecandidate,khôngproduction/provider/financialmutation.
 - [ ] Utilitykhác/phụđềcustom/Compressmeta/wholelocale/AX/auth/device/
   Safari/signedUI/finaloutput/M-FINAL01..06 vẫn mở,motioncuối.
+
+## Thứ tự phát hành hiện tại —18/11/2026
+
+- [x] Nhãn chungPR760đãgiao:CI44145898416/deploy44148596640/
+  runtime4180d4e2,3dịchvụ/health/5assetsexact,receiptIssue6956419825.
+- [x] RESIZE-DESKTOP-CONTROL-HEIGHT:AGY1CSSrule,12geometry/6native/
+  30control44–44,5px,150protected/22ownedstopped0.
+- [x] ResizeheightdeliveryPR761:HEAD5eccf0bb/CI44156742967bothSUCCESS,
+  merge/runtime560377ad/tree9f592af7exact/deploy44160017763SUCCESS;
+  3dịchvụ/health/5assetsexact,Issue6958160337/PR6958828987receipt.
+- [x] PDF-COMPRESS-OUTER-META:reuseworker5edits,noextracall;3changed/
+  148protected;BASE15Node+3PythonRED→22Node+3PythonPASS,12neighborPASS.
+- [x] Compressaffected127PASS/1QAreaderfail→only1correctedPASS,
+  noapprepair/nooldassertionweakening;6ChromefixtureviewsmetadataPASS.
+- [ ] CompressCIexactHEAD/merge/deploy/runtime/assets.
+- [x] Compressnativefullshell6READY/firstHTML/header/hero/typedPDFGET1items2/
+  select/Tab/nosubmit,zeroerrors/overflow/egress;3freshregister3login12metadata/
+  audit/schema/core/source151giữ,22ownedstopped0;12h2đúngtheme,khôngCSSfix.
+- [ ] TiếpđếnImage-to-PDFguard1line vàEnhance6rows:workerđãtrảđúng,
+  chưaáp,chưacreatePR;nghiệmthu/pháthànhtuầntự.
+- [x] ParallelWeb–Bot:publicreceiver/fullartifactsourcecontract và15offline
+  characterizationcasesPASS;Botruntime804e23dađúngpublicreference,clean/
+  active. KhôngsửaBot/engine,khôngpaidcalls/ENV/data/payment.
+- [ ] Web–Botactualtransport/finalaudiochưađượcchứngminh;khôngnhậnUI
+  hoặcHTTP200làđầuracuối. GiữngoàiphạmvisửaenginecủagoalUI.
+- [ ] Wholelocale/AX/auth/responsive/device/Safari/signedproductionUI/
+  finaloutput và M-FINAL01..06. ToàngoalACTIVE/incomplete;motioncuối.
+
+MộtIssue689,mỗiphầnđãđạtthìmerge/deploydứtđiểmtrướcphầnsau. Khôngtạo
+Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.

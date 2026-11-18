@@ -22480,6 +22480,21 @@
     imageResizeMetaUiDescription: "选择已保存的图像，设置尺寸并创建新的 PNG。原文件将保持不变。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    pdfCompressMetaUiTitle: "Nén PDF",
+    pdfCompressMetaUiDescription: "Giảm dung lượng PDF khi có thể. Tệp gốc được giữ nguyên."
+  });
+
+  Object.assign(MESSAGES.en, {
+    pdfCompressMetaUiTitle: "Compress PDF",
+    pdfCompressMetaUiDescription: "Reduce a PDF's file size where possible. The original stays unchanged."
+  });
+
+  Object.assign(MESSAGES.zh, {
+    pdfCompressMetaUiTitle: "压缩 PDF",
+    pdfCompressMetaUiDescription: "在可行时减小 PDF 文件大小。原文件将保持不变。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

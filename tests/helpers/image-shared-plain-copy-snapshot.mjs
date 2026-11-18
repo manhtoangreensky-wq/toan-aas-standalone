@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {execFileSync} from "node:child_process";
+import {pdfCompressMetaHistoricalPortalSource,pdfCompressMetaHistoricalI18nSource,pdfCompressMetaHistoricalSnapshot} from "./pdf-compress-meta-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/image-shared-plain-copy-reviewed.json",import.meta.url),"utf8"));
 const base=file=>execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:12e6}).replace(/\r\n/g,"\n");
 const priorI18n=base("static/portal/portal-i18n.js"),priorPortal=base("static/portal/portal.js");
@@ -44,9 +45,10 @@ function sourceBack(source,marker,edits){
   for(const edit of edits)value=value.replace(edit.new,()=>edit.old);
   return source.slice(0,part.start)+value+source.slice(part.end);
 }
-export const imageSharedHistoricalI18nSource=source=>sourceBack(source,arrayMarker,imageSharedChanges);
-export const imageSharedHistoricalPortalSource=source=>sourceBack(source,resizeMarker,chipEdits);
+export const imageSharedHistoricalI18nSource=source=>sourceBack(pdfCompressMetaHistoricalI18nSource(source),arrayMarker,imageSharedChanges);
+export const imageSharedHistoricalPortalSource=source=>sourceBack(pdfCompressMetaHistoricalPortalSource(source),resizeMarker,chipEdits);
 export function imageSharedHistoricalSnapshot(entries,locale){
+  entries=pdfCompressMetaHistoricalSnapshot(entries,locale);
   assert.ok(locales.includes(locale),fail+" locale");
   const index=locales.indexOf(locale)+1,keys=imageSharedChanges.map(edit=>"imageOperationUi."+edit.key);
   const found=keys.map(key=>entries.filter(([name])=>name===key));

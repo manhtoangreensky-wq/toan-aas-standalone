@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {resizePlainHistoricalI18nSource,resizePlainHistoricalSnapshot} from "./image-resize-plain-copy-snapshot.mjs";
 import {imageSharedHistoricalPortalSource} from "./image-shared-plain-copy-snapshot.mjs";
 import {resizeControlHeightHistoricalThemeSource} from "./image-resize-control-height-snapshot.mjs";
+import {pdfCompressMetaHistoricalPagesSource} from "./pdf-compress-meta-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/image-resize-polish-reviewed.json",import.meta.url),"utf8"));
 const failure="Unreviewed Image Resize polish",prefix="imageResizeMetaUi",locales=["vi","en","zh"];
 const count=(source,part)=>source.split(part).length-1;
@@ -38,6 +39,7 @@ export function resizePolishHistoricalI18nSource(source){
   assert.equal(restored.includes(prefix),false,failure+" partial/unknown catalogue");return restored;
 }
 export function resizePolishHistoricalPagesSource(source){
+  source=pdfCompressMetaHistoricalPagesSource(source);
   assert.equal(typeof source,"string",failure);const edits=editsFor("copyfast_pages.py"),found=edits.map(e=>count(source,e.new));
   if(found.every(n=>n===0)){
     for(const edit of edits){const start=source.indexOf(edit.old),end=source.indexOf("\n}",start);assert.ok(start>=0&&end>start,failure+" dictionary owner");
