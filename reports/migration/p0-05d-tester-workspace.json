@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-18",
-  "local_files_refresh_scope": "Enhance six plain headings: canonical cases 1687 lines/176360 LF bytes after six unique scoped EPH rows and final native R2 evidence; local metadata only, historical remote/P0/48case/safety fields preserved, trackerIssue689. PR768 delivery recorded separately.",
+  "local_files_refresh_scope": "Resize two plain result labels: canonical cases 1698 lines/177408 LF bytes with six unique RRL rows; 1566 local tests and native12views/48captions/48shots accepted. Local metadata only; historical remote/P0/48case/safety fields preserved, trackerIssue689. PR769 delivery recorded separately.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1687,
-      "bytes": 176360,
-      "sha256": "3920ace9096bdda90730f9bc6f4a1f65136ed6b63054c3f5961167603e4573d3"
+      "lines": 1698,
+      "bytes": 177408,
+      "sha256": "00a742f11c7e036d761a94b73a9a78d0171d2424b408f6461e1a9c9ecaf64df4"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

@@ -16,9 +16,9 @@ assert.deepEqual(authority.proposal.cases.map(row=>row.id),Array.from({length:8}
 const render=await pageMetaRenderer(pageMetaSources());
 const LOCALES=["vi","en","zh"],ROUTES=["/image/resize","/image/history"];
 const COPY={
-  vi:{outer:"Đổi canvas · ",custom:"Tùy chỉnh",fit:{crop:"Cắt giữa khung · lấp đầy, có thể cắt rìa",pad:"Đệm nền trắng · giữ trọn ảnh, không cắt",blur:"Nền mờ · giữ trọn ảnh ở giữa, nền mờ"}},
-  en:{outer:"Canvas resize · ",custom:"Custom",fit:{crop:"Center crop · fill the frame, edges may be cropped",pad:"White padding · keep full image, no crop",blur:"Blurred background · keep image centered"}},
-  zh:{outer:"调整画布 · ",custom:"自定义",fit:{crop:"居中裁剪 · 填满画面，可能裁掉边缘",pad:"白色填充 · 保留完整图像，不裁剪",blur:"模糊背景 · 图像居中保留"}}
+  vi:{outer:"Đổi kích thước · ",custom:"Tùy chỉnh",fit:{crop:"Cắt giữa khung · lấp đầy, có thể cắt rìa",pad:"Đệm nền trắng · giữ trọn ảnh, không cắt",blur:"Nền mờ · giữ trọn ảnh ở giữa, nền mờ"}},
+  en:{outer:"Image resize · ",custom:"Custom",fit:{crop:"Center crop · fill the frame, edges may be cropped",pad:"White padding · keep full image, no crop",blur:"Blurred background · keep image centered"}},
+  zh:{outer:"调整尺寸 · ",custom:"自定义",fit:{crop:"居中裁剪 · 填满画面，可能裁掉边缘",pad:"白色填充 · 保留完整图像，不裁剪",blur:"模糊背景 · 图像居中保留"}}
 };
 const CUSTOMER='CUSTOMER media studio Facebook TikTok <img src=x onerror="literal">&';
 const id=n=>"11111111-1111-4111-8111-"+String(n).padStart(12,"0");

@@ -1,0 +1,41 @@
+{
+  "review": {
+    "specId": "IMAGE-RESIZE-PLAIN-RESULT-COPY-20261118",
+    "conversation": "fbea6cea-423c-4d42-8769-f1a05f865c24",
+    "rawSha256": "fbd4c27709263ae3746520e6ac37478136f45fa36afa60908e935f67757bddf6",
+    "schemaValid": true,
+    "proposalExact": true,
+    "handoffRound": 1,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "note": "Root reviewed structured output and exact rows once. Release remains dependency-ordered; no execution claim accepted."
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"result.resize.subtitle\", \"Đổi kích thước · {preset}\", \"Image resize · {preset}\", \"调整尺寸 · {preset}\"],",
+        "old": "    [\"result.resize.subtitle\", \"Đổi canvas · {preset}\", \"Canvas resize · {preset}\", \"调整画布 · {preset}\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"result.history.operation.resize\", \"Đổi kích thước\", \"Image resize\", \"调整尺寸\"],",
+        "old": "    [\"result.history.operation.resize\", \"Đổi canvas\", \"Canvas resize\", \"调整画布\"],"
+      }
+    ],
+    "report": "Proposal only. Application NOT_APPLIED. Tests and execution NOT_RUN; no inferred PASS. Independent output session with no writable source edits. LỆCH: Không có.",
+    "revision": "R1",
+    "specId": "IMAGE-RESIZE-PLAIN-RESULT-COPY-20261118",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}

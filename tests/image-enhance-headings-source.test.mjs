@@ -3,9 +3,10 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {enhanceHeadingsHistoricalI18nSource as inverse,enhanceHeadingsHistoricalSnapshot as snapshot} from "./helpers/image-enhance-headings-snapshot.mjs";
+import {resizeResultLabelHistoricalI18nSource} from "./helpers/image-resize-result-label-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-enhance-headings-reviewed.json",import.meta.url),"utf8")),edits=fixture.proposal.changes;
 const file="static/portal/portal-i18n.js",base="be8015ad908a87535cb644243d43ba81f37ffdcc",lf=value=>value.replace(/\r\n/g,"\n");
-const before=lf(execFileSync("git",["show",base+":"+file],{encoding:"utf8",maxBuffer:12e6})),current=lf(fs.readFileSync(file,"utf8"));
+const before=lf(execFileSync("git",["show",base+":"+file],{encoding:"utf8",maxBuffer:12e6})),current=resizeResultLabelHistoricalI18nSource(lf(fs.readFileSync(file,"utf8")));
 test("Physical i18n equals exactly six accepted heading rows with every outside byte unchanged",()=>{
   let expected=before;
   for(const edit of edits){assert.equal(edit.file,file);assert.equal(edit.count,1);assert.equal(expected.split(edit.old).length-1,1);expected=expected.replace(edit.old,()=>edit.new);}
