@@ -2565,7 +2565,7 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
 - [ ] ENHANCE-LIGHT-STEP-TITLES: rawZH375light thấy nhãn3bước rất nhạt;
   chưa đo contrast/nguyên nhân, cần READ/RED/AGYphiếu riêng,khôngsửa
   CSSké hoặc nhận wholeEnhanceUI/AX từ sáu body.
-- [ ] IMAGE-TO-PDF-OUTER-META: native đã thấy heroVI/EN còn tiêu đề Việt,
+- [x] IMAGE-TO-PDF-OUTER-META: native đã thấy heroVI/EN còn tiêu đề Việt,
   ZH về workspace chung; mô tả cả ba còn chữ kỹ thuật. Phiếu metadata
   riêng sau Enhance, trước bounded Resize subtitle; không sửa ké guard.
   AGYR1e84ae0eb trả đúng5addition3files/2keys6localevalues,Rootđãđốichiếu
@@ -2578,10 +2578,29 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   oldauditexact+3login/schema/core/source151/bindinggiữ,22ownedstopped0.
 - [x] Case1643lines172490LFbytes/metadata1PASS32deselected0.45s/
   syntaxdiff0/currentoperations/originalcomparison/Tester/prepushREADY.
-- [ ] ImagePDFmetadatasourceprovenance/CI/merge/deploy/runtime/assets;
-  khôngnhậnfinalPDF/signedUI/wholelocale.
+- [x] ImagePDFmetadatasourceprovenance/CI44255182929bothSUCCESSexact52af9235/
+  PR765merge-runtimeb9815725/treeeq/deploy44256934807SUCCESS/
+  3serviceshealth5assetsexact;Issue6971500533/PR6971984449readbackexact.
+  KhôngnhậnfinalPDF/signedUI/wholelocale.
 - [x] Phiên độc lập Resize subtitle READcontract d79bbf98 trả đủ8case
   RSC01..08,Rootđãđọc/kiểm một lượt và ghi ba hiệu chỉnh thuật ngữ/
   packetline/token-vs-wholesubtitle/fixturefields;NOT_RUN,khôngappfix.
 - [ ] Resize custom subtitle/wholelocale/AX/auth/responsive/device/Safari/
   signedUI/finaloutput vẫn mở; M-FINAL01..06 cuối; fullgoalACTIVE.
+
+### Chỉnh ảnh metadata —18/11/2026
+
+- [x] Newbranchfromdeliveredb9815725,acceptedAGY92163194R1reused.
+- [x] BASE22Node7PASS15RED/3PythonRED;exact5addition3files148protected.
+- [x] Candidate423NodePASS/30PythonPASS;wholeHTML ngoài2hero/
+  sáuhelp/controls/rights/source/customer/context/sixneighbors giữ.
+- [x] NativeR2:6readonlyviews/54realpaintwitness/18shots/Rootviewraw,
+  firstHTTP/hydratedmetadata đúng;sáuhelp/form/rights/source giữ;
+ 0errors/egress/overflow,audit/schema/core/source151giữ,22ownedstopped0.
+  R1startup0case/3ownedstopped0,samecodeR2đạt,khôngappfailure.
+- [x] Case1654lines173392LFbytes/metadata1PASS32deselected0.79s/
+  currentdocs/Tester/prepushREADY/JSASTdiff0.
+- [ ] Provenance/CI/merge/deploy/runtime/assetsreceipt;
+  khôngsuywholepage/PNG/cuốingoal.
+- [ ] Lightstepcolor sau metadata;ResizeboundedRED/implementation kế;
+  bốnroutecoverage vàremainingwholefunctional/locale/AX/auth/responsive/live.

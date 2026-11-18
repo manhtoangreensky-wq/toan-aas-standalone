@@ -22510,6 +22510,21 @@
     imageToPdfMetaUiDescription: "选择图像并合成为一个 PDF 文件。原图像保持不变。"
   });
 
+  Object.assign(MESSAGES.vi, {
+    imageEnhanceMetaUiTitle: "Chỉnh ảnh",
+    imageEnhanceMetaUiDescription: "Chọn ảnh đã lưu, chỉnh màu và độ nét rồi tải bản PNG mới. Tệp gốc được giữ nguyên."
+  });
+
+  Object.assign(MESSAGES.en, {
+    imageEnhanceMetaUiTitle: "Edit images",
+    imageEnhanceMetaUiDescription: "Choose a saved image, adjust color and sharpness, then download a new PNG. The original file stays unchanged."
+  });
+
+  Object.assign(MESSAGES.zh, {
+    imageEnhanceMetaUiTitle: "调整图像",
+    imageEnhanceMetaUiDescription: "选择已保存的图像，调整色彩和锐度，然后下载新的 PNG 文件。原文件保持不变。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

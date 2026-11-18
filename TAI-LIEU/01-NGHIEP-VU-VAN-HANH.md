@@ -3272,3 +3272,29 @@ VI/EN/ZH375sáng/1440tối,24witnesssaucuộn/ancestorpaint và18shots;
 Rootxem ba rawảnh.0form/chips/ô rỗng/overflow/errors/egress,
 oldauditexact+3login/schema/coredata/source151/bindinggiữ,
 22ownedstopped0. Đây là metadata/guarded,khôngnativeREADY/PDFcuối.
+
+## Tiêu đề Chỉnh ảnh —18/11/2026
+
+Ảnh thành PDF đã giao PR765,CI44255182929/deploy44256934807 đạt;
+runtimeb9815725/3dịch vụ hoạt động/5tệp giao diện khớp từng byte,
+Issue689 receipt6971500533 và PRreceipt6971984449 đã đọc lại khớp.
+
+Ứng viên kế tiếp chỉ thêm tiêu đề/mô tả riêng cho /image/edit từ lần
+tải đầu đến thanh điều hướng và đầu trang. VI:Chỉnh ảnh;EN:Edit images;
+ZH:调整图像. Mô tả nói chọn ảnh đã lưu,chỉnh màu/độ nét,tải PNG và
+giữ tệp gốc. Năm addition/ba tệp,148tệp ứng dụng khác giữ nguyên.
+Không đổi sáu hướng dẫn đã giao,biểu mẫu,quyền,nguồn ảnh hoặc xử lý.
+
+BASE7NodePASS/15metadataRED và3HTMLResponseRED. Ứng viên423Node
+liên quan và30Python đạt,không lỗi mới. QA chỉ đảo hữu hạn đúng
+addition mới ở biên so sánh lịch sử;renderer dùng toàn nguồn thật.
+Native/CI/delivery là bằng chứng riêng;không suy PNG cuối hoặc toàn
+ngôn ngữ/khả năng tiếp cận/chuyển động đã xong.
+[Báo cáo](../docs/reports/image-enhance-meta-20261118.md).
+
+NativeR2 mới:6readonlyviews/54paintwitness/18shots,firstHTTP/header/hero
+đúng;giữ sáuhelp/form/options/rights/source,0errors/egress/overflow,
+oldregisterauditexact+3login/schema/core/source151giữ,22ownedstopped0.
+R1startupchưađếnapp,3ownedstopped0;samecodeR2đạt,khôngsửaapp.
+Tiêu đề/nội dung kỹ thuật khác ngoài hai node metadata vẫn thuộc
+checklist tổng;không coi toàn trang đã sạch.

@@ -1641,3 +1641,14 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | IPM-HISTORY | nặng |Affectedsource/readers |399PASS+failedreader22PASS,oldhash/assertion/outside giữ | PhiênIPM |
 | IPM-NATIVE | vừa |6actualguardedviews | Firstpaint/header/hero/realpaint/noform/egress/owned0 | PhiênIPM |
 | IPM-DELIVERY | nặng |CI/merge/deploy/runtime/assets | ĐúngHEAD/từngphầnchốt,khôngsuyPDFcuối | ReceiptIssue689/PR |
+
+## IMAGE-ENHANCE-OUTER-META-20261118 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| EHM-RED | vừa |3locale/firstpaint+renderer | BASE15Node+3PythonRED/7protectedPASS | [PhiênEHM](PHIEN-IMAGE-ENHANCE-META-20261118.md) |
+| EHM-META | vừa |5stateVI/EN/ZH | Title/description/header/hero/bootstrapđúng |22Node/3Python |
+| EHM-SCOPE | nặng | Exact5addition3file |148appfilesgiữ/sáuhelp/form/rights/customer giữ | [Báo cáo](../docs/reports/image-enhance-meta-20261118.md) |
+| EHM-HISTORY | nặng |Affectedsource/readers |423Node/30Python,oldhash/assertion/outside giữ | PhiênEHM |
+| EHM-NATIVE | vừa |6actualreadonlyviews | Firstpaint/header/hero/realpaint/noerrors/egress/owned0 | PhiênEHM |
+| EHM-DELIVERY | nặng |CI/merge/deploy/runtime/assets | ĐúngHEAD/từngphầnchốt,khôngsuyPNGcuối | ReceiptIssue689/PR |
