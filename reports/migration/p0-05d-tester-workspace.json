@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-19",
-  "local_files_refresh_scope": "History six state strings: canonical cases 1709 lines/178472 LF bytes, six unique HSC rows; 1590 local tests, nativeR3 sixpages/18states/36paint/18screens. Local metadata only; historical remote/P0/48case/safety fields preserved, trackerIssue689. PR770 delivered separately; existing toast/hero locale gaps remain open.",
+  "local_files_refresh_scope": "History customer cleanup: 1721 lines/179742 LF bytes, seven unique HCC rows; 1904/1907 Node first run plus exact three historical-reader retests pass, 12 Python shells; EMPTY R2 sixpages90witness12screens22owned0 and FULL R6 sixpages24states162witness+12toast78screens27owned0. Preserve historical remote/P0/48case/safety fields; Issue689. Two technical History notes/state-meta clusters remain NEXT, output-only AGY; motion LAST.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1709,
-      "bytes": 178472,
-      "sha256": "a1b9ed00216d5ec518dbdd760500ebb8437ca32085ea395e09c6dd398d846297"
+      "lines": 1721,
+      "bytes": 179742,
+      "sha256": "6c797d60f0bc2082d3780500030230bca9e6e797e7d6668dfeeea5bac50ba544"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

@@ -1,0 +1,77 @@
+{
+  "review": {
+    "specId": "IMAGE-HISTORY-READY-COPY-20261118",
+    "conversation": "5eee3247-8f69-48f6-8004-bfda7e287fac",
+    "rawSha256": "8186dc9b779b08a3a4ad6f98c72b0585567a97f1b8795fba8b2a9e0f287a3006",
+    "schemaValid": true,
+    "proposalExact": true,
+    "handoffRound": 1,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "note": "Root read structured output and reviewed exact proposed edits once as a pair. Serial application waits for Resize delivery and History state copy; no runtime/whole-page/output claim."
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.intro.kicker\", \"Lịch sử ảnh\", \"Image history\", \"图像记录\"],",
+        "old": "    [\"history.intro.kicker\", \"Lịch sử ảnh riêng tư\", \"Private image history\", \"私有图像记录\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.intro.title\", \"Ảnh đã xử lý của bạn\", \"Your processed images\", \"您已处理的图像\"],",
+        "old": "    [\"history.intro.title\", \"Một lịch sử PNG đã xác minh, không trộn nguồn\", \"One verified PNG history without mixed authority\", \"单一已验证 PNG 记录，不混用来源\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.intro.body\", \"Xem lại các lần chỉnh ảnh và tải ảnh đã hoàn tất.\", \"Review your image edits and download completed images.\", \"查看您的图像编辑记录并下载已完成的图像。\"],",
+        "old": "    [\"history.intro.body\", \"Chỉ đầu ra từ các công cụ ảnh của tài khoản hiện tại xuất hiện. Mỗi lần tải xuống đều được máy chủ kiểm tra lại quyền sở hữu, tính toàn vẹn và trạng thái hoàn tất.\", \"Only outputs from this account's image tools are shown. Every download is rechecked by the server for ownership, integrity and completion.\", \"仅显示当前账户图像工具的输出。每次下载都会由服务器重新检查所有权、完整性和完成状态。\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.metric.count\", \"Ảnh ở trang này\", \"Images on this page\", \"本页图像\"],",
+        "old": "    [\"history.metric.count\", \"PNG Web ở trang này\", \"Web PNGs on this page\", \"本页 Web PNG\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.results.title\", \"Kết quả chỉnh ảnh\", \"Image editing results\", \"图像编辑结果\"],",
+        "old": "    [\"history.results.title\", \"PNG đã xử lý\", \"Processed PNG files\", \"已处理的 PNG\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.results.description\", \"Chọn ảnh đã hoàn tất để tải xuống. Nếu chưa tải được, hãy làm mới danh sách.\", \"Choose a completed image to download. If you can't download it, refresh the list.\", \"选择已完成的图像进行下载。如果无法下载，请刷新列表。\"],",
+        "old": "    [\"history.results.description\", \"Không dùng URL tĩnh, bản xem trước công khai, bộ nhớ đệm PWA hoặc lịch sử Asset/Bot thay thế khi một lần đọc riêng tư thất bại.\", \"Static URLs, public previews, PWA cache and Asset/Bot history are not used as substitutes when a private read fails.\", \"私有读取失败时，不使用静态 URL、公开预览、PWA 缓存或 Asset/Bot 记录替代。\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.empty.title\", \"Chưa có ảnh đã xử lý\", \"No processed images yet\", \"暂无已处理的图像\"],",
+        "old": "    [\"history.empty.title\", \"Chưa có PNG Web đã xác minh\", \"No verified Web PNG files yet\", \"暂无已验证的 Web PNG\"],"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "    [\"history.empty.body\", \"Ảnh bạn chỉnh bằng các công cụ ảnh sẽ xuất hiện tại đây.\", \"Images you edit with the image tools will appear here.\", \"您使用图像工具编辑的图像将显示在这里。\"],",
+        "old": "    [\"history.empty.body\", \"Lịch sử này chỉ hiển thị đầu ra từ các công cụ ảnh của tài khoản hiện tại. Nó không suy đoán từ Kho tài sản, Bot, nhà cung cấp hay trình duyệt.\", \"This history shows only outputs from this account's image tools. It does not infer data from Asset Vault, Bot, providers or the browser.\", \"此记录仅显示当前账户图像工具的输出。不会从 Asset Vault、Bot、服务商或浏览器推测数据。\"],"
+      }
+    ],
+    "report": "Application: NOT_APPLIED. Execution/Verification: NOT_RUN. Discrepancies (LỆCH): 0. Output-only bounded proposal; no commands, edits, network, or data operations executed.",
+    "revision": "R1",
+    "specId": "IMAGE-HISTORY-READY-COPY-20261118",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}

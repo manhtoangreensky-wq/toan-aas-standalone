@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {historyCustomerCleanupHistoricalSource} from "./image-history-customer-cleanup-snapshot.mjs";
 import {resizeSubtitleHistoricalPortalSource} from "./image-resize-subtitle-snapshot.mjs";
 import {enhanceHeadingsHistoricalI18nSource,enhanceHeadingsHistoricalSnapshot} from "./image-enhance-headings-snapshot.mjs";
 const raw=fs.readFileSync(new URL("../fixtures/image-enhance-meta-reviewed.json",import.meta.url));
@@ -39,9 +40,9 @@ function inverse(source,file){
   if(!file.endsWith(".py"))assert.equal(result.includes(prefix),false,fail+" unknown namespace");
   return result;
 }
-export const imageEnhanceMetaHistoricalPortalSource=source=>inverse(resizeSubtitleHistoricalPortalSource(source),"static/portal/portal.js");
+export const imageEnhanceMetaHistoricalPortalSource=source=>inverse(resizeSubtitleHistoricalPortalSource(historyCustomerCleanupHistoricalSource(source,"static/portal/portal.js")),"static/portal/portal.js");
 export const imageEnhanceMetaHistoricalI18nSource=source=>inverse(enhanceHeadingsHistoricalI18nSource(source),"static/portal/portal-i18n.js");
-export const imageEnhanceMetaHistoricalPagesSource=source=>inverse(source,"copyfast_pages.py");
+export const imageEnhanceMetaHistoricalPagesSource=source=>inverse(historyCustomerCleanupHistoricalSource(source,"copyfast_pages.py"),"copyfast_pages.py");
 export function imageEnhanceMetaHistoricalSnapshot(entries,locale){
   entries=enhanceHeadingsHistoricalSnapshot(entries,locale);
   const copies={vi:["Chỉnh ảnh","Chọn ảnh đã lưu, chỉnh màu và độ nét rồi tải bản PNG mới. Tệp gốc được giữ nguyên."],

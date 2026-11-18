@@ -1,0 +1,41 @@
+{
+  "review": {
+    "specId": "IMAGE-HISTORY-CUSTOMER-STRUCTURE-20261118",
+    "conversation": "de9c50e6-3cc8-4084-8225-a88c8d63ce01",
+    "rawSha256": "c72e240ba9d2625569d751c25aa656f9242b67bb0a606091e7b19e572ebbcb64",
+    "schemaValid": true,
+    "proposalExact": true,
+    "handoffRound": 1,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "note": "Root read structured output and reviewed exact proposed edits once as a pair. Serial application waits for Resize delivery and History state copy; no runtime/whole-page/output claim."
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "       <section class=\"portal-document-operation-intro\"><div><span class=\"portal-section-kicker\">${safeText(t(\"intro.kicker\", \"Lịch sử ảnh riêng tư\"))}</span><h2>${safeText(t(\"intro.title\", \"Một lịch sử PNG đã xác minh, không trộn nguồn\"))}</h2><p>${safeText(t(\"intro.body\", \"Chỉ output từ các công cụ ảnh của tài khoản hiện tại xuất hiện. Mỗi lần tải xuống đều được máy chủ kiểm tra lại quyền sở hữu, tính toàn vẹn và trạng thái hoàn tất.\"))}</p></div><dl><div><dt>${safeText(String(returned))}</dt><dd>${safeText(t(\"metric.count\", \"PNG Web ở trang này\"))}</dd></div></dl></section>",
+        "old": "       <section class=\"portal-document-operation-intro\"><div><span class=\"portal-section-kicker\">${safeText(t(\"intro.kicker\", \"Lịch sử ảnh riêng tư\"))}</span><h2>${safeText(t(\"intro.title\", \"Một lịch sử PNG đã xác minh, không trộn nguồn\"))}</h2><p>${safeText(t(\"intro.body\", \"Chỉ output từ các công cụ ảnh của tài khoản hiện tại xuất hiện. Mỗi lần tải xuống đều được máy chủ kiểm tra lại quyền sở hữu, tính toàn vẹn và trạng thái hoàn tất.\"))}</p></div><dl><div><dt>${safeText(String(returned))}</dt><dd>${safeText(t(\"metric.count\", \"PNG Web ở trang này\"))}</dd></div><div><dt>${safeText(t(\"metric.outOfScope\", \"Ngoài phạm vi\"))}</dt><dd>${safeText(t(\"metric.outOfScopeBody\", \"Tác vụ Bot và output nhà cung cấp không được truy vấn\"))}</dd></div></dl></section>"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "       <div class=\"portal-form-footer\"><p>${safeText(t(\"boundary.item.three\", \"Muốn tạo bản mới, mở đúng công cụ ảnh tương ứng.\"))} <a href=\"/image/resize\">${safeText(imageOperationText(\"resize.form.title\", \"Đổi canvas\"))}</a>, <a href=\"/image/edit\">${safeText(imageOperationText(\"enhance.form.title\", \"Làm ảnh rõ\"))}</a>, <a href=\"/image/brand-overlay\">${safeText(imageOperationText(\"brand.form.title\", \"Gắn thương hiệu\"))}</a>.</p></div>",
+        "old": "       <section class=\"portal-card portal-card-pad portal-operations-boundary\"><div class=\"portal-card-header\"><div><h2>${safeText(t(\"boundary.title\", \"Ranh giới dữ liệu\"))}</h2><p>${safeText(t(\"boundary.body\", \"Đây là kho output riêng của Web Workspace, không phải trung tâm giao tệp chung.\"))}</p></div>${badge(\"read_only\")}</div><ul class=\"portal-operations-boundary-list\"><li>${safeText(t(\"boundary.item.one\", \"Không gọi Bot/Core Bridge, nhà cung cấp, PayOS, ví Xu hoặc webhook.\"))}</li><li>${safeText(t(\"boundary.item.two\", \"Không ghi đè file gốc, không tạo bản xem trước và không suy đoán output từ Asset Vault.\"))}</li><li>${safeText(t(\"boundary.item.three\", \"Muốn tạo bản mới, mở đúng công cụ ảnh tương ứng.\"))} <a href=\"/image/resize\">${safeText(imageOperationText(\"resize.form.title\", \"Đổi canvas\"))}</a>, <a href=\"/image/edit\">${safeText(imageOperationText(\"enhance.form.title\", \"Làm ảnh rõ\"))}</a> hoặc <a href=\"/image/brand-overlay\">${safeText(imageOperationText(\"brand.form.title\", \"Gắn thương hiệu\"))}</a>.</li></ul></section>"
+      }
+    ],
+    "report": "Application: NOT_APPLIED. Bounded output-only proposal. Verify: NOT_RUN (test not created yet; commands/execution forbidden by scope; do not infer PASS). LỆCH: Không có (0 discrepancies). PROVIDER_CALLS=0; WALLET_MUTATIONS=0. Stopped after bounded proposal.",
+    "revision": "R1",
+    "specId": "IMAGE-HISTORY-CUSTOMER-STRUCTURE-20261118",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}

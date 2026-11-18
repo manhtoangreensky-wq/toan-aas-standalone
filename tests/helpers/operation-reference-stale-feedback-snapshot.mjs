@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import {historyCustomerCleanupHistoricalSource} from "./image-history-customer-cleanup-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/operation-reference-stale-feedback-reviewed.json",import.meta.url),"utf8"));
 const failure='        if (!refreshed) throw new Error(operationReferenceFeedbackText("failed", "Chưa tải được tệp. Hãy thử lại."));';
 const edits=[
@@ -17,6 +18,7 @@ const markers=["const feedbackSessionEpoch = assetVaultSessionEpoch;","const fee
   "documentAssetReferenceRequestIsCurrent(kind, feedbackEpoch, feedbackSessionEpoch, feedbackPath)",
   "imageOperationAssetReferenceRequestIsCurrent(feedbackEpoch, feedbackSessionEpoch, feedbackPath)"];
 export function operationReferenceStaleFeedbackHistoricalIntegrationSource(source){
+  source=historyCustomerCleanupHistoricalSource(source,"static/portal/integration.js");
   assert.equal(typeof source,"string",fail);
   if(!markers.some(marker=>source.includes(marker)))return source;
   let result=source;

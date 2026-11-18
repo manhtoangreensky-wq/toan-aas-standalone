@@ -5,6 +5,7 @@ import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {operationReferenceFeedbackRuntime as runtime} from "./helpers/operation-reference-feedback-runtime.mjs";
 import {operationReferenceStaleFeedbackHistoricalIntegrationSource as inverse} from "./helpers/operation-reference-stale-feedback-snapshot.mjs";
+import {historyCustomerCleanupHistoricalSource} from "./helpers/image-history-customer-cleanup-snapshot.mjs";
 import {imageResizeGuidanceHistoricalI18nSource} from "./helpers/image-resize-guidance-snapshot.mjs";
 import {pdfSplitMetaHistoricalPortalSource} from "./helpers/pdf-split-meta-snapshot.mjs";
 import {resizePolishHistoricalThemeSource} from "./helpers/image-resize-polish-snapshot.mjs";
@@ -52,7 +53,8 @@ for(const route of ["/documents/split","/image/resize"]){
 test("exact two worker edits and scoped inverse bind actual source and every outside byte",()=>{
   assert.equal(fixture.changes.length,2);let expected=baseline.integration;
   for(const edit of fixture.changes){assert.equal(edit.count,1);assert.equal(expected.split(edit.old).length-1,1);expected=expected.replace(edit.old,()=>edit.new);}
-  assert.equal(source.integration,expected);assert.equal(hash(source.integration),fixture.binding.candidateIntegration);
+  const historicalIntegration=historyCustomerCleanupHistoricalSource(source.integration,paths.integration);
+  assert.equal(historicalIntegration,expected);assert.equal(hash(historicalIntegration),fixture.binding.candidateIntegration);
   assert.equal(hash(baseline.integration),fixture.binding.baselineIntegration);assert.equal(inverse(source.integration),baseline.integration);
   assert.equal(inverse(baseline.integration),baseline.integration);
   for(const key of ["i18n","portal","theme"]){const current=key==="i18n"?imageResizeGuidanceHistoricalI18nSource(source[key]):key==="portal"?pdfSplitMetaHistoricalPortalSource(source[key]):resizePolishHistoricalThemeSource(source[key]);assert.equal(current,baseline[key]);assert.equal(hash(current),fixture.binding[key]);}

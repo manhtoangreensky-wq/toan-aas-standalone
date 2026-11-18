@@ -849,6 +849,9 @@
       || text === "Cannot perform this action right now."
       || text === "当前无法执行此操作。") return;
     const legacyStatusMap = {
+      "Đã làm mới lịch sử ảnh Web.": "imageHistoryRefreshed",
+      "Không thể làm mới lịch sử ảnh Web.": "imageHistoryRefreshFailed",
+      "Bạn không có quyền xem lịch sử ảnh Web.": "imageHistoryAccessDenied",
       "Bản nháp canonical đã được cập nhật.": "draft",
       "Dữ liệu canonical đang chờ bước xác nhận phù hợp.": "awaiting_confirm",
       "Yêu cầu đã được canonical queue ghi nhận.": "queued",
@@ -942,6 +945,9 @@
       "Đã lưu Reference Format Plan thành Video Plan Draft riêng tư. Video nguồn không được mở/phân tích; chưa có render, job, media, thanh toán hoặc giao hàng.": "lasttwo_saved"
     };
     const viFallbacks = {
+      imageHistoryRefreshed: "Đã làm mới lịch sử ảnh.",
+      imageHistoryRefreshFailed: "Chưa làm mới được lịch sử ảnh. Hãy thử lại.",
+      imageHistoryAccessDenied: "Hãy kiểm tra quyền truy cập để xem lịch sử ảnh.",
       draft: "Đã cập nhật bản nháp.",
       awaiting_confirm: "Vui lòng kiểm tra thông tin và xác nhận.",
       queued: "Yêu cầu đã được tiếp nhận.",
