@@ -37,3 +37,7 @@ Hai khối giải thích kỹ thuật cuối trang và ba cụm nhãn phụ ở 
 còn mở trong hai phiếuAGY output-only kế tiếp,contract6992944109.
 Không suy đợt này thành toàn trang sạch/toànứngdụnghoànthành/motionPASS.
 [Báo cáo](../docs/reports/image-history-customer-cleanup-20261119.md).
+
+CI44409604449FAIL2standaloneResize-subtitlereadercases;Rootnối
+finiteleafchỉsohistoricalcurrent,local2PASS408.4502ms. Khôngappchange,
+khôngnative/1904rerun. VẫnPR772,CIHEADmới/provenancechưađạt.

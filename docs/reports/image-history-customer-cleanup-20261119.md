@@ -85,3 +85,13 @@ contractcùngIssue689/comment6992944109;output-only,không áp dụng trước
 khi release19edits hiện tại được giao xong.
 PROVIDER_CALLS=0;WALLET_MUTATIONS=0;PRODUCT_SUBMIT=NO.
 DEPLOY=NO;LIVE_PASS=NOT_TESTED;goalACTIVE,motionM-FINAL01..06LAST.
+
+## CI đúng HEAD và bổ sung reader bị bỏ sót
+
+PR772/HEAD534eccae5d7ceb576cbb5ec1c1c78c291501f49b,run44409604449
+FAIL3m5sởhai sourcecomparators củaResize-subtitle đọcportalvật lý
+thẳng. Đây là thiếu sót tập kiểm tra liên đới củaRoot:70filegroupchưa
+córeaderđộclập này. ChỉnốifiniteHistoryleafvào current nguồn lịch sử
+trong test;giữhash/assertions/negativevectors vàmãứngdụng19edits.
+Local2/2sourcecasesđạt408.4502ms. Khônggộp/triểnkhaibảnCIđỏ,
+khôngchạylại1904pass/native. GiữcùngPR772,refreshprovenancevàCIHEADmới.

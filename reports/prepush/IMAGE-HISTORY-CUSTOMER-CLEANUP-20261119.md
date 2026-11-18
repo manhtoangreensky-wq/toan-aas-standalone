@@ -37,3 +37,8 @@ Tiếp theo:metadatahash/secret/diff→sourcecommit→Web-onlyprovenance→
 finalHEADverify→pushonePR→exactHEADCI2jobs→guardedmerge/treeeq→
 exclusiveexactSHAdeploy→runtime/3services/health/public+versionassets→
 fixedIssue/PRreceipts. Không bỏcổng và khôngchấtPRchưađạt.
+
+PR772CI44409604449HEAD534eccaeFAIL2Resize-subtitlesourcecases(3m5s);
+Rootmissedstandalonereaderin70filegroup. Chỉhistoricalcurrent thêm
+finiteleaf,giữapplication/hash/assertions/negatives. Local2PASS0FAIL
+408.4502ms;CIHEADmới/provenancerequired,samePR/nomergered/noalltestrerun.
