@@ -2560,9 +2560,9 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   merge-runtimec584e4f8/deploy44252326794SUCCESS/3active-services/
   health/5assetsexact;fixedIssue6970832913/readback/PR6971158282.
   Không nhận finalPNG/signedUI/wholelocale hoặc gọi lại proposal đã nhận.
-- [ ] ENHANCE-OUTER-META: actualnativeVI vẫn Image Enhance Studio,
+- [x] ENHANCE-OUTER-META: actualnativeVI vẫn Image Enhance Studio,
   ENmô tảcònViệt/kỹthuật; lập exactroute metadata riêng sau gói body.
-- [ ] ENHANCE-LIGHT-STEP-TITLES: rawZH375light thấy nhãn3bước rất nhạt;
+- [x] ENHANCE-LIGHT-STEP-TITLES: rawZH375light thấy nhãn3bước rất nhạt;
   chưa đo contrast/nguyên nhân, cần READ/RED/AGYphiếu riêng,khôngsửa
   CSSké hoặc nhận wholeEnhanceUI/AX từ sáu body.
 - [x] IMAGE-TO-PDF-OUTER-META: native đã thấy heroVI/EN còn tiêu đề Việt,
@@ -2600,7 +2600,26 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   R1startup0case/3ownedstopped0,samecodeR2đạt,khôngappfailure.
 - [x] Case1654lines173392LFbytes/metadata1PASS32deselected0.79s/
   currentdocs/Tester/prepushREADY/JSASTdiff0.
-- [ ] Provenance/CI/merge/deploy/runtime/assetsreceipt;
-  khôngsuywholepage/PNG/cuốingoal.
+- [x] ProvenancefinalHEAD23a55606/f37264b7/CI44263659873bothSUCCESS/
+  PR766merge-runtimec1fdd4bf/treeeq/deploy44283897180SUCCESS/
+  3serviceshealth5assetsbyteexact/Issue6972711440/PR6975682890readback.
+  Khôngsuywholepage/PNG/cuốingoal.
 - [ ] Lightstepcolor sau metadata;ResizeboundedRED/implementation kế;
   bốnroutecoverage vàremainingwholefunctional/locale/AX/auth/responsive/live.
+
+### Màu chữ hướng dẫn Chỉnh ảnh —18/11/2026
+
+- [x] PR766delivery chốt trước newbranchfromc1fdd4bf.
+- [x] ReadacceptedAGY0ec097d5R1 oneCSSaddition;khônggọilại.
+- [x] BASEsource2PASS1RED;actualfullserver6views/36colorrows,
+  3lightviews18mismatches/0unknown,darkcolorscaptured/RootviewVI375steps.
+  Noerrors/egress,audit/schema/core/source151held,22ownedstopped0.
+- [x] ActualGREEN6views/18lightnodes tokenexact/18darkheld/
+  textfontdocgeometrylayout/formrightssourceheld;357NodePASS/
+  source1changed150protected,54metadatahelp+36stepwitness/24shots,
+  RootviewVIENZHraw,0errors/egress,audit/schema/coreheld,22ownedstopped0.
+- [x] Currentdocs/originalcomparison/Tester/prepushREADY/
+  case1664lines174217LFbytes/metadata1PASS32deselected0.66s/syntaxdiff0.
+- [ ] Provenance/CI/merge/deploy/runtime/assetsreceipt.
+- [ ] Wholelocale/AX/default-light lifecycle/device/Safari/signedUI/
+  finalPNG/motion vẫn riêng;Resize kế tiếp,motioncuối.

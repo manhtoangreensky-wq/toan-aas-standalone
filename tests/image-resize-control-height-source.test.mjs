@@ -4,8 +4,9 @@ import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {resizeControlHeightHistoricalThemeSource as inverse} from "./helpers/image-resize-control-height-snapshot.mjs";
+import {enhanceStepColorHistoricalThemeSource} from "./helpers/image-enhance-step-color-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-resize-control-height-reviewed.json",import.meta.url),"utf8"));
-const file="static/portal/portal-theme.css",current=fs.readFileSync(file,"utf8").replace(/\r\n/g,"\n");
+const file="static/portal/portal-theme.css",current=enhanceStepColorHistoricalThemeSource(fs.readFileSync(file,"utf8").replace(/\r\n/g,"\n"));
 const before=execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:2e6}).replace(/\r\n/g,"\n");
 const hash=value=>createHash("sha256").update(value).digest("hex"),[edit]=fixture.changes;
 test("Resize height style equals the one worker addition and every other theme byte stays BASE",()=>{

@@ -1,0 +1,35 @@
+{
+  "review": {
+    "specId": "IMAGE-ENHANCE-LIGHT-STEP-COLOR-20261118",
+    "conversation": "0ec097d5-5b46-48d8-9147-dfec771bdc07",
+    "rawSha256": "e05a4bb00ff0cfc08a3e8a66da9b8faff4cff20a0c0b6a0e6472bc76dfaef3ed",
+    "schemaValid": true,
+    "proposalExact": true,
+    "changes": 1,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "reportCorrection": "Reject worker report BASELINE_FAILURES=0/BRANCH_FAILURES=0/NEW_FAILURES=0/PROTECTED_COMPARATORS=0 as unmeasured. No tests were run; these fields are NOT_RUN/UNKNOWN, not PASS. Exact code proposal alone accepted pending Root RED/GREEN/native."
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal-theme.css",
+        "new": "/* Keep Resize controls at their natural height beside the source picker. */\n.portal-page.portal-image-resize form[data-portal-action=\"image-operation-resize\"] > .portal-fields > .portal-field {\n  align-content: start;\n}\n\n/* Keep Enhance step text readable in the light theme. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-image-enhance .portal-project-steps strong,\nhtml:not([data-portal-theme=\"dark\"]) .portal-page.portal-image-enhance .portal-project-steps span {\n  color: var(--portal-ink);\n}",
+        "old": "/* Keep Resize controls at their natural height beside the source picker. */\n.portal-page.portal-image-resize form[data-portal-action=\"image-operation-resize\"] > .portal-fields > .portal-field {\n  align-content: start;\n}"
+      }
+    ],
+    "report": "Đang đọc và áp dụng skill owner-governed-codex cho task này.\n\nTASK=IMAGE-ENHANCE-LIGHT-STEP-COLOR-20261118 R1\nBASE_SHA=39a3fb9ebda84f5fed7b582839040ada54b1cc0e\nHEAD_SHA=PROPOSED\nFILES_CHANGED=static/portal/portal-theme.css\nTESTS=NOT_RUN (node --test tests/image-enhance-step-color.test.mjs)\nBASELINE_FAILURES=0\nBRANCH_FAILURES=0\nNEW_FAILURES=0\nPROTECTED_COMPARATORS=0\nPROVIDER_CALLS=0\nWALLET_MUTATIONS=0\nDEPLOY=NO\nRUNTIME_SHA=NOT_RUN\nLIVE_PASS=NOT_RUN\nBLOCKERS=NONE\nLỆCH=KHÔNG",
+    "revision": "R1",
+    "specId": "IMAGE-ENHANCE-LIGHT-STEP-COLOR-20261118",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}
