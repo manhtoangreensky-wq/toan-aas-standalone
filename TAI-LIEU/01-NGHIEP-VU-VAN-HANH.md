@@ -3223,3 +3223,30 @@ chữ kỹ thuật. Đưa vào phiếu metadata tiếp theo, không nhận cả 
 Không sửa ké metadata vào bản một-return đã khóa. Chưa nhận signed production
 UI, PDF đầu ra, thiết bị thật/Safari hoặc motion.
 [Báo cáo](../docs/reports/image-to-pdf-guard-20261118.md).
+
+## Hướng dẫn chỉnh ảnh —18/11/2026
+
+Thông báo Ảnh thành PDF đã giao PR763,CI44243641593 vàdeploy44245453666
+đạt;runtime39a3fb9e/5tệp giao diện exact/3dịch vụ hoạt động,receipt6969883472.
+
+Ứng viên kế tiếp chỉ đổi sáu dòng i18n/18giá trị VI/EN/ZH ở hướng dẫn
+Chỉnh ảnh: cách chọn ảnh/chỉnh thông số/lưu PNG, thứ tự điều chỉnh, giới hạn
+phóng ảnh và cách tải. Không còn giải thích ID/thuật toán/băm/phiên/cache
+trong đúng sáu đoạn này. Không thêm khóa hoặc đổi renderer/engine.
+Bốn thông số, PNG, tệp gốc, tối đa2lần/4096điểm ảnh mỗi cạnh/16triệu điểm
+ảnh và cảnh báo không thêm chi tiết vẫn giữ rõ nghĩa. Không thay form,
+quyền, nguồn/dữ liệu khách hoặc150tệp ứng dụng khác.
+
+BASE12ca8PASS/4copyRED;candidate12PASS,nhóm17tệp385PASS cùng một lượt,
+không lỗi mới. Full HTML/context ngoài sáu đoạn trên3locale×8state giữ;
+unknown/tên riêng/nội dung khách không bị dịch. Native/CI/delivery của
+phần này chốt riêng; không nhận PNG cuối hoặc toàn locale đã sạch.
+[Báo cáo](../docs/reports/image-enhance-help-20261118.md).
+
+NativeR2 của sáu body đã được xem sau cuộn thật:6view/36paintwitness/
+24screens, ba raw vùngVI/EN/ZH kiểm đủ sáu vị trí. Actualread-only,
+không thực thi ảnh;0overflow/errors/egress,old3registeraudit+3login/
+schema/coredata/source151 giữ,22ownedstopped0. R1ảnh chưa cuộn không
+được nhận UI, giữ lịch sử;không sửa app hoặc chạy lại397Nodeca.
+Hero ngoài sáu đoạn vẫn có tiếng Anh/kỹ thuật và nhãn bước sáng quá nhạt;
+đó là gap riêng cần sửa,không coi toàn trang/AX đã đạt.

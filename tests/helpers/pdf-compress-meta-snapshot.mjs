@@ -2,6 +2,7 @@ import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
 import {imageToPdfGuardHistoricalPortalSource} from "./image-to-pdf-guard-snapshot.mjs";
+import {imageEnhanceHelpHistoricalI18nSource,imageEnhanceHelpHistoricalSnapshot} from "./image-enhance-help-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/pdf-compress-meta-reviewed.json",import.meta.url),"utf8"));
 const hash=value=>createHash("sha256").update(value).digest("hex");
 assert.equal(hash(fixture.expectedRaw),"b3d1bd271b4d2ae39a7873d9906c6aa20429da68eea4f5ddee624781d7632ab2");
@@ -44,7 +45,7 @@ function inverse(source,file){
   return result;
 }
 export const pdfCompressMetaHistoricalPortalSource=source=>inverse(imageToPdfGuardHistoricalPortalSource(source),"static/portal/portal.js");
-export const pdfCompressMetaHistoricalI18nSource=source=>inverse(source,"static/portal/portal-i18n.js");
+export const pdfCompressMetaHistoricalI18nSource=source=>inverse(imageEnhanceHelpHistoricalI18nSource(source),"static/portal/portal-i18n.js");
 export const pdfCompressMetaHistoricalPagesSource=source=>inverse(source,"copyfast_pages.py");
 export const pdfCompressMetaHistoricalSources=source=>({...source,
   portal:pdfCompressMetaHistoricalPortalSource(source.portal),
@@ -56,6 +57,7 @@ const copies={
   zh:["压缩 PDF","在可行时减小 PDF 文件大小。原文件将保持不变。"]
 };
 export function pdfCompressMetaHistoricalSnapshot(entries,locale){
+  entries=imageEnhanceHelpHistoricalSnapshot(entries,locale);
   assert.ok(Object.hasOwn(copies,locale),fail+" locale");
   const keys=[prefix+"Title",prefix+"Description"],owned=entries.filter(([key])=>key.startsWith(prefix));
   if(!owned.length)return entries;

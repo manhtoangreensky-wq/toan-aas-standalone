@@ -1,0 +1,99 @@
+{
+  "review": {
+    "specId": "IMAGE-ENHANCE-STATIC-HELP-20261118-R1A",
+    "conversation": "cfda048e-035d-46cd-84ba-0639584c949c",
+    "rawSha256": "85f66b756f8072a194d82eafdd4628ce8b3345b0e9d618360f5c1e1def5d50b6",
+    "schemaValid": true,
+    "proposalExact": true,
+    "changes": 6,
+    "applicationApplied": false,
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED"
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "key": "enhance.intro.body",
+        "new": "    [\"enhance.intro.body\", \"Chọn ảnh đã lưu, dùng cách chỉnh có sẵn hoặc tự đặt bốn thông số. Tệp gốc được giữ nguyên.\", \"Choose a saved image, use a preset or set four controls yourself. The original file stays unchanged.\", \"选择已保存的图像，使用现成的调整方式，或自行设置四项参数。原文件保持不变。\"],",
+        "old": "    [\"enhance.intro.body\", \"Chọn ảnh riêng tư trong Kho tài sản rồi áp công thức màu/làm nét cục bộ hoặc nhập bốn thông số tùy chỉnh. File gốc được giữ nguyên và PNG mới chỉ xuất hiện sau khi kiểm tra lại.\", \"Choose a private image in Asset Vault and apply a local color/sharpening preset or four custom settings. The original stays unchanged and a new PNG appears only after verification.\", \"在 Asset Vault 中选择私有图像，应用本地色彩/锐化预设或四项自定义设置。原文件保持不变，验证后才显示新 PNG。\"],",
+        "site": "locale-row"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "key": "enhance.form.description",
+        "new": "    [\"enhance.form.description\", \"Chọn ảnh, cách chỉnh và mức điều chỉnh phù hợp.\", \"Choose an image, an adjustment preset and suitable adjustment levels.\", \"选择图像、调整方式和合适的调整程度。\"],",
+        "old": "    [\"enhance.form.description\", \"Trình duyệt chỉ gửi mã tài sản và thông số đã giới hạn.\", \"The browser sends only the asset ID and bounded settings.\", \"浏览器仅发送资产编号和受限设置。\"],",
+        "site": "locale-row"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "key": "enhance.boundary.description",
+        "new": "    [\"enhance.boundary.description\", \"Ảnh đã chỉnh được lưu thành tệp PNG mới. Tệp gốc không thay đổi.\", \"The adjusted image is saved as a new PNG file. The original file does not change.\", \"调整后的图像保存为新的 PNG 文件。原文件不会改变。\"],",
+        "old": "    [\"enhance.boundary.description\", \"Công thức là xử lý cục bộ có thể kiểm tra, không phải lời hứa chỉnh sửa AI.\", \"Presets are verifiable local processing, not an AI retouching promise.\", \"预设是可验证的本地处理，不是 AI 修图承诺。\"],",
+        "site": "locale-row"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "key": "enhance.step.order.body",
+        "new": "    [\"enhance.step.order.body\", \"Ảnh được tự cân bằng, rồi điều chỉnh độ sáng, độ tương phản, độ bão hòa, độ nét và sắc độ theo thứ tự.\", \"The image is auto-balanced, then brightness, contrast, saturation, sharpness and tone are adjusted in that order.\", \"图像先自动平衡，再依次调整亮度、对比度、饱和度、锐度和色调。\"],",
+        "old": "    [\"enhance.step.order.body\", \"Tự cân bằng → sáng → tương phản → bão hòa → nét → sắc độ, theo cùng thứ tự của trình chỉnh sửa cục bộ.\", \"Auto balance → brightness → contrast → saturation → sharpness → tone, in the same order as the local editor.\", \"自动平衡 → 亮度 → 对比度 → 饱和度 → 锐度 → 色调，与本地编辑器顺序一致。\"],",
+        "site": "locale-row"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "key": "enhance.step.upscale.body",
+        "new": "    [\"enhance.step.upscale.body\", \"Có thể phóng ảnh tối đa 2 lần, không quá 4096 điểm ảnh mỗi cạnh và 16 triệu điểm ảnh. Phóng ảnh không tạo thêm chi tiết.\", \"Images can be enlarged up to 2 times, with no more than 4096 pixels per side and 16 million pixels in total. Enlarging does not add detail.\", \"图像最多可放大 2 倍，每边不超过 4096 像素，总计不超过 1600 万像素。放大不会增加细节。\"],",
+        "old": "    [\"enhance.step.upscale.body\", \"Nếu bật, máy chủ chỉ dùng LANCZOS và UnsharpMask tối đa 2×, giữ trần 4096 px/16 MP. Không tạo chi tiết mới.\", \"When enabled, the server uses LANCZOS and UnsharpMask up to 2× with a 4096 px/16 MP limit. It does not create new detail.\", \"启用后，服务器仅使用 LANCZOS 和 UnsharpMask，最高 2×，上限 4096 像素/16 MP。不生成新细节。\"],",
+        "site": "locale-row"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "key": "enhance.step.delivery.body",
+        "new": "    [\"enhance.step.delivery.body\", \"Khi xử lý xong, bạn có thể tải ảnh PNG mới trong tài khoản của mình.\", \"When processing is complete, you can download the new PNG image from your account.\", \"处理完成后，您可以在自己的账户中下载新的 PNG 图像。\"],",
+        "old": "    [\"enhance.step.delivery.body\", \"PNG mới được kiểm tra lại, băm lại và tải qua phiên đã xác thực; không có URL công khai hoặc bộ nhớ đệm PWA.\", \"The new PNG is reparsed, rehashed and downloaded through an authenticated session; there is no public URL or PWA cache.\", \"新 PNG 会重新解析、重新计算哈希并通过已验证会话下载；没有公开 URL 或 PWA 缓存。\"],",
+        "site": "locale-row"
+      }
+    ],
+    "deviations": [],
+    "source": {
+      "commit": "4180d4e2ec0ac4303037b409e55cb5f86106fa84",
+      "inputs": [
+        {
+          "bytes": 4539,
+          "file": "MAP.md",
+          "sha256": "9f2bef0e01971b225b47cb81082674999faab0ced28f391813e4c2c64cbcc634"
+        },
+        {
+          "bytes": 4540771,
+          "file": "static/portal/portal.js",
+          "sha256": "ff4eee9b0b7a1dd55704e3e97d7074389398b089c001f07b166346c36da9e881"
+        },
+        {
+          "bytes": 2416367,
+          "file": "static/portal/portal-i18n.js",
+          "sha256": "45e5b9ba90fde2ba7af006df7c5b76505350283a8faa96706db48503692601eb"
+        }
+      ],
+      "repository": "manhtoangreensky-wq/toan-aas-standalone"
+    },
+    "specId": "IMAGE-ENHANCE-STATIC-HELP-20261118-R1A",
+    "status": "PROPOSED",
+    "verification": {
+      "applicationTests": "NOT_RUN",
+      "applicationWrites": 0,
+      "browserQA": "NOT_RUN",
+      "deploy": "NO",
+      "gitMutations": 0,
+      "providerCalls": 0,
+      "walletMutations": 0
+    }
+  }
+}

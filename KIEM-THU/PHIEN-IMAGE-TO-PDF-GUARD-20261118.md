@@ -16,7 +16,9 @@ CASE_SOURCE=DANH-SACH-CASE.md, sáu IPG rows.
   overflow/errors/egress; không giả API hoặc submit.
 - [x] Fresh3register/3login/12metadata, audit/schema/coredata/source giữ,
   22owned stopped0; Root xem ba raw screenshots.
-- [ ] CI exactHEAD/merge/deploy/runtime/assets receipt.
+- [x] CI44243641593bothSUCCESS/exact2ff6e784/PR763/treeexact/
+  deploy44245453666/runtime39a3fb9e/5assetsexact/3servicesactive;
+  fixedIssue6969883472/readbackexact/PR6970185371.
 - [ ] Tiêu đề/mô tả ngoài guard: metadata phiếu riêng, chưa đạt locale.
 - [ ] Signed production UI/PDF cuối/device/Safari/toàn goal/motion.
 

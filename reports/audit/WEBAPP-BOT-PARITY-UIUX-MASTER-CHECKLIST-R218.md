@@ -2545,11 +2545,31 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   không fake response. READY full renderer parity, không nativeREADYclaim.
 - [x] Fresh3register3login12metadata/noblobs/auditexact+3login/schema/
   coredata/source151/binding giữ;22ownedstopped0; ba rawscreens đã xem.
-- [ ] Sourcefreeze/provenance/CIexactHEAD/merge/deploy/runtime/assetsreceipt.
-- [ ] Enhance6rows acceptedNOT_APPLIED; QA prep12declared/NOT_RUN,
-  chỉ mở áp sau guard delivery, không gọi lại worker.
+- [x] GuardPR763/CI44243641593bothSUCCESSatexact2ff6e784/treeeq/
+  merge-runtime39a3fb9e/deploy44245453666SUCCESS/3active-services/
+  health/5assetsexact;fixedIssue6969883472/readback/PR6970185371.
+- [x] Sau guarddelivery mớiápEnhance6rows/18values, một app đổi/150giữ;
+  BASE12ca8PASS4copyRED→candidate12PASS;nhóm17tệp385PASSmộtlượt.
+- [x] EnhancenativeR2actualreadonly6views/36paintwitness/24screens,
+  cuộn thật/ancestorpaint/Rootxemba rawvùngđủ6slot;0errors/overflow/egress,
+  oldaudit+3login/schema/core/source151giữ,22ownedstopped0.
+  R1 thiếu scrollproof giữ lịch sử QA,không appfailure/không397rerun.
+- [x] Canonical1632lines171590LFbytes/metadata1PASS32deselected0.48s/
+  currentoperations/originalcomparison/Tester/prepushREADY/syntaxdiff0.
+- [ ] Enhance source/provenance/CI/merge/deploy/runtime/assetsreceipt;
+  không nhận finalPNG/signedUI/wholelocale hoặc gọi lại proposal đã nhận.
+- [ ] ENHANCE-OUTER-META: actualnativeVI vẫn Image Enhance Studio,
+  ENmô tảcònViệt/kỹthuật; lập exactroute metadata riêng sau gói body.
+- [ ] ENHANCE-LIGHT-STEP-TITLES: rawZH375light thấy nhãn3bước rất nhạt;
+  chưa đo contrast/nguyên nhân, cần READ/RED/AGYphiếu riêng,khôngsửa
+  CSSké hoặc nhận wholeEnhanceUI/AX từ sáu body.
 - [ ] IMAGE-TO-PDF-OUTER-META: native đã thấy heroVI/EN còn tiêu đề Việt,
   ZH về workspace chung; mô tả cả ba còn chữ kỹ thuật. Phiếu metadata
   riêng sau Enhance, trước bounded Resize subtitle; không sửa ké guard.
+  AGYR1e84ae0eb trả đúng5addition3files/2keys6localevalues,Rootđãđốichiếu
+  schema/exactproposal một lượt,NOT_APPLIED;khônggọi lại.
+- [x] Phiên độc lập Resize subtitle READcontract d79bbf98 trả đủ8case
+  RSC01..08,Rootđãđọc/kiểm một lượt và ghi ba hiệu chỉnh thuật ngữ/
+  packetline/token-vs-wholesubtitle/fixturefields;NOT_RUN,khôngappfix.
 - [ ] Resize custom subtitle/wholelocale/AX/auth/responsive/device/Safari/
   signedUI/finaloutput vẫn mở; M-FINAL01..06 cuối; fullgoalACTIVE.
