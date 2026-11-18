@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-18",
-  "local_files_refresh_scope": "Resize custom subtitle and readability prerequisite: canonical cases 1676 lines/175312 LF bytes after seven scoped RSC rows; local metadata only, historical remote/P0/48case/safety fields preserved, trackerIssue689. PR767 delivery recorded separately.",
+  "local_files_refresh_scope": "Resize custom subtitle and readability prerequisite: canonical cases 1676 lines/175351 LF bytes after seven scoped RSC rows and final R5 evidence; local metadata only, historical remote/P0/48case/safety fields preserved, trackerIssue689. PR767 delivery recorded separately.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -71,8 +71,8 @@
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
       "lines": 1676,
-      "bytes": 175312,
-      "sha256": "4edcaf5271dd32eb25885269f454ca2b0b1ddaaac4a14b337e22a5ed557faf29"
+      "bytes": 175351,
+      "sha256": "6e7450b9ae70d98399d2b52a2ca7afc3975f36ce65a16db9a69140c36fbacf97"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

@@ -1671,6 +1671,6 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | RSC-CUSTOM | vừa |2routes3locale | Custom/rỗng/thiếu→Tùy chỉnh/Custom/自定义 |8Nodecases |
 | RSC-PRESERVE | nặng |Ratio/unknown/nonResize/frozen | Chíntỷlệ/customer/UUID/state/geometry/downloads/wholeHTML giữ | [Báo cáo](../docs/reports/image-resize-subtitle-20261118.md) |
 | RSC-SOURCE | nặng |Exact2JS+1scopedCSS |2appchanged149protected/oldhash/assertionsgiữ |Source/affectedgroup |
-| RSC-WRAP | vừa |Hai route/actualsubtitle |Khôngcắtcuối,normal/anywhere/visible/clip;naturalheightgrowth |NativeR4pending/source56PASS |
-| RSC-NATIVE | vừa |12actualviews4failedmetadata/account |Nooutput/cardpaint/ownership/egress/audit/owned0 |PhiênRSC |
+| RSC-WRAP | vừa |Hai route/actualsubtitle |Khôngcắtcuối,normal/anywhere/visible/clip;naturalheightgrowth |NativeR5:12views/48captions/source56PASS |
+| RSC-NATIVE | vừa |12actualviews4failedmetadata/account |Nooutput/cardpaint/ownership/egress/audit/owned0 |R5:48shots/28ownedstopped0/PhiênRSC |
 | RSC-DELIVERY | nặng |CI/merge/deploy/runtime/assets |ĐúngHEAD/từngphầnchốt,khôngsuyPNGcuối |ReceiptIssue689/PR |

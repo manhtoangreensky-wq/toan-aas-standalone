@@ -19,9 +19,12 @@ PUSH_GATE=READY;finalsourceprovenance/review/CI/runtime riêng.
 4. Currentoperations vàoriginalcomparison cập nhật,không nhận UI
    là đầu raPNG hoặc signedproduction. VIoutercanvas vẫn backlog.
 5. TESTER_PROJECT_ID=IMAGE-RESIZE-SUBTITLE-20261118,READY;sevenRSCrows,
-   canonicalcase1676lines175312LFbytes/
-   SHA4edcaf5271dd32eb25885269f454ca2b0b1ddaaac4a14b337e22a5ed557faf29.
-   Metadata1PASS32deselected0.82s;historicalremote/P0/48fields giữ.
+   canonicalcase1676lines175351LFbytes/
+   SHA6e7450b9ae70d98399d2b52a2ca7afc3975f36ce65a16db9a69140c36fbacf97.
+   Review phát hiện một ô case còn ghiR4pending;Root sửa đúng bằng chứng
+   R5 và đo lại casehash. Metadata1PASS32deselected0.81s.
+   Một lượt dùng sai bộ lọc tên test không chọn ca nào;không tính PASS,
+   đã chạy đúng ca metadata. Historicalremote/P0/48fields giữ.
 6. Explicitstaging;OwnerYAMLneveropened/staged. No newIssue/Projects;
    onePRonlyafterreview/provenance. Provider/wallet/ENVchanges0.
 
@@ -29,3 +32,8 @@ Native summary2de06bf4…;isolation8484af9b…;report/tester chứa chi tiết.
 SauCIexactHEAD:guardedmerge/fulltreeeq/exactSHAdeploy/3readonlyruntime
 verifiers/5assets/fixedIssue689+onePRreceipt trước appunit kế tiếp.
 Không nhận wholelocale/AX/auth/device/Safari/motion hoặc fullgoalcomplete.
+
+Independentreview BASE..95e13e5f:0Critical0Important1Minor(caseevidence),
+Minor đã sửa như trên;không app change hoặc rerun436/56/native.
+Web-onlyprovenance source95e13e5f/fingerprint57c2d205…đạt;
+finalHEAD verification sau commit tài liệu là cổng push cuối.

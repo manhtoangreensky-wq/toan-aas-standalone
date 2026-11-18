@@ -22,7 +22,9 @@ TRACKER=Issue689;CASE_SOURCE=DANH-SACH-CASE.md,bảyRSCrows.
   conditions only,12views/48fullcaptionwitness/48shots,28ownedstopped0.
   Auditoldexact+3login/schema/core/source151/fixtures/scopeheld;
   RootviewVI375Resize/EN1440History/ZH375History.
-- [ ] Casehash/currentdocs/originalcomparison/prepush/provenance.
+- [x] Casehash/currentdocs/originalcomparison/prepush/sourceprovenance;
+  oneMinor review staleR4casecorrectedtoR5;1676lines175351LFbytes,
+  SHA6e7450b9…;finalHEADverification riêng.
 - [ ] CIexactHEAD/merge/treeeq/deploy/runtime/assetsreceipt.
 - [ ] Wholelocale/outercanvas/finalPNG/signedproductionUI/device/Safari/
   AX/authfullmatrix/motion.
