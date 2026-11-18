@@ -2384,3 +2384,19 @@ Nguồnhiệnhữu:/documents/compress,renderPdfOptimize,shellmetadata dictionar
 
 Không thêmkhảnăngnén,khôngtạokếtquảPDFtrongQAhoặcgọiprovider.
 Browserfixturemetadatađạt khôngthaynativefullshell/CI/deploy/finaloutput.
+
+## Ảnh thành PDF — đối chiếu18/11/2026
+
+Nguồn hiện hữu: renderImageToPdf; không thêm công cụ hoặc sửa xử lý tài liệu.
+
+| Trước | Ứng viên đã kiểm | Giữ nguyên |
+|---|---|---|
+| Guard cố định tiếng Việt, lẫn thuật ngữ triển khai | Hai khóa VI/EN/ZH sẵn có, một tiêu đề/một câu hướng dẫn | Điều kiện canView === true |
+| Ba nhãn kỹ thuật trong guard | Bỏ đúng ba nhãn, không ô rỗng thay thế | Không thêm form hoặc nút xử lý khi bị từ chối |
+| Form được phép có tám ảnh nguồn | Whole HTML/control/context giữ byte-exact | Quyền chạy/làm mới, tên tệp/nội dung khách |
+| Comparator cũ đọc bundle trước thay đổi | Đảo hữu hạn đúng một return tại biên đọc QA | Hash/assertion/mutation và byte ngoài |
+| Nén PDF còn ghi chờ phát hành | PR762 đã giao runtime6c8e2b22 | Receipt6969229851, deploy44241082812 |
+
+Sáu lượt native guarded là trạng thái server QA tạm thật; không chứng minh
+READY native hoặc PDF đầu ra. READY được khóa bằng renderer parity ba ngôn ngữ.
+Tiêu đề/mô tả ngoài guard còn thiếu bản địa hóa, ghi backlog metadata riêng.

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {imageToPdfGuardHistoricalPortalSource} from "./image-to-pdf-guard-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("../fixtures/pdf-compress-meta-reviewed.json",import.meta.url),"utf8"));
 const hash=value=>createHash("sha256").update(value).digest("hex");
 assert.equal(hash(fixture.expectedRaw),"b3d1bd271b4d2ae39a7873d9906c6aa20429da68eea4f5ddee624781d7632ab2");
@@ -42,7 +43,7 @@ function inverse(source,file){
   if(!file.endsWith(".py"))assert.equal(result.includes(prefix),false,fail+" unknown namespace");
   return result;
 }
-export const pdfCompressMetaHistoricalPortalSource=source=>inverse(source,"static/portal/portal.js");
+export const pdfCompressMetaHistoricalPortalSource=source=>inverse(imageToPdfGuardHistoricalPortalSource(source),"static/portal/portal.js");
 export const pdfCompressMetaHistoricalI18nSource=source=>inverse(source,"static/portal/portal-i18n.js");
 export const pdfCompressMetaHistoricalPagesSource=source=>inverse(source,"copyfast_pages.py");
 export const pdfCompressMetaHistoricalSources=source=>({...source,
