@@ -1685,3 +1685,14 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | EPH-SOURCE | nặng |Exact6i18nrows |1appchanged150protected/goldenassertions/outsidebytes giữ |Scope/source/affectedchecks |
 | EPH-NATIVE | vừa |6actualviews/36headings |Fulltextpaint/clipping/hit/ancestor/formrights/audit/owned0 |R2:54metadatahelp+36headings/18shots/22ownedstopped0 |
 | EPH-DELIVERY | nặng |CI/merge/deploy/runtime/assets |ExactHEAD/từngcổngđạt,khôngsuyPNGcuối/wholegoal |ReceiptIssue689/PR |
+
+## IMAGE-RESIZE-PLAIN-RESULT-COPY-20261118 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| RRL-RED | vừa |14 ca renderer vật lý |BASE 7 RED/7 PASS đúng nhãn cũ |[Phiên RRL](PHIEN-IMAGE-RESIZE-RESULT-LABEL-20261118.md) |
+| RRL-COPY | vừa |VI/EN/ZH, hai trang, cùng VM |Nhãn mới đúng; fallback/tỷ lệ/fit giữ |14 ca mới trong nhóm 1566 PASS |
+| RRL-PRESERVE | nặng |So toàn HTML ngoài prefix/ô loại |Customer/state/UUID/geometry/download/controls giữ |[Báo cáo](../docs/reports/image-resize-result-label-20261118.md) |
+| RRL-SOURCE | nặng |Đúng hai dòng i18n |1 tệp đổi/150 bảo vệ; golden/assertions giữ |Scope/3 source/59 tệp ảnh hưởng |
+| RRL-NATIVE | vừa |12 màn, 48 phụ đề |Đọc đủ chữ/History type/ownership/audit/egress/owned0 |48 ảnh;28 tiến trình dừng về0 |
+| RRL-DELIVERY | nặng |CI/merge/deploy/runtime/assets |Đúng HEAD, không suy đầu ra thật hoặc toàn goal |Receipt Issue689/PR |

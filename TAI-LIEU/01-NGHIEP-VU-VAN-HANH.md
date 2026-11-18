@@ -3371,3 +3371,17 @@ NativeR2đủ6views/54metadatahelp+36headingwitness/18shots,
 RootxemVIENZHraw;R1edge-scrollhitFAIL giữ lịch sử,khôngworkerfault.
 Không nhận toàntrang hết chữ kỹ thuật hoặc menu mobile đã gọn;
 CI/merge/deploy/runtime/assets vẫn chốt riêng.
+
+## Đổi kích thước — nhãn thẻ kết quả, 18/11/2026
+
+Đơn vị này chỉ đổi hai nhãn cố định trong phụ đề thẻ và ô loại thao tác
+ở Lịch sử ảnh: VI “Đổi kích thước”, EN “Image resize”, ZH “调整尺寸”.
+Tham số do khách chọn, tên ảnh, quyền, trạng thái, tải xuống và dữ liệu
+không thay đổi. Không thay thế chữ trùng trong nội dung của khách.
+
+BASE 14 ca có 7 RED/7 PASS. Ứng viên 59 tệp đạt 1566 PASS/0 FAIL.
+Native cô lập 12 màn/48 phụ đề/48 ảnh giữ metadata, biểu mẫu và quyền;
+0 lỗi/egress, audit/schema/core/source giữ, 28 tiến trình dừng về0.
+Đây là kiểm tra đọc metadata thao tác thất bại, không chứng minh ảnh
+đã được xử lý. Phát hành/runtime/signed UI được chốt riêng trên Issue689.
+[Báo cáo](../docs/reports/image-resize-result-label-20261118.md).

@@ -2511,3 +2511,19 @@ reader-onlyfix giữassertions,4PASS,no passinggrouprerun.
 NativeR2đủ6views/54metadatahelp+36headingpaint/18shots,22ownedstopped0,
 rights/body/source/audit/schema/coreheld. R1edgehit→realcenter-scrollQA,
 khôngđổiapp. Khôngsuycandidategeometry thànhBASEequality hoặcwholepage.
+
+## Đổi kích thước — nhãn kết quả, 18/11/2026
+
+Nguồn đối chiếu là hai dòng `result.resize.subtitle` và
+`result.history.operation.resize` đang tồn tại; không thêm chức năng.
+
+| Chữ/hành vi cũ | Ứng viên | Ranh giới giữ |
+|---|---|---|
+| Đổi canvas / Canvas resize / 调整画布 | Đổi kích thước / Image resize / 调整尺寸 |Đúng hai nhãn cố định |
+| Phụ đề thẻ và ô loại thao tác |Cùng nhãn theo locale hiện tại |Placeholder/fit/preset/customer giữ |
+| Test RSC cũ chờ prefix cũ |Đổi đúng ba expected literals |Renderer vật lý/mọi assertion/vector giữ |
+| Golden nguồn lịch sử |Inverse hữu hạn đúng hai dòng ở biên lịch sử |Hash cũ và byte ngoài phạm vi giữ |
+
+BASE7RED/7PASS; ứng viên1566PASS/0FAIL; native12màn/48caption/48ảnh.
+Không nhận processing-output/signedproduction hoặc toàn trang đã sạch.
+CI/merge/deploy/runtime/assets phải có bằng chứng riêng.

@@ -2672,11 +2672,32 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   R1edge-hit0caseFAIL→QArealcenter-scrollonly,R2prehitVI/ZH
   portal-mobile-nav-label;strictvisibilityheld,18shots/Rootrawreview,
   22ownedstopped0;noBASEgeometryequality/nativeimageexecutionclaim.
-- [ ] Currentdocs/originalcomparison/Tester/prepush/provenance/
+- [x] Currentdocs/originalcomparison/Tester/prepush/provenance/
   onePR/exactCI/merge/treeeq/deploy/runtime/assets/fixedreceipts.
+  PR769CI44339156762bothSUCCESS11m24s+5m1s/exacta6272d45;
+  merge-runtime6a407cfc/fulltree74a05137…/diff0/deploy44342809452SUCCESS66s,
+  3servicesactive-running/health5assetsbyteexact;normalpublic?v=build
+  changed4c8c80f3…→a5bc9892…and5normalassets exact.
+  FixedIssue6978688502/PR6984117552readbackexact.
 - [ ] Resizeplainresultcopy→Historystatecopy→fourroutebroadercoverage;
   wholelocale/AX/auth/responsive/device/Safari/signedUI/output remain;
   motionM-FINAL01..06LAST,fullgoalACTIVE.
 - [ ] Observedseparategap:mobile4image-workspacemodecards pushworkbelow
   firstviewport;othertechnicalcopyremains. Need ownsource/RED/AGYscope,
   notsilentlyfoldintoheadingsorclaimwholepageready.
+
+### Đổi kích thước — nhãn kết quả dễ hiểu18/11/2026
+
+- [x] PR769delivery/receiptclosed trước nhánh từ6a407cfc.
+- [x] AcceptedAGYR1fbea6cea exact2i18nrows reused;không giao lại.
+- [x] ActualBASE14cases7RED7PASS5548.8861ms,newlabel/sameVM đúngRED;
+  wholeHTMLoutside/scalar/customer/mixedhistory/guardprotectedPASS.
+- [x] Exact2rows1appchanged150protected/currentphysicalcandidate.
+- [x] LegacyRSC3expectedprefix literals updatedtoapprovedcopy only,
+  allassertions/vectors/physicalsource retained;no renderer projection.
+- [x] Source/finiteleaf/affectedchecks/native12views48captions/typecells/
+  ownership/data/audit/source/owned0.
+  59filegroup1566PASS0FAIL142121.393ms;native12views48caption48shots,
+  RootrawVI375History/EN1440Resize/ZH375Resize;28ownedstopped0.
+- [ ] Currentdocs/Tester/prepush/provenance/review/CI/merge/deploy/receipts.
+- [ ] Historystatecopy→broadercoverage;motionLAST/fullgoalACTIVE.

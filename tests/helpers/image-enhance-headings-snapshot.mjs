@@ -1,12 +1,14 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {resizeResultLabelHistoricalI18nSource,resizeResultLabelHistoricalSnapshot} from "./image-resize-result-label-snapshot.mjs";
 const raw=fs.readFileSync(new URL("../fixtures/image-enhance-headings-reviewed.json",import.meta.url));
 assert.equal(createHash("sha256").update(raw).digest("hex"),"8d17d4110028c6a2cd00f50bf3852e3419db70346894caffae87cf1367bc8755");
 const fixture=JSON.parse(raw),edits=fixture.proposal.changes,fail="Unreviewed Enhance plain headings",count=(source,part)=>source.split(part).length-1;
 assert.equal(fixture.review.proposalExact,true);assert.equal(edits.length,6);
 const rows=edits.map(edit=>{assert.equal(edit.file,"static/portal/portal-i18n.js");assert.equal(edit.count,1);const old=JSON.parse(edit.old.trim().replace(/,$/,"")),next=JSON.parse(edit.new.trim().replace(/,$/,""));assert.equal(old[0],next[0]);return{key:old[0],old,next};});
 export function enhanceHeadingsHistoricalI18nSource(source){
+  source=resizeResultLabelHistoricalI18nSource(source);
   assert.equal(typeof source,"string",fail);
   if(rows.every(row=>!source.includes('["'+row.key+'",')))return source;
   const phases=edits.map(edit=>[count(source,edit.old),count(source,edit.new)]);
@@ -19,6 +21,7 @@ export function enhanceHeadingsHistoricalI18nSource(source){
   return result;
 }
 export function enhanceHeadingsHistoricalSnapshot(entries,locale){
+  entries=resizeResultLabelHistoricalSnapshot(entries,locale);
   const index=["vi","en","zh"].indexOf(locale)+1;assert.ok(index>0,fail+" locale");
   const keys=rows.map(row=>"imageOperationUi."+row.key),owned=entries.filter(([key])=>keys.includes(key));
   if(!owned.length)return entries;assert.equal(owned.length,6,fail+" partial/duplicate catalogue");
