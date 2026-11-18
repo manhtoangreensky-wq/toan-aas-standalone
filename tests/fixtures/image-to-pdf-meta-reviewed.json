@@ -1,0 +1,54 @@
+{
+  "review": {
+    "specId": "IMAGE-TO-PDF-OUTER-META-20261118",
+    "conversation": "e84ae0eb-6ee2-4359-b651-68a3b7d6dda0",
+    "rawSha256": "084ca54cc95023925a458e324f1226d12a70c3bfd6a42b84742cc7200719efd2",
+    "schemaValid": true,
+    "proposalExact": true,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "corrections": []
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "copyfast_pages.py",
+        "new": "_PORTAL_SHELL_TITLES = {\n    \"/documents/image-to-pdf\": {\"vi\": \"Ảnh thành PDF · TOAN AAS\", \"en\": \"Images to PDF · TOAN AAS\", \"zh\": \"图像转 PDF · TOAN AAS\"},",
+        "old": "_PORTAL_SHELL_TITLES = {"
+      },
+      {
+        "count": 1,
+        "file": "copyfast_pages.py",
+        "new": "_PORTAL_SHELL_DESCRIPTIONS = {\n    \"/documents/image-to-pdf\": {\n        \"vi\": \"Chọn ảnh và ghép thành một tệp PDF. Ảnh gốc được giữ nguyên.\",\n        \"en\": \"Choose images and combine them into one PDF file. The original images stay unchanged.\",\n        \"zh\": \"选择图像并合成为一个 PDF 文件。原图像保持不变。\",\n    },",
+        "old": "_PORTAL_SHELL_DESCRIPTIONS = {"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "    if (path === \"/documents/compress\") return uiText(\"pdfCompressMetaUiTitle\", \"Nén PDF\");\n    if (path === \"/documents/image-to-pdf\") return uiText(\"imageToPdfMetaUiTitle\", \"Ảnh thành PDF\");",
+        "old": "    if (path === \"/documents/compress\") return uiText(\"pdfCompressMetaUiTitle\", \"Nén PDF\");"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "    if (path === \"/documents/compress\") return uiText(\"pdfCompressMetaUiDescription\", \"Giảm dung lượng PDF khi có thể. Tệp gốc được giữ nguyên.\");\n    if (path === \"/documents/image-to-pdf\") return uiText(\"imageToPdfMetaUiDescription\", \"Chọn ảnh và ghép thành một tệp PDF. Ảnh gốc được giữ nguyên.\");",
+        "old": "    if (path === \"/documents/compress\") return uiText(\"pdfCompressMetaUiDescription\", \"Giảm dung lượng PDF khi có thể. Tệp gốc được giữ nguyên.\");"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal-i18n.js",
+        "new": "  Object.assign(MESSAGES.vi, {\n    imageToPdfMetaUiTitle: \"Ảnh thành PDF\",\n    imageToPdfMetaUiDescription: \"Chọn ảnh và ghép thành một tệp PDF. Ảnh gốc được giữ nguyên.\"\n  });\n\n  Object.assign(MESSAGES.en, {\n    imageToPdfMetaUiTitle: \"Images to PDF\",\n    imageToPdfMetaUiDescription: \"Choose images and combine them into one PDF file. The original images stay unchanged.\"\n  });\n\n  Object.assign(MESSAGES.zh, {\n    imageToPdfMetaUiTitle: \"图像转 PDF\",\n    imageToPdfMetaUiDescription: \"选择图像并合成为一个 PDF 文件。原图像保持不变。\"\n  });\n\n  verifyEqualKeysets();",
+        "old": "  verifyEqualKeysets();"
+      }
+    ],
+    "report": "Spec: IMAGE-TO-PDF-OUTER-META-20261118 R1\nEdits: 5 count-one changes across 3 files (copyfast_pages.py, static/portal/portal.js, static/portal/portal-i18n.js).\nKeys added: imageToPdfMetaUiTitle, imageToPdfMetaUiDescription across 3 locales (vi, en, zh) for /documents/image-to-pdf.\nVerification: NOT_RUN. Root verification command `node --test tests/image-to-pdf-meta.test.mjs` not run by worker; PASS not inferred.\nSafety: PROVIDER_CALLS=0, WALLET_MUTATIONS=0, DEPLOY=NO.",
+    "revision": "R1",
+    "specId": "IMAGE-TO-PDF-OUTER-META-20261118",
+    "status": "BUILT",
+    "verify": "NOT_RUN"
+  }
+}

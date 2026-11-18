@@ -107,6 +107,7 @@ _PORTAL_SHELL_COPY = {
     },
 }
 _PORTAL_SHELL_TITLES = {
+    "/documents/image-to-pdf": {"vi": "Ảnh thành PDF · TOAN AAS", "en": "Images to PDF · TOAN AAS", "zh": "图像转 PDF · TOAN AAS"},
     "/documents/compress": {"vi": "Nén PDF · TOAN AAS", "en": "Compress PDF · TOAN AAS", "zh": "压缩 PDF · TOAN AAS"},
     "/image/resize": {"vi": "Đổi kích thước ảnh · TOAN AAS", "en": "Resize images · TOAN AAS", "zh": "调整图像尺寸 · TOAN AAS"},
     "/documents/split": {"vi": "Tách PDF · TOAN AAS", "en": "Split PDF · TOAN AAS", "zh": "拆分 PDF · TOAN AAS"},
@@ -218,6 +219,11 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/documents/image-to-pdf": {
+        "vi": "Chọn ảnh và ghép thành một tệp PDF. Ảnh gốc được giữ nguyên.",
+        "en": "Choose images and combine them into one PDF file. The original images stay unchanged.",
+        "zh": "选择图像并合成为一个 PDF 文件。原图像保持不变。",
+    },
     "/documents/compress": {
         "vi": "Giảm dung lượng PDF khi có thể. Tệp gốc được giữ nguyên.",
         "en": "Reduce a PDF's file size where possible. The original stays unchanged.",

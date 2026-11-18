@@ -19,11 +19,14 @@ const COPY={
 const files={"static/portal/portal.js":"portal","static/portal/portal-i18n.js":"i18n","copyfast_pages.py":"pages"};
 const sources=pageMetaSources(),prior={...sources},count=(text,part)=>text.split(part).length-1;
 // Exactly five reviewed inverses in RAM only; no historical adapter stack, proposal replay or file write.
-const present=edits.map(edit=>count(sources[files[edit.file]],edit.new));
+// New metadata may share an insertion anchor; match only the five owned additions.
+const ownedAddition=edit=>edit.file.endsWith("portal-i18n.js")?edit.new.slice(0,-edit.old.length):edit.new.slice(edit.old.length);
+const present=edits.map(edit=>count(sources[files[edit.file]],ownedAddition(edit)));
 assert.ok(present.every(value=>value===0)||present.every(value=>value===1),"Partial/duplicated metadata proposal is not an accepted phase");
 if(present.every(value=>value===1))for(const edit of [...edits].reverse()){
   assert.equal(edit.count,1);const key=files[edit.file];assert.ok(key);
-  assert.equal(count(prior[key],edit.new),1);prior[key]=prior[key].replace(edit.new,()=>edit.old);
+  const addition=ownedAddition(edit);
+  assert.equal(count(prior[key],addition),1);prior[key]=prior[key].replace(addition,"");
 }
 const render=await pageMetaRenderer(sources),before=await pageMetaRenderer(prior);
 const ROUTE="/documents/compress",ID="11111111-1111-4111-8111-111111111111";

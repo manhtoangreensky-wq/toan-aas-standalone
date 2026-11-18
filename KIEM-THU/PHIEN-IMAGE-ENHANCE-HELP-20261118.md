@@ -19,7 +19,9 @@ CASE_SOURCE=DANH-SACH-CASE.md,sáuEHHrows.
   R1 giữ lịch sử QA thiếu scrollproof, không appfailure.
 - [ ] Hero/metadata kỹ thuật và tiêu đề bước sáng quá nhạt là gap riêng,
   không dùng native sáu body để nhận wholeUI/AX.
-- [ ] CIexactHEAD/merge/deploy/runtime/assetsreceipt.
+- [x] CI44250426132bothSUCCESS/exact06829130/PR764/treeeq/
+  merge-runtimec584e4f8/deploy44252326794/3active-services/5assetsexact,
+  fixedIssue6970832913/readbackexact/PR6971158282.
 - [ ] SignedproductionUI/finalPNG/device/Safari/wholelocale/motion.
 
 Không nhận provider hoặc xử lý ảnh thành công từ UI/HTTP200.

@@ -2556,8 +2556,10 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   R1 thiếu scrollproof giữ lịch sử QA,không appfailure/không397rerun.
 - [x] Canonical1632lines171590LFbytes/metadata1PASS32deselected0.48s/
   currentoperations/originalcomparison/Tester/prepushREADY/syntaxdiff0.
-- [ ] Enhance source/provenance/CI/merge/deploy/runtime/assetsreceipt;
-  không nhận finalPNG/signedUI/wholelocale hoặc gọi lại proposal đã nhận.
+- [x] EnhancePR764/CI44250426132bothSUCCESSatexact06829130/treeeq/
+  merge-runtimec584e4f8/deploy44252326794SUCCESS/3active-services/
+  health/5assetsexact;fixedIssue6970832913/readback/PR6971158282.
+  Không nhận finalPNG/signedUI/wholelocale hoặc gọi lại proposal đã nhận.
 - [ ] ENHANCE-OUTER-META: actualnativeVI vẫn Image Enhance Studio,
   ENmô tảcònViệt/kỹthuật; lập exactroute metadata riêng sau gói body.
 - [ ] ENHANCE-LIGHT-STEP-TITLES: rawZH375light thấy nhãn3bước rất nhạt;
@@ -2567,7 +2569,17 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   ZH về workspace chung; mô tả cả ba còn chữ kỹ thuật. Phiếu metadata
   riêng sau Enhance, trước bounded Resize subtitle; không sửa ké guard.
   AGYR1e84ae0eb trả đúng5addition3files/2keys6localevalues,Rootđãđốichiếu
-  schema/exactproposal một lượt,NOT_APPLIED;khônggọi lại.
+  schema/exactproposal một lượt;chỉáp sauEnhance764delivery,khônggọi lại.
+  BASE22Node7PASS15RED/3PythonRED→candidate22metadata+2source/
+  399affectedPASS,18PythonPASS;oneQAreaderfilefail→chỉ22correctedPASS.
+- [x] ImagePDFmetadatanativeONEGREEN6actualguardedfirstpaint/header/hero,
+  24realScrollancestorpaintwitness/18shots/Rootxemba rawVIENZH;
+  0forms/chips/overflow/errors/egress;fresh3register3login12metadata/
+  oldauditexact+3login/schema/core/source151/bindinggiữ,22ownedstopped0.
+- [x] Case1643lines172490LFbytes/metadata1PASS32deselected0.45s/
+  syntaxdiff0/currentoperations/originalcomparison/Tester/prepushREADY.
+- [ ] ImagePDFmetadatasourceprovenance/CI/merge/deploy/runtime/assets;
+  khôngnhậnfinalPDF/signedUI/wholelocale.
 - [x] Phiên độc lập Resize subtitle READcontract d79bbf98 trả đủ8case
   RSC01..08,Rootđãđọc/kiểm một lượt và ghi ba hiệu chỉnh thuật ngữ/
   packetline/token-vs-wholesubtitle/fixturefields;NOT_RUN,khôngappfix.
