@@ -1,0 +1,49 @@
+task: DOCUMENT-CONVERT-CUSTOMER-COPY-20261119
+phase: REPORT
+goal_status: ACTIVE_INCOMPLETE
+base_sha: a589008be5d7be371789551ffc11e750db46270b
+tracker: Issue689/comment7006239694
+dependency: PR774_PR775_DELIVERED_RECEIPTS_CLOSED
+application_files_changed: 3
+application_files_protected: 148
+canonical_edits: 13
+locale_keys_added: 28
+fixture_sha256: e162e15e4ddff0899dcf69bee7134576c7fac7a2fb35fb1857e555d1e70c6b63
+workers:
+  model: gemini-3.8-flash-high
+  sessions: 3
+  revisions: ALL_R1_EXACT
+  fields: 4016959a-13b1-4e7f-8289-56378a80fb0c
+  images: 523ff7c6-8df9-4a1b-8aae-3ac0078bb922
+  word: f5e057f5-c42e-4072-8794-27a4fd1da479
+  root_application_takeover: false
+  application_failure_count: 0
+verification:
+  physical_baseline: 5_PASS_11_TARGET_RED_5272_8224_MS
+  physical_green: 16_PASS_13507_5012_MS
+  shell_baseline: 1_PASS_6_TARGET_RED_2_82_SECONDS
+  shell_green: 7_PASS_2_40_SECONDS
+  native_baseline: TWO_ROUTES_24_VIEWS_EACH_OWNED_ZERO
+  native_green: TWO_ROUTES_24_VIEWS_EACH_OWNED_ZERO
+  native_artifact_validation: 96_VIEWS_192_PNG_PARSE_CRC_HASH_0_RERUN
+  affected_regression: 1691_PASS_14_LEGACY_COMPARATOR_FAIL_242926_9242_MS
+  affected_correction: QA_ONLY_FINITE_DCC_STAGING_10_FAIL_RETEST_PASS_132_UNEXECUTED_PASS
+  affected_unique_pass: 1833
+  extra_old_boundary_case: 1_PASS_861_3317_MS
+  failed_slice: 10_PASS_6873_2822_MS
+  unexecuted_slice: 132_PASS_30436_386_MS
+  tester_metadata: 2_PASS_31_DESELECTED_0_66_SECONDS
+  independent_review: C0_I0_M0
+  review_sha256: 64befd51081f856063477d26be8aace38026f7f4b721004adf813820c52aca44
+  prepush: READY_39_FILES_SECRET_0_SOURCE151_HELD
+release:
+  pr: NOT_CREATED
+  deploy: NOT_STARTED_FOR_THIS_BATCH
+  signed_live: NOT_TESTED
+provider_calls: 0
+wallet_mutations: 0
+production_data_mutations: 0
+product_submissions: 0
+machine_env_writes: 0
+production_env_writes: 0
+motion: M-FINAL-01..06_LAST

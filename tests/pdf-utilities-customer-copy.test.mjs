@@ -7,6 +7,7 @@ import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {imageEditCustomerHistoricalSource} from "./helpers/image-edit-customer-copy-snapshot.mjs";
+import {documentConvertCustomerHistoricalSource} from "./helpers/document-convert-customer-copy-snapshot.mjs";
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const BASE="513557a9ece0f8fe049884868dc5fb3a1ac2339c",hash=x=>createHash("sha256").update(x).digest("hex"),count=(s,p)=>s.split(p).length-1;
 const fixtureRaw=fs.readFileSync(path.join(ROOT,"tests/fixtures/pdf-utilities-customer-copy-reviewed.json"));
@@ -28,7 +29,8 @@ const{pageMetaSources,pageMetaRenderer}=await import("data:text/javascript;base6
 const current=pageMetaSources(),files={portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js",pages:"copyfast_pages.py"};
 const baseline=Object.fromEntries(Object.entries(files).map(([key,file])=>[key,execFileSync("git",["show",BASE+":"+file],{cwd:ROOT,encoding:"utf8",maxBuffer:30e6}).replace(/\r\n/g,"\n")]));
 assert.equal(fixture.canonicalChanges.length,4);
-const phases=[],restored={...current};
+// Stage only the source-comparator copy before the older catalog anchor; actual/before renderers below remain physical.
+const phases=[],restored=Object.fromEntries(Object.entries(current).map(([key,source])=>[key,documentConvertCustomerHistoricalSource(source,files[key])]));
 for(const edit of fixture.canonicalChanges){
   const key=edit.file.endsWith("portal-i18n.js")?"i18n":"portal",source=restored[key];
   const next=count(source,edit.new),old=count(source,edit.old);

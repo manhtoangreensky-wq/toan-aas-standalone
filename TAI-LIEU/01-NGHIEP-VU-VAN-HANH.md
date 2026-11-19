@@ -1,5 +1,21 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 19/11/2026 — PDF sang ảnh và PDF sang Word
+
+Ứng viên dùng đúng VI/EN/ZH ở tên trang, mô tả, ô chọn PDF, xác nhận,
+hướng dẫn và lịch sử. Bỏ các panel giải thích kỹ thuật; liên kết kho tệp
+được đưa vào chân biểu mẫu. Không thêm ô trống hoặc thay xử lý tệp.
+PDF sang Word chỉ nhận chữ có thể bôi chọn; không nhận dạng chữ trong ảnh
+và không giữ hình ảnh, bảng, phông chữ hay bố cục. Giới hạn hiện tại
+20 MB/30 trang được đọc từ mã nguồn, không thay trong đợt này.
+
+Ba phiên Antigravity R1 trả đúng phiếu; 13 phép thay/3 tệp ứng dụng,
+28 khóa dịch mới/148 tệp bảo vệ. Physical BASE 5 đạt/11 RED → 16 đạt;
+HTML đầu BASE 1 đạt/6 RED → 7 đạt. Hai trang native mỗi trang 24 cấu hình
+đã chạy BASE và GREEN, mỗi nhóm dọn tiến trình sở hữu về 0. Kết quả
+CI/triển khai/production và đầu ra tệp là các cổng riêng, chưa suy từ đây.
+[Báo cáo](../docs/reports/document-convert-customer-copy-20261119.md).
+
 ## 19/11/2026 — Bỏ giải thích kỹ thuật ở Lịch sử ảnh
 
 Ứng viên bỏhai panelcuốitrang vàbacụmnhãnphụ ởmànchờ/lỗi/chưaquyền,

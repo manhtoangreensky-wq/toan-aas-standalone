@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-19",
-  "local_files_refresh_scope": "Edit customer cleanup: 1753 lines/182884 LF bytes, six IEC cases; physical14/source14 PASS, affected1776 PASS and Chat12 PASS (includes two previously-passingCSS, no double count). Native24views/48verifiedPNG/48mobile44pxrows/45owned0. PR774 delivered/receipted. Preserve historical remote/P0/48case/safety fields; Issue689; no signed production/output/provider/wallet claims; motion LAST.",
+  "local_files_refresh_scope": "Document conversion customer copy: six DCC cases; three AGY R1 exact,13edits/3app/28keys,physical16/source16 PASS,96BASE+GREENviews/192PNG/owned0. Preserve historical remote/P0/48case/safety fields; sameIssue689, no newIssue/PR until acceptance; no signedproduction/output/provider/walletclaim; motionLAST.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1753,
-      "bytes": 182884,
-      "sha256": "df52e8adf46e25c6d30bf97d5e6fb12c0160fc62fdf93f8455879fa541551692"
+      "lines": 1767,
+      "bytes": 183986,
+      "sha256": "6a0fbaa59c1439dc62fac6e5d71b9407704507941c42c67e22d911bfc5aec302"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

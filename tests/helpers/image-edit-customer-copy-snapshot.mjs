@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {documentConvertCustomerHistoricalSource,documentConvertCustomerHistoricalSnapshot} from "./document-convert-customer-copy-snapshot.mjs";
 // Finite historical-comparator leaf only; current renderers keep full physical application sources.
 const raw=fs.readFileSync(new URL("../fixtures/image-edit-customer-copy-reviewed.json",import.meta.url));
 const fail="Unreviewed Image Edit customer copy",count=(source,part)=>source.split(part).length-1;
@@ -34,6 +35,7 @@ function rowDeclarations(source){
 }
 export function imageEditCustomerHistoricalSource(source,file){
   assert.equal(typeof source,"string",fail);
+  source=documentConvertCustomerHistoricalSource(source,file);
   if(file===portal){
     const old=count(source,page.old),next=count(source,page.new);
     if(!source.includes(owner)&&!source.includes(nextOwner)&&!old&&!next)return source;
@@ -66,6 +68,7 @@ export function imageEditCustomerHistoricalSource(source,file){
 }
 export function imageEditCustomerHistoricalSnapshot(entries,locale){
   const index=["vi","en","zh"].indexOf(locale)+1;assert.ok(index>0,fail+" locale");assert.ok(Array.isArray(entries),fail+" entries");
+  entries=documentConvertCustomerHistoricalSnapshot(entries,locale);
   const owned=entries.filter(([key])=>catalogKeys.includes(key));if(!owned.length)return entries;
   assert.deepEqual(owned.map(([key])=>key),catalogKeys,fail+" partial/duplicate/reordered catalogue");
   // Equal OLD/NEW EN/ZH cells are neutral; the entire changed set must still have one coherent phase.

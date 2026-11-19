@@ -1,5 +1,19 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## DOCUMENT-CONVERT-20261119 — PDF sang ảnh và Word
+
+Phiên: [DOCUMENT-CONVERT-CUSTOMER-COPY](PHIEN-DOCUMENT-CONVERT-CUSTOMER-COPY-20261119.md).
+Sửa case tại đây trước; dùng Issue689 hiện có, không tạo hàng loạt thẻ trống.
+
+| Case | Mức | Thao tác | Điều kiện đạt |
+|---|---|---|---|
+| DCC-FIELD | vừa | Hai trang × VI/EN/ZH | Nhãn/hướng dẫn đúng locale, field contract giữ |
+| DCC-PAGE | vừa | Ready/trống/chưa quyền | Không panel kỹ thuật hoặc khung trống, form/history/kho tệp còn |
+| DCC-WORD | nặng | Đọc giới hạn chuyển Word | Chỉ chữ bôi chọn; không hứa bản quét hoặc giữ dàn trang |
+| DCC-RIGHTS | nặng | Quyền thiếu/false/chuỗi và thiếu nguồn | Không nới capability, nút và dữ liệu giữ |
+| DCC-NATIVE | vừa | 320/414/1024 và ngang 768, sáng/tối, ba locale | Nhận diện/trường/Tab/nguồn thật, không lỗi/ghi sản phẩm |
+| DCC-DELIVERY | nặng | Exact HEAD CI → merge → deploy | Cây nguồn/VPS/assets/receipt khớp; không suy LIVE/output |
+
 ## REFERENCE-CURRENTNESS-20261111 — phản hồi hiện hành và khôi phục
 
 Phiên: [REFERENCE-CURRENTNESS](PHIEN-REFERENCE-CURRENTNESS-20261111.md).

@@ -12,6 +12,7 @@ import {pdfCompressMetaHistoricalPagesSource,pdfCompressMetaHistoricalI18nSource
 import {resizePolishHistoricalPortalSource,resizePolishHistoricalI18nSource,
   resizePolishHistoricalPagesSource,resizePolishHistoricalThemeSource,resizePolishHistoricalSnapshot} from "./helpers/image-resize-polish-snapshot.mjs";
 import {historyCustomerCleanupHistoricalSource} from "./helpers/image-history-customer-cleanup-snapshot.mjs";
+import {documentConvertCustomerHistoricalSource} from "./helpers/document-convert-customer-copy-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-resize-polish-reviewed.json",import.meta.url),"utf8"));
 const live=pageMetaSources(),source={...live,portal:imageSharedHistoricalPortalSource(live.portal),i18n:resizePlainHistoricalI18nSource(live.i18n)},render=await pageMetaRenderer(source),lf=x=>x.replace(/\r\n/g,"\n"),hash=x=>createHash("sha256").update(x).digest("hex");
 const files={pages:"copyfast_pages.py",portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js",theme:"static/portal/portal-theme.css",integration:"static/portal/integration.js"};
@@ -90,7 +91,8 @@ test("physical application equals exactly seven worker changes and protected int
     assert.equal(expected[key].split(edit.old).length-1,1);expected[key]=expected[key].replace(edit.old,()=>edit.new);
   }
   for(const[key,file]of Object.entries(files)){
-    const physical=lf(fs.readFileSync(file,"utf8")),raw=key==="i18n"?resizePlainHistoricalI18nSource(physical):key==="portal"?imageSharedHistoricalPortalSource(physical):key==="theme"?resizeControlHeightHistoricalThemeSource(physical):key==="pages"?pdfCompressMetaHistoricalPagesSource(physical):historyCustomerCleanupHistoricalSource(physical,file),suffix=key[0].toUpperCase()+key.slice(1);
+    // Historical source comparison only; current route renderer inputs above stay unchanged.
+    const physical=lf(fs.readFileSync(file,"utf8")),staged=documentConvertCustomerHistoricalSource(physical,file),raw=key==="i18n"?resizePlainHistoricalI18nSource(staged):key==="portal"?imageSharedHistoricalPortalSource(staged):key==="theme"?resizeControlHeightHistoricalThemeSource(staged):key==="pages"?pdfCompressMetaHistoricalPagesSource(staged):historyCustomerCleanupHistoricalSource(staged,file),suffix=key[0].toUpperCase()+key.slice(1);
     assert.equal(raw,expected[key]);assert.equal(hash(raw),fixture.binding["candidate"+suffix]);
     assert.equal(hash(baseline[key]),fixture.binding["baseline"+suffix]);
     if(inverses[key]){assert.equal(inverses[key](raw),baseline[key]);assert.equal(inverses[key](baseline[key]),baseline[key]);}
@@ -98,8 +100,8 @@ test("physical application equals exactly seven worker changes and protected int
 });
 test("historical source projections fail closed on partial/duplicate changes and retain outside bytes",()=>{
   for(const[key,inverse]of Object.entries(inverses)){
-    const physical=lf(fs.readFileSync(files[key],"utf8")),project={portal:pdfCompressMetaHistoricalPortalSource,i18n:pdfCompressMetaHistoricalI18nSource,pages:pdfCompressMetaHistoricalPagesSource};
-    const raw=project[key]?project[key](physical):physical,prefix="\r\n/* CUSTOMER prefix */\r\n",suffix="\r\n/* media studio Facebook TikTok */";
+    const physical=lf(fs.readFileSync(files[key],"utf8")),staged=documentConvertCustomerHistoricalSource(physical,files[key]),project={portal:pdfCompressMetaHistoricalPortalSource,i18n:pdfCompressMetaHistoricalI18nSource,pages:pdfCompressMetaHistoricalPagesSource};
+    const raw=project[key]?project[key](staged):staged,prefix="\r\n/* CUSTOMER prefix */\r\n",suffix="\r\n/* media studio Facebook TikTok */";
     assert.equal(inverse(prefix+raw+suffix),prefix+baseline[key]+suffix);
     const edit=fixture.changes.find(e=>e.file===files[key]&&e.new);
     assert.throws(()=>inverse(raw+"\n"+edit.new),/Unreviewed Image Resize polish/);

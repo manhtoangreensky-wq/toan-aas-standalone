@@ -107,7 +107,9 @@ _PORTAL_SHELL_COPY = {
     },
 }
 _PORTAL_SHELL_TITLES = {
+    "/documents/pdf-to-images": {"vi":"PDF sang ảnh · TOAN AAS","en":"PDF to images · TOAN AAS","zh":"PDF 转图像 · TOAN AAS"},
     "/image/history": {"vi": "Lịch sử ảnh · TOAN AAS", "en": "Image history · TOAN AAS", "zh": "图像记录 · TOAN AAS"},
+    "/documents/pdf-to-word": {"vi":"PDF sang Word · TOAN AAS","en":"PDF to Word · TOAN AAS","zh":"PDF 转 Word · TOAN AAS"},
     "/image/edit": {"vi": "Chỉnh ảnh · TOAN AAS", "en": "Edit images · TOAN AAS", "zh": "调整图像 · TOAN AAS"},
     "/documents/image-to-pdf": {"vi": "Ảnh thành PDF · TOAN AAS", "en": "Images to PDF · TOAN AAS", "zh": "图像转 PDF · TOAN AAS"},
     "/documents/compress": {"vi": "Nén PDF · TOAN AAS", "en": "Compress PDF · TOAN AAS", "zh": "压缩 PDF · TOAN AAS"},
@@ -221,10 +223,20 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/documents/pdf-to-images": {
+        "vi": "Chuyển các trang PDF thành ảnh PNG. Nhiều trang được tải trong một tệp ZIP; tệp gốc được giữ nguyên.",
+        "en": "Convert PDF pages into PNG images. Multiple pages download in one ZIP file; the original stays unchanged.",
+        "zh": "将 PDF 页面转换为 PNG 图像。多页通过一个 ZIP 文件下载，原文件保持不变。",
+    },
     "/image/history": {
         "vi": "Xem lại các lần chỉnh ảnh và tải ảnh đã hoàn tất.",
         "en": "Review your image edits and download completed images.",
         "zh": "查看您的图像编辑记录并下载已完成的图像。",
+    },
+    "/documents/pdf-to-word": {
+        "vi": "Chuyển phần chữ có thể bôi chọn trong PDF sang Word. Không chuyển chữ trong ảnh hoặc giữ nguyên cách dàn trang.",
+        "en": "Convert selectable PDF text into Word. Text in images and the original page layout are not converted.",
+        "zh": "将 PDF 中可选择的文字转换为 Word。不转换图像中的文字，也不保留原页面布局。",
     },
     "/image/edit": {
         "vi": "Chọn ảnh đã lưu, chỉnh màu và độ nét rồi tải bản PNG mới. Tệp gốc được giữ nguyên.",

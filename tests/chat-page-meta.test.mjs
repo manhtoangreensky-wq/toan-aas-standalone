@@ -7,7 +7,9 @@ import {pageMetaHistoricalSnapshot,pageMetaHistoricalPortalSource,pageMetaFragme
 import {chatDateHistoricalPortalSource} from './helpers/chat-date-snapshot.mjs';
 import {documentCardHistoricalSnapshot,documentCardHistoricalI18nSource} from './helpers/document-card-copy-snapshot.mjs';
 import {pdfSplitMetaHistoricalPagesSource} from './helpers/pdf-split-meta-snapshot.mjs';
-const live=pageMetaSources(),source={...live,portal:chatDateHistoricalPortalSource(live.portal),i18n:documentCardHistoricalI18nSource(live.i18n),pages:pdfSplitMetaHistoricalPagesSource(live.pages)},baseline=pageMetaSources(true);
+import {documentConvertCustomerHistoricalSource} from './helpers/document-convert-customer-copy-snapshot.mjs';
+// Historical metadata comparator: stage only later shell dictionary additions before the older pages inverse.
+const live=pageMetaSources(),source={...live,portal:chatDateHistoricalPortalSource(live.portal),i18n:documentCardHistoricalI18nSource(live.i18n),pages:pdfSplitMetaHistoricalPagesSource(documentConvertCustomerHistoricalSource(live.pages,'copyfast_pages.py'))},baseline=pageMetaSources(true);
 const actual=await pageMetaRenderer(source),before=await pageMetaRenderer(baseline);
 const current=(...args)=>{
   const result=actual(...args);

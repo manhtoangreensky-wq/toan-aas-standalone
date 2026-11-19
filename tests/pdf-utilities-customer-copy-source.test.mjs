@@ -7,12 +7,13 @@ import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {pdfUtilitiesCustomerHistoricalSource as inverse,pdfUtilitiesCustomerHistoricalSnapshot as snapshot} from "./helpers/pdf-utilities-customer-copy-snapshot.mjs";
 import {imageEditCustomerHistoricalSource} from "./helpers/image-edit-customer-copy-snapshot.mjs";
+import {documentConvertCustomerHistoricalSource} from "./helpers/document-convert-customer-copy-snapshot.mjs";
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),".."),BASE="513557a9ece0f8fe049884868dc5fb3a1ac2339c";
 const raw=fs.readFileSync(new URL("./fixtures/pdf-utilities-customer-copy-reviewed.json",import.meta.url)),fixture=JSON.parse(raw),edits=fixture.canonicalChanges,fail=/Unreviewed PDF utilities customer copy/;
 const lf=value=>value.replace(/\r\n/g,"\n"),count=(source,part)=>source.split(part).length-1,hash=value=>createHash("sha256").update(value).digest("hex");
 const files=["static/portal/portal.js","static/portal/portal-i18n.js"],before=Object.fromEntries(files.map(file=>[file,lf(execFileSync("git",["show",BASE+":"+file],{cwd:ROOT,encoding:"utf8",maxBuffer:30e6}))])),physical=Object.fromEntries(files.map(file=>[file,lf(fs.readFileSync(path.join(ROOT,file),"utf8"))]));
-// Historical PDF source comparator only: remove the separately reviewed later Edit batch, never a current renderer.
-const historical=Object.fromEntries(files.map(file=>[file,imageEditCustomerHistoricalSource(physical[file],file)]));
+// Historical PDF source comparator only: remove later DCC before Edit; no current renderer inputs exist in this suite.
+const historical=Object.fromEntries(files.map(file=>[file,imageEditCustomerHistoricalSource(documentConvertCustomerHistoricalSource(physical[file],file),file)]));
 test("exact immutable authority, all four canonical edits and 15 translated rows; Root faults do not change AGY counters",()=>{
   assert.equal(hash(raw),"fb1ffa41f9d924a11caf78b840d5ebc2a8e6a270eb49e91838868def71973870");assert.equal(fixture.base,BASE);assert.equal(fixture.task,"PDF-UTILITIES-CUSTOMER-COPY-20261119");assert.equal(fixture.revision,"ROOT_REVIEWED_R1_WITH_SPEC_AMENDMENTS");
   assert.equal(edits.length,4);assert.deepEqual(edits.map(edit=>edit.file),[files[0],files[0],files[0],files[1]]);assert.ok(edits.every(edit=>edit.count===1));assert.equal(fixture.fieldsRows.length,6);assert.equal(fixture.pageRows.length,9);
