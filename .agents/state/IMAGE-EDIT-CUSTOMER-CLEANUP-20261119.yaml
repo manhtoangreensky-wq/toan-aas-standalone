@@ -38,8 +38,11 @@ verification:
   independent_review: C0_I0_M0
   review_sha256: 197132d24670be70cf722cad5dff547f0a60d6c23c08106f5855cefd7c80c8aa
   prepush: READY_28_FILES_SECRET_0
+  first_ci_run: 44496478443
+  first_ci_result: FAIL_3_LEGACY_STEPS_COUNT_EXPECTATIONS
+  ci_target_retest: 3_PASS_2774_7827_MS
 release:
-  pr: NOT_CREATED
+  pr: 775
   deploy: NO
   live: NOT_TESTED
 provider_calls: 0

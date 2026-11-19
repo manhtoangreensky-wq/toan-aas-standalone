@@ -90,3 +90,13 @@ Web-onlyprovenance/finalHEAD→onePR/exactCI/merge/treeeq→exclusiveSHAdeploy
 PROVIDER_CALLS=0;WALLET_MUTATIONS=0;PRODUCT_SUBMIT=NO.
 SIGNED_PRODUCTION_UI/FINAL_IMAGE_OUTPUT=NOT_TESTED.
 WholegoalACTIVE/incomplete;motionM-FINAL01..06LAST.
+
+## CI cùng PR775 — kỳ vọng khối hướng dẫn cũ
+
+HEAD9a72af2c/run44496478443 dừng3image-enhance-meta cases,21/24khác đạt.
+Local3RED2524.0962ms xác nhận expected1olprojectsteps đã lỗithời vìaside
+đượcduyệtbỏ. Chỉ đổi count1→0;giữ wholeHTMLoutside2hero,controls/context/
+attributes/quyền/nguồn/customer và renderer vật lý. Đúng3retestPASS
+2774.7827ms,khôngrerun21CIpass/1776local/native hoặc sửa app.
+Đây làthiếusót danh sáchaffectedQA củaRoot,khôngAGYfault. Giữ cùngPR775,
+refreshprovenance/finalHEADCI;không dùng lượt fail làm bằng chứng merge.

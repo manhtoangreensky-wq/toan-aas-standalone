@@ -24,3 +24,7 @@ Projects/PR lưu tạm. Sauđạt:source/provenance/finalHEAD/onePR/exactCI/
 merge/treeeq/exclusivedeploy/runtime/5+5assets/receipts.
 Không backend/auth/API/schema/engine/Bot/provider/ví/PayOS/ENV/motion/data.
 WholegoalACTIVE/incomplete,motioncuối;signedproduction/outputNOT_TESTED.
+
+CI775/run44496478443 lộ3kỳ vọng cũđòi1khối đãbỏ. Local3RED→chỉcount1→0
+→3PASS2774.7827ms;fullHTML/rights/fields/context giữ,khôngappfix/rerun.
+CùngPR775,refreshprovenance/CIHEADmới trước merge;oldfail giữ riêng.

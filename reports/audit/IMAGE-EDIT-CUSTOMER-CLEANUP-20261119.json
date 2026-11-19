@@ -3569,7 +3569,17 @@
     "passingGroupsRerunRequested": false
   },
   "sourceCommit": "NOT_CREATED",
-  "ci": "NOT_RUN",
+  "ci": {
+    "pr": 775,
+    "firstRun": 44496478443,
+    "firstHead": "9a72af2ca2f92939d629fb9dc8ccefb8d383a56c",
+    "firstResult": "FAIL_3_OLD_STEPS_COUNT_EXPECTATIONS",
+    "cause": "Old physical metadata suite still expected one removed aside step list",
+    "correction": "Only count1 to0; wholeHTML/control/rights/context/source assertions retained",
+    "localRed": {"pass": 0, "fail": 3, "durationMs": 2524.0962},
+    "localGreen": {"pass": 3, "fail": 0, "durationMs": 2774.7827},
+    "finalHeadResult": "PENDING"
+  },
   "deploy": "NO",
   "signedProductionUi": "NOT_TESTED",
   "finalImageOutput": "NOT_TESTED",
