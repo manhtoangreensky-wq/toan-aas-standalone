@@ -1,5 +1,25 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## Nối tiếp đúng thứ tự —19/11/2026
+
+- [x] PR773 khép: CI44466426934 hai job thành công,18browser/456signedQA,
+  merge/runtime513557a9ece0f8fe049884868dc5fb3a1ac2339c/treeeq,
+  deploy44468185148 thành công70giây/3dịch vụ/health/5+5assets/receipt.
+- [x] Bổ sung baseline bốn route:96view/192PNG parse-hash/174owned0;
+  UNKNOWNpaint và lỗi báo cáo Nén PDF giữ riêng, không nhận toàn UI PASS.
+- [x] PDF ba proposalAGY3.8FlashHigh → bốn edits/haiappfiles149protected;
+  physical14PASS/source11PASS; regression285giữ+1430unexecuted+19retestPASS.
+- [x] Candidate Nén PDF24view được quan sát đủ, không tạo sản phẩm.
+- [x] Ảnh thành PDF candidate24view/92.681s/45owned0; hai startupfail60s/
+  0view/3owned0 mỗi lượt giữ riêng, không tăng giới hạn hoặc sửa app.
+  Hai nhóm48view/96PNG parse-hash/192nhãn/87owned0; Root xem ba ảnh.
+- [ ] PDF metadata/review/prepush/provenance/CI/merge/deploy/receipt.
+- [ ] Chỉnh ảnh copy/menu density sau PDF; không sửa ké khi chưa phát hành.
+- [ ] COV05 còn nền UNKNOWN; COV06recovery/COV07auth/COV08late response,
+  realdevice/Safari/signedproduction/finaloutput giữ mở. Motion cuối.
+
+Chi tiết [PDF](../../docs/reports/pdf-utilities-customer-copy-20261119.md).
+
 ## Đối chiếu phát hành 11/11/2026 — không đóng toàn goal
 
 Các mục delivery cũ bên dưới giữ lịch sử; bằng chứng mới theo từng đơn vị:

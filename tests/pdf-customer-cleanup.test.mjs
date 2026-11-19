@@ -1,4 +1,7 @@
 import test from "node:test";
+// LEGACY_HISTORICAL_RENDER_COMPARATOR: this loader already reverses later reviewed changes.
+// It is not current-physical UI acceptance; preserve its original assertions/negative/hash vectors.
+// Current PDF utility acceptance uses the separately reserved physical-bundle and native evidence.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";

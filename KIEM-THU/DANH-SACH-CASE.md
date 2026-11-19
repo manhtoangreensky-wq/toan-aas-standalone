@@ -1728,4 +1728,15 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | HTC-SCOPE | nặng |1appfile/4AGYedits |150protected,unknownoutside/negative/sourcegiữ |Scope5decd09c…/2sourcecases |
 | HTC-PHYSICAL | vừa |VIENZH×5states/refresh±/pagination |0notes0state-meta/noempty;rights/customer/cards/downloadgiữ |24PASS/1632+3targetretests |
 | HTC-NATIVE | vừa |Actualsignedlocalhostsixviews |0notes0state-meta/loading/error/retry/toast/ownership/audit/owned0 |FULL6pages24samples162witness+12toast78ảnh27owned0;empty/guardunitonly |
-| HTC-DELIVERY | nặng |OnePR/exactCI/merge/deploy/runtime/assets |Bảnđãkiểmkhớpbảnđãgiao,từngcổngriêng |Issue689receiptpending |
+| HTC-DELIVERY | nặng |OnePR/exactCI/merge/deploy/runtime/assets |Bảnđãkiểmkhớpbảnđãgiao,từngcổngriêng |PR773/CI44466426934/deploy44468185148/runtime513557a9/receipts closed |
+
+## PDF-UTILITIES-CUSTOMER-COPY-20261119 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| PUC-BASE | vừa | Renderer vật lý trước sửa |9targetRED/4protectedPASS,Root-specfault riêng |[Phiên PUC](PHIEN-PDF-UTILITIES-CUSTOMER-COPY-20261119.md) |
+| PUC-COPY | vừa |VI/EN/ZH hai route |Không panel kỹ thuật;15khóa/tám trường đúng locale |Physical14PASS |
+| PUC-PRESERVE | nặng |Quyền/nguồn/escape/frozen/wholeoutside |Tám names/IDs/required/action/history/customer giữ |Source11PASS/scope151 |
+| PUC-LEGACY | nặng |Bốn inverse hữu hạn |Golden/assertions/negative/outside bytes giữ |285retained+1430unexecuted+19retestPASS |
+| PUC-NATIVE | vừa |Hai route×24views,keyboard thật |Noerrors/overflow/egress/writes;core/audit/source/owned0 |48view/96PNG/192nhãn/87owned0;hai startupfail giữ riêng |
+| PUC-DELIVERY | nặng |MộtPR/CI/merge/treeeq/deploy/runtime/assets |Đúngbản/từngcổng/receipts;không nhận output |PENDING |

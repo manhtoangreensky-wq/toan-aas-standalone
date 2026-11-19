@@ -3416,6 +3416,20 @@ Native cô lập 12 màn/48 phụ đề/48 ảnh giữ metadata, biểu mẫu v�
 đã được xử lý. Phát hành/runtime/signed UI được chốt riêng trên Issue689.
 [Báo cáo](../docs/reports/image-resize-result-label-20261118.md).
 
+## Hai công cụ PDF — ứng viên ngày19/11/2026
+
+PR773 đã giao runtime513557a9, CI44466426934/deploy44468185148 và receipt
+khép trước đợt này. Ứng viên PDF chỉ bỏ lời giải thích nội bộ cuối Nén PDF,
+dịch tám trường Ảnh thành PDF, bỏ intro/khung bên/thông báo dư và giữ kho tệp
+ở chân biểu mẫu. Tám vị trí, ô đầu bắt buộc, quyền, hành động, lịch sử giữ.
+15khóa đủVI/EN/ZH; không đổi xử lý tệp hoặc dữ liệu khách.
+
+Physical14/source11PASS; regression285giữ+1430unexecuted+19retestPASS.
+Hai route candidate48view/96PNG/192nhãn đã kiểm,87owned0; hai timeout khởi
+động QA giữ riêng, không thay ứng dụng. Chưa PR/merge/deploy cho ứng viên.
+Không lấy HTTP200 hoặc ảnh sẵn sàng làm
+bằng chứng đã tạoPDF. [Báo cáo](../docs/reports/pdf-utilities-customer-copy-20261119.md).
+
 ## Lịch sử ảnh — thông báo trạng thái, 19/11/2026
 
 Ứng viên chỉ đổi tiêu đề/nội dung khi chưa mở được, đang tải và tải lỗi,

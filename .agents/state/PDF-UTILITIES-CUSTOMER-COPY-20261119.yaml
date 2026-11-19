@@ -1,0 +1,54 @@
+task: PDF-UTILITIES-CUSTOMER-COPY-20261119
+phase: REPORT
+goal_status: ACTIVE_INCOMPLETE
+base_sha: 513557a9ece0f8fe049884868dc5fb3a1ac2339c
+branch: codex/four-route-coverage-20261119
+tracker: Issue689/comment7001187976
+app_files:
+  - static/portal/portal.js
+  - static/portal/portal-i18n.js
+canonical_edits: 4
+source151_protected: 149
+fixture_sha256: fb1ffa41f9d924a11caf78b840d5ebc2a8e6a270eb49e91838868def71973870
+scope_sha256: 035ad00800cbae4f78eb5946e920cf0b13bd8143fcbd842537806420d68a5fae
+worker:
+  model: gemini-3.8-flash-high
+  independent_sessions: 3
+  result: EXACT_PROPOSALS_REVIEWED
+  application_failure_count: 0
+  root_spec_faults: 2
+verification:
+  physical_portable: 14_PASS_0_FAIL
+  source: 11_PASS_0_FAIL
+  retained_affected_pass: 285
+  prior_import_blocked_files: 43
+  newly_executed_pass: 1430
+  failed_named_retest: 19_PASS_0_FAIL
+  native_compress: 24_OBSERVATIONS_ACCEPTED
+  native_image_to_pdf: DIAGNOSTIC_FRESH_24_OBSERVATIONS_ACCEPTED
+  failed_startup_evidence: PRESERVED_R1_R2_ZERO_VIEWS
+  successful_native_views: 48
+  verified_png: 96
+  translated_labels: 192
+  successful_owned_processes_stopped: 87
+  paint_unknown_samples: 456
+  python_shell: 6_PASS
+  tester_metadata: 2_PASS_31_DESELECTED
+  independent_review: C0_I0_M0
+  review_sha256: 2eeac65049848c61560c119f103826198be7d983ecf4c4718305e7c3ef29168b
+  prepush: READY
+  native_limits_seconds: 60_180_10_5
+release:
+  pr: NOT_CREATED
+  push: NO
+  deploy: NO
+  signed_production_ui: NOT_TESTED
+  final_pdf_output: NOT_TESTED
+provider_calls: 0
+wallet_mutations: 0
+product_submit: NO
+next:
+  - Web-only provenance and exact-head CI
+  - One PR exact-head CI merge deploy runtime receipts
+  - Edit copy and mobile density after PDF delivery
+motion: M-FINAL-01..06_LAST
