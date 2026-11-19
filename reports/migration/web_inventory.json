@@ -10507,6 +10507,7 @@
         "docs/reports/document-ocr-customer-copy-20261119.md",
         "docs/reports/pdf-input-font16-20261116.md",
         "docs/reports/pdf-split-readability-20261116.md",
+        "docs/reports/vault-customer-copy-20261119.md",
         "docs/reports/video-inner-first-three-20261110.md",
         "reports/audit/R218-CHECKPOINT-20261021.md",
         "reports/audit/R218-CUSTOMER-UI-REALITY-QA-20261022.json",
@@ -10533,10 +10534,9 @@
         "reports/audit/R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json",
         "reports/prepush/R218-20261023-MUSIC-PRODUCT-READABILITY-E.md",
         "reports/prepush/R218-20261023-VOICE-AUDIT-DOCS.md",
-        "reports/prepush/R218-20261024-MUSIC-REQUEST-REVIEW-FH.md",
-        "studio/script.js"
+        "reports/prepush/R218-20261024-MUSIC-REQUEST-REVIEW-FH.md"
       ],
-      "occurrences": 57,
+      "occurrences": 58,
       "provider": "Gemini"
     },
     {
@@ -10673,7 +10673,7 @@
         "copyfast_music_media.py",
         "copyfast_music_sfx_library_bridge.py"
       ],
-      "occurrences": 2131,
+      "occurrences": 2130,
       "provider": "Telegram"
     }
   ],
@@ -18798,39 +18798,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 627,
-  "source_files_scanned": 627,
-  "source_fingerprint_sha256": "bf87a6245d5737691f7e1ffd9c070ec52904d988d3415e54165e18ae07f21221",
+  "source_files_discovered": 631,
+  "source_files_scanned": 631,
+  "source_fingerprint_sha256": "4fc8cb453c1deeabc5f1bd2c54d3b14b734c9d81e60b001c7f883a64c82d2417",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 36062,
+      "line": 36063,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36378,
+      "line": 36379,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35726,
+      "line": 35727,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35975,
+      "line": 35976,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35347,
+      "line": 35348,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35639,
+      "line": 35640,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -19045,7 +19045,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 37498,
+      "line": 37499,
       "path": "/features"
     },
     {
