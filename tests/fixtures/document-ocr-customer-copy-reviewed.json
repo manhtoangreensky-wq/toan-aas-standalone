@@ -1,0 +1,1304 @@
+{
+  "task": "DOCUMENT-OCR-CUSTOMER-COPY-20261119",
+  "base": "8ba0d0452f86dcc3d72e5087351134902eb4e659",
+  "revision": "ROOT_REVIEWED_R1",
+  "sourceAuthorities": [
+    {
+      "name": "fields",
+      "specId": "DOCUMENT-OCR-SHARED-FIELDS-20261119",
+      "revision": "R1",
+      "conversation": "e848b31b-be36-4038-8801-e3bd569b6b29",
+      "packetSha256": "c35cda742efb7287c1737bee582eac8a1ad0e46cfa7bd02c0e47d4164e0c5c4d",
+      "resultRawSha256": "87f4e7041cc8a92ffec0bcd13e193d03b4ccd694dcd8aac8d64e289d88ebdbc8",
+      "schemaValid": true,
+      "proposalExact": true,
+      "applicationFailureCount": 0,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    },
+    {
+      "name": "image",
+      "specId": "DOCUMENT-OCR-IMAGE-PAGE-20261119",
+      "revision": "R1",
+      "conversation": "3b569dc8-863e-47ca-a578-c0665a76b3c9",
+      "packetSha256": "8f9c94a7b448617bdab9643637043fb8b8090b4b2b42b12d3dda627f0eb3fe3d",
+      "resultRawSha256": "220fe68db72cf3727f73e98d0bc9bd871e6486ed748a0e6b0e90cfd0b062ee43",
+      "schemaValid": true,
+      "proposalExact": true,
+      "applicationFailureCount": 0,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    },
+    {
+      "name": "pdf",
+      "specId": "DOCUMENT-OCR-PDF-PAGE-20261119",
+      "revision": "R1",
+      "conversation": "569bac41-0255-4a3a-af0f-a46b54d013ae",
+      "packetSha256": "d4e4e7a1f43cc9daf1c07f964fb5ae915ae788e4587cfd5f3546a4855fb7439d",
+      "resultRawSha256": "a93d146a7b3bc65afcaeec608ac5190b0034c15a1b70821d4178f8a933ad37e3",
+      "schemaValid": true,
+      "proposalExact": true,
+      "applicationFailureCount": 0,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    },
+    {
+      "name": "word",
+      "specId": "DOCUMENT-OCR-WORD-PAGE-20261119",
+      "revision": "R1",
+      "conversation": "c37404c0-ba40-47b9-8a8e-acede81796f5",
+      "packetSha256": "9a9024a141468f34578932c7525125bf0d62f49a7c29ce2e0eab0e6765bde8c4",
+      "resultRawSha256": "eef2c0188026b68b944d080e70fd30468d7f272827c654fcff01025cf1205ebe",
+      "schemaValid": true,
+      "proposalExact": true,
+      "applicationFailureCount": 0,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    }
+  ],
+  "canonicalChanges": [
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function imageOcrFormFields() {\n    return [\n      {\n        name: \"source_asset_id\", label: \"Ảnh nguồn trong Asset Vault\", control: \"select\", optionsFrom: \"imageVaultAssets\", referencePicker: \"document-image\",\n        emptyLabel: \"Chọn ảnh riêng tư\", required: true,\n        help: \"Chỉ JPEG, PNG hoặc WebP active thuộc signed Web account hiện tại xuất hiện. Browser chỉ gửi Asset Vault ID, không gửi URL, path hoặc bytes ảnh.\"\n      },\n      {\n        name: \"language\", label: \"Ngôn ngữ OCR\", control: \"select\", required: true,\n        options: [[\"auto\", \"Tự nhận diện (auto)\"], [\"vi\", \"Tiếng Việt\"], [\"en\", \"English\"]],\n        help: \"Lựa chọn này chỉ được gửi vào server OCR đã bật. Không có OCR trong browser, dịch máy, provider call hoặc preview text cục bộ.\"\n      }\n    ];\n  }\n\n",
+      "new": "  function imageOcrFormFields() {\n    return [\n      {\n        name: \"source_asset_id\", label: uiText(\"docOcrSharedUiImageSourceLabel\", \"Ảnh từ kho tệp\"), control: \"select\", optionsFrom: \"imageVaultAssets\", referencePicker: \"document-image\",\n        emptyLabel: uiText(\"docOcrSharedUiImageSourceEmpty\", \"Chọn ảnh\"), required: true,\n        help: uiText(\"docOcrSharedUiImageSourceHelp\", \"Chọn một ảnh JPEG, PNG hoặc WebP đã lưu, tối đa 20 MB. Chữ rõ và ngay ngắn cho kết quả dễ đọc hơn.\")\n      },\n      {\n        name: \"language\", label: uiText(\"docOcrSharedUiLanguageLabel\", \"Ngôn ngữ của chữ\"), control: \"select\", required: true,\n        options: [[\"auto\", uiText(\"docOcrSharedUiLanguageAuto\", \"Tự chọn\")], [\"vi\", uiText(\"docOcrSharedUiLanguageVi\", \"Tiếng Việt\")], [\"en\", uiText(\"docOcrSharedUiLanguageEn\", \"Tiếng Anh\")]],\n        help: uiText(\"docOcrSharedUiLanguageHelp\", \"Chọn ngôn ngữ của chữ trong tệp. Chỉ đọc lại chữ, không dịch nội dung.\")\n      }\n    ];\n  }\n\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function pdfOcrFormFields() {\n    return [\n      {\n        name: \"source_asset_id\", label: \"PDF nguồn trong Asset Vault\", control: \"select\", optionsFrom: \"pdfVaultAssets\", referencePicker: \"document-pdf\",\n        emptyLabel: \"Chọn PDF riêng tư\", required: true,\n        help: \"Chỉ PDF active thuộc signed Web account hiện tại xuất hiện. Browser chỉ gửi Asset Vault ID, không gửi URL, path hoặc bytes PDF.\"\n      },\n      {\n        name: \"language\", label: \"Ngôn ngữ OCR\", control: \"select\", required: true,\n        options: [[\"auto\", \"Tự nhận diện (auto)\"], [\"vi\", \"Tiếng Việt\"], [\"en\", \"English\"]],\n        help: \"Lựa chọn này chỉ được gửi vào runtime OCR local đã bật. Không có OCR trong browser, dịch máy, provider call hoặc preview text cục bộ.\"\n      }\n    ];\n  }\n\n",
+      "new": "  function pdfOcrFormFields() {\n    return [\n      {\n        name: \"source_asset_id\", label: uiText(\"docPdfSourceUiLabel\", \"PDF từ kho tệp\"), control: \"select\", optionsFrom: \"pdfVaultAssets\", referencePicker: \"document-pdf\",\n        emptyLabel: uiText(\"docPdfSourceUiEmpty\", \"Chọn PDF\"), required: true,\n        help: uiText(\"docOcrSharedUiPdfSourceHelp\", \"Chọn PDF đã lưu, tối đa 20 MB và 5 trang. Chữ rõ và ngay ngắn cho kết quả dễ đọc hơn.\")\n      },\n      {\n        name: \"language\", label: uiText(\"docOcrSharedUiLanguageLabel\", \"Ngôn ngữ của chữ\"), control: \"select\", required: true,\n        options: [[\"auto\", uiText(\"docOcrSharedUiLanguageAuto\", \"Tự chọn\")], [\"vi\", uiText(\"docOcrSharedUiLanguageVi\", \"Tiếng Việt\")], [\"en\", uiText(\"docOcrSharedUiLanguageEn\", \"Tiếng Anh\")]],\n        help: uiText(\"docOcrSharedUiLanguageHelp\", \"Chọn ngôn ngữ của chữ trong tệp. Chỉ đọc lại chữ, không dịch nội dung.\")\n      }\n    ];\n  }\n\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function pdfOcrWordFormFields() {\n    return [\n      {\n        name: \"source_asset_id\", label: \"PDF nguồn trong Asset Vault\", control: \"select\", optionsFrom: \"pdfVaultAssets\", referencePicker: \"document-pdf\",\n        emptyLabel: \"Chọn PDF scan riêng tư\", required: true,\n        help: \"Chỉ PDF active thuộc signed Web account hiện tại xuất hiện. Browser chỉ gửi Asset Vault ID, không gửi URL, path hoặc bytes PDF.\"\n      },\n      {\n        name: \"language\", label: \"Ngôn ngữ OCR\", control: \"select\", required: true,\n        options: [[\"auto\", \"Tự nhận diện (auto)\"], [\"vi\", \"Tiếng Việt\"], [\"en\", \"English\"]],\n        help: \"Lựa chọn này chỉ được gửi vào server OCR → DOCX đã bật. Không có OCR trong browser, provider call hoặc preview text cục bộ.\"\n      }\n    ];\n  }\n",
+      "new": "  function pdfOcrWordFormFields() {\n    return [\n      {\n        name: \"source_asset_id\", label: uiText(\"docPdfSourceUiLabel\", \"PDF từ kho tệp\"), control: \"select\", optionsFrom: \"pdfVaultAssets\", referencePicker: \"document-pdf\",\n        emptyLabel: uiText(\"docPdfSourceUiEmpty\", \"Chọn PDF\"), required: true,\n        help: uiText(\"docOcrSharedUiWordSourceHelp\", \"Chỉ lấy phần chữ, không giữ hình ảnh, bảng, phông chữ hoặc cách dàn trang. PDF tối đa 20 MB và 5 trang.\")\n      },\n      {\n        name: \"language\", label: uiText(\"docOcrSharedUiLanguageLabel\", \"Ngôn ngữ của chữ\"), control: \"select\", required: true,\n        options: [[\"auto\", uiText(\"docOcrSharedUiLanguageAuto\", \"Tự chọn\")], [\"vi\", uiText(\"docOcrSharedUiLanguageVi\", \"Tiếng Việt\")], [\"en\", uiText(\"docOcrSharedUiLanguageEn\", \"Tiếng Anh\")]],\n        help: uiText(\"docOcrSharedUiLanguageHelp\", \"Chọn ngôn ngữ của chữ trong tệp. Chỉ đọc lại chữ, không dịch nội dung.\")\n      }\n    ];\n  }\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function renderImageOcr(page, context) {\n    const imageOcrEnabled = context.imageOcrEnabled === true;\n    const canView = Boolean(context.capabilities && context.capabilities[\"document-operation-view\"] === true && imageOcrEnabled);\n    const canRunCapability = Boolean(context.capabilities && context.capabilities[\"document-operation-ocr-image\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"document-operation-refresh\"] === true && imageOcrEnabled);\n    if (!canView) {\n      return `<article class=\"portal-page portal-image-ocr\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>OCR ảnh đang ở chế độ an toàn</h2><p>OCR chỉ mở khi server xác nhận feature flag, Asset Vault, storage output private và runtime/language pack có thể dùng. Không fallback sang OCR browser, Bot, provider hoặc output text mô phỏng.</p><div class=\"portal-state-meta\"><span>Signed session</span><span>Runtime server-side</span><span>Không có TXT giả</span></div></div></div></section></article>`;\n    }\n    const sources = imageVaultItems(context);\n    const operations = documentOperationItems(context, \"image_ocr\");\n    const canRun = canRunCapability && sources.length > 0;\n    const formValues = { language: \"auto\", ...transientFormValues(\"/documents/ocr\") };\n    const runReason = !canRunCapability\n      ? \"OCR ảnh đang được server giữ ở trạng thái guarded. Không có xử lý hoặc output thay thế từ browser.\"\n      : !sources.length\n        ? \"Hãy lưu ít nhất một JPEG, PNG hoặc WebP private vào Asset Vault trước khi chạy OCR.\"\n        : \"Server đọc ảnh source trong vùng cô lập và chỉ phát TXT khi text output non-empty được xác minh cùng ownership/integrity.\";\n    const completedCount = operations.filter((item) => documentOperationState(item) === \"completed\" && item.download_ready === true).length;\n    return `<article class=\"portal-page portal-image-ocr\">${renderHero(page, context)}\n      <section class=\"portal-document-operation-intro\"><div><span class=\"portal-section-kicker\">Private Image OCR</span><h2>Đọc text từ ảnh private, chỉ giao khi có kết quả thật</h2><p>Chọn một JPEG, PNG hoặc WebP đã có trong Asset Vault. Browser chỉ gửi mã asset và ngôn ngữ auto/vi/en; server kiểm tra ownership, decode nguồn trong vùng cô lập và chỉ tạo TXT private sau khi output có nội dung, hash và metadata đều hợp lệ.</p></div><dl><div><dt>${safeText(sources.length === 1 ? \"1 ảnh đang hoạt động\" : `${sources.length} ảnh đang hoạt động`)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>TXT sẵn sàng tải</dd></div></dl></section>\n      <div class=\"portal-document-operation-layout\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Chọn ảnh và ngôn ngữ</h2><p class=\"portal-card-subtitle\">Không upload bytes, không nhận URL/path và không OCR trong browser. Mỗi request chỉ có một Asset Vault ID private cùng một lựa chọn ngôn ngữ.</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-ocr-image\" data-portal-route=\"/documents/ocr\" data-portal-confirm=\"Đọc text từ ảnh private đã chọn? Web chỉ phát TXT sau khi server xác minh output; ảnh gốc không bị thay đổi.\" novalidate>${renderFields(imageOcrFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>Tạo TXT riêng tư</button></div></form></section><aside class=\"portal-card portal-card-pad portal-document-operation-boundary\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Ranh giới rõ ràng</h2><p class=\"portal-card-subtitle\">OCR là pipeline Web-native server-side, không phải preview hay promise browser.</p></div></div><ol class=\"portal-project-steps\"><li><strong>1. Nguồn có ownership</strong><span>Chỉ một ảnh JPEG/PNG/WebP active của signed account hiện tại được đọc từ Asset Vault.</span></li><li><strong>2. Runtime có thể kiểm tra</strong><span>Thiếu runtime/language pack hoặc không tìm thấy text đủ điều kiện sẽ trả guarded. Web không chuyển sang Bot, provider hay OCR cục bộ.</span></li><li><strong>3. Delivery riêng tư</strong><span>TXT chỉ được phát sau kiểm tra content và integrity qua signed session; không public URL, PWA cache hoặc preview raw text.</span></li></ol><div class=\"portal-form-footer\"><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">Mở Asset Vault</a></div></aside></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">TXT OCR riêng tư</h2><p class=\"portal-card-subtitle\">Chỉ metadata an toàn và download thuộc signed account hiện tại được hiển thị. Text OCR không được render vào browser để tránh preview hoặc lưu client-side ngoài ý muốn.</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/ocr\"${canRefresh ? \"\" : \" disabled\"}>Làm mới</button></div>${renderDocumentOperationCards(operations, context, \"Chưa có TXT OCR\", \"TXT chỉ xuất hiện sau khi server đọc được text thực, xác minh output private và xác nhận ownership. Không có text/attachment mô phỏng.\")}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/ocr\")}</section>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-notice portal-notice--info\"><span class=\"portal-notice-icon\" aria-hidden=\"true\">i</span><div><strong>Không tạo tích hợp ngầm</strong><p>OCR ảnh không tạo Bot job, gọi provider, Xu, ví, PayOS, webhook, asset public hoặc Telegram action. PDF OCR và dịch tài liệu là workflow riêng, không tự được suy diễn từ trang này.</p></div></div>${renderNotes(page)}</section>\n    </article>`;\n  }\n\n",
+      "new": "  function renderImageOcr(page, context) {\n    const imageOcrEnabled = context.imageOcrEnabled === true;\n    const canView = Boolean(context.capabilities && context.capabilities[\"document-operation-view\"] === true && imageOcrEnabled);\n    const canRunCapability = Boolean(context.capabilities && context.capabilities[\"document-operation-ocr-image\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"document-operation-refresh\"] === true && imageOcrEnabled);\n    if (!canView) {\n      return `<article class=\"portal-page portal-image-ocr\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText(\"docOcrSharedUiGuardTitle\", \"Chưa thể mở công cụ\"))}</h2><p>${safeText(uiText(\"docOcrSharedUiGuardBody\", \"Vui lòng tải lại trang. Nếu vẫn chưa mở được, hãy liên hệ hỗ trợ.\"))}</p></div></div></section></article>`;\n    }\n    const sources = imageVaultItems(context);\n    const operations = documentOperationItems(context, \"image_ocr\");\n    const canRun = canRunCapability && sources.length > 0;\n    const formValues = { language: \"auto\", ...transientFormValues(\"/documents/ocr\") };\n    const runReason = !canRunCapability\n      ? uiText(\"docOcrSharedUiNoAccess\", \"Tài khoản này chưa được phép dùng công cụ.\")\n      : !sources.length ? uiText(\"docOcrImageUiEmptyBody\", \"Chọn một ảnh trong kho tệp để bắt đầu.\") : uiText(\"docOcrSharedUiReady\", \"Tệp gốc được giữ nguyên. Hãy rà soát lại chữ sau khi tải kết quả.\");\n    return `<article class=\"portal-page portal-image-ocr\">${renderHero(page, context)}\n      <div class=\"portal-document-operation-layout portal-document-operation-layout--single\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docOcrImageUiFormTitle\", \"Chọn ảnh và ngôn ngữ\"))}</h2></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-ocr-image\" data-portal-route=\"/documents/ocr\" data-portal-confirm=\"${safeText(uiText(\"docOcrImageUiConfirm\", \"Đọc chữ từ ảnh đã chọn? Ảnh gốc được giữ nguyên.\"))}\" novalidate>${renderFields(imageOcrFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(uiText(\"docPdfReadyUiOpenFiles\", \"Mở kho tệp\"))}</a><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>${safeText(uiText(\"docOcrImageUiTitle\", \"Đọc chữ từ ảnh\"))}</button></div></form></section></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docOcrImageUiHistoryTitle\", \"Văn bản đã đọc từ ảnh\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiHistoryBody\", \"Xem tiến trình và tải tệp khi xử lý hoàn tất.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/ocr\"${canRefresh ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiRefresh\", \"Làm mới\"))}</button></div>${renderDocumentOperationCards(operations, context, uiText(\"docOcrImageUiEmptyTitle\", \"Chưa có kết quả đọc chữ từ ảnh\"), uiText(\"docOcrImageUiEmptyBody\", \"Chọn một ảnh trong kho tệp để bắt đầu.\"))}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/ocr\")}</section>\n    </article>`;\n  }\n\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    if (path === \"/documents/pdf-to-images\") return uiText(\"docConvertImagesUiTitle\", \"PDF sang ảnh\");",
+      "new": "    if (path === \"/documents/ocr\") return uiText(\"docOcrImageUiTitle\", \"Đọc chữ từ ảnh\");\n    if (path === \"/documents/pdf-to-images\") return uiText(\"docConvertImagesUiTitle\", \"PDF sang ảnh\");",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    if (path === \"/documents/pdf-to-images\") return uiText(\"docConvertImagesUiDescription\", \"Chuyển các trang PDF thành ảnh PNG. Nhiều trang được tải trong một tệp ZIP; tệp gốc được giữ nguyên.\");",
+      "new": "    if (path === \"/documents/ocr\") return uiText(\"docOcrImageUiDescription\", \"Đọc chữ trong ảnh đã lưu và tải về tệp văn bản. Ảnh gốc được giữ nguyên.\");\n    if (path === \"/documents/pdf-to-images\") return uiText(\"docConvertImagesUiDescription\", \"Chuyển các trang PDF thành ảnh PNG. Nhiều trang được tải trong một tệp ZIP; tệp gốc được giữ nguyên.\");",
+      "count": 1
+    },
+    {
+      "file": "copyfast_pages.py",
+      "old": "    \"/documents/pdf-to-images\": {\"vi\":\"PDF sang ảnh · TOAN AAS\",\"en\":\"PDF to images · TOAN AAS\",\"zh\":\"PDF 转图像 · TOAN AAS\"},",
+      "new": "    \"/documents/ocr\": {\"vi\":\"Đọc chữ từ ảnh · TOAN AAS\",\"en\":\"Read text from images · TOAN AAS\",\"zh\":\"识别图像文字 · TOAN AAS\"},\n    \"/documents/pdf-to-images\": {\"vi\":\"PDF sang ảnh · TOAN AAS\",\"en\":\"PDF to images · TOAN AAS\",\"zh\":\"PDF 转图像 · TOAN AAS\"},",
+      "count": 1
+    },
+    {
+      "file": "copyfast_pages.py",
+      "old": "    \"/documents/pdf-to-images\": {\n        \"vi\": \"Chuyển các trang PDF thành ảnh PNG. Nhiều trang được tải trong một tệp ZIP; tệp gốc được giữ nguyên.\",\n        \"en\": \"Convert PDF pages into PNG images. Multiple pages download in one ZIP file; the original stays unchanged.\",\n        \"zh\": \"将 PDF 页面转换为 PNG 图像。多页通过一个 ZIP 文件下载，原文件保持不变。\",\n    },",
+      "new": "    \"/documents/ocr\": {\n        \"vi\": \"Đọc chữ trong ảnh đã lưu và tải về tệp văn bản. Ảnh gốc được giữ nguyên.\",\n        \"en\": \"Read text in a saved image and download a text file. The original image stays unchanged.\",\n        \"zh\": \"识别已保存图像中的文字并下载文本文件。原图像保持不变。\",\n    },\n    \"/documents/pdf-to-images\": {\n        \"vi\": \"Chuyển các trang PDF thành ảnh PNG. Nhiều trang được tải trong một tệp ZIP; tệp gốc được giữ nguyên.\",\n        \"en\": \"Convert PDF pages into PNG images. Multiple pages download in one ZIP file; the original stays unchanged.\",\n        \"zh\": \"将 PDF 页面转换为 PNG 图像。多页通过一个 ZIP 文件下载，原文件保持不变。\",\n    },",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function renderPdfOcr(page, context) {\n    const pdfOcrEnabled = context.pdfOcrEnabled === true;\n    const canView = Boolean(context.capabilities && context.capabilities[\"document-operation-view\"] === true && pdfOcrEnabled);\n    const canRunCapability = Boolean(context.capabilities && context.capabilities[\"document-operation-ocr-pdf\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"document-operation-refresh\"] === true && pdfOcrEnabled);\n    if (!canView) {\n      return `<article class=\"portal-page portal-pdf-ocr\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>OCR PDF đang ở chế độ an toàn</h2><p>OCR PDF chỉ mở khi server xác nhận feature flag, Asset Vault, storage output private, PDF renderer và runtime/language pack có thể dùng. Không fallback sang OCR browser, Bot, provider hoặc output text mô phỏng.</p><div class=\"portal-state-meta\"><span>Signed session</span><span>Runtime server-side</span><span>Không có TXT giả</span></div></div></div></section></article>`;\n    }\n    const sources = pdfVaultItems(context);\n    const operations = documentOperationItems(context, \"pdf_ocr\");\n    const canRun = canRunCapability && sources.length > 0;\n    const formValues = { language: \"auto\", ...transientFormValues(\"/documents/pdf-ocr\") };\n    const runReason = !canRunCapability\n      ? \"OCR PDF đang được server giữ ở trạng thái guarded. Không có xử lý hoặc output thay thế từ browser.\"\n      : !sources.length\n        ? \"Hãy lưu ít nhất một PDF private vào Asset Vault trước khi chạy OCR.\"\n        : \"Server đọc PDF source trong vùng cô lập, áp giới hạn trang/tài nguyên an toàn và chỉ phát TXT khi text output non-empty được xác minh cùng ownership/integrity.\";\n    const completedCount = operations.filter((item) => documentOperationState(item) === \"completed\" && item.download_ready === true).length;\n    return `<article class=\"portal-page portal-pdf-ocr\">${renderHero(page, context)}\n      <section class=\"portal-document-operation-intro\"><div><span class=\"portal-section-kicker\">Private PDF OCR</span><h2>Đọc text từ PDF private, chỉ giao khi có kết quả thật</h2><p>Chọn một PDF đã có trong Asset Vault. Browser chỉ gửi mã asset và ngôn ngữ auto/vi/en; server kiểm tra ownership, parse/render trong giới hạn trang và tài nguyên an toàn của server, rồi chỉ tạo TXT private sau khi output có nội dung, hash và metadata đều hợp lệ.</p></div><dl><div><dt>${safeText(sources.length === 1 ? \"1 PDF đang hoạt động\" : `${sources.length} PDF đang hoạt động`)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>TXT sẵn sàng tải</dd></div></dl></section>\n      <div class=\"portal-document-operation-layout\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Chọn PDF và ngôn ngữ</h2><p class=\"portal-card-subtitle\">Không upload bytes, không nhận URL/path và không OCR trong browser. Mỗi request chỉ có một Asset Vault ID PDF private cùng một lựa chọn ngôn ngữ.</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-ocr-pdf\" data-portal-route=\"/documents/pdf-ocr\" data-portal-confirm=\"Đọc text từ PDF private đã chọn? Web chỉ phát TXT sau khi server xác minh output; PDF gốc không bị thay đổi.\" novalidate>${renderFields(pdfOcrFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>Tạo TXT riêng tư</button></div></form></section><aside class=\"portal-card portal-card-pad portal-document-operation-boundary\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Ranh giới rõ ràng</h2><p class=\"portal-card-subtitle\">PDF OCR là pipeline Web-native server-side, không phải preview hay promise browser.</p></div></div><ol class=\"portal-project-steps\"><li><strong>1. Nguồn có ownership</strong><span>Chỉ một PDF active của signed account hiện tại được đọc từ Asset Vault.</span></li><li><strong>2. Xử lý có giới hạn</strong><span>PDF tối đa 20 MB và 5 trang được parse/render 2× trong runtime local. Thiếu runtime/language pack hoặc không tìm thấy text đủ điều kiện sẽ trả guarded.</span></li><li><strong>3. Delivery riêng tư</strong><span>TXT chỉ được phát sau kiểm tra content và integrity qua signed session; không public URL, PWA cache hoặc preview raw text.</span></li></ol><div class=\"portal-form-footer\"><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">Mở Asset Vault</a></div></aside></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">TXT OCR PDF riêng tư</h2><p class=\"portal-card-subtitle\">Chỉ metadata an toàn và download thuộc signed account hiện tại được hiển thị. Text OCR không được render vào browser để tránh preview hoặc lưu client-side ngoài ý muốn.</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/pdf-ocr\"${canRefresh ? \"\" : \" disabled\"}>Làm mới</button></div>${renderDocumentOperationCards(operations, context, \"Chưa có TXT OCR PDF\", \"TXT chỉ xuất hiện sau khi server đọc được text thực, xác minh output private và xác nhận ownership. Không có text/attachment mô phỏng.\")}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/pdf-ocr\")}</section>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-notice portal-notice--info\"><span class=\"portal-notice-icon\" aria-hidden=\"true\">i</span><div><strong>Không tạo tích hợp ngầm</strong><p>OCR PDF không tạo Bot job, gọi provider, Xu, ví, PayOS, webhook, asset public hoặc Telegram action. OCR ảnh và dịch tài liệu là workflow riêng, không tự được suy diễn từ trang này.</p></div></div>${renderNotes(page)}</section>\n    </article>`;\n  }\n\n",
+      "new": "  function renderPdfOcr(page, context) {\n    const pdfOcrEnabled = context.pdfOcrEnabled === true;\n    const canView = Boolean(context.capabilities && context.capabilities[\"document-operation-view\"] === true && pdfOcrEnabled);\n    const canRunCapability = Boolean(context.capabilities && context.capabilities[\"document-operation-ocr-pdf\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"document-operation-refresh\"] === true && pdfOcrEnabled);\n    if (!canView) {\n      return `<article class=\"portal-page portal-pdf-ocr\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText(\"docOcrSharedUiGuardTitle\", \"Chưa thể mở công cụ\"))}</h2><p>${safeText(uiText(\"docOcrSharedUiGuardBody\", \"Vui lòng tải lại trang. Nếu vẫn chưa mở được, hãy liên hệ hỗ trợ.\"))}</p></div></div></section></article>`;\n    }\n    const sources = pdfVaultItems(context);\n    const operations = documentOperationItems(context, \"pdf_ocr\");\n    const canRun = canRunCapability && sources.length > 0;\n    const formValues = { language: \"auto\", ...transientFormValues(\"/documents/pdf-ocr\") };\n    const runReason = !canRunCapability\n      ? uiText(\"docOcrSharedUiNoAccess\", \"Tài khoản này chưa được phép dùng công cụ.\")\n      : !sources.length ? uiText(\"docOcrPdfUiEmptyBody\", \"Chọn một PDF trong kho tệp để bắt đầu.\") : uiText(\"docOcrSharedUiReady\", \"Tệp gốc được giữ nguyên. Hãy rà soát lại chữ sau khi tải kết quả.\");\n    return `<article class=\"portal-page portal-pdf-ocr\">${renderHero(page, context)}\n      <div class=\"portal-document-operation-layout portal-document-operation-layout--single\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docOcrPdfUiFormTitle\", \"Chọn PDF và ngôn ngữ\"))}</h2></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-ocr-pdf\" data-portal-route=\"/documents/pdf-ocr\" data-portal-confirm=\"${safeText(uiText(\"docOcrPdfUiConfirm\", \"Đọc chữ từ PDF đã chọn? Tệp gốc được giữ nguyên.\"))}\" novalidate>${renderFields(pdfOcrFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(uiText(\"docPdfReadyUiOpenFiles\", \"Mở kho tệp\"))}</a><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>${safeText(uiText(\"docOcrPdfUiTitle\", \"Đọc chữ từ PDF\"))}</button></div></form></section></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docOcrPdfUiHistoryTitle\", \"Văn bản đã đọc từ PDF\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiHistoryBody\", \"Xem tiến trình và tải tệp khi xử lý hoàn tất.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/pdf-ocr\"${canRefresh ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiRefresh\", \"Làm mới\"))}</button></div>${renderDocumentOperationCards(operations, context, uiText(\"docOcrPdfUiEmptyTitle\", \"Chưa có kết quả đọc chữ từ PDF\"), uiText(\"docOcrPdfUiEmptyBody\", \"Chọn một PDF trong kho tệp để bắt đầu.\"))}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/pdf-ocr\")}</section>\n    </article>`;\n  }\n\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    if (path === \"/documents/pdf-to-word\") return uiText(\"docConvertWordUiTitle\", \"PDF sang Word\");",
+      "new": "    if (path === \"/documents/pdf-ocr\") return uiText(\"docOcrPdfUiTitle\", \"Đọc chữ từ PDF\");\n    if (path === \"/documents/pdf-to-word\") return uiText(\"docConvertWordUiTitle\", \"PDF sang Word\");",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    if (path === \"/documents/pdf-to-word\") return uiText(\"docConvertWordUiDescription\", \"Chuyển phần chữ có thể bôi chọn trong PDF sang Word. Không chuyển chữ trong ảnh hoặc giữ nguyên cách dàn trang.\");",
+      "new": "    if (path === \"/documents/pdf-ocr\") return uiText(\"docOcrPdfUiDescription\", \"Đọc chữ trong PDF đã lưu và tải về tệp văn bản. Tệp gốc được giữ nguyên.\");\n    if (path === \"/documents/pdf-to-word\") return uiText(\"docConvertWordUiDescription\", \"Chuyển phần chữ có thể bôi chọn trong PDF sang Word. Không chuyển chữ trong ảnh hoặc giữ nguyên cách dàn trang.\");",
+      "count": 1
+    },
+    {
+      "file": "copyfast_pages.py",
+      "old": "    \"/documents/pdf-to-word\": {\"vi\":\"PDF sang Word · TOAN AAS\",\"en\":\"PDF to Word · TOAN AAS\",\"zh\":\"PDF 转 Word · TOAN AAS\"},",
+      "new": "    \"/documents/pdf-ocr\": {\"vi\":\"Đọc chữ từ PDF · TOAN AAS\",\"en\":\"Read text from PDF · TOAN AAS\",\"zh\":\"识别 PDF 文字 · TOAN AAS\"},\n    \"/documents/pdf-to-word\": {\"vi\":\"PDF sang Word · TOAN AAS\",\"en\":\"PDF to Word · TOAN AAS\",\"zh\":\"PDF 转 Word · TOAN AAS\"},",
+      "count": 1
+    },
+    {
+      "file": "copyfast_pages.py",
+      "old": "    \"/documents/pdf-to-word\": {\n        \"vi\": \"Chuyển phần chữ có thể bôi chọn trong PDF sang Word. Không chuyển chữ trong ảnh hoặc giữ nguyên cách dàn trang.\",\n        \"en\": \"Convert selectable PDF text into Word. Text in images and the original page layout are not converted.\",\n        \"zh\": \"将 PDF 中可选择的文字转换为 Word。不转换图像中的文字，也不保留原页面布局。\",\n    },",
+      "new": "    \"/documents/pdf-ocr\": {\n        \"vi\": \"Đọc chữ trong PDF đã lưu và tải về tệp văn bản. Tệp gốc được giữ nguyên.\",\n        \"en\": \"Read text in a saved PDF and download a text file. The original stays unchanged.\",\n        \"zh\": \"识别已保存 PDF 中的文字并下载文本文件。原文件保持不变。\",\n    },\n    \"/documents/pdf-to-word\": {\n        \"vi\": \"Chuyển phần chữ có thể bôi chọn trong PDF sang Word. Không chuyển chữ trong ảnh hoặc giữ nguyên cách dàn trang.\",\n        \"en\": \"Convert selectable PDF text into Word. Text in images and the original page layout are not converted.\",\n        \"zh\": \"将 PDF 中可选择的文字转换为 Word。不转换图像中的文字，也不保留原页面布局。\",\n    },",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function renderPdfOcrToWord(page, context) {\n    const pdfOcrWordEnabled = context.pdfOcrWordEnabled === true;\n    const canView = Boolean(context.capabilities && context.capabilities[\"document-operation-view\"] === true && pdfOcrWordEnabled);\n    const canRunCapability = Boolean(context.capabilities && context.capabilities[\"document-operation-pdf-ocr-to-word\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"document-operation-refresh\"] === true && pdfOcrWordEnabled);\n    if (!canView) {\n      return `<article class=\"portal-page portal-pdf-ocr-to-word\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>OCR PDF → Word đang ở chế độ an toàn</h2><p>Cấu hình, Asset Vault hoặc storage output private chưa đủ điều kiện. PDF renderer, OCR runtime, language pack và DOCX writer luôn được kiểm tra lại khi gửi yêu cầu; nếu chưa sẵn sàng, Web giữ guarded thay vì fallback sang OCR browser, Bot, provider hoặc DOCX mô phỏng.</p><div class=\"portal-state-meta\"><span>Signed session</span><span>Runtime server-side</span><span>Không có DOCX giả</span></div></div></div></section></article>`;\n    }\n    const sources = pdfVaultItems(context);\n    const operations = documentOperationItems(context, \"pdf_ocr_word\");\n    const canRun = canRunCapability && sources.length > 0;\n    const formValues = { language: \"auto\", ...transientFormValues(\"/documents/pdf-ocr-to-word\") };\n    const runReason = !canRunCapability\n      ? \"OCR PDF → Word đang được server giữ ở trạng thái guarded. Không có xử lý hoặc DOCX thay thế từ browser.\"\n      : !sources.length\n        ? \"Hãy lưu ít nhất một PDF scan private vào Asset Vault trước khi chạy OCR → Word.\"\n        : \"Server đọc PDF source trong vùng cô lập và chỉ phát DOCX khi text OCR non-empty cùng output, ownership và integrity đều được xác minh.\";\n    const completedCount = operations.filter((item) => documentOperationState(item) === \"completed\" && item.download_ready === true).length;\n    return `<article class=\"portal-page portal-pdf-ocr-to-word\">${renderHero(page, context)}\n      <section class=\"portal-document-operation-intro\"><div><span class=\"portal-section-kicker\">Private PDF OCR → Word</span><h2>Đọc PDF scan thành DOCX riêng tư, chỉ khi có kết quả thật</h2><p>Chọn PDF đã có trong Asset Vault. Browser chỉ gửi mã asset và ngôn ngữ auto/vi/en; server kiểm tra ownership, xử lý OCR trong vùng cô lập và chỉ tạo DOCX private sau khi text, output và metadata đều hợp lệ.</p></div><dl><div><dt>${safeText(sources.length === 1 ? \"1 PDF đang hoạt động\" : `${sources.length} PDF đang hoạt động`)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>DOCX sẵn sàng tải</dd></div></dl></section>\n      <div class=\"portal-document-operation-layout\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Chọn PDF scan và ngôn ngữ</h2><p class=\"portal-card-subtitle\">Không upload bytes, không nhận URL/path và không OCR trong browser. Mỗi request chỉ có một Asset Vault ID PDF private cùng một lựa chọn ngôn ngữ.</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-pdf-ocr-to-word\" data-portal-route=\"/documents/pdf-ocr-to-word\" data-portal-confirm=\"Đọc PDF scan private thành DOCX? Web chỉ phát DOCX sau khi server xác minh OCR và output; PDF gốc không bị thay đổi.\" novalidate>${renderFields(pdfOcrWordFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>Tạo DOCX riêng tư</button></div></form></section><aside class=\"portal-card portal-card-pad portal-document-operation-boundary\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Ranh giới rõ ràng</h2><p class=\"portal-card-subtitle\">OCR → Word là pipeline Web-native server-side, không phải preview hay promise browser.</p></div></div><ol class=\"portal-project-steps\"><li><strong>1. Nguồn có ownership</strong><span>Chỉ một PDF active của signed account hiện tại được đọc từ Asset Vault.</span></li><li><strong>2. Xử lý có kiểm tra</strong><span>Runtime, language pack, PDF source và DOCX cuối cùng phải được server kiểm tra. Không có text đủ điều kiện hoặc runtime chưa sẵn sàng sẽ trả guarded.</span></li><li><strong>3. Delivery riêng tư</strong><span>DOCX chỉ được phát sau kiểm tra content và integrity qua signed session; không public URL, PWA cache hoặc preview raw OCR text.</span></li></ol><div class=\"portal-form-footer\"><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">Mở Asset Vault</a></div></aside></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">DOCX OCR PDF riêng tư</h2><p class=\"portal-card-subtitle\">Chỉ metadata an toàn và download thuộc signed account hiện tại được hiển thị. Text OCR không được render vào browser để tránh preview hoặc lưu client-side ngoài ý muốn.</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/pdf-ocr-to-word\"${canRefresh ? \"\" : \" disabled\"}>Làm mới</button></div>${renderDocumentOperationCards(operations, context, \"Chưa có DOCX OCR PDF\", \"DOCX chỉ xuất hiện sau khi server đọc được text thực, xác minh output private và xác nhận ownership. Không có text/attachment mô phỏng.\")}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/pdf-ocr-to-word\")}</section>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-notice portal-notice--info\"><span class=\"portal-notice-icon\" aria-hidden=\"true\">i</span><div><strong>Không tạo tích hợp ngầm</strong><p>OCR PDF → Word không tạo Bot job, gọi provider, Xu, ví, PayOS, webhook, asset public hoặc Telegram action. OCR PDF TXT và PDF có text → Word là workflow riêng, không tự được suy diễn từ trang này.</p></div></div>${renderNotes(page)}</section>\n    </article>`;\n  }\n",
+      "new": "  function renderPdfOcrToWord(page, context) {\n    const pdfOcrWordEnabled = context.pdfOcrWordEnabled === true;\n    const canView = Boolean(context.capabilities && context.capabilities[\"document-operation-view\"] === true && pdfOcrWordEnabled);\n    const canRunCapability = Boolean(context.capabilities && context.capabilities[\"document-operation-pdf-ocr-to-word\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"document-operation-refresh\"] === true && pdfOcrWordEnabled);\n    if (!canView) {\n      return `<article class=\"portal-page portal-pdf-ocr-to-word\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText(\"docOcrSharedUiGuardTitle\", \"Chưa thể mở công cụ\"))}</h2><p>${safeText(uiText(\"docOcrSharedUiGuardBody\", \"Vui lòng tải lại trang. Nếu vẫn chưa mở được, hãy liên hệ hỗ trợ.\"))}</p></div></div></section></article>`;\n    }\n    const sources = pdfVaultItems(context);\n    const operations = documentOperationItems(context, \"pdf_ocr_word\");\n    const canRun = canRunCapability && sources.length > 0;\n    const formValues = { language: \"auto\", ...transientFormValues(\"/documents/pdf-ocr-to-word\") };\n    const runReason = !canRunCapability\n      ? uiText(\"docOcrSharedUiNoAccess\", \"Tài khoản này chưa được phép dùng công cụ.\")\n      : !sources.length ? uiText(\"docOcrWordUiEmptyBody\", \"Chọn một PDF quét trong kho tệp để bắt đầu.\") : uiText(\"docOcrSharedUiReady\", \"Tệp gốc được giữ nguyên. Hãy rà soát lại chữ sau khi tải kết quả.\");\n    return `<article class=\"portal-page portal-pdf-ocr-to-word\">${renderHero(page, context)}\n      <div class=\"portal-document-operation-layout portal-document-operation-layout--single\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docOcrWordUiFormTitle\", \"Chọn PDF quét và ngôn ngữ\"))}</h2></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-pdf-ocr-to-word\" data-portal-route=\"/documents/pdf-ocr-to-word\" data-portal-confirm=\"${safeText(uiText(\"docOcrWordUiConfirm\", \"Đọc chữ trong PDF quét để tạo tài liệu Word? PDF gốc được giữ nguyên.\"))}\" novalidate>${renderFields(pdfOcrWordFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(uiText(\"docPdfReadyUiOpenFiles\", \"Mở kho tệp\"))}</a><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>${safeText(uiText(\"docOcrWordUiButton\", \"Tạo tệp Word\"))}</button></div></form></section></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docOcrWordUiHistoryTitle\", \"Tài liệu Word đã tạo\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiHistoryBody\", \"Xem tiến trình và tải tệp khi xử lý hoàn tất.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/pdf-ocr-to-word\"${canRefresh ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiRefresh\", \"Làm mới\"))}</button></div>${renderDocumentOperationCards(operations, context, uiText(\"docOcrWordUiEmptyTitle\", \"Chưa có tài liệu Word từ PDF quét\"), uiText(\"docOcrWordUiEmptyBody\", \"Chọn một PDF quét trong kho tệp để bắt đầu.\"))}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/pdf-ocr-to-word\")}</section>\n    </article>`;\n  }\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    if (path === \"/documents/image-to-pdf\") return uiText(\"imageToPdfMetaUiTitle\", \"Ảnh thành PDF\");",
+      "new": "    if (path === \"/documents/pdf-ocr-to-word\") return uiText(\"docOcrWordUiTitle\", \"PDF quét sang Word\");\n    if (path === \"/documents/image-to-pdf\") return uiText(\"imageToPdfMetaUiTitle\", \"Ảnh thành PDF\");",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    if (path === \"/documents/image-to-pdf\") return uiText(\"imageToPdfMetaUiDescription\", \"Chọn ảnh và ghép thành một tệp PDF. Ảnh gốc được giữ nguyên.\");",
+      "new": "    if (path === \"/documents/pdf-ocr-to-word\") return uiText(\"docOcrWordUiDescription\", \"Đọc chữ trong PDF quét để tạo tài liệu Word. Không giữ hình ảnh, bảng, phông chữ hay cách dàn trang.\");\n    if (path === \"/documents/image-to-pdf\") return uiText(\"imageToPdfMetaUiDescription\", \"Chọn ảnh và ghép thành một tệp PDF. Ảnh gốc được giữ nguyên.\");",
+      "count": 1
+    },
+    {
+      "file": "copyfast_pages.py",
+      "old": "    \"/documents/image-to-pdf\": {\"vi\": \"Ảnh thành PDF · TOAN AAS\", \"en\": \"Images to PDF · TOAN AAS\", \"zh\": \"图像转 PDF · TOAN AAS\"},",
+      "new": "    \"/documents/pdf-ocr-to-word\": {\"vi\":\"PDF quét sang Word · TOAN AAS\",\"en\":\"Scanned PDF to Word · TOAN AAS\",\"zh\":\"扫描版 PDF 转 Word · TOAN AAS\"},\n    \"/documents/image-to-pdf\": {\"vi\": \"Ảnh thành PDF · TOAN AAS\", \"en\": \"Images to PDF · TOAN AAS\", \"zh\": \"图像转 PDF · TOAN AAS\"},",
+      "count": 1
+    },
+    {
+      "file": "copyfast_pages.py",
+      "old": "    \"/documents/image-to-pdf\": {\n        \"vi\": \"Chọn ảnh và ghép thành một tệp PDF. Ảnh gốc được giữ nguyên.\",\n        \"en\": \"Choose images and combine them into one PDF file. The original images stay unchanged.\",\n        \"zh\": \"选择图像并合成为一个 PDF 文件。原图像保持不变。\",\n    },",
+      "new": "    \"/documents/pdf-ocr-to-word\": {\n        \"vi\": \"Đọc chữ trong PDF quét để tạo tài liệu Word. Không giữ hình ảnh, bảng, phông chữ hay cách dàn trang.\",\n        \"en\": \"Read text in a scanned PDF to create a Word document. Images, tables, fonts and page layout are not retained.\",\n        \"zh\": \"识别扫描版 PDF 中的文字并生成 Word 文档。不保留图像、表格、字体或页面布局。\",\n    },\n    \"/documents/image-to-pdf\": {\n        \"vi\": \"Chọn ảnh và ghép thành một tệp PDF. Ảnh gốc được giữ nguyên.\",\n        \"en\": \"Choose images and combine them into one PDF file. The original images stay unchanged.\",\n        \"zh\": \"选择图像并合成为一个 PDF 文件。原图像保持不变。\",\n    },",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  verifyEqualKeysets();",
+      "new": "  Object.assign(MESSAGES.vi, {\"docOcrSharedUiImageSourceLabel\":\"Ảnh từ kho tệp\",\"docOcrSharedUiImageSourceEmpty\":\"Chọn ảnh\",\"docOcrSharedUiImageSourceHelp\":\"Chọn một ảnh JPEG, PNG hoặc WebP đã lưu, tối đa 20 MB. Chữ rõ và ngay ngắn cho kết quả dễ đọc hơn.\",\"docOcrSharedUiPdfSourceHelp\":\"Chọn PDF đã lưu, tối đa 20 MB và 5 trang. Chữ rõ và ngay ngắn cho kết quả dễ đọc hơn.\",\"docOcrSharedUiWordSourceHelp\":\"Chỉ lấy phần chữ, không giữ hình ảnh, bảng, phông chữ hoặc cách dàn trang. PDF tối đa 20 MB và 5 trang.\",\"docOcrSharedUiLanguageLabel\":\"Ngôn ngữ của chữ\",\"docOcrSharedUiLanguageAuto\":\"Tự chọn\",\"docOcrSharedUiLanguageVi\":\"Tiếng Việt\",\"docOcrSharedUiLanguageEn\":\"Tiếng Anh\",\"docOcrSharedUiLanguageHelp\":\"Chọn ngôn ngữ của chữ trong tệp. Chỉ đọc lại chữ, không dịch nội dung.\",\"docOcrSharedUiGuardTitle\":\"Chưa thể mở công cụ\",\"docOcrSharedUiGuardBody\":\"Vui lòng tải lại trang. Nếu vẫn chưa mở được, hãy liên hệ hỗ trợ.\",\"docOcrSharedUiNoAccess\":\"Tài khoản này chưa được phép dùng công cụ.\",\"docOcrSharedUiReady\":\"Tệp gốc được giữ nguyên. Hãy rà soát lại chữ sau khi tải kết quả.\",\"docOcrImageUiTitle\":\"Đọc chữ từ ảnh\",\"docOcrImageUiDescription\":\"Đọc chữ trong ảnh đã lưu và tải về tệp văn bản. Ảnh gốc được giữ nguyên.\",\"docOcrImageUiFormTitle\":\"Chọn ảnh và ngôn ngữ\",\"docOcrImageUiConfirm\":\"Đọc chữ từ ảnh đã chọn? Ảnh gốc được giữ nguyên.\",\"docOcrImageUiHistoryTitle\":\"Văn bản đã đọc từ ảnh\",\"docOcrImageUiEmptyTitle\":\"Chưa có kết quả đọc chữ từ ảnh\",\"docOcrImageUiEmptyBody\":\"Chọn một ảnh trong kho tệp để bắt đầu.\",\"docOcrPdfUiTitle\":\"Đọc chữ từ PDF\",\"docOcrPdfUiDescription\":\"Đọc chữ trong PDF đã lưu và tải về tệp văn bản. Tệp gốc được giữ nguyên.\",\"docOcrPdfUiFormTitle\":\"Chọn PDF và ngôn ngữ\",\"docOcrPdfUiConfirm\":\"Đọc chữ từ PDF đã chọn? Tệp gốc được giữ nguyên.\",\"docOcrPdfUiHistoryTitle\":\"Văn bản đã đọc từ PDF\",\"docOcrPdfUiEmptyTitle\":\"Chưa có kết quả đọc chữ từ PDF\",\"docOcrPdfUiEmptyBody\":\"Chọn một PDF trong kho tệp để bắt đầu.\",\"docOcrWordUiTitle\":\"PDF quét sang Word\",\"docOcrWordUiDescription\":\"Đọc chữ trong PDF quét để tạo tài liệu Word. Không giữ hình ảnh, bảng, phông chữ hay cách dàn trang.\",\"docOcrWordUiFormTitle\":\"Chọn PDF quét và ngôn ngữ\",\"docOcrWordUiConfirm\":\"Đọc chữ trong PDF quét để tạo tài liệu Word? PDF gốc được giữ nguyên.\",\"docOcrWordUiHistoryTitle\":\"Tài liệu Word đã tạo\",\"docOcrWordUiEmptyTitle\":\"Chưa có tài liệu Word từ PDF quét\",\"docOcrWordUiEmptyBody\":\"Chọn một PDF quét trong kho tệp để bắt đầu.\",\"docOcrWordUiButton\":\"Tạo tệp Word\"});\n  Object.assign(MESSAGES.en, {\"docOcrSharedUiImageSourceLabel\":\"Image from file library\",\"docOcrSharedUiImageSourceEmpty\":\"Choose image\",\"docOcrSharedUiImageSourceHelp\":\"Choose a saved JPEG, PNG or WebP image, up to 20 MB. Clear, upright text gives more readable results.\",\"docOcrSharedUiPdfSourceHelp\":\"Choose a saved PDF, up to 20 MB and 5 pages. Clear, upright text gives more readable results.\",\"docOcrSharedUiWordSourceHelp\":\"Extract text only; images, tables, fonts and page layout are not retained. PDFs can be up to 20 MB and 5 pages.\",\"docOcrSharedUiLanguageLabel\":\"Text language\",\"docOcrSharedUiLanguageAuto\":\"Automatic\",\"docOcrSharedUiLanguageVi\":\"Vietnamese\",\"docOcrSharedUiLanguageEn\":\"English\",\"docOcrSharedUiLanguageHelp\":\"Choose the language of the text in the file. Text is extracted, not translated.\",\"docOcrSharedUiGuardTitle\":\"This tool could not be opened\",\"docOcrSharedUiGuardBody\":\"Reload the page. If the tool still cannot be opened, contact support.\",\"docOcrSharedUiNoAccess\":\"This account does not have access to this tool.\",\"docOcrSharedUiReady\":\"The original stays unchanged. Review the extracted text after downloading.\",\"docOcrImageUiTitle\":\"Read text from images\",\"docOcrImageUiDescription\":\"Read text in a saved image and download a text file. The original image stays unchanged.\",\"docOcrImageUiFormTitle\":\"Choose an image and text language\",\"docOcrImageUiConfirm\":\"Read text from the selected image? The original image stays unchanged.\",\"docOcrImageUiHistoryTitle\":\"Text extracted from images\",\"docOcrImageUiEmptyTitle\":\"No text extracted from images yet\",\"docOcrImageUiEmptyBody\":\"Choose an image from your file library to begin.\",\"docOcrPdfUiTitle\":\"Read text from PDF\",\"docOcrPdfUiDescription\":\"Read text in a saved PDF and download a text file. The original stays unchanged.\",\"docOcrPdfUiFormTitle\":\"Choose a PDF and text language\",\"docOcrPdfUiConfirm\":\"Read text from the selected PDF? The original stays unchanged.\",\"docOcrPdfUiHistoryTitle\":\"Text extracted from PDF\",\"docOcrPdfUiEmptyTitle\":\"No text extracted from PDF yet\",\"docOcrPdfUiEmptyBody\":\"Choose a PDF from your file library to begin.\",\"docOcrWordUiTitle\":\"Scanned PDF to Word\",\"docOcrWordUiDescription\":\"Read text in a scanned PDF to create a Word document. Images, tables, fonts and page layout are not retained.\",\"docOcrWordUiFormTitle\":\"Choose a scanned PDF and text language\",\"docOcrWordUiConfirm\":\"Read text in the scanned PDF to create a Word document? The original PDF stays unchanged.\",\"docOcrWordUiHistoryTitle\":\"Created Word documents\",\"docOcrWordUiEmptyTitle\":\"No Word documents from scanned PDF yet\",\"docOcrWordUiEmptyBody\":\"Choose a scanned PDF from your file library to begin.\",\"docOcrWordUiButton\":\"Create Word file\"});\n  Object.assign(MESSAGES.zh, {\"docOcrSharedUiImageSourceLabel\":\"文件库中的图像\",\"docOcrSharedUiImageSourceEmpty\":\"选择图像\",\"docOcrSharedUiImageSourceHelp\":\"选择已保存的 JPEG、PNG 或 WebP 图像，最大 20 MB。清晰、端正的文字可获得更易读的结果。\",\"docOcrSharedUiPdfSourceHelp\":\"选择已保存的 PDF，最大 20 MB、5 页。清晰、端正的文字可获得更易读的结果。\",\"docOcrSharedUiWordSourceHelp\":\"仅提取文字，不保留图像、表格、字体或页面布局。PDF 最大 20 MB、5 页。\",\"docOcrSharedUiLanguageLabel\":\"文字语言\",\"docOcrSharedUiLanguageAuto\":\"自动选择\",\"docOcrSharedUiLanguageVi\":\"越南语\",\"docOcrSharedUiLanguageEn\":\"英语\",\"docOcrSharedUiLanguageHelp\":\"选择文件中文字的语言。仅提取文字，不翻译内容。\",\"docOcrSharedUiGuardTitle\":\"暂时无法打开此工具\",\"docOcrSharedUiGuardBody\":\"请重新加载页面。如果仍无法打开此工具，请联系支持人员。\",\"docOcrSharedUiNoAccess\":\"此账户无权使用此工具。\",\"docOcrSharedUiReady\":\"原文件保持不变。下载后请核对识别出的文字。\",\"docOcrImageUiTitle\":\"识别图像文字\",\"docOcrImageUiDescription\":\"识别已保存图像中的文字并下载文本文件。原图像保持不变。\",\"docOcrImageUiFormTitle\":\"选择图像与文字语言\",\"docOcrImageUiConfirm\":\"识别所选图像中的文字？原图像保持不变。\",\"docOcrImageUiHistoryTitle\":\"已识别的图像文字\",\"docOcrImageUiEmptyTitle\":\"尚无图像文字识别结果\",\"docOcrImageUiEmptyBody\":\"从文件库选择图像以开始。\",\"docOcrPdfUiTitle\":\"识别 PDF 文字\",\"docOcrPdfUiDescription\":\"识别已保存 PDF 中的文字并下载文本文件。原文件保持不变。\",\"docOcrPdfUiFormTitle\":\"选择 PDF 与文字语言\",\"docOcrPdfUiConfirm\":\"识别所选 PDF 中的文字？原文件保持不变。\",\"docOcrPdfUiHistoryTitle\":\"已识别的 PDF 文字\",\"docOcrPdfUiEmptyTitle\":\"尚无 PDF 文字识别结果\",\"docOcrPdfUiEmptyBody\":\"从文件库选择 PDF 以开始。\",\"docOcrWordUiTitle\":\"扫描版 PDF 转 Word\",\"docOcrWordUiDescription\":\"识别扫描版 PDF 中的文字并生成 Word 文档。不保留图像、表格、字体或页面布局。\",\"docOcrWordUiFormTitle\":\"选择扫描版 PDF 与文字语言\",\"docOcrWordUiConfirm\":\"识别扫描版 PDF 中的文字并生成 Word 文档？原 PDF 保持不变。\",\"docOcrWordUiHistoryTitle\":\"已生成的 Word 文档\",\"docOcrWordUiEmptyTitle\":\"尚无由扫描版 PDF 生成的 Word 文档\",\"docOcrWordUiEmptyBody\":\"从文件库选择扫描版 PDF 以开始。\",\"docOcrWordUiButton\":\"生成 Word 文件\"});\n  verifyEqualKeysets();",
+      "count": 1
+    }
+  ],
+  "rows": [
+    [
+      "docOcrSharedUiImageSourceLabel",
+      "Ảnh từ kho tệp",
+      "Image from file library",
+      "文件库中的图像"
+    ],
+    [
+      "docOcrSharedUiImageSourceEmpty",
+      "Chọn ảnh",
+      "Choose image",
+      "选择图像"
+    ],
+    [
+      "docOcrSharedUiImageSourceHelp",
+      "Chọn một ảnh JPEG, PNG hoặc WebP đã lưu, tối đa 20 MB. Chữ rõ và ngay ngắn cho kết quả dễ đọc hơn.",
+      "Choose a saved JPEG, PNG or WebP image, up to 20 MB. Clear, upright text gives more readable results.",
+      "选择已保存的 JPEG、PNG 或 WebP 图像，最大 20 MB。清晰、端正的文字可获得更易读的结果。"
+    ],
+    [
+      "docOcrSharedUiPdfSourceHelp",
+      "Chọn PDF đã lưu, tối đa 20 MB và 5 trang. Chữ rõ và ngay ngắn cho kết quả dễ đọc hơn.",
+      "Choose a saved PDF, up to 20 MB and 5 pages. Clear, upright text gives more readable results.",
+      "选择已保存的 PDF，最大 20 MB、5 页。清晰、端正的文字可获得更易读的结果。"
+    ],
+    [
+      "docOcrSharedUiWordSourceHelp",
+      "Chỉ lấy phần chữ, không giữ hình ảnh, bảng, phông chữ hoặc cách dàn trang. PDF tối đa 20 MB và 5 trang.",
+      "Extract text only; images, tables, fonts and page layout are not retained. PDFs can be up to 20 MB and 5 pages.",
+      "仅提取文字，不保留图像、表格、字体或页面布局。PDF 最大 20 MB、5 页。"
+    ],
+    [
+      "docOcrSharedUiLanguageLabel",
+      "Ngôn ngữ của chữ",
+      "Text language",
+      "文字语言"
+    ],
+    [
+      "docOcrSharedUiLanguageAuto",
+      "Tự chọn",
+      "Automatic",
+      "自动选择"
+    ],
+    [
+      "docOcrSharedUiLanguageVi",
+      "Tiếng Việt",
+      "Vietnamese",
+      "越南语"
+    ],
+    [
+      "docOcrSharedUiLanguageEn",
+      "Tiếng Anh",
+      "English",
+      "英语"
+    ],
+    [
+      "docOcrSharedUiLanguageHelp",
+      "Chọn ngôn ngữ của chữ trong tệp. Chỉ đọc lại chữ, không dịch nội dung.",
+      "Choose the language of the text in the file. Text is extracted, not translated.",
+      "选择文件中文字的语言。仅提取文字，不翻译内容。"
+    ],
+    [
+      "docOcrSharedUiGuardTitle",
+      "Chưa thể mở công cụ",
+      "This tool could not be opened",
+      "暂时无法打开此工具"
+    ],
+    [
+      "docOcrSharedUiGuardBody",
+      "Vui lòng tải lại trang. Nếu vẫn chưa mở được, hãy liên hệ hỗ trợ.",
+      "Reload the page. If the tool still cannot be opened, contact support.",
+      "请重新加载页面。如果仍无法打开此工具，请联系支持人员。"
+    ],
+    [
+      "docOcrSharedUiNoAccess",
+      "Tài khoản này chưa được phép dùng công cụ.",
+      "This account does not have access to this tool.",
+      "此账户无权使用此工具。"
+    ],
+    [
+      "docOcrSharedUiReady",
+      "Tệp gốc được giữ nguyên. Hãy rà soát lại chữ sau khi tải kết quả.",
+      "The original stays unchanged. Review the extracted text after downloading.",
+      "原文件保持不变。下载后请核对识别出的文字。"
+    ],
+    [
+      "docOcrImageUiTitle",
+      "Đọc chữ từ ảnh",
+      "Read text from images",
+      "识别图像文字"
+    ],
+    [
+      "docOcrImageUiDescription",
+      "Đọc chữ trong ảnh đã lưu và tải về tệp văn bản. Ảnh gốc được giữ nguyên.",
+      "Read text in a saved image and download a text file. The original image stays unchanged.",
+      "识别已保存图像中的文字并下载文本文件。原图像保持不变。"
+    ],
+    [
+      "docOcrImageUiFormTitle",
+      "Chọn ảnh và ngôn ngữ",
+      "Choose an image and text language",
+      "选择图像与文字语言"
+    ],
+    [
+      "docOcrImageUiConfirm",
+      "Đọc chữ từ ảnh đã chọn? Ảnh gốc được giữ nguyên.",
+      "Read text from the selected image? The original image stays unchanged.",
+      "识别所选图像中的文字？原图像保持不变。"
+    ],
+    [
+      "docOcrImageUiHistoryTitle",
+      "Văn bản đã đọc từ ảnh",
+      "Text extracted from images",
+      "已识别的图像文字"
+    ],
+    [
+      "docOcrImageUiEmptyTitle",
+      "Chưa có kết quả đọc chữ từ ảnh",
+      "No text extracted from images yet",
+      "尚无图像文字识别结果"
+    ],
+    [
+      "docOcrImageUiEmptyBody",
+      "Chọn một ảnh trong kho tệp để bắt đầu.",
+      "Choose an image from your file library to begin.",
+      "从文件库选择图像以开始。"
+    ],
+    [
+      "docOcrPdfUiTitle",
+      "Đọc chữ từ PDF",
+      "Read text from PDF",
+      "识别 PDF 文字"
+    ],
+    [
+      "docOcrPdfUiDescription",
+      "Đọc chữ trong PDF đã lưu và tải về tệp văn bản. Tệp gốc được giữ nguyên.",
+      "Read text in a saved PDF and download a text file. The original stays unchanged.",
+      "识别已保存 PDF 中的文字并下载文本文件。原文件保持不变。"
+    ],
+    [
+      "docOcrPdfUiFormTitle",
+      "Chọn PDF và ngôn ngữ",
+      "Choose a PDF and text language",
+      "选择 PDF 与文字语言"
+    ],
+    [
+      "docOcrPdfUiConfirm",
+      "Đọc chữ từ PDF đã chọn? Tệp gốc được giữ nguyên.",
+      "Read text from the selected PDF? The original stays unchanged.",
+      "识别所选 PDF 中的文字？原文件保持不变。"
+    ],
+    [
+      "docOcrPdfUiHistoryTitle",
+      "Văn bản đã đọc từ PDF",
+      "Text extracted from PDF",
+      "已识别的 PDF 文字"
+    ],
+    [
+      "docOcrPdfUiEmptyTitle",
+      "Chưa có kết quả đọc chữ từ PDF",
+      "No text extracted from PDF yet",
+      "尚无 PDF 文字识别结果"
+    ],
+    [
+      "docOcrPdfUiEmptyBody",
+      "Chọn một PDF trong kho tệp để bắt đầu.",
+      "Choose a PDF from your file library to begin.",
+      "从文件库选择 PDF 以开始。"
+    ],
+    [
+      "docOcrWordUiTitle",
+      "PDF quét sang Word",
+      "Scanned PDF to Word",
+      "扫描版 PDF 转 Word"
+    ],
+    [
+      "docOcrWordUiDescription",
+      "Đọc chữ trong PDF quét để tạo tài liệu Word. Không giữ hình ảnh, bảng, phông chữ hay cách dàn trang.",
+      "Read text in a scanned PDF to create a Word document. Images, tables, fonts and page layout are not retained.",
+      "识别扫描版 PDF 中的文字并生成 Word 文档。不保留图像、表格、字体或页面布局。"
+    ],
+    [
+      "docOcrWordUiFormTitle",
+      "Chọn PDF quét và ngôn ngữ",
+      "Choose a scanned PDF and text language",
+      "选择扫描版 PDF 与文字语言"
+    ],
+    [
+      "docOcrWordUiConfirm",
+      "Đọc chữ trong PDF quét để tạo tài liệu Word? PDF gốc được giữ nguyên.",
+      "Read text in the scanned PDF to create a Word document? The original PDF stays unchanged.",
+      "识别扫描版 PDF 中的文字并生成 Word 文档？原 PDF 保持不变。"
+    ],
+    [
+      "docOcrWordUiHistoryTitle",
+      "Tài liệu Word đã tạo",
+      "Created Word documents",
+      "已生成的 Word 文档"
+    ],
+    [
+      "docOcrWordUiEmptyTitle",
+      "Chưa có tài liệu Word từ PDF quét",
+      "No Word documents from scanned PDF yet",
+      "尚无由扫描版 PDF 生成的 Word 文档"
+    ],
+    [
+      "docOcrWordUiEmptyBody",
+      "Chọn một PDF quét trong kho tệp để bắt đầu.",
+      "Choose a scanned PDF from your file library to begin.",
+      "从文件库选择扫描版 PDF 以开始。"
+    ],
+    [
+      "docOcrWordUiButton",
+      "Tạo tệp Word",
+      "Create Word file",
+      "生成 Word 文件"
+    ]
+  ],
+  "applicationBaseline": [
+    {
+      "file": "admin_ops.py",
+      "baselineLfSha256": "91a9e9b14fe4ae0af54aa3c4806661694d3240f86774b07e5b12db9b740d3e68",
+      "candidateLfSha256": "91a9e9b14fe4ae0af54aa3c4806661694d3240f86774b07e5b12db9b740d3e68",
+      "changed": false
+    },
+    {
+      "file": "affiliate_ops.py",
+      "baselineLfSha256": "fe6e604918732498c809e56318c6b05d42ecc1d8f7e8c828676d6068c6b590b4",
+      "candidateLfSha256": "fe6e604918732498c809e56318c6b05d42ecc1d8f7e8c828676d6068c6b590b4",
+      "changed": false
+    },
+    {
+      "file": "ai_assistant.py",
+      "baselineLfSha256": "968050546548369be1e1d349a250c40d2d0ff04c1a20af53b665db88e07ccb6e",
+      "candidateLfSha256": "968050546548369be1e1d349a250c40d2d0ff04c1a20af53b665db88e07ccb6e",
+      "changed": false
+    },
+    {
+      "file": "ai_media.py",
+      "baselineLfSha256": "495be3b425cc8d79be2491b3519f37115bcea0e5ba511e75ca05115fd0569dec",
+      "candidateLfSha256": "495be3b425cc8d79be2491b3519f37115bcea0e5ba511e75ca05115fd0569dec",
+      "changed": false
+    },
+    {
+      "file": "app.py",
+      "baselineLfSha256": "903aebe8620d630670b6c05edfd59c7781df46ab8e57cf8c1eb28ae201a503d5",
+      "candidateLfSha256": "903aebe8620d630670b6c05edfd59c7781df46ab8e57cf8c1eb28ae201a503d5",
+      "changed": false
+    },
+    {
+      "file": "auth.py",
+      "baselineLfSha256": "e0d33d7a89e3854a2cd5c5bb7456586a482a9c79a9a57283887bcb04e36fde81",
+      "candidateLfSha256": "e0d33d7a89e3854a2cd5c5bb7456586a482a9c79a9a57283887bcb04e36fde81",
+      "changed": false
+    },
+    {
+      "file": "auth_ops.py",
+      "baselineLfSha256": "438af891dc582e17f24f6d96e9c1037d1f217de7bfd446043aff6ac1751a8e50",
+      "candidateLfSha256": "438af891dc582e17f24f6d96e9c1037d1f217de7bfd446043aff6ac1751a8e50",
+      "changed": false
+    },
+    {
+      "file": "billing.py",
+      "baselineLfSha256": "51d9469cd555cf6d9cef9398e9e988131907c782f4ec479797dcf60cde9a7518",
+      "candidateLfSha256": "51d9469cd555cf6d9cef9398e9e988131907c782f4ec479797dcf60cde9a7518",
+      "changed": false
+    },
+    {
+      "file": "campaign.py",
+      "baselineLfSha256": "3c340dd1e528a24f828828032e9bd7555ed5e4d997479e95a1bcedcd88e56c68",
+      "candidateLfSha256": "3c340dd1e528a24f828828032e9bd7555ed5e4d997479e95a1bcedcd88e56c68",
+      "changed": false
+    },
+    {
+      "file": "campaign_ops.py",
+      "baselineLfSha256": "e42f7871571cf392bf9f4dddcc240cc9f47c67e0fde4bd33740f4bebd377be77",
+      "candidateLfSha256": "e42f7871571cf392bf9f4dddcc240cc9f47c67e0fde4bd33740f4bebd377be77",
+      "changed": false
+    },
+    {
+      "file": "coach.py",
+      "baselineLfSha256": "9dc7bcff7048d392214783121aaf01c4b8415b8b80796cffec0bfabc32702dce",
+      "candidateLfSha256": "9dc7bcff7048d392214783121aaf01c4b8415b8b80796cffec0bfabc32702dce",
+      "changed": false
+    },
+    {
+      "file": "config.py",
+      "baselineLfSha256": "25411413042e8ad814bc7f80f2f863ad4f9b8a0ded01302a29db21963e193270",
+      "candidateLfSha256": "25411413042e8ad814bc7f80f2f863ad4f9b8a0ded01302a29db21963e193270",
+      "changed": false
+    },
+    {
+      "file": "control_status.py",
+      "baselineLfSha256": "815f93031645e0c51eea38b3810014e7eb9b73038fe1f56323eb083d7e432aca",
+      "candidateLfSha256": "815f93031645e0c51eea38b3810014e7eb9b73038fe1f56323eb083d7e432aca",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_audit.py",
+      "baselineLfSha256": "5292858ef4fea614f49113568ef77d2bc5fe814c632c673113811c3ce61aebc8",
+      "candidateLfSha256": "5292858ef4fea614f49113568ef77d2bc5fe814c632c673113811c3ce61aebc8",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_automation.py",
+      "baselineLfSha256": "abf61e8ffbf507885db5d7729138f6b9f3143332422836c427af9387aaab9b14",
+      "candidateLfSha256": "abf61e8ffbf507885db5d7729138f6b9f3143332422836c427af9387aaab9b14",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_commercial.py",
+      "baselineLfSha256": "e25f28f9e2ab30ede1c833cbbab4f718ec9b8811737c20c700214ddef20e46ca",
+      "candidateLfSha256": "e25f28f9e2ab30ede1c833cbbab4f718ec9b8811737c20c700214ddef20e46ca",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_customer_directory.py",
+      "baselineLfSha256": "3f5d63d0c327c431e69339d1b11e244fbfb209ff853cbd24f69f0c760d9404a7",
+      "candidateLfSha256": "3f5d63d0c327c431e69339d1b11e244fbfb209ff853cbd24f69f0c760d9404a7",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_document_archive.py",
+      "baselineLfSha256": "16b02f83f69cbf43c9d72050e7806d067a81671ecc4fd115d5d94e4fee7d2157",
+      "candidateLfSha256": "16b02f83f69cbf43c9d72050e7806d067a81671ecc4fd115d5d94e4fee7d2157",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_erp_navigation.py",
+      "baselineLfSha256": "6815e1b6c00d1c17d7ccb5625fa9b0e587c2240a27b21ca05a5ce5dae1be06f3",
+      "candidateLfSha256": "6815e1b6c00d1c17d7ccb5625fa9b0e587c2240a27b21ca05a5ce5dae1be06f3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_security_posture.py",
+      "baselineLfSha256": "6cca07df76803f5abbabe6cb22e5b05c6eb2663ccf2698f6a5b80a4b92863044",
+      "candidateLfSha256": "6cca07df76803f5abbabe6cb22e5b05c6eb2663ccf2698f6a5b80a4b92863044",
+      "changed": false
+    },
+    {
+      "file": "copyfast_analytics_workspace.py",
+      "baselineLfSha256": "6b6f15005da6f723b8f0f2a8899e192058eed73af48433fe7bbb9184343d41ae",
+      "candidateLfSha256": "6b6f15005da6f723b8f0f2a8899e192058eed73af48433fe7bbb9184343d41ae",
+      "changed": false
+    },
+    {
+      "file": "copyfast_api.py",
+      "baselineLfSha256": "8e18ea3ae8e3a11af54673760371815fbcd4e49ea7ca4573b97971ad5ac71ecf",
+      "candidateLfSha256": "8e18ea3ae8e3a11af54673760371815fbcd4e49ea7ca4573b97971ad5ac71ecf",
+      "changed": false
+    },
+    {
+      "file": "copyfast_assets.py",
+      "baselineLfSha256": "43fb5119c0e240858041be3088e276b5b0cf2dca091eefdda681deca74be0039",
+      "candidateLfSha256": "43fb5119c0e240858041be3088e276b5b0cf2dca091eefdda681deca74be0039",
+      "changed": false
+    },
+    {
+      "file": "copyfast_audio_asset_operations.py",
+      "baselineLfSha256": "62eb392945e8712ff0bf784dbc24f908a91ec60d769bb6e3e5d364eb3932d8a8",
+      "candidateLfSha256": "62eb392945e8712ff0bf784dbc24f908a91ec60d769bb6e3e5d364eb3932d8a8",
+      "changed": false
+    },
+    {
+      "file": "copyfast_audio_change_requests.py",
+      "baselineLfSha256": "3939330b55b27d535eba5afb17b9f8c571fb790b4e5a9ed7b5f9b5adc858ce7f",
+      "candidateLfSha256": "3939330b55b27d535eba5afb17b9f8c571fb790b4e5a9ed7b5f9b5adc858ce7f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_auth.py",
+      "baselineLfSha256": "daeb3dd96b77ad76622ed4c0ebc6d0264a0dd524cbcd5dd6e316502b81bf6606",
+      "candidateLfSha256": "daeb3dd96b77ad76622ed4c0ebc6d0264a0dd524cbcd5dd6e316502b81bf6606",
+      "changed": false
+    },
+    {
+      "file": "copyfast_auth_throttle.py",
+      "baselineLfSha256": "f45ffc9e3e6c3b0dd4f0c51aa41ff91a927b67ba6ea12b7c546d6a606695616d",
+      "candidateLfSha256": "f45ffc9e3e6c3b0dd4f0c51aa41ff91a927b67ba6ea12b7c546d6a606695616d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_autopilot.py",
+      "baselineLfSha256": "542c3c819be393a40bda83701fd74f47a7a5127ae10eeab9dd96ac449e8a8a93",
+      "candidateLfSha256": "542c3c819be393a40bda83701fd74f47a7a5127ae10eeab9dd96ac449e8a8a93",
+      "changed": false
+    },
+    {
+      "file": "copyfast_autopilot_policy.py",
+      "baselineLfSha256": "d9212eddfb2b5429f26e54d9ed29005c012a90045948fb843aa86acdd60f40a1",
+      "candidateLfSha256": "d9212eddfb2b5429f26e54d9ed29005c012a90045948fb843aa86acdd60f40a1",
+      "changed": false
+    },
+    {
+      "file": "copyfast_autopilot_protocol.py",
+      "baselineLfSha256": "6bc4ebc1bd925131fecc277231a5c14663694b13ba565e0f7514387af61782bf",
+      "candidateLfSha256": "6bc4ebc1bd925131fecc277231a5c14663694b13ba565e0f7514387af61782bf",
+      "changed": false
+    },
+    {
+      "file": "copyfast_bridge.py",
+      "baselineLfSha256": "64879f12ddeb635a4abb47a03cdf7c87be10e701a82ca6773cfa0d8804c0c775",
+      "candidateLfSha256": "64879f12ddeb635a4abb47a03cdf7c87be10e701a82ca6773cfa0d8804c0c775",
+      "changed": false
+    },
+    {
+      "file": "copyfast_campaign_schedule.py",
+      "baselineLfSha256": "cb53503bb710e39289c7427b588319eca7674e57df53e2bdbe0264350b4e6e9b",
+      "candidateLfSha256": "cb53503bb710e39289c7427b588319eca7674e57df53e2bdbe0264350b4e6e9b",
+      "changed": false
+    },
+    {
+      "file": "copyfast_capability_hub.py",
+      "baselineLfSha256": "417fe0a24038622b5385801f4f1b442d78b92f7c69d32c40932a150716562c7d",
+      "candidateLfSha256": "417fe0a24038622b5385801f4f1b442d78b92f7c69d32c40932a150716562c7d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_channel_strategy.py",
+      "baselineLfSha256": "501d68b373cdf9455c07a9b8306073cbeacab9b0ec687eea1e0d8fb0f7ff09b3",
+      "candidateLfSha256": "501d68b373cdf9455c07a9b8306073cbeacab9b0ec687eea1e0d8fb0f7ff09b3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_chat_workspace.py",
+      "baselineLfSha256": "9dfcd65d3e84394d1c5605284c42e2beaf5c7e763e74e08e80b8fb6a85b1563d",
+      "candidateLfSha256": "9dfcd65d3e84394d1c5605284c42e2beaf5c7e763e74e08e80b8fb6a85b1563d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_community_trust.py",
+      "baselineLfSha256": "a5ef03b853d41bd506a50ca1009d0efbe8723472e1055f1ed974c83dc3d456f8",
+      "candidateLfSha256": "a5ef03b853d41bd506a50ca1009d0efbe8723472e1055f1ed974c83dc3d456f8",
+      "changed": false
+    },
+    {
+      "file": "copyfast_content_handoff.py",
+      "baselineLfSha256": "1a51cec09754e37766102d80cc55ae72e5553ce48f6d7589cd0399350c56d9e3",
+      "candidateLfSha256": "1a51cec09754e37766102d80cc55ae72e5553ce48f6d7589cd0399350c56d9e3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_content_studio.py",
+      "baselineLfSha256": "e93a3ed3ccc8e1697d1e8ea1a23d77e194361dbfc899020ec5e7149e080c78d2",
+      "candidateLfSha256": "e93a3ed3ccc8e1697d1e8ea1a23d77e194361dbfc899020ec5e7149e080c78d2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_customer_crm_policy.py",
+      "baselineLfSha256": "78f23f9b2b9ee8c23404ecc71e01d8f6fc46b4a1be01def2b1def5017d6b094d",
+      "candidateLfSha256": "78f23f9b2b9ee8c23404ecc71e01d8f6fc46b4a1be01def2b1def5017d6b094d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_data_controls.py",
+      "baselineLfSha256": "a7cb5b3e84d416ea6814c4891bd1cde2c5be139ffcdd3b71df089fa0558d1bbd",
+      "candidateLfSha256": "a7cb5b3e84d416ea6814c4891bd1cde2c5be139ffcdd3b71df089fa0558d1bbd",
+      "changed": false
+    },
+    {
+      "file": "copyfast_db.py",
+      "baselineLfSha256": "7ae4592bcdd02373070209f8e6ee4120276bbba3b226f1f323b293bbdf1e8689",
+      "candidateLfSha256": "7ae4592bcdd02373070209f8e6ee4120276bbba3b226f1f323b293bbdf1e8689",
+      "changed": false
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "baselineLfSha256": "cd17e9e2669e1af0631a33490b498a6876204385c9daaa8bd73d8635c2b32c2d",
+      "candidateLfSha256": "cd17e9e2669e1af0631a33490b498a6876204385c9daaa8bd73d8635c2b32c2d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_document_translate_bridge.py",
+      "baselineLfSha256": "e4fd585acc27baf01e6210cf7aa77d3fd7350cffe09aa375811db6eea8c4d114",
+      "candidateLfSha256": "e4fd585acc27baf01e6210cf7aa77d3fd7350cffe09aa375811db6eea8c4d114",
+      "changed": false
+    },
+    {
+      "file": "copyfast_document_workspace.py",
+      "baselineLfSha256": "84899b30b56bff95942c4c14a3a5a13e00409e2728140c6d4489bf1fa74918ba",
+      "candidateLfSha256": "84899b30b56bff95942c4c14a3a5a13e00409e2728140c6d4489bf1fa74918ba",
+      "changed": false
+    },
+    {
+      "file": "copyfast_finance_planning.py",
+      "baselineLfSha256": "50df4ac7076f35b8575bc3a15170c6f0ab9c628f00d329338943e38083ed7748",
+      "candidateLfSha256": "50df4ac7076f35b8575bc3a15170c6f0ab9c628f00d329338943e38083ed7748",
+      "changed": false
+    },
+    {
+      "file": "copyfast_finance_policy.py",
+      "baselineLfSha256": "06188107e21edad9e90ee643fa72b1390de0978ab546e47d110056bb3ddf0b32",
+      "candidateLfSha256": "06188107e21edad9e90ee643fa72b1390de0978ab546e47d110056bb3ddf0b32",
+      "changed": false
+    },
+    {
+      "file": "copyfast_frame_video_operations.py",
+      "baselineLfSha256": "a00519665bea97d37abfc1c015028edcb9213f432b1cad45da96a266a7646cfe",
+      "candidateLfSha256": "a00519665bea97d37abfc1c015028edcb9213f432b1cad45da96a266a7646cfe",
+      "changed": false
+    },
+    {
+      "file": "copyfast_free_prompt_gallery.py",
+      "baselineLfSha256": "b9d32e2163f473649f7f9e14e7ed3f363fbb13c3e654fa29686671afc0fb94ae",
+      "candidateLfSha256": "b9d32e2163f473649f7f9e14e7ed3f363fbb13c3e654fa29686671afc0fb94ae",
+      "changed": false
+    },
+    {
+      "file": "copyfast_governance.py",
+      "baselineLfSha256": "7550165e8d48200a105a7486ab0bb4ad923c4fe546be8411ce123121e495aee6",
+      "candidateLfSha256": "7550165e8d48200a105a7486ab0bb4ad923c4fe546be8411ce123121e495aee6",
+      "changed": false
+    },
+    {
+      "file": "copyfast_growth_review.py",
+      "baselineLfSha256": "d3e8f34f8caa5ded3f001bae8acb4dc33dfd2f9dd0e7ce26db3326ba06ee2e9b",
+      "candidateLfSha256": "d3e8f34f8caa5ded3f001bae8acb4dc33dfd2f9dd0e7ce26db3326ba06ee2e9b",
+      "changed": false
+    },
+    {
+      "file": "copyfast_guide_center.py",
+      "baselineLfSha256": "6d4ca3895c767aec4fbe133e9d34d45e76772261ea385db4acd4c366237a2040",
+      "candidateLfSha256": "6d4ca3895c767aec4fbe133e9d34d45e76772261ea385db4acd4c366237a2040",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_generation_job_bridge.py",
+      "baselineLfSha256": "86a84e46ba773f78aa3ab14148dc6670f3ec214d868a62dc12514ad63837bb3f",
+      "candidateLfSha256": "86a84e46ba773f78aa3ab14148dc6670f3ec214d868a62dc12514ad63837bb3f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "baselineLfSha256": "3d559195a68cf4102133c960e801496326be70f422ca193c8b2cbd72f8a99f9c",
+      "candidateLfSha256": "3d559195a68cf4102133c960e801496326be70f422ca193c8b2cbd72f8a99f9c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_remove_background_bridge.py",
+      "baselineLfSha256": "1a99a84d58a174841dadc4487aa3ebac5de8dfff06a9a6795a29f1ad2e5be4d5",
+      "candidateLfSha256": "1a99a84d58a174841dadc4487aa3ebac5de8dfff06a9a6795a29f1ad2e5be4d5",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_runtime.py",
+      "baselineLfSha256": "2cca79ce69712716c01548574c4b87510e33a991fdedfb174e8f8fac10d229cd",
+      "candidateLfSha256": "2cca79ce69712716c01548574c4b87510e33a991fdedfb174e8f8fac10d229cd",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "baselineLfSha256": "b6181e9b527bb729d79ad744e41fca299082674af06c33f3d343a7a123074f9c",
+      "candidateLfSha256": "b6181e9b527bb729d79ad744e41fca299082674af06c33f3d343a7a123074f9c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_transform_job_bridge.py",
+      "baselineLfSha256": "a84cf54cec611e9bf3c071668f9c9920a045fa89d76d77f8838c85e8d041bd85",
+      "candidateLfSha256": "a84cf54cec611e9bf3c071668f9c9920a045fa89d76d77f8838c85e8d041bd85",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_transform_runtime_bridge.py",
+      "baselineLfSha256": "6f75c4c1ba253d0d8ed61777dd179cf5e1a9b9e0f783b4534c0e39d563e48b7d",
+      "candidateLfSha256": "6f75c4c1ba253d0d8ed61777dd179cf5e1a9b9e0f783b4534c0e39d563e48b7d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "baselineLfSha256": "d66438fe942baec59625fc579812bc3515c17ebf7df89c83f4d284ffbacfb18c",
+      "candidateLfSha256": "d66438fe942baec59625fc579812bc3515c17ebf7df89c83f4d284ffbacfb18c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_upscale_provider.py",
+      "baselineLfSha256": "6e75037aaa163f83874d97709deb5b3d4df33a4ff7e3dd88eb46db655d496f66",
+      "candidateLfSha256": "6e75037aaa163f83874d97709deb5b3d4df33a4ff7e3dd88eb46db655d496f66",
+      "changed": false
+    },
+    {
+      "file": "copyfast_media_factory.py",
+      "baselineLfSha256": "472f69228327fa1a16993648b126b06ea1d45bcc7a7e34e6d530952e03b1135f",
+      "candidateLfSha256": "472f69228327fa1a16993648b126b06ea1d45bcc7a7e34e6d530952e03b1135f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_media_runtime.py",
+      "baselineLfSha256": "e1edb1502a425763a21fe229af72c51ea2088972912d5ed3b32f4314e8aad008",
+      "candidateLfSha256": "e1edb1502a425763a21fe229af72c51ea2088972912d5ed3b32f4314e8aad008",
+      "changed": false
+    },
+    {
+      "file": "copyfast_memory.py",
+      "baselineLfSha256": "bc3dd4c3b1b7feaf375705ae90b2989c3f92b036d64f66fffb90399e3b1817b3",
+      "candidateLfSha256": "bc3dd4c3b1b7feaf375705ae90b2989c3f92b036d64f66fffb90399e3b1817b3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_mfa.py",
+      "baselineLfSha256": "956f0f7b24d4ec0d3583b9cddbb7061078bddd19aeeb63351be9beae27e131b3",
+      "candidateLfSha256": "956f0f7b24d4ec0d3583b9cddbb7061078bddd19aeeb63351be9beae27e131b3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_multi_scene_film_job_bridge.py",
+      "baselineLfSha256": "717d2dfca4f524dc600f0016ab79ada35d939832e97d59ca65504dbc77b581b9",
+      "candidateLfSha256": "717d2dfca4f524dc600f0016ab79ada35d939832e97d59ca65504dbc77b581b9",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_job_bridge.py",
+      "baselineLfSha256": "a34baa555cbb8b8edb59a9653551831b83e7fad77ba9bc97c2569d64869106aa",
+      "candidateLfSha256": "a34baa555cbb8b8edb59a9653551831b83e7fad77ba9bc97c2569d64869106aa",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_library_bridge.py",
+      "baselineLfSha256": "d98e42bf9af170a3aef3552a9d4f8f335c3e984d8ea54a4217d1ed633b1bfb0b",
+      "candidateLfSha256": "d98e42bf9af170a3aef3552a9d4f8f335c3e984d8ea54a4217d1ed633b1bfb0b",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_media.py",
+      "baselineLfSha256": "e7be50ff71eb375ed9dd8da449453a4ea1d3fbce6fcc1f93d53590eac2bff1ca",
+      "candidateLfSha256": "e7be50ff71eb375ed9dd8da449453a4ea1d3fbce6fcc1f93d53590eac2bff1ca",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_sfx_job_bridge.py",
+      "baselineLfSha256": "51b25469eea084288c34882ffad314183cda8bb1be20210b54f8c232565f33b5",
+      "candidateLfSha256": "51b25469eea084288c34882ffad314183cda8bb1be20210b54f8c232565f33b5",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_sfx_library_bridge.py",
+      "baselineLfSha256": "d60e8ae5d7e9b1721de91a7023e4db71035b96c1fbf027a686f42e0f180bc927",
+      "candidateLfSha256": "d60e8ae5d7e9b1721de91a7023e4db71035b96c1fbf027a686f42e0f180bc927",
+      "changed": false
+    },
+    {
+      "file": "copyfast_native_read_models.py",
+      "baselineLfSha256": "a18506592f7dfcbdf6e84da7eca961a333aa71abe5ba742b27563692a3d837aa",
+      "candidateLfSha256": "a18506592f7dfcbdf6e84da7eca961a333aa71abe5ba742b27563692a3d837aa",
+      "changed": false
+    },
+    {
+      "file": "copyfast_notification_center.py",
+      "baselineLfSha256": "6e7492917c6915dbdae0c1ddf7dabba46267bdbc9e3ccafe275015da5f014eac",
+      "candidateLfSha256": "6e7492917c6915dbdae0c1ddf7dabba46267bdbc9e3ccafe275015da5f014eac",
+      "changed": false
+    },
+    {
+      "file": "copyfast_notification_protocol.py",
+      "baselineLfSha256": "c40fdae4e29ee24f015d1c3175e5595d7f270639de891ce62b5735f80898575f",
+      "candidateLfSha256": "c40fdae4e29ee24f015d1c3175e5595d7f270639de891ce62b5735f80898575f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_operations_desk.py",
+      "baselineLfSha256": "6c91ac5c4801e987dd60fcd75135898ea7ac791d99d0a791685120d8ca4e2166",
+      "candidateLfSha256": "6c91ac5c4801e987dd60fcd75135898ea7ac791d99d0a791685120d8ca4e2166",
+      "changed": false
+    },
+    {
+      "file": "copyfast_operations_jobs_policy.py",
+      "baselineLfSha256": "0cc42ec614c10a320a144c0be1d69c473d283a3d726a8ee8f61d92dc638f7b9e",
+      "candidateLfSha256": "0cc42ec614c10a320a144c0be1d69c473d283a3d726a8ee8f61d92dc638f7b9e",
+      "changed": false
+    },
+    {
+      "file": "copyfast_pages.py",
+      "baselineLfSha256": "80d42118024375b678fc3acee6d4f2819f8c7144491fa56bd80b2fbe898f3703",
+      "candidateLfSha256": "0b0ac18f3cdb4911d9ac56657db4a5f0aeb9ae95a730537daf7fbb5c3d35bd6f",
+      "changed": true
+    },
+    {
+      "file": "copyfast_partner_crm.py",
+      "baselineLfSha256": "85548bb5f5b00d8eb3c4e4197f520fc3a6438a9310c28f047027385421093849",
+      "candidateLfSha256": "85548bb5f5b00d8eb3c4e4197f520fc3a6438a9310c28f047027385421093849",
+      "changed": false
+    },
+    {
+      "file": "copyfast_partner_readiness.py",
+      "baselineLfSha256": "1a6c1cda8ea73ca056e39bbcd826dca505fdb4d6d4b388fa45e90e759fa7c9a2",
+      "candidateLfSha256": "1a6c1cda8ea73ca056e39bbcd826dca505fdb4d6d4b388fa45e90e759fa7c9a2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "baselineLfSha256": "5244ee53572ea147945ec1168f3e3c51a9fb17abb657c03567f8ce8bd4ad1f8c",
+      "candidateLfSha256": "5244ee53572ea147945ec1168f3e3c51a9fb17abb657c03567f8ce8bd4ad1f8c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_product_readiness.py",
+      "baselineLfSha256": "7d9813abf1fc70742cf900d65d187dd76a8cb6635e89c1d786f0c90610eac6e9",
+      "candidateLfSha256": "7d9813abf1fc70742cf900d65d187dd76a8cb6635e89c1d786f0c90610eac6e9",
+      "changed": false
+    },
+    {
+      "file": "copyfast_product_video_dispatcher.py",
+      "baselineLfSha256": "cae77fb4849cc09201628999bfbe872060a6cd917784f8da222f9b1b2221ecf1",
+      "candidateLfSha256": "cae77fb4849cc09201628999bfbe872060a6cd917784f8da222f9b1b2221ecf1",
+      "changed": false
+    },
+    {
+      "file": "copyfast_product_video_job_bridge.py",
+      "baselineLfSha256": "1b9baaad8d65b8a41d9cc7069d85fa901c1fdb197d13e67b84705adc775a550b",
+      "candidateLfSha256": "1b9baaad8d65b8a41d9cc7069d85fa901c1fdb197d13e67b84705adc775a550b",
+      "changed": false
+    },
+    {
+      "file": "copyfast_project_packages.py",
+      "baselineLfSha256": "847a84b926585d54651758d83adcab014cce4cf9ece65ab5aa63c430bac4911f",
+      "candidateLfSha256": "847a84b926585d54651758d83adcab014cce4cf9ece65ab5aa63c430bac4911f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_projects.py",
+      "baselineLfSha256": "7ccb4c2a5210904f7d795c517aa38ef8b82724cbfba365fa7bb636d571c228a2",
+      "candidateLfSha256": "7ccb4c2a5210904f7d795c517aa38ef8b82724cbfba365fa7bb636d571c228a2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_prompt_library.py",
+      "baselineLfSha256": "277ba7675d9f8e27849b88cd5e34ccf667ff80ddcd65416f8cc59ffb2cbb492c",
+      "candidateLfSha256": "277ba7675d9f8e27849b88cd5e34ccf667ff80ddcd65416f8cc59ffb2cbb492c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_prompt_studio.py",
+      "baselineLfSha256": "6a67a3b401e747dd4589794dbad8c8a7ae290c9154a8e9852316cf41745e51cf",
+      "candidateLfSha256": "6a67a3b401e747dd4589794dbad8c8a7ae290c9154a8e9852316cf41745e51cf",
+      "changed": false
+    },
+    {
+      "file": "copyfast_provider_policy.py",
+      "baselineLfSha256": "15f47446d77f468309a33a20c63ba813d936f2aa808c3a7bf9a307cefdda3ef1",
+      "candidateLfSha256": "15f47446d77f468309a33a20c63ba813d936f2aa808c3a7bf9a307cefdda3ef1",
+      "changed": false
+    },
+    {
+      "file": "copyfast_quick_image_planner.py",
+      "baselineLfSha256": "132795c55d7e2f5b00f637c1c0c1cfb4869daf6906c663a3cca86dbbbbe3f938",
+      "candidateLfSha256": "132795c55d7e2f5b00f637c1c0c1cfb4869daf6906c663a3cca86dbbbbe3f938",
+      "changed": false
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "baselineLfSha256": "193d7fe27eb4799b0010d5695f5104d8f613e0bbd79f06ee6e033d8c6ef4301f",
+      "candidateLfSha256": "193d7fe27eb4799b0010d5695f5104d8f613e0bbd79f06ee6e033d8c6ef4301f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_registry.py",
+      "baselineLfSha256": "6a8e84966e84a4b6e7f24d79ef00b4128ec05d93f1c962aa4e43fdc41f72c517",
+      "candidateLfSha256": "6a8e84966e84a4b6e7f24d79ef00b4128ec05d93f1c962aa4e43fdc41f72c517",
+      "changed": false
+    },
+    {
+      "file": "copyfast_reliability.py",
+      "baselineLfSha256": "4cf575b64e5ff9938fe493a735c24059d8d7787c0b521640e459d5adea72b6a2",
+      "candidateLfSha256": "4cf575b64e5ff9938fe493a735c24059d8d7787c0b521640e459d5adea72b6a2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_reliability_policy.py",
+      "baselineLfSha256": "bf0d74656d61f8622ba8af3456ad9070d0db63cffa26d4f12c13a95d695f7a42",
+      "candidateLfSha256": "bf0d74656d61f8622ba8af3456ad9070d0db63cffa26d4f12c13a95d695f7a42",
+      "changed": false
+    },
+    {
+      "file": "copyfast_route_engine.py",
+      "baselineLfSha256": "53ff5fd84fa797f14b616e61b8abb4f8d7ee72bcf9c69f4da9083246195d10ea",
+      "candidateLfSha256": "53ff5fd84fa797f14b616e61b8abb4f8d7ee72bcf9c69f4da9083246195d10ea",
+      "changed": false
+    },
+    {
+      "file": "copyfast_starter_kits.py",
+      "baselineLfSha256": "79eed070462c915810aacd0db8d6b4f68c84a137534060be8b9a94af9f240cf2",
+      "candidateLfSha256": "79eed070462c915810aacd0db8d6b4f68c84a137534060be8b9a94af9f240cf2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_storyboard_grid.py",
+      "baselineLfSha256": "393ff5496569152d34cb5c354ad73831fb1dee0864f842f48daf892e5e731c87",
+      "candidateLfSha256": "393ff5496569152d34cb5c354ad73831fb1dee0864f842f48daf892e5e731c87",
+      "changed": false
+    },
+    {
+      "file": "copyfast_subdub_job_bridge.py",
+      "baselineLfSha256": "c75ea7425ad224bddde6db7e53468166994e78159d522cc741ceb54aff49f6fd",
+      "candidateLfSha256": "c75ea7425ad224bddde6db7e53468166994e78159d522cc741ceb54aff49f6fd",
+      "changed": false
+    },
+    {
+      "file": "copyfast_subtitle_asset_operations.py",
+      "baselineLfSha256": "d6f6cde4d16b43135999c0f1298ac05cb1fa19b95034f3a1f701a0bfa680b982",
+      "candidateLfSha256": "d6f6cde4d16b43135999c0f1298ac05cb1fa19b95034f3a1f701a0bfa680b982",
+      "changed": false
+    },
+    {
+      "file": "copyfast_subtitle_format_core.py",
+      "baselineLfSha256": "aa9b853999441d00badaf9aa4dadbad656040f0e190523d12852525947196367",
+      "candidateLfSha256": "aa9b853999441d00badaf9aa4dadbad656040f0e190523d12852525947196367",
+      "changed": false
+    },
+    {
+      "file": "copyfast_subtitle_workspace.py",
+      "baselineLfSha256": "c82ab41b71792bc2f4f43ff46507e481d083cef69534ddb1d459fbe105c29926",
+      "candidateLfSha256": "c82ab41b71792bc2f4f43ff46507e481d083cef69534ddb1d459fbe105c29926",
+      "changed": false
+    },
+    {
+      "file": "copyfast_support.py",
+      "baselineLfSha256": "2c7df5bb38cc71aa62ada592addde5c6109ca9bc5131ece508908f93826d347e",
+      "candidateLfSha256": "2c7df5bb38cc71aa62ada592addde5c6109ca9bc5131ece508908f93826d347e",
+      "changed": false
+    },
+    {
+      "file": "copyfast_trend_research.py",
+      "baselineLfSha256": "4b609a9971efd06c98a7ef75df59686bd7ce650bd363f3f4f80384f94dbc76d9",
+      "candidateLfSha256": "4b609a9971efd06c98a7ef75df59686bd7ce650bd363f3f4f80384f94dbc76d9",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_long_job_bridge.py",
+      "baselineLfSha256": "5b97eeef2626ab257b95850d9294e29e7df27542d78126773dfbde9e55121b6e",
+      "candidateLfSha256": "5b97eeef2626ab257b95850d9294e29e7df27542d78126773dfbde9e55121b6e",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_operations.py",
+      "baselineLfSha256": "18ed04feb3e1585b4612b5755ddbac4275bd69c8bc15e71d33efa69dba70b54a",
+      "candidateLfSha256": "18ed04feb3e1585b4612b5755ddbac4275bd69c8bc15e71d33efa69dba70b54a",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_output_copy.py",
+      "baselineLfSha256": "1e5685db200da23979b154d18633ea1982b681311582709e631960b23c78f5ec",
+      "candidateLfSha256": "1e5685db200da23979b154d18633ea1982b681311582709e631960b23c78f5ec",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_studio.py",
+      "baselineLfSha256": "0c48803356153fde8d45d1b9c8795ade9727c8232cf2bc33ac1ebe98eb82cb8f",
+      "candidateLfSha256": "0c48803356153fde8d45d1b9c8795ade9727c8232cf2bc33ac1ebe98eb82cb8f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_transform_operations.py",
+      "baselineLfSha256": "28159581d97b0310d2334cd657923204491702ba51166986552fd9c22a7a5953",
+      "candidateLfSha256": "28159581d97b0310d2334cd657923204491702ba51166986552fd9c22a7a5953",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_trend_job_bridge.py",
+      "baselineLfSha256": "9547cab30bbca3bc056eb4cfc6a3e59adbb8339019cbc7f15ee6903eb9a29f7e",
+      "candidateLfSha256": "9547cab30bbca3bc056eb4cfc6a3e59adbb8339019cbc7f15ee6903eb9a29f7e",
+      "changed": false
+    },
+    {
+      "file": "copyfast_voice_clone_runtime_bridge.py",
+      "baselineLfSha256": "77f3a3dd7609e61be70180a74e247a95d14fdb5fa1378c52aa307a4f4c6f9073",
+      "candidateLfSha256": "77f3a3dd7609e61be70180a74e247a95d14fdb5fa1378c52aa307a4f4c6f9073",
+      "changed": false
+    },
+    {
+      "file": "copyfast_voice_studio.py",
+      "baselineLfSha256": "c6f6b9dc0e86124171e615626d095749561c5190266431979cf142acbb2ad4c2",
+      "candidateLfSha256": "c6f6b9dc0e86124171e615626d095749561c5190266431979cf142acbb2ad4c2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_voice_tts_job_bridge.py",
+      "baselineLfSha256": "ed910e8d6ecb83ef40a5058c1cd5bb146f2a843af149d9fd2ddf5f8beba3dd09",
+      "candidateLfSha256": "ed910e8d6ecb83ef40a5058c1cd5bb146f2a843af149d9fd2ddf5f8beba3dd09",
+      "changed": false
+    },
+    {
+      "file": "copyfast_web_engine.py",
+      "baselineLfSha256": "2ff12604aba455837863c47721d4a5bca3605e5df91b20341e08ea53c61fdb38",
+      "candidateLfSha256": "2ff12604aba455837863c47721d4a5bca3605e5df91b20341e08ea53c61fdb38",
+      "changed": false
+    },
+    {
+      "file": "copyfast_workboard.py",
+      "baselineLfSha256": "9fdb7d695e235bd10d5ba77c3a9a604c77ab4f32db9d0b6a9a574fbd92a07301",
+      "candidateLfSha256": "9fdb7d695e235bd10d5ba77c3a9a604c77ab4f32db9d0b6a9a574fbd92a07301",
+      "changed": false
+    },
+    {
+      "file": "copyfast_workspace_draft_contract.py",
+      "baselineLfSha256": "774a544f62aac298a537129d48d001f95fa258626318864fae40853ad51fa131",
+      "candidateLfSha256": "774a544f62aac298a537129d48d001f95fa258626318864fae40853ad51fa131",
+      "changed": false
+    },
+    {
+      "file": "copyfast_workspace_setup.py",
+      "baselineLfSha256": "4db7d20624b6ddce19fdf4a7b383a639c935ef5b77c8422181811c7fecf09d1d",
+      "candidateLfSha256": "4db7d20624b6ddce19fdf4a7b383a639c935ef5b77c8422181811c7fecf09d1d",
+      "changed": false
+    },
+    {
+      "file": "customer_api.py",
+      "baselineLfSha256": "88214aba38871583b55f3935d9271b0fa5e6d4f07a5ad85727ef163de67e90a1",
+      "candidateLfSha256": "88214aba38871583b55f3935d9271b0fa5e6d4f07a5ad85727ef163de67e90a1",
+      "changed": false
+    },
+    {
+      "file": "db.py",
+      "baselineLfSha256": "38ca969a2ff86e29f263b7e16179ed9cdb63c8082c73647ea08dff6e61ba46ea",
+      "candidateLfSha256": "38ca969a2ff86e29f263b7e16179ed9cdb63c8082c73647ea08dff6e61ba46ea",
+      "changed": false
+    },
+    {
+      "file": "device_ops.py",
+      "baselineLfSha256": "03ae760c424beb8af06e13ddf3b14eb83fb799e3dbb471b37c7863cd410e7dbd",
+      "candidateLfSha256": "03ae760c424beb8af06e13ddf3b14eb83fb799e3dbb471b37c7863cd410e7dbd",
+      "changed": false
+    },
+    {
+      "file": "erp_core.py",
+      "baselineLfSha256": "ec418b60e52ce458d7028ed157976c34d566be51fcd26bb38a8e40bf84c07042",
+      "candidateLfSha256": "ec418b60e52ce458d7028ed157976c34d566be51fcd26bb38a8e40bf84c07042",
+      "changed": false
+    },
+    {
+      "file": "main.py",
+      "baselineLfSha256": "94bedbf116ac45e197a99b31251bf3def5c9c9fd5207d0df2eb2a90573d17371",
+      "candidateLfSha256": "94bedbf116ac45e197a99b31251bf3def5c9c9fd5207d0df2eb2a90573d17371",
+      "changed": false
+    },
+    {
+      "file": "media_ops.py",
+      "baselineLfSha256": "6f045229af22195aef2e664c29a3584524d562dba12856eb2b49ab9d380682ff",
+      "candidateLfSha256": "6f045229af22195aef2e664c29a3584524d562dba12856eb2b49ab9d380682ff",
+      "changed": false
+    },
+    {
+      "file": "migrate_db.py",
+      "baselineLfSha256": "7910c5ddca43952f360919eecbdeee18a7fac6a69a9a40919c908ab4fff90b6f",
+      "candidateLfSha256": "7910c5ddca43952f360919eecbdeee18a7fac6a69a9a40919c908ab4fff90b6f",
+      "changed": false
+    },
+    {
+      "file": "performance.py",
+      "baselineLfSha256": "2a278f1f1dc7d3116655bff373cb904955e3ff48cbf3ddb4833889ae357eba89",
+      "candidateLfSha256": "2a278f1f1dc7d3116655bff373cb904955e3ff48cbf3ddb4833889ae357eba89",
+      "changed": false
+    },
+    {
+      "file": "report.py",
+      "baselineLfSha256": "ca082d9e2f057c1e7922a7fa2e980aac29a816b7badd76254a5916190fef57da",
+      "candidateLfSha256": "ca082d9e2f057c1e7922a7fa2e980aac29a816b7badd76254a5916190fef57da",
+      "changed": false
+    },
+    {
+      "file": "security.py",
+      "baselineLfSha256": "3e356d4d6442bfbb17bbfa2f3a7c01860aaa9407aeb50fe7db0ba1b916d7380b",
+      "candidateLfSha256": "3e356d4d6442bfbb17bbfa2f3a7c01860aaa9407aeb50fe7db0ba1b916d7380b",
+      "changed": false
+    },
+    {
+      "file": "static/portal/admin-customer-directory.js",
+      "baselineLfSha256": "32d7f7a01f8e2f8da8b5fe3f045e63eac5831d0ea00e6a9213c11b7954c781fd",
+      "candidateLfSha256": "32d7f7a01f8e2f8da8b5fe3f045e63eac5831d0ea00e6a9213c11b7954c781fd",
+      "changed": false
+    },
+    {
+      "file": "static/portal/bundle_analyzer.html",
+      "baselineLfSha256": "3fc533c2e959bd473be72c2820fbcd591360660f86b30efd57a4e863b29683bf",
+      "candidateLfSha256": "3fc533c2e959bd473be72c2820fbcd591360660f86b30efd57a4e863b29683bf",
+      "changed": false
+    },
+    {
+      "file": "static/portal/integration.js",
+      "baselineLfSha256": "1895449f90d575a2d0ab9f6de9b5d86ae95011181a2a87016ed1eabcf4d44364",
+      "candidateLfSha256": "1895449f90d575a2d0ab9f6de9b5d86ae95011181a2a87016ed1eabcf4d44364",
+      "changed": false
+    },
+    {
+      "file": "static/portal/offline.html",
+      "baselineLfSha256": "cc8a54608aee86826d9cfec05cde52959877a6ba1b806631ea297ef1bc5c066c",
+      "candidateLfSha256": "cc8a54608aee86826d9cfec05cde52959877a6ba1b806631ea297ef1bc5c066c",
+      "changed": false
+    },
+    {
+      "file": "static/portal/offline.js",
+      "baselineLfSha256": "94c197bfb52199d41ab35dbdcf43995aa6839c4f90a28c071ddecaf2f57159d6",
+      "candidateLfSha256": "94c197bfb52199d41ab35dbdcf43995aa6839c4f90a28c071ddecaf2f57159d6",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-auth.js",
+      "baselineLfSha256": "893796a10a51b721ff33c52f3f812d9cc4624c7790dfce4c934f7a1b5cef6d86",
+      "candidateLfSha256": "893796a10a51b721ff33c52f3f812d9cc4624c7790dfce4c934f7a1b5cef6d86",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-feature-catalog-copy.js",
+      "baselineLfSha256": "72a8bd4a2897dba29aea19189d3118cc4aa872c65ee68919c4cafec05cad3006",
+      "candidateLfSha256": "72a8bd4a2897dba29aea19189d3118cc4aa872c65ee68919c4cafec05cad3006",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-features.js",
+      "baselineLfSha256": "f786ad861fcff561d5a666c47afd6d9c5dc1912d0cac02611e32fa69c231222a",
+      "candidateLfSha256": "f786ad861fcff561d5a666c47afd6d9c5dc1912d0cac02611e32fa69c231222a",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-first-paint.css",
+      "baselineLfSha256": "6c33b091b1a2378d87ba0451d71bc89401368cdb9c1c4b737d85de13f4d4eca9",
+      "candidateLfSha256": "6c33b091b1a2378d87ba0451d71bc89401368cdb9c1c4b737d85de13f4d4eca9",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "baselineLfSha256": "9f6ffcd563f81c47e941a9f3ca32b44a782c14fbaf7722c0ec07fa53436bf516",
+      "candidateLfSha256": "21acb270061ec7ce652150cabf597b023f340dd3ea9e6806fec12611f31c462d",
+      "changed": true
+    },
+    {
+      "file": "static/portal/portal-motion.js",
+      "baselineLfSha256": "2bd037f2b06e3a98196e4c5776497298953dbddb4ec38fcf275a19457238db90",
+      "candidateLfSha256": "2bd037f2b06e3a98196e4c5776497298953dbddb4ec38fcf275a19457238db90",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-theme.css",
+      "baselineLfSha256": "9706f04bc230531f2e4bb77a6bb0c715061711cd33ca8510104859e25285639f",
+      "candidateLfSha256": "9706f04bc230531f2e4bb77a6bb0c715061711cd33ca8510104859e25285639f",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-theme.js",
+      "baselineLfSha256": "883fb51d0fa0f644be706a14a270a8b1c0709b85c0b3159769500d286789ce3d",
+      "candidateLfSha256": "883fb51d0fa0f644be706a14a270a8b1c0709b85c0b3159769500d286789ce3d",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal.css",
+      "baselineLfSha256": "86691e824085bd88b23a76b788ce1f56b25dca7fbbf2b1cb753a91a5011b7ce2",
+      "candidateLfSha256": "86691e824085bd88b23a76b788ce1f56b25dca7fbbf2b1cb753a91a5011b7ce2",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal.js",
+      "baselineLfSha256": "ed9cb9735e3c49ac17439c07b50035aff9ceed68c721d12c7d64677e38ab651c",
+      "candidateLfSha256": "adc88e1b3fe6cc8baa22be8bb22e42e4492b4a74de351bedaf56af4f25a416d2",
+      "changed": true
+    },
+    {
+      "file": "static/portal/service-worker.js",
+      "baselineLfSha256": "a2f2429c2656318a18c58524a534c1ccf48deb94ccd50c68a90446f53afa1cf2",
+      "candidateLfSha256": "a2f2429c2656318a18c58524a534c1ccf48deb94ccd50c68a90446f53afa1cf2",
+      "changed": false
+    },
+    {
+      "file": "static/sw.js",
+      "baselineLfSha256": "9f9f90454f22e2ee93013f92decd621cfb21915d42828bb4b98c55cb1241b82b",
+      "candidateLfSha256": "9f9f90454f22e2ee93013f92decd621cfb21915d42828bb4b98c55cb1241b82b",
+      "changed": false
+    },
+    {
+      "file": "studio/index.html",
+      "baselineLfSha256": "caded4340df065721509c3173f96edf0ef3a32531f2a267f9570ba6dc9af4d72",
+      "candidateLfSha256": "caded4340df065721509c3173f96edf0ef3a32531f2a267f9570ba6dc9af4d72",
+      "changed": false
+    },
+    {
+      "file": "studio/script.js",
+      "baselineLfSha256": "5bca28d38031c376d4a77f4c3620b69cac6788feabed1544513f764404f5fb6d",
+      "candidateLfSha256": "5bca28d38031c376d4a77f4c3620b69cac6788feabed1544513f764404f5fb6d",
+      "changed": false
+    },
+    {
+      "file": "studio/style.css",
+      "baselineLfSha256": "4c03b30d7e2dca21b0bee89ad9bcc0bde704c7bb11e259a1e8d0a95277e40013",
+      "candidateLfSha256": "4c03b30d7e2dca21b0bee89ad9bcc0bde704c7bb11e259a1e8d0a95277e40013",
+      "changed": false
+    },
+    {
+      "file": "studio/sw.js",
+      "baselineLfSha256": "9f9f90454f22e2ee93013f92decd621cfb21915d42828bb4b98c55cb1241b82b",
+      "candidateLfSha256": "9f9f90454f22e2ee93013f92decd621cfb21915d42828bb4b98c55cb1241b82b",
+      "changed": false
+    },
+    {
+      "file": "templates/dashboard.html",
+      "baselineLfSha256": "b2deda4f940d275793bd22014753e34dc114561ce103a55a6495ce1a9e8d0e20",
+      "candidateLfSha256": "b2deda4f940d275793bd22014753e34dc114561ce103a55a6495ce1a9e8d0e20",
+      "changed": false
+    },
+    {
+      "file": "templates/index.html",
+      "baselineLfSha256": "912bbae7e6edbc64e9459eea7fa90eceb507830f812276b8ff074fb28fc92850",
+      "candidateLfSha256": "912bbae7e6edbc64e9459eea7fa90eceb507830f812276b8ff074fb28fc92850",
+      "changed": false
+    },
+    {
+      "file": "templates/portal_shell.html",
+      "baselineLfSha256": "6154b2ba472319cbd7c9e690e7a21407fdd5949e8675b892a6976cd68fedb904",
+      "candidateLfSha256": "6154b2ba472319cbd7c9e690e7a21407fdd5949e8675b892a6976cd68fedb904",
+      "changed": false
+    },
+    {
+      "file": "user.py",
+      "baselineLfSha256": "1b7c977672f77e8f6d0ea13ce19bafd30b476b4141edc571f51e0da3439dc51c",
+      "candidateLfSha256": "1b7c977672f77e8f6d0ea13ce19bafd30b476b4141edc571f51e0da3439dc51c",
+      "changed": false
+    },
+    {
+      "file": "video.py",
+      "baselineLfSha256": "64b45efe43929916bc9b40137df430e3a85b067a493793fda79add0db987e16c",
+      "candidateLfSha256": "64b45efe43929916bc9b40137df430e3a85b067a493793fda79add0db987e16c",
+      "changed": false
+    },
+    {
+      "file": "workflow_engine.py",
+      "baselineLfSha256": "dc3226ae535162ceefc00edff804f15a11848690fc5dcffb9f01ab7e2a8e845b",
+      "candidateLfSha256": "dc3226ae535162ceefc00edff804f15a11848690fc5dcffb9f01ab7e2a8e845b",
+      "changed": false
+    }
+  ],
+  "applicationWrites": 0,
+  "engineRuntimeReadiness": "NOT_TESTED",
+  "finalOcrOutput": "NOT_TESTED"
+}

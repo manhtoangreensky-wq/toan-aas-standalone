@@ -1,5 +1,18 @@
 # PDF sang ảnh và Word — giao diện đúng ngôn ngữ
 
+## Chốt PR776 — thay các dòng chờ phát hành phía dưới
+
+Đã gộp/triển khai PR776. Tested HEAD `4c24489ef97ea1b4ff9b4173bb73bb6efc0d44d4`;
+CI `44512041758` hai SUCCESS 723s/272s; browser `14523449377` đủ
+18 trang/18 hash, auth `14524896330` đủ 456 bản ghi/456 hash, không lỗi.
+Merge/runtime `8ba0d0452f86dcc3d72e5087351134902eb4e659`, tree
+`df25393700584433ef62c44205e7f852b658adf3` đúng bản đã kiểm.
+Deploy `44515050253` SUCCESS 66s; VPS sạch tracked, ba dịch vụ
+active-running/health, tệp bảo vệ và 5 public + 5 normal assets khớp.
+Build `local-9a9e684f7dc64e8bf0a2`. Issue689 receipt `7006239694`,
+PR receipt `7007830023` đọc lại đúng. Không còn PR mở của đơn vị này.
+Signed production UI/tệp chuyển đổi cuối vẫn NOT_TESTED.
+
 TASK=DOCUMENT-CONVERT-CUSTOMER-COPY-20261119; FSM=VERIFY.
 BASE_SHA=a589008be5d7be371789551ffc11e750db46270b.
 TRACKER=Issue689/comment7006239694.

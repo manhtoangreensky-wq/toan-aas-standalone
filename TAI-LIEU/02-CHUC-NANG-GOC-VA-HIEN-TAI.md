@@ -1,5 +1,21 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 19/11/2026 — Chữ từ ảnh/PDF, giữ giới hạn xử lý
+
+Nguồn: `docs/migration/IMAGE_OCR_CONTRACT.md`, `PDF_OCR_CONTRACT.md`,
+`PDF_OCR_WORD_CONTRACT.md`, ba renderer/field factory và handler gốc.
+
+| Chức năng gốc | Ứng viên giao diện | Ranh giới giữ |
+|---|---|---|
+| Đọc chữ từ ảnh JPEG/PNG/WebP | Tên/nguồn/ngôn ngữ/hướng dẫn VI/EN/ZH | Không đổi decode/OCR hoặc dữ liệu |
+| Đọc chữ PDF tối đa20MB/5trang | Bỏ lời triển khai, giữ hướng dẫn cần dùng | Mã auto/vi/en, API/nguồn/quyền giữ |
+| PDF quét sang Word | Nêu rõ chữ-only, không giữ dàn trang | Ba phụ thuộc thực tế không nới |
+| Panel giới hạn kỹ thuật và chỉ số phụ | Bỏ ở đúng3trang, không khung trống | Form/history/vault/refresh/download giữ |
+| Metadata chưa riêng từng locale | Sáu entry shell/sáu nhánh JS đúng route | Không đổi locale/auth |
+
+Wholephysical28ca và HTMLđầu10ca đạt; native/affected/release chốt riêng.
+Không nhận đầu ra OCR cuối từ UI. [Tester](../KIEM-THU/PHIEN-DOCUMENT-OCR-CUSTOMER-COPY-20261119.md).
+
 ## 19/11/2026 — Chuyển đổi PDF: giữ chức năng, bỏ lời triển khai
 
 Nguồn gốc: `docs/migration/PDF_TO_IMAGES_CONTRACT.md`,

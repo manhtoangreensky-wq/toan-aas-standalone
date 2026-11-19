@@ -30,7 +30,10 @@ Nguồn case: [DANH-SACH-CASE.md](DANH-SACH-CASE.md).
   nguồn ứng dụng giữ đúng13phép thay. Không ghi toàn repository xanh.
   Lượt đầu 1.691 đạt/14 lỗi comparator trong 242926.9242 ms; giữ ca đạt,
   chỉ sửa biên hữu hạn và chạy lại ca thất bại/chưa được thực thi.
-- [ ] Một PR/exact HEAD CI/merge/tree/deploy/VPS/assets/receipt.
+- [x] PR776/HEAD4c24489e CI44512041758haiSUCCESS723s/272s,
+  18browser/456authhashkhớp;merge/runtime8ba0d045/treedf253937.
+- [x] Deploy44515050253SUCCESS66s/3active-running/health/assetskhớp;
+  receiptIssue7006239694/PR7007830023đọclạiđúng.
 - [ ] Production có đăng nhập và tệp PNG/ZIP/DOCX cuối: NOT_TESTED,
   không được tick từ CI hoặc health200.
 

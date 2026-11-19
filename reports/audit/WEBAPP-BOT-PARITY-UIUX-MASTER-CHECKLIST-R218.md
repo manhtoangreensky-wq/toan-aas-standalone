@@ -1,5 +1,36 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## Chốt PR775/776, đọc chữ từ ảnh/PDF kế tiếp — 19/11/2026
+
+Snapshot hiện hành này thay trạng thái chờ phát hành của hai đơn vị cũ
+phía dưới; giữ nguyên các mục lịch sử và các cổng toàn goal chưa đạt.
+
+- [x] Chỉnh ảnh PR775: CI44497802507 hai job thành công, 18browser/456signedQA
+  và hash đủ; merge/runtimea589008be5d7be371789551ffc11e750db46270b,
+  deploy44501027405 thành công66s, VPS3services/health/5+5assets/build khớp.
+  Receipt Issue7004266812/PR7005803682 đã đọc lại đúng.
+- [x] PDF sang ảnh/Word PR776: CI44512041758 hai job thành công,
+  18browser/456signedQA và hash đủ; merge/runtime8ba0d0452f86dcc3d72e5087351134902eb4e659,
+  tree df25393700584433ef62c44205e7f852b658adf3 bằng bản đã kiểm.
+  Deploy44515050253 thành công66s; VPS trackedclean/3services/health/
+  5+5assets/build khớp; receipt Issue7006239694/PR7007830023 đọc lại đúng.
+- [x] OCR-01..04 local: bốn AGY3.8FlashHigh R1 exact, 19 phép thay/3app/
+  36khóa/148nguồn bảo vệ, 0workerfailure/0Rootapplicationtakeover.
+  Physical10PASS18RED→28PASS; portable/source50PASS; affected81files1866PASS,
+  Python71PASS; metadata2PASS31deselected. Không chạy lại nhóm đã đạt.
+  Native BASE/GREEN144views/288PNGstructureCRC/hash, sáu nhóm42owned→0,
+  source/core/schema/authaudit/egress giữ; 540BASE/540GREENpaintUNKNOWN giữ.
+- [x] OCR-05 local: ReviewC0/I0/M0/Rootfullread, currentops/crosswalk/Tester
+  và finalmanifest28 sau cập nhật checklist; 151sourcepins giữ nguyên,
+  boundedsecretpatterns0/Ownerstatekhôngmở. Không rerun nhóm đã đạt.
+- [ ] OCR-06: Một PR, CI đúng HEAD, merge/tree, deploy ngay, VPS/assets/receipt.
+- [ ] OCR-07: SignedproductionUI, Tesseract/languagepacks và kết quả TXT/DOCX
+  NOT_TESTED/NOT_PROVEN; cờ/form/startup không chứng minh đầu ra.
+- [ ] Wholelocale/AX/recovery/auth/device/Safari/signedUI/finaloutput và
+  M-FINAL-01..06 vẫn mở; motion làm cuối, toàn goal ACTIVE/incomplete.
+
+[Báo cáo OCR](../../docs/reports/document-ocr-customer-copy-20261119.md).
+
 ## PDF đã giao, Chỉnh ảnh kế tiếp —19/11/2026
 
 - [x] PDF PR774:CI44487050618haiSUCCESS/18browser/456signedQA+456hash;

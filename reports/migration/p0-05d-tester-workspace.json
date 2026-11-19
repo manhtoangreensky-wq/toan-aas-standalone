@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-19",
-  "local_files_refresh_scope": "Document conversion customer copy: six DCC cases; three AGY R1 exact,13edits/3app/28keys,physical16/source16 PASS,96BASE+GREENviews/192PNG/owned0. Preserve historical remote/P0/48case/safety fields; sameIssue689, no newIssue/PR until acceptance; no signedproduction/output/provider/walletclaim; motionLAST.",
+  "local_files_refresh_scope": "OCR customer UI: six OCR cases; fourAGY3.8FlashHighR1exact,19edits/3app/36keys,portable/source50PASS,Python71PASS. Native3BASE+3GREENgroups24viewseach/owned0; source151andengineTruth separate. Preserve historical remote/P0/48case/safety fields; Issue689comment7008143289; no newIssue/PR beforeacceptance; no signedproduction/Tesseract/language/finalOCRoutput/provider/walletclaim; motionLAST.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1767,
-      "bytes": 183986,
-      "sha256": "6a0fbaa59c1439dc62fac6e5d71b9407704507941c42c67e22d911bfc5aec302"
+      "lines": 1781,
+      "bytes": 184934,
+      "sha256": "5cb377539f2abddb0f23942386a2781bc38870d1dd986d9e6b4de3215f9a85ed"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
