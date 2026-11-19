@@ -10421,7 +10421,7 @@
         "copyfast_mfa.py",
         "copyfast_music_media.py"
       ],
-      "occurrences": 1229,
+      "occurrences": 1230,
       "provider": "PayOS"
     },
     {
@@ -18798,39 +18798,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 611,
-  "source_files_scanned": 611,
-  "source_fingerprint_sha256": "24855a4e31c5e6d668c4923e04e9194ee5dc1ff751036d170e859d2759209d00",
+  "source_files_discovered": 615,
+  "source_files_scanned": 615,
+  "source_fingerprint_sha256": "6464e460930d2dee32af4670811933be008d6481d0f825eee6e12869c3ff82a3",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 36090,
+      "line": 36085,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36406,
+      "line": 36401,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35754,
+      "line": 35749,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36003,
+      "line": 35998,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35375,
+      "line": 35370,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35667,
+      "line": 35662,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -19045,7 +19045,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 37526,
+      "line": 37521,
       "path": "/features"
     },
     {
