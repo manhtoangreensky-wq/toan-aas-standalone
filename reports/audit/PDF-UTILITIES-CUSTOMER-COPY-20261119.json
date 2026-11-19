@@ -1542,7 +1542,17 @@
     "passingGroupsRerunRequested": false
   },
   "sourceCommit": "NOT_CREATED",
-  "ci": "NOT_RUN",
+  "ci": {
+    "pr": 774,
+    "firstRun": 44485773134,
+    "firstHead": "8489cdb58905131851f7aa15bf492eb97c3e9867",
+    "firstResult": "FAIL_3_QA_ERROR_IDENTITY_CASES",
+    "cause": "New finite leaf checked locale before original History guard",
+    "correction": "Move only leaf call after original locale/type guards; assertions and app unchanged",
+    "localRed": {"pass": 0, "fail": 3, "durationMs": 807.4411},
+    "localGreen": {"pass": 3, "fail": 0, "durationMs": 1031.4493},
+    "finalHeadResult": "PENDING"
+  },
   "deploy": "NO",
   "live": "NOT_TESTED",
   "goal": "ACTIVE_INCOMPLETE_MOTION_LAST"

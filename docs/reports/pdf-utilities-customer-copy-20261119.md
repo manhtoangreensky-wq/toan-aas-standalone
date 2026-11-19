@@ -94,6 +94,16 @@ ReviewSHA2eeac65049848c61560c119f103826198be7d983ecf4c4718305e7c3ef29168b.
 Publish manifest24tệp,0tệp trúng mẫu secret,source151held.
 PREPUSH=READY; provenance/CI đúngHEAD/treeeq/runtime/assets/receipt
 vẫn là các cổng riêng.
+
+## CI cùng PR774 — sửa đúng một thứ tự chốt QA
+
+HEAD8489cdb5/run44485773134 dừng ở ba negativecase History invalid-locale;
+110/113case trong nhóm đó đạt. Các case trước đó đã đạt nhưng ghép leaf mới
+làm lỗi PDF che guard History. Local tái hiện đúng3FAIL807.4411ms; chuyển
+một dòng gọi leaf xuống sau locale/typeguard gốc, giữ mọi assertion/golden/
+negativevector. Chỉ3case chạy lại3PASS1031.4493ms. Không sửa ứng dụng hoặc
+rerun native/nhóm đã đạt; lỗi Root-QA, workerfailure vẫn0.
+Giữ cùng PR774, không tạo PR khác; provenance/finalHEADCI phải cập nhật.
 Signed production, cuối PDF thực, toàn AX/recovery/auth/device/Safari chưa đo.
 
 PROVIDER_CALLS=0; WALLET_MUTATIONS=0; PRODUCT_SUBMIT=NO.

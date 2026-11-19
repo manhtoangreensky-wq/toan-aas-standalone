@@ -37,10 +37,13 @@ verification:
   independent_review: C0_I0_M0
   review_sha256: 2eeac65049848c61560c119f103826198be7d983ecf4c4718305e7c3ef29168b
   prepush: READY
+  first_ci_run: 44485773134
+  first_ci_result: FAIL_3_QA_ERROR_IDENTITY_CASES
+  qa_guard_order_retest: 3_PASS_1031_4493_MS
   native_limits_seconds: 60_180_10_5
 release:
-  pr: NOT_CREATED
-  push: NO
+  pr: 774
+  push: FIRST_HEAD_PUBLISHED_QA_CORRECTION_PENDING
   deploy: NO
   signed_production_ui: NOT_TESTED
   final_pdf_output: NOT_TESTED

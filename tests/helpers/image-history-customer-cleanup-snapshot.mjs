@@ -91,8 +91,8 @@ export function historyCustomerCleanupHistoricalSource(source,file){
   return result;
 }
 export function historyCustomerCleanupHistoricalSnapshot(entries,locale){
-  entries=pdfUtilitiesCustomerHistoricalSnapshot(entries,locale);
   const index=["vi","en","zh"].indexOf(locale)+1;assert.ok(index>0,fail+" locale");assert.ok(Array.isArray(entries),fail+" entries");
+  entries=pdfUtilitiesCustomerHistoricalSnapshot(entries,locale);
   const rowKeys=rows.map(row=>"imageOperationUi."+row.key),ownedRows=entries.filter(([key])=>rowKeys.includes(key)),ownedAdded=entries.filter(([key])=>namespace(key));
   if(!ownedRows.length&&!ownedAdded.length)return entries;
   assert.deepEqual(ownedRows.map(([key])=>key),rowKeys,fail+" missing/duplicate/reordered catalogue rows");

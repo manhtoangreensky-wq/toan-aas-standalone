@@ -21,6 +21,9 @@ BASE_SHA=513557a9ece0f8fe049884868dc5fb3a1ac2339c.
   SHAb5b034b1fe704da8a05f0c15a7c0f7cf404e921ddf3ddb2a182b78e7d233df5f.
 - [x] Review độc lập C0/I0/M0,Root đọc đủ;prepushREADY/24tệp/secret0.
 - [ ] Provenance/CI đúngHEAD.
+- [x] CI774 lượt44485773134 lỗi3negativeguard QA: local3RED→đổi vị trí
+  một dòng sau guard gốc→3PASS1031.4493ms; không đổi app/assertions/native.
+- [ ] Cùng PR774/provenance/finalHEADCI mới; lượt lỗi giữ nguyên.
 - [ ] Một PR → merge/treeeq → deploy đúngSHA → runtime/assets/receipt.
 
 Đối chiếu VI/EN/ZH × sáng/tối ×320×844,414×896,768×414,1024×768.

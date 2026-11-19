@@ -27,6 +27,10 @@ PUSH_GATE=READY; PR=NOT_CREATED; EXACT_HEAD_CI=NEXT_GATE.
    ví/PayOS. CI chỉ thêm một dòng chạy hai bài mới, giữ ma trận456 và quyền.
 6. Publish manifest24tệp, source151 vẫn khớp và0tệp trúng mẫu secret.
    Tệp trạng thái riêng của Owner không mở/stage/đổi/xóa/stash.
+7. CI774/run44485773134 phát hiện3negativecase do thứ tự guard QA.
+   Local3RED→chuyển1dòng leaf sau guard gốc→3PASS1031.4493ms.
+   Không đổi assertion/app/native hoặc rerun phần đã đạt. Cùng PR774;
+   refresh provenance và CI HEAD mới, không lấy lượt fail làm bằng chứng gộp.
 
 Sau đủ local gate mới sourcecommit/provenance/finalHEAD → mộtPR → CI đúngSHA
 → merge/treeeq → exclusive deploy → VPS/health/assets → receipts đọc lại.
