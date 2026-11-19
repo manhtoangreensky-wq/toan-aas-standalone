@@ -1,5 +1,5 @@
 task: ASSET-VAULT-CUSTOMER-COPY-20261119
-phase: REPORT_LOCAL_READY_FOR_SOURCE_COMMIT_PROVENANCE_CI
+phase: CI_R2_QA_ONLY_CORRECTION_PROVENANCE_PENDING
 goal_status: ACTIVE_INCOMPLETE
 base_sha: 5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5
 branch: codex/vault-customer-copy-20261119
@@ -76,7 +76,10 @@ verification:
   independent_review: C0_I0_M0_ROOT_FULL_READ331_LINES
   independent_review_sha256: 3e812945f986d0085abf7b31e08e64feec0342731c230970ad30aa5879903ea1
   prepush: READY
-  publication_manifest_files: 36
+  publication_manifest_files: 37
+  ci_r1: 44562908436_ONE_OLD_DCC_SOURCE_CSS_PIN_FAILURE
+  ci_r2_correction: TWO_LINES_QA_ONLY_STRICT_CSS_INPUT_STAGING_OLD_ASSERTIONS_HELD
+  ci_r2_local_retest: 1_PASS_1406_4887_MS
   qa_preparation_parallel:
     native: ROOT_DOCUMENT_CONVERT_NATIVE_PREP_NEW_ARTIFACTS_ONLY_NO_RUN
     portable_source: ROOT_DOCUMENT_CONVERT_PHYSICAL_QA_PREP_QA_ONLY_NO_RUN
@@ -85,7 +88,9 @@ root_spec_faults:
   corrected_before_handoff: true
   worker_failure: false
 release:
-  pr: NOT_CREATED
+  pr: 778_OPEN
+  head_r1: e72cf631ec7b17b2a920d5b46da699fdc1ba9f28
+  source_r1: f45863d4d65fb0d2d51caf115a41493e55c2274d
   deploy: NOT_STARTED
   signed_live: NOT_TESTED
 protected_owner_state: NEVER_OPENED_OR_TOUCHED

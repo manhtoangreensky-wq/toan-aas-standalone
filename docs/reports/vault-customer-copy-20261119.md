@@ -2,7 +2,16 @@
 
 TASK=ASSET-VAULT-CUSTOMER-COPY-20261119;FSM=VERIFY.
 BASE_SHA=5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5.
-TRACKER=Issue689/comment7011217772;PR=NOT_CREATED;DEPLOY=NOT_STARTED.
+TRACKER=Issue689/comment7011217772;PR=778_OPEN;DEPLOY=NOT_STARTED.
+
+CI R1 run44562908436 dừng ở một oldDCCsource151CSSpin; không ứng dụng lỗi.
+Root đã bổ sung đúng một import và nhánh CSS-only qua stricthelper có sẵn
+trong tests/document-convert-customer-copy-source.test.mjs, assertion/golden/
+negative giữ nguyên. Ca thất bại chạy riêng1PASS1406.4887ms. Nguồn ứng dụng,
+native/currentmatrix/authorities giữ; không chạy lại các nhóm localPASS.
+CSSconsumerselection trước đó chỉ tìm directthemeCSS, thiếu nguồn gián tiếp
+từ151pins; thiếu selection của Root, không tính lỗi Antigravity.
+FinalmanifestR2=37 thêm một tệp QA;review36 ban đầu giữ đúng lịch sử.
 
 Independent reviewC0/I0/M0,Root đã đọc331dòng;reviewSHA
 3e812945f986d0085abf7b31e08e64feec0342731c230970ad30aa5879903ea1.

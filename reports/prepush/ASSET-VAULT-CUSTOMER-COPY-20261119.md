@@ -6,7 +6,12 @@ PUSH_GATE=READY;PR=NOT_CREATED.
 BRANCH=codex/vault-customer-copy-20261119.
 INDEPENDENT_REVIEW=C0_I0_M0_ROOT_READ_ALL331LINES.
 REVIEW_SHA256=3e812945f986d0085abf7b31e08e64feec0342731c230970ad30aa5879903ea1.
-FINAL_MANIFEST=36_EXPLICIT_FILES_SOURCE151_HELD_SECRET_PATTERN_FILES0_OWNER_STATE_UNREAD.
+FINAL_MANIFEST=37_EXPLICIT_FILES_R2_SOURCE151_HELD_SECRET_PATTERN_FILES0_OWNER_STATE_UNREAD.
+CI_R1=44562908436_FAILED_ONE_OLD_DCC_CSS_PIN_APP_UNCHANGED.
+CI_QA_R2=TwoLineComparatorAmendmentInDocumentConvertSourceSuite;
+onlyCSSinputusesexistingstrictleaf,alloldassertionsheld;target1PASS1406.4887ms.
+Originalreview36filemanifestkept;Rootreviewedtwo-lineQA-onlyR2diff,
+newfinalmanifest37includesoneadditionaloldQAfile. Noapp/native/rerunofPASS.
 TRACKER=Issue689/comment7011217772.
 
 ## Phạm vi/nghiệp vụ hiện tại
