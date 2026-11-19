@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {historyTechnicalCleanupHistoricalPortalSource} from "./image-history-technical-cleanup-snapshot.mjs";
 // Historical-comparator leaf only. Never normalize current rendering or current feature acceptance.
 const fail="Unreviewed History customer cleanup",count=(source,part)=>source.split(part).length-1;
 const pins=[
@@ -59,6 +60,7 @@ function sourceMarkers(source,file){
   return ["_PORTAL_SHELL_TITLES = {","_PORTAL_SHELL_DESCRIPTIONS = {"].some(marker=>{const start=source.indexOf(marker),end=source.indexOf("\n}",start);return start>=0&&end>start&&source.slice(start,end).includes('"/image/history":');});
 }
 export function historyCustomerCleanupHistoricalSource(source,file){
+  if(file==="static/portal/portal.js")source=historyTechnicalCleanupHistoricalPortalSource(source);
   assert.equal(typeof source,"string",fail);assert.ok(FILES.includes(file),fail+" file");
   const replaced=replacements.filter(edit=>edit.file===file),added=additions.filter(edit=>edit.file===file);
   if(!sourceMarkers(source,file)&&!replaced.some(edit=>count(source,edit.old)||count(source,edit.new))&&!added.some(edit=>count(source,edit.part)))return source;

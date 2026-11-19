@@ -1,5 +1,17 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 19/11/2026 — Bỏ giải thích kỹ thuật ở Lịch sử ảnh
+
+Ứng viên bỏhai panelcuốitrang vàbacụmnhãnphụ ởmànchờ/lỗi/chưaquyền,
+khôngđểkhungtrống. Các hướngdẫn chính,nút thửlại,quyềnvàdữliệugiữ.
+Đãđo4điểmchỉnh1appfile/150appfilesbảovệ;physical24PASS.
+Nhómliênquan1632/1635đạt;baexpectationcũcount1đượcđổiđúng0theo
+removalđãduyệt,3retestđạt. Khôngđổiứngdụngthêmđểépbàikiểmtra.
+NativeFULL6trang24samplesđạt0notes0state-meta,54GETthật48controllederrors,
+core/schema/audit/sourceheld27owned0. Empty/guardnativechỉunit;
+CI/runtime làcổngriêng,chưađượcsuytừkiểmtracụcbộ.
+[Báo cáo](../docs/reports/image-history-technical-cleanup-20261119.md).
+
 ## 19/11/2026 — Tiêu đề, danh sách và thông báo Lịch sử ảnh
 
 Ứng viên dùng đúngVI/EN/ZH cho tiêu đề trang, hướng dẫn danh sách, màn trống,

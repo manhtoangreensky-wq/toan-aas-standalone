@@ -2747,3 +2747,25 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   contractIssue6992944109;khôngápdụngtrướcreleasehiệntại/khôngnhậntoàntrangsạch.
 - [ ] Wholeapp/coverage/AX/auth/responsive/device/Safari/signedUI/output
   vẫn mở;motionM-FINAL01..06LAST.
+
+### Chốt PR772 và bỏ phần giải thích kỹ thuật History còn lại,19/11/2026
+
+- [x] PR772CI44411124561haiSUCCESS9m27s/5m21s;456signedQA+456hash/
+  18browserhashđạt;merge-runtimebb3c5657/fulltree252579dc…diff0;
+  deploy44414112861SUCCESS62s/3active-running/health5+5assets/publicbuild
+  local-59e05f84fa10e240497e. FixedIssue6992184830/PR6993378170closed/readbackexact.
+- [x] Nhánhcodex/image-history-technical-cleanup-20261119 từruntimebb3c5657.
+- [x] NOTESR1exact1editvàSTATE-METAR2exact3editAGYreviewedonce;
+  STATE-METAR1quoteencodingFAIL1khôngapply,khôngđổiSPECđểnévòng.
+- [x] PhysicalBASE24:16targetRED7protectedPASS1QAnegativefault;
+  R3negative1retestPASS,loaderfaulttáchriêng;candidate24PASS7792.0791ms.
+- [x] Exact4removals1app150protected/scope5decd09c…;rights/customer/
+  fulloutsideHTMLheld,norendererprojection/noemptyreplacement.
+- [x] Aggregate64files1635cases1632PASS3oldmetadata-countFAIL;
+  expected1→0đúngremoval,3targetretestsPASS;no1632rerun.
+- [x] NativeFULLmộtlượt6pages24samples0notes0state-meta,162witness+
+  12toast78ảnh54GET48controllederrors/core/audit/sourceheld27owned0.
+  RootrawVI375/EN1440ready/ZH375failed;guard/emptynativeUNIT_ONLY.
+- [ ] Docs/Tester/review/prepush/provenance/onePR/exactCI/merge/deploy/receipt.
+- [ ] Wholeapp/locale/AX/auth/device/Safari/signedproduction/outputremain;
+  motionM-FINAL01..06LAST/fullgoalACTIVE.

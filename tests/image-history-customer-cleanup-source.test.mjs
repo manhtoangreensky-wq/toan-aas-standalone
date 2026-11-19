@@ -6,6 +6,7 @@ import {fileURLToPath} from "node:url";
 import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {historyCustomerCleanupHistoricalSource as inverse,historyCustomerCleanupHistoricalSnapshot as snapshot} from "./helpers/image-history-customer-cleanup-snapshot.mjs";
+import {historyTechnicalCleanupHistoricalPortalSource} from "./helpers/image-history-technical-cleanup-snapshot.mjs";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),".."),BASE="7af6e2f89f99a3739d13e173b173e81e5179b969",fail=/Unreviewed History customer cleanup/,lf=value=>value.replace(/\r\n/g,"\n"),count=(source,part)=>source.split(part).length-1;
 const pins=[
   ["ready-copy","4c4a2c9cf418331701f52195c092a150627375f6281bcfab0a470f14df8a3820","IMAGE-HISTORY-READY-COPY-20261118","5eee3247-8f69-48f6-8004-bfda7e287fac",8],
@@ -16,6 +17,7 @@ const pins=[
 ];
 const authorities=pins.map(([name])=>fs.readFileSync(new URL("./fixtures/image-history-"+name+"-reviewed.json",import.meta.url))),fixtures=authorities.map(raw=>JSON.parse(raw)),edits=fixtures.flatMap(value=>value.proposal.changes);
 const files=[...new Set(edits.map(edit=>edit.file))],before=Object.fromEntries(files.map(file=>[file,lf(execFileSync("git",["show",BASE+":"+file],{cwd:root,encoding:"utf8",maxBuffer:30e6}))])),physical=Object.fromEntries(files.map(file=>[file,lf(fs.readFileSync(path.join(root,file),"utf8"))]));
+const historical=Object.fromEntries(files.map(file=>[file,file==="static/portal/portal.js"?historyTechnicalCleanupHistoricalPortalSource(physical[file]):physical[file]]));
 const unit=edit=>edit.new.startsWith(edit.old)?edit.new.slice(edit.old.length):edit.new.endsWith(edit.old)?edit.new.slice(0,-edit.old.length):edit.new;
 test("exact authority SHA/spec/conversation/count/order: READY8 STRUCTURE2 META5 FEEDBACK3 RETRY1",()=>{
   assert.equal(edits.length,19);assert.equal(files.length,4);
@@ -23,25 +25,25 @@ test("exact authority SHA/spec/conversation/count/order: READY8 STRUCTURE2 META5
   assert.deepEqual(files.sort(),["copyfast_pages.py","static/portal/integration.js","static/portal/portal-i18n.js","static/portal/portal.js"].sort());
 });
 for(const file of files){
-  test(file+": CURRENT physical source equals exactly ordered accepted changes from Git BASE",()=>{
+  test(file+": historical source equals exactly ordered accepted changes from Git BASE",()=>{
     let expected=before[file];for(const edit of edits.filter(row=>row.file===file)){assert.equal(count(expected,edit.old),1,"count-one OLD anchor");expected=expected.replace(edit.old,()=>edit.new);}
-    assert.equal(physical[file],expected,"Read candidate directly; do not normalize current acceptance");assert.equal(inverse(physical[file],file),before[file]);assert.equal(inverse(before[file],file),before[file]);
+    assert.equal(historical[file],expected,"Only reviewed later removals are reversed for this historical comparator");assert.equal(inverse(historical[file],file),before[file]);assert.equal(inverse(before[file],file),before[file]);
   });
   test(file+": finite inverse preserves arbitrary outside bytes and no-owned older inputs",()=>{
     const prefix='\r\n/* CUSTOMER Facebook TikTok <literal>& Lịch sử ảnh */\r\n',suffix='\r\n/* unrelated outside bytes */\r\n';
-    assert.equal(inverse(prefix+physical[file]+suffix,file),prefix+before[file]+suffix);assert.equal(inverse(prefix+before[file]+suffix,file),prefix+before[file]+suffix);assert.equal(inverse(prefix+suffix,file),prefix+suffix);
+    assert.equal(inverse(prefix+historical[file]+suffix,file),prefix+before[file]+suffix);assert.equal(inverse(prefix+before[file]+suffix,file),prefix+before[file]+suffix);assert.equal(inverse(prefix+suffix,file),prefix+suffix);
   });
   test(file+": missing changed mixed duplicate detached/reordered owned edits are rejected",()=>{
     const selected=edits.filter(row=>row.file===file);
-    for(const edit of selected){const part=unit(edit);assert.equal(count(physical[file],part),1);
-      assert.throws(()=>inverse(physical[file].replace(part,""),file),fail,"missing");
-      assert.throws(()=>inverse(physical[file].replace(part,part.slice(0,-1)+"?"),file),fail,"changed");
-      assert.throws(()=>inverse(physical[file]+"\n"+part,file),fail,"duplicate");
-      assert.throws(()=>inverse(physical[file].replace(part,"")+"\n"+part,file),fail,"detached");
-      if(part===edit.new)assert.throws(()=>inverse(physical[file].replace(edit.new,()=>edit.old),file),fail,"mixed OLD/NEW");
+    for(const edit of selected){const part=unit(edit);assert.equal(count(historical[file],part),1);
+      assert.throws(()=>inverse(historical[file].replace(part,""),file),fail,"missing");
+      assert.throws(()=>inverse(historical[file].replace(part,part.slice(0,-1)+"?"),file),fail,"changed");
+      assert.throws(()=>inverse(historical[file]+"\n"+part,file),fail,"duplicate");
+      assert.throws(()=>inverse(historical[file].replace(part,"")+"\n"+part,file),fail,"detached");
+      if(part===edit.new)assert.throws(()=>inverse(historical[file].replace(edit.new,()=>edit.old),file),fail,"mixed OLD/NEW");
     }
-    const[a,b]=selected.slice(0,2).map(unit),marker="@@HISTORY_OWNED_SWAP@@";assert.equal(count(physical[file],marker),0);
-    assert.throws(()=>inverse(physical[file].replace(a,marker).replace(b,()=>a).replace(marker,()=>b),file),fail,"reordered");
+    const[a,b]=selected.slice(0,2).map(unit),marker="@@HISTORY_OWNED_SWAP@@";assert.equal(count(historical[file],marker),0);
+    assert.throws(()=>inverse(historical[file].replace(a,marker).replace(b,()=>a).replace(marker,()=>b),file),fail,"reordered");
   });
 }
 const rowOrder=["history.intro.kicker","history.intro.title","history.intro.body","history.metric.count","history.results.title","history.results.description","history.retry","history.empty.title","history.empty.body"];
