@@ -1,0 +1,29 @@
+{
+  "task": "VAULT-HINT-CONTRAST-20261119",
+  "base": "5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5",
+  "revision": "ROOT_REVIEWED_R1",
+  "sourceAuthority": {
+    "conversation": "f7770b7d-9716-4cf3-8ac4-3765d01014e6",
+    "packetSha256": "8b3bd708ab23a16c7bccd87a7bb9fddd8bccb1ac5b37a3d01059b3ec6207b96b",
+    "resultRawSha256": "9b5d244c599bc9208c9255bdbc522c785059b9a2e169f1bcf45df3d353804965",
+    "schemaValid": true,
+    "proposalExact": true,
+    "verify": "NOT_RUN",
+    "applicationWrites": 0
+  },
+  "canonicalChanges": [
+    {
+      "count": 1,
+      "file": "static/portal/portal-theme.css",
+      "new": "/* Keep image result subtitles readable in Resize and history. */\n.portal-page:is(.portal-image-resize, .portal-image-operation-history) .portal-document-operation-card .portal-document-operation-title .portal-card-subtitle {\n  white-space: normal;\n  overflow-wrap: anywhere;\n  overflow: visible;\n  text-overflow: clip;\n}\n\n/* Keep the file hint readable against the dark dropzone in every interaction state. */\nhtml[data-portal-theme=\"dark\"] .portal-page.portal-asset-vault .portal-vault-dropzone small {\n  color: var(--portal-ink);\n}\n",
+      "old": "/* Keep image result subtitles readable in Resize and history. */\n.portal-page:is(.portal-image-resize, .portal-image-operation-history) .portal-document-operation-card .portal-document-operation-title .portal-card-subtitle {\n  white-space: normal;\n  overflow-wrap: anywhere;\n  overflow: visible;\n  text-overflow: clip;\n}\n"
+    }
+  ],
+  "file": "static/portal/portal-theme.css",
+  "baselineLfSha256": "9706f04bc230531f2e4bb77a6bb0c715061711cd33ca8510104859e25285639f",
+  "candidateLfSha256": "353ce66afb195a866156ba6a1c523486dd3c8d620a082bcaf086ae7ea13825d2",
+  "priorVaultCopyAuthorityRawSha256": "2b895f84f77c8656811c4e732506926a677dda1eb6aa824f854670e127e8228b",
+  "applicationWrites": 0,
+  "applicationFailureCount": 0,
+  "rootApplicationTakeover": false
+}

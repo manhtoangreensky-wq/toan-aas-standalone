@@ -1,0 +1,691 @@
+{
+  "task": "ASSET-VAULT-CUSTOMER-COPY-20261119",
+  "base": "5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5",
+  "copyAuthorityRawSha256": "2b895f84f77c8656811c4e732506926a677dda1eb6aa824f854670e127e8228b",
+  "cssAuthorityRawSha256": "c58f59c1da9f1fdeff9582d2d05917d87d92e67cdf91a685bb65037898d44f7b",
+  "canonicalCopyEdits": 12,
+  "canonicalCssEdits": 1,
+  "newKeysPerLocale": 90,
+  "applicationFilesChanged": 4,
+  "applicationFilesProtected": 147,
+  "workers": [
+    {
+      "name": "fields",
+      "specId": "ASSET-VAULT-FIELDS-20261119",
+      "revision": "R1",
+      "rootPacketPreflight": "A",
+      "conversation": "8f41e3c7-b8b9-49a1-8878-6d1c19621cbc",
+      "packetSha256": "8ab6865d2b4ed730143d40f564b977dd435d89be116676b506b6d429eb5c0c78",
+      "resultRawSha256": "c409cfe329a0623774b96d8ac5c640af9e7e7dbef20b7c49850ba20b2ade6fce",
+      "schemaValid": true,
+      "proposalExact": true,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    },
+    {
+      "name": "cards",
+      "specId": "ASSET-VAULT-CARDS-20261119",
+      "revision": "R1",
+      "rootPacketPreflight": "A",
+      "conversation": "add5be17-f2ff-4c35-a31c-a979c3a07fa4",
+      "packetSha256": "a2c8e4b9ff1375b4ba71270c4f68a180409d7a1ca95fd6d00544b63a4d536c5c",
+      "resultRawSha256": "94d5e476ebc649fa4c0642ff197decf3a43ec1a847289d6398adef5acc1703bb",
+      "schemaValid": true,
+      "proposalExact": true,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    },
+    {
+      "name": "lifecycle",
+      "specId": "ASSET-VAULT-LIFECYCLE-20261119",
+      "revision": "R1",
+      "rootPacketPreflight": "A",
+      "conversation": "4eebac00-cba8-45e9-bf16-8061ee2acc77",
+      "packetSha256": "517f21ed6686a846403785bcc2737ad7a2931f762874c205d0a622518a6d5f15",
+      "resultRawSha256": "1ca65e6382258e3b89cc8265a9b807c4777c3a499b79f9d3df5e27dd870d44b5",
+      "schemaValid": true,
+      "proposalExact": true,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    },
+    {
+      "name": "page",
+      "specId": "ASSET-VAULT-PAGE-20261119",
+      "revision": "R1",
+      "rootPacketPreflight": "A",
+      "conversation": "2567927b-81b9-4d85-bdcd-930ad91a266d",
+      "packetSha256": "64493e4931fbd6c91c22ff9bba5203d6a1f284df1d26d676c99cc122e2711ed8",
+      "resultRawSha256": "76d9f78486d1d4d1bd0fe1cb4c50497dd0656e69ebbee09b981493a5fcb78792",
+      "schemaValid": true,
+      "proposalExact": true,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    },
+    {
+      "conversation": "f7770b7d-9716-4cf3-8ac4-3765d01014e6",
+      "packetSha256": "8b3bd708ab23a16c7bccd87a7bb9fddd8bccb1ac5b37a3d01059b3ec6207b96b",
+      "resultRawSha256": "9b5d244c599bc9208c9255bdbc522c785059b9a2e169f1bcf45df3d353804965",
+      "schemaValid": true,
+      "proposalExact": true,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    }
+  ],
+  "rootApplicationTakeover": false,
+  "physicalBaseline": {
+    "file": "vault-physical-base-nov19.json",
+    "rawSha256": "23a4674627f0d8e4eac648e47e8e4670643e0562f0904a7bb0079933a77287d0",
+    "command": [
+      "node",
+      "--stack-trace-limit=0",
+      "--test",
+      "--test-concurrency=4",
+      "--test-reporter=tap",
+      "C:\\Users\\toann\\.codex\\visualizations\\2026\\07\\10\\019f4b14-cdaa-7d90-8869-cf654fcab17a\\vault-physical-target-nov19.mjs"
+    ],
+    "counts": {
+      "tests": 27,
+      "pass": 6,
+      "fail": 21,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 7865.4066
+    },
+    "exitCode": 1,
+    "outputTruncated": false
+  },
+  "physicalGreen": {
+    "file": "vault-physical-green-nov19.json",
+    "rawSha256": "cdadffb5a7851c4bb41dc9e48868fc50a3eda81bde965f554281bbf3a6d172e1",
+    "command": [
+      "node",
+      "--stack-trace-limit=0",
+      "--test",
+      "--test-concurrency=4",
+      "--test-reporter=tap",
+      "C:\\Users\\toann\\.codex\\visualizations\\2026\\07\\10\\019f4b14-cdaa-7d90-8869-cf654fcab17a\\vault-physical-target-nov19.mjs"
+    ],
+    "counts": {
+      "tests": 27,
+      "pass": 27,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 18314.4078
+    },
+    "exitCode": 0,
+    "outputTruncated": false
+  },
+  "newSource18": {
+    "file": "vault-source-nov19.json",
+    "rawSha256": "d3dedc7c5bce90fc9d08e1f454806a11073513d2004304f6326f1de2091f39cc",
+    "command": [
+      "node",
+      "--stack-trace-limit=0",
+      "--test",
+      "--test-concurrency=4",
+      "--test-reporter=tap",
+      "tests/vault-customer-copy-source.test.mjs"
+    ],
+    "counts": {
+      "tests": 18,
+      "pass": 18,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 3040.62
+    },
+    "exitCode": 0,
+    "outputTruncated": false
+  },
+  "portableBootstrapNotAddedAgain": {
+    "file": "vault-portable-bootstrap-nov19.json",
+    "rawSha256": "c443d5c41ccb9bfe89d3ca6ee00aa844e2b08f170516f5aa90558a966de9a001",
+    "command": [
+      "node",
+      "--stack-trace-limit=0",
+      "--test",
+      "--test-concurrency=4",
+      "--test-reporter=tap",
+      "--test-name-pattern=immutable reviewed design identity",
+      "tests/vault-customer-copy.test.mjs"
+    ],
+    "counts": {
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 1997.0491
+    },
+    "exitCode": 0,
+    "outputTruncated": false
+  },
+  "cssTargetRed": {
+    "file": "vault-hint-css-red-nov19.json",
+    "rawSha256": "c0b4d69873d16706c6ec845bf417ecdf891eacf3f42387078bfcccb5500e3d4b",
+    "command": [
+      "node",
+      "--stack-trace-limit=0",
+      "--test",
+      "--test-concurrency=4",
+      "--test-reporter=tap",
+      "--test-name-pattern=^actual current CSS|^independent151-file overlay",
+      "tests/vault-hint-contrast.test.mjs"
+    ],
+    "counts": {
+      "tests": 2,
+      "pass": 0,
+      "fail": 2,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 531.3778
+    },
+    "exitCode": 1,
+    "outputTruncated": false
+  },
+  "cssTargetGreen": {
+    "file": "vault-hint-css-green-nov19.json",
+    "rawSha256": "fd29444dfb7a83d5daadf9851964c0462157d2b0355cf8aa283f4780dc1e3c5b",
+    "command": [
+      "node",
+      "--stack-trace-limit=0",
+      "--test",
+      "--test-concurrency=4",
+      "--test-reporter=tap",
+      "tests/vault-hint-contrast.test.mjs"
+    ],
+    "counts": {
+      "tests": 10,
+      "pass": 10,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 4886.127
+    },
+    "exitCode": 0,
+    "outputTruncated": false
+  },
+  "affectedCopy": {
+    "initial": {
+      "file": "vault-affected-node-nov19.json",
+      "rawSha256": "d1c1d48d1eb64cb0a7b39d00d352b2cee8fdb066b878502e29cc7e37e23a5af8",
+      "command": [
+        "node",
+        "--stack-trace-limit=0",
+        "--test",
+        "--test-concurrency=4",
+        "--test-reporter=tap",
+        "tests/account-plain-language-snapshot.test.mjs",
+        "tests/assets-product-controls.test.mjs",
+        "tests/chat-boundary-grid.test.mjs",
+        "tests/chat-cards-customer-copy.test.mjs",
+        "tests/chat-context-cards-turn.test.mjs",
+        "tests/chat-context-label-contrast.test.mjs",
+        "tests/chat-context-section.test.mjs",
+        "tests/chat-date.test.mjs",
+        "tests/chat-dates-pages.test.mjs",
+        "tests/chat-detail-controls.test.mjs",
+        "tests/chat-detail-summary-editor.test.mjs",
+        "tests/chat-doc-root-access-locale.test.mjs",
+        "tests/chat-document-usable-copy.test.mjs",
+        "tests/chat-history.test.mjs",
+        "tests/chat-light-label-contrast.test.mjs",
+        "tests/chat-page-meta.test.mjs",
+        "tests/chat-request-panel.test.mjs",
+        "tests/chat-root-doc-read-copy.test.mjs",
+        "tests/display-clutter.test.mjs",
+        "tests/document-card-copy.test.mjs",
+        "tests/document-card-display.test.mjs",
+        "tests/document-card-metrics.test.mjs",
+        "tests/document-convert-customer-copy-source.test.mjs",
+        "tests/document-convert-customer-copy.test.mjs",
+        "tests/document-ocr-customer-copy-source.test.mjs",
+        "tests/document-ocr-customer-copy.test.mjs",
+        "tests/document-pdf-ui.test.mjs",
+        "tests/document-refresh-copy-snapshot.test.mjs",
+        "tests/document-refresh-feedback.test.mjs",
+        "tests/document-utility-guard-clarity.test.mjs",
+        "tests/documents-product-controls.test.mjs",
+        "tests/feature-catalog-dynamic-card-locale.test.mjs",
+        "tests/image-edit-customer-copy-source.test.mjs",
+        "tests/image-edit-customer-copy.test.mjs",
+        "tests/image-enhance-headings-source.test.mjs",
+        "tests/image-enhance-headings.test.mjs",
+        "tests/image-enhance-help-source.test.mjs",
+        "tests/image-enhance-help.test.mjs",
+        "tests/image-enhance-meta-source.test.mjs",
+        "tests/image-enhance-step-color-source.test.mjs",
+        "tests/image-history-customer-cleanup-source.test.mjs",
+        "tests/image-history-customer-structure.test.mjs",
+        "tests/image-history-outer-meta.test.mjs",
+        "tests/image-history-ready-copy.test.mjs",
+        "tests/image-history-retry-label.test.mjs",
+        "tests/image-history-state-copy-source.test.mjs",
+        "tests/image-history-state-copy.test.mjs",
+        "tests/image-history-technical-cleanup-source.test.mjs",
+        "tests/image-history-technical-cleanup.test.mjs",
+        "tests/image-resize-control-height-source.test.mjs",
+        "tests/image-resize-guidance.test.mjs",
+        "tests/image-resize-plain-copy.test.mjs",
+        "tests/image-resize-polish.test.mjs",
+        "tests/image-resize-result-label-source.test.mjs",
+        "tests/image-resize-subtitle-source.test.mjs",
+        "tests/image-resize-subtitle-wrap-source.test.mjs",
+        "tests/image-shared-plain-copy.test.mjs",
+        "tests/image-to-pdf-guard-source.test.mjs",
+        "tests/image-to-pdf-guard.test.mjs",
+        "tests/image-to-pdf-meta-source.test.mjs",
+        "tests/image-to-pdf-meta.test.mjs",
+        "tests/landing-workflow-plain-language.test.mjs",
+        "tests/last-two-planner-outer.test.mjs",
+        "tests/last-two-planner-results.test.mjs",
+        "tests/legacy-decorative-workbench.test.mjs",
+        "tests/membership-plain-language.test.mjs",
+        "tests/nav-ai-studio-locale.test.mjs",
+        "tests/operation-reference-feedback.test.mjs",
+        "tests/operation-reference-stale-feedback.test.mjs",
+        "tests/pdf-compress-meta-source.test.mjs",
+        "tests/pdf-compress-meta.test.mjs",
+        "tests/pdf-customer-cleanup.test.mjs",
+        "tests/pdf-input-font16.test.mjs",
+        "tests/pdf-merge-contrast.test.mjs",
+        "tests/pdf-merge-fields.test.mjs",
+        "tests/pdf-split-meta.test.mjs",
+        "tests/pdf-split-readability.test.mjs",
+        "tests/pdf-usability.test.mjs",
+        "tests/pdf-utilities-customer-copy-source.test.mjs",
+        "tests/pdf-utilities-customer-copy.test.mjs",
+        "tests/remaining-planner-ui.test.mjs",
+        "tests/video-inner-first-three-locale.test.mjs",
+        "tests/video-planner-header-locale.test.mjs",
+        "tests/video-planning-result-locale.test.mjs"
+      ],
+      "counts": {
+        "tests": 1921,
+        "pass": 1919,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 278440.0809
+      },
+      "exitCode": 1,
+      "outputTruncated": true
+    },
+    "onlyFailed": {
+      "file": "vault-legacy-node-retest-nov19.json",
+      "rawSha256": "b5ff48f31dd7e82faf80ed13d6850fa7a6ea6f0eb15d00e3d25a0fb36c56b0c1",
+      "command": [
+        "node",
+        "--stack-trace-limit=0",
+        "--test",
+        "--test-concurrency=4",
+        "--test-reporter=tap",
+        "--test-name-pattern=^Asset Vault (keeps one owner-scoped|exposes explicit)",
+        "tests/assets-product-controls.test.mjs"
+      ],
+      "counts": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 346.7419
+      },
+      "exitCode": 0,
+      "outputTruncated": false
+    },
+    "uniquePass": 1921,
+    "wholeGroupRetries": 0
+  },
+  "affectedCss": {
+    "initial": {
+      "file": "vault-css-affected-node-nov19.json",
+      "rawSha256": "e1fd28d12711bbb4c94a5194fb074bb480f5674f8349702b20f2a227f75ee29f",
+      "command": [
+        "node",
+        "--stack-trace-limit=0",
+        "--test",
+        "--test-concurrency=4",
+        "--test-reporter=tap",
+        "tests/a0-admin-shared-contracts.test.mjs",
+        "tests/admin-data-chart-source.test.mjs",
+        "tests/admin-data-reference-source.test.mjs",
+        "tests/admin-mobile-data-harmony-source.test.mjs",
+        "tests/admin-module-tabs-vertical-layout.test.mjs",
+        "tests/admin-pricing-mobile-source.test.mjs",
+        "tests/chat-boundary-grid.test.mjs",
+        "tests/chat-context-label-contrast.test.mjs",
+        "tests/chat-light-label-contrast.test.mjs",
+        "tests/current-main-motion-static-gates.test.mjs",
+        "tests/customer-dashboard-entry-locale.test.mjs",
+        "tests/customer-entry-lifecycle.test.mjs",
+        "tests/document-ocr-customer-copy-source.test.mjs",
+        "tests/f0-q0-shared-contracts.test.mjs",
+        "tests/feature-catalog-route-presentation.test.mjs",
+        "tests/image-enhance-headings.test.mjs",
+        "tests/image-enhance-step-color-source.test.mjs",
+        "tests/image-resize-control-height-source.test.mjs",
+        "tests/image-resize-guidance.test.mjs",
+        "tests/image-resize-plain-copy.test.mjs",
+        "tests/image-resize-polish.test.mjs",
+        "tests/image-resize-subtitle-wrap-source.test.mjs",
+        "tests/landing-hero-emphasis-locale.test.mjs",
+        "tests/music-flow-state-and-surface-contract.test.mjs",
+        "tests/music-hub-presentation.test.mjs",
+        "tests/music-product-controls.test.mjs",
+        "tests/music-sfx-presentation-layout.test.mjs",
+        "tests/operation-reference-stale-feedback.test.mjs",
+        "tests/pdf-customer-cleanup.test.mjs",
+        "tests/pdf-input-font16.test.mjs",
+        "tests/pdf-merge-contrast.test.mjs",
+        "tests/pdf-split-readability.test.mjs",
+        "tests/pdf-usability.test.mjs",
+        "tests/pwa-landing-install-placement.test.mjs",
+        "tests/q0-l0-shared-contracts.test.mjs",
+        "tests/r215-full-uiux-static-acceptance.test.mjs",
+        "tests/r216-motion-lifecycle-compositor.test.mjs",
+        "tests/shared-page-hero-type-scale.test.mjs",
+        "tests/voice-clone-touch-contract.test.mjs",
+        "tests/voice-workspace-stt-contract.test.mjs"
+      ],
+      "counts": {
+        "tests": 486,
+        "pass": 463,
+        "fail": 23,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 46763.3391
+      },
+      "exitCode": 1,
+      "outputTruncated": true
+    },
+    "onlyFailed19": {
+      "file": "vault-css-failed19-retest-nov19.json",
+      "rawSha256": "21bd911ec531f3cd2d2b8e7d3b8d1b814ff7c1efd0f9255d7d07c1cccaaa9ca9",
+      "command": [
+        "node",
+        "--stack-trace-limit=0",
+        "--test",
+        "--test-concurrency=4",
+        "--test-reporter=tap",
+        "--test-name-pattern=^(?:151actual source pins preserve148protected files without any inverse or acceptance mask|Actual theme equals the sole reviewed light Enhance step color addition and preserves every outside byte|Resize height style equals the one worker addition and every other theme byte stays BASE|Resize height inverse rejects duplicate/partial/changed/moved rule and retains outside bytes|the actual full catalogue is exactly the three worker rows and all other application files remain BASE|actual catalogue equals exactly 33 reviewed rows and every other application file is exact BASE|physical application equals exactly seven worker changes and protected integration stays byte-exact|historical source projections fail closed on partial/duplicate changes and retain outside bytes|Actual theme equals one accepted subtitle wrapping addition with every outside byte unchanged|exact two worker edits and scoped inverse bind actual source and every outside byte|full-source binding and serial forward/function-scoped reverse preserve every outside byte and both prior PDF CSS additions|one exact reviewed replacement binds actual BASE/current CSS; a missing mobile rule is a real RED|all prior desktop rules and every outside stylesheet byte remain intact, without simulated computed style|the exact inverse preserves unknown outside bytes instead of laundering unrelated edits|actual raw CSS contains exactly the reviewed Merge foreground addition; missing addition is RED|all font16, desktop, controls, dark and outside stylesheet bytes remain unchanged|old historical styles and unknown outside bytes including CRLF remain visible to comparisons|full-source hashes bind the delivered BASE and all five exact reviewed forward/inverse edits|Compress CSS adds only the two reviewed light semantic colors, preserving Split and every baseline byte)$",
+        "tests/document-ocr-customer-copy-source.test.mjs",
+        "tests/image-enhance-step-color-source.test.mjs",
+        "tests/image-resize-control-height-source.test.mjs",
+        "tests/image-resize-guidance.test.mjs",
+        "tests/image-resize-plain-copy.test.mjs",
+        "tests/image-resize-polish.test.mjs",
+        "tests/image-resize-subtitle-wrap-source.test.mjs",
+        "tests/operation-reference-stale-feedback.test.mjs",
+        "tests/pdf-customer-cleanup.test.mjs",
+        "tests/pdf-input-font16.test.mjs",
+        "tests/pdf-merge-contrast.test.mjs",
+        "tests/pdf-usability.test.mjs"
+      ],
+      "counts": {
+        "tests": 19,
+        "pass": 19,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 17122.7598
+      },
+      "exitCode": 0,
+      "outputTruncated": false
+    },
+    "unexecutedAndNew": {
+      "file": "vault-css-unexecuted-bootstrap-nov19.json",
+      "rawSha256": "c32b99e7d9b43e74dbed1e7fa6217b55d6150d8634738c371db703dbd054332a",
+      "command": [
+        "node",
+        "--stack-trace-limit=0",
+        "--test",
+        "--test-concurrency=4",
+        "--test-reporter=tap",
+        "tests/chat-boundary-grid.test.mjs",
+        "tests/chat-context-label-contrast.test.mjs",
+        "tests/chat-light-label-contrast.test.mjs",
+        "tests/pdf-split-readability.test.mjs",
+        "tests/vault-hint-contrast-history.test.mjs"
+      ],
+      "counts": {
+        "tests": 10,
+        "pass": 10,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 6574.7865
+      },
+      "exitCode": 0,
+      "outputTruncated": false
+    },
+    "oldUnexecuted": 7,
+    "newHistory": 3,
+    "uniqueOldPass": 489,
+    "newHistoryPass": 3,
+    "overlapsPrior1921": true,
+    "wholeGroupRetries": 0
+  },
+  "python": {
+    "shellBaseline": {
+      "pass": 1,
+      "fail": 3,
+      "seconds": 2.49
+    },
+    "shellGreen": {
+      "pass": 4,
+      "fail": 0,
+      "seconds": 2.25
+    },
+    "affectedInitial": {
+      "pass": 74,
+      "fail": 2,
+      "seconds": 31.03
+    },
+    "failedAndNew": {
+      "old": 2,
+      "new": 2,
+      "pass": 4,
+      "deselected": 3,
+      "seconds": 4.4
+    },
+    "uniqueAffectedPass": 78,
+    "metadata": {
+      "pass": 2,
+      "deselected": 31,
+      "seconds": 0.69
+    },
+    "knownPriorOutsideScopeFailures": "Three earlier export/handoff Python failures remain outside this selection, not claimed fixed"
+  },
+  "native": {
+    "matrixViews": 48,
+    "matrixPngVerified": 192,
+    "representativeViewsSeparate": 4,
+    "representativePngSeparate": 16,
+    "groups": [
+      {
+        "phase": "CANDIDATE_ONLY",
+        "mode": "SINGLE_VIEW",
+        "views": 1,
+        "pngVerified": 4,
+        "elapsedSeconds": 9.649,
+        "ownedProcesses": 16,
+        "ownedActive": 0,
+        "findings": 1,
+        "unknownCount": 33,
+        "nativeRawSha256": "6d59c94cb273d089743770b122cf9afd3a1ab04d72edbea9703a43c1eceb67b2",
+        "isolationRawSha256": "9c93238b43b3771e02a695cccabf6d8e9fbfff769bec64426483e0852c26f990",
+        "hintMeasuredRatios": [
+          3.5100441173202004
+        ]
+      },
+      {
+        "phase": "CANDIDATE_ONLY",
+        "mode": "SINGLE_VIEW",
+        "views": 1,
+        "pngVerified": 4,
+        "elapsedSeconds": 9.865,
+        "ownedProcesses": 16,
+        "ownedActive": 0,
+        "findings": 0,
+        "unknownCount": 33,
+        "nativeRawSha256": "16288eb91d7b09ddaec4402ec782da173866e2c54584ba8497d5c3a95322ef81",
+        "isolationRawSha256": "e74e4ff267eb827d2e38e6586ec847bb1675aa5e17b4084d1687a3a3197a1acc",
+        "hintMeasuredRatios": [
+          8.836529045485037
+        ]
+      },
+      {
+        "phase": "CANDIDATE_ONLY",
+        "mode": "SINGLE_VIEW",
+        "views": 1,
+        "pngVerified": 4,
+        "elapsedSeconds": 9.551,
+        "ownedProcesses": 13,
+        "ownedActive": 0,
+        "findings": 0,
+        "unknownCount": 33,
+        "nativeRawSha256": "0aa369d6515240455ecd8fb3efcb8a632182de66392e0dcb6d650c96b6780c5d",
+        "isolationRawSha256": "a9348fca82b33d56b10926dae32144f711d82d4dc4124943620864702f994135",
+        "hintMeasuredRatios": [
+          8.836529045485037
+        ]
+      },
+      {
+        "phase": "CANDIDATE_ONLY",
+        "mode": "FULL_MATRIX",
+        "views": 24,
+        "pngVerified": 96,
+        "elapsedSeconds": 110.516,
+        "ownedProcesses": 45,
+        "ownedActive": 0,
+        "findings": 0,
+        "unknownCount": 996,
+        "nativeRawSha256": "799262cb72151e06fa5e38a96259a55db9965862afeda7919e7043577aad12bd",
+        "isolationRawSha256": "ecd5f8fc2f2a51a29cd02ca0005128a2ccba389cf481ebeccf53f740cf4cadb7",
+        "hintMeasuredRatios": [
+          8.836529045485037
+        ]
+      },
+      {
+        "phase": "BASE_NOT_CANDIDATE_ACCEPTANCE",
+        "mode": "SINGLE_VIEW",
+        "views": 1,
+        "pngVerified": 4,
+        "elapsedSeconds": 11.39,
+        "ownedProcesses": 13,
+        "ownedActive": 0,
+        "findings": 1,
+        "unknownCount": 33,
+        "nativeRawSha256": "8eef5e6ccce14c91020663bc6fd0bdee442469d841cbd6a40bfcb4de718d78f5",
+        "isolationRawSha256": "42e42c7cd954401dfac7b3054bf5a74a7b918241ca6ea232c2f8db3a3c0cb79f",
+        "hintMeasuredRatios": [
+          3.5100441173202004
+        ]
+      },
+      {
+        "phase": "BASE_NOT_CANDIDATE_ACCEPTANCE",
+        "mode": "FULL_MATRIX",
+        "views": 24,
+        "pngVerified": 96,
+        "elapsedSeconds": 100.978,
+        "ownedProcesses": 45,
+        "ownedActive": 0,
+        "findings": 12,
+        "unknownCount": 996,
+        "nativeRawSha256": "2bcef485e79514df0debe33997bd8f860e9054d9370af4244a6089caf126238d",
+        "isolationRawSha256": "a8f73d1242b2eb767bfc75979df52858a637d69eeb413aa75d90dd81c1f681c9",
+        "hintMeasuredRatios": [
+          3.5100441173202004
+        ]
+      }
+    ],
+    "storedEvidenceRawSha256": "324187ac18917096f51885220bd646522e3da1ab667cc392b05ea57a2e5758ce",
+    "validatorRawSha256": "180ada23f52ee5d401ac7b2a75f77f1a1b7728f236c631c0e0d7ba9f840f2bcd",
+    "baselineTrackedBlobs": 2514,
+    "baselineTrackedBytes": 66745084,
+    "baselineBeforeAfterGitAndRawExact": true,
+    "firstContrastFailurePreserved": true,
+    "rootVisualReview": "BASE/currentVI320dark,currentEN768landscapelight",
+    "pngValidation": "Signature/chunksCRC/dimensions/hash/zlibdecodedscanlines; semanticRootvisualreviewseparate",
+    "globalUiAaClaim": false
+  },
+  "source151CanonicalJsonSha256": "e2a3775bc74f97df22fa8836ef3a9275a4ed6216b6dcfe5bd49ff0eb10da180b",
+  "source151ManifestRawSha256": "24b7cbbc014ccc4aeaa097f4e9e4c9b8ec947cac60d6fd016579bc0153f4b585",
+  "changedSourceHashes": [
+    {
+      "file": "copyfast_pages.py",
+      "lfSha256": "93382a7aa0d2a2a151ba6bcaa0daca9b216e43cb955393fa2d0b2c1eb701c48d",
+      "changed": true
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "lfSha256": "2d29f11a78c58440b3bff2b73b457e03eb9a6d7ce9a2f8275f3161a2e0ba164d",
+      "changed": true
+    },
+    {
+      "file": "static/portal/portal-theme.css",
+      "lfSha256": "353ce66afb195a866156ba6a1c523486dd3c8d620a082bcaf086ae7ea13825d2",
+      "changed": true
+    },
+    {
+      "file": "static/portal/portal.js",
+      "lfSha256": "8e7b42fc5d595ce9e8b15a4b0c13f286ab4e5210f31d007bc9f7ffce3098347e",
+      "changed": true
+    }
+  ],
+  "tester": {
+    "path": "KIEM-THU/DANH-SACH-CASE.md",
+    "lines": 1795,
+    "bytes": 186040,
+    "sha256": "3366e666fc8443d05b7d359c7449d25b6cdd6f057af337bc82a5e17d4d3d4969"
+  },
+  "qaReports": [
+    {
+      "file": "vault-portable-source-qa-prep-nov19.md",
+      "rawSha256": "d1affefc3608ec6182fae1bc3f5e6494371b3c23ffa30f41b52c3aaf4b927ec1"
+    },
+    {
+      "file": "vault-hint-contrast-qa-prep-nov19.md",
+      "rawSha256": "b438471752784eca02914f6cf83b91921baf056d24681cb04c6753523acc8672"
+    },
+    {
+      "file": "vault-hint-css-legacy-amendment-nov19.md",
+      "rawSha256": "8410db0e29f7860b870ca44a881c8a76d485217d0549b54898aa0175266220c6"
+    }
+  ],
+  "rootQaCorrections": [
+    "Unsent initial HTML interpolation contexts before worker handoff, not worker failure",
+    "Native intro query corrected to actualVaultclass beforeexecution",
+    "Serialized codeRaw UUID-redaction lookup corrected; preflight failure beforematrix, receipts retained and newrepresentative",
+    "Gitarchive WindowsCRLF detected byGitOID and regenerated with command-only autocrlf=false; no globalconfigchange"
+  ],
+  "ciCommandsAdded": 2,
+  "workflowOtherBehaviorUnchanged": true,
+  "botPyCompile": "NOT_APPLICABLE_NO_BOT_PY_IN_STANDALONE",
+  "providerCalls": 0,
+  "walletMutations": 0,
+  "productionDataMutations": 0,
+  "productSubmissions": 0,
+  "machineEnvWrites": 0,
+  "productionEnvWrites": 0,
+  "ownerStateOpened": false,
+  "release": "NOT_YET_PUSHED",
+  "signedProductionUi": "NOT_TESTED",
+  "finalBlobOutput": "NOT_TESTED",
+  "integrationActionFeedback": "SEPARATE_NEXT_SCOPE_NOT_CLOSED",
+  "goalComplete": false,
+  "motionLast": true
+}

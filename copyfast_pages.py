@@ -107,6 +107,7 @@ _PORTAL_SHELL_COPY = {
     },
 }
 _PORTAL_SHELL_TITLES = {
+    "/asset-vault": {"vi":"Kho tệp · TOAN AAS","en":"File library · TOAN AAS","zh":"文件库 · TOAN AAS"},
     "/documents/ocr": {"vi":"Đọc chữ từ ảnh · TOAN AAS","en":"Read text from images · TOAN AAS","zh":"识别图像文字 · TOAN AAS"},
     "/documents/pdf-to-images": {"vi":"PDF sang ảnh · TOAN AAS","en":"PDF to images · TOAN AAS","zh":"PDF 转图像 · TOAN AAS"},
     "/image/history": {"vi": "Lịch sử ảnh · TOAN AAS", "en": "Image history · TOAN AAS", "zh": "图像记录 · TOAN AAS"},
@@ -226,6 +227,11 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/asset-vault": {
+        "vi": "Lưu, tìm và quản lý các tệp của bạn. Xem thông tin tệp và tải lại khi cần.",
+        "en": "Save, find and manage your files. View file details and download them when needed.",
+        "zh": "保存、查找并管理您的文件。查看文件详情，并在需要时下载。",
+    },
     "/documents/ocr": {
         "vi": "Đọc chữ trong ảnh đã lưu và tải về tệp văn bản. Ảnh gốc được giữ nguyên.",
         "en": "Read text in a saved image and download a text file. The original image stays unchanged.",

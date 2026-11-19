@@ -1,5 +1,5 @@
 task: DOCUMENT-OCR-CUSTOMER-COPY-20261119
-phase: REPORT
+phase: REPORT_DELIVERED
 goal_status: ACTIVE_INCOMPLETE
 base_sha: 8ba0d0452f86dcc3d72e5087351134902eb4e659
 branch: codex/document-ocr-customer-copy-20261119
@@ -43,8 +43,16 @@ root_spec_amendment:
   applied_before_native: true
   app_or_worker_failure: false
 release:
-  pr: NOT_CREATED
-  deploy: NOT_STARTED
+  pr: 777_MERGED
+  tested_head: 21176b3634bbf5abb541c108204f6961b5f84e51
+  ci: 44531826202_BOTH_SUCCESS_897S_318S
+  merge_runtime: 5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5
+  full_tree: 45373d6382b3f4471753a10f88112056c707fb9a
+  deploy: 44536393560_SUCCESS_72S
+  runtime_services_assets: EXACT_TRACKED_CLEAN_THREE_ACTIVE_RUNNING_FIVE_PLUS_FIVE_ASSETS
+  public_build: local-392adcd5d51e1f37f743
+  issue_receipt: 7008143289_READBACK_EXACT
+  pr_receipt: 7010982669_READBACK_EXACT
   signed_live: NOT_TESTED
 engine_runtime_language_readiness: NOT_PROVEN
 final_ocr_output: NOT_TESTED

@@ -5,6 +5,7 @@ import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
+import {vaultHintContrastHistoricalCss} from "./helpers/vault-hint-contrast-snapshot.mjs";
 import {documentOcrCustomerHistoricalSource} from "./helpers/document-ocr-customer-copy-snapshot.mjs";
 import {documentConvertCustomerHistoricalSource as inverse,documentConvertCustomerHistoricalSnapshot as snapshot} from "./helpers/document-convert-customer-copy-snapshot.mjs";
 import {imageEditCustomerHistoricalSource as editInverse,imageEditCustomerHistoricalSnapshot as editSnapshot} from "./helpers/image-edit-customer-copy-snapshot.mjs";
@@ -44,7 +45,7 @@ test("151source pins protect148unchanged application files and exactly3changed s
  assert.equal(fixture.applicationBaseline.length,151);assert.equal(fixture.applicationBaseline.filter(pin=>pin.changed).length,3);
  for(const pin of fixture.applicationBaseline){
   const actual=lf(fs.readFileSync(path.join(ROOT,pin.file),"utf8"));
-  assert.equal(hash(files.includes(pin.file)?documentOcrCustomerHistoricalSource(actual,pin.file):actual),pin.candidateLfSha256,pin.file);
+  assert.equal(hash(files.includes(pin.file)?documentOcrCustomerHistoricalSource(actual,pin.file):pin.file==="static/portal/portal-theme.css"?vaultHintContrastHistoricalCss(actual,pin.file):actual),pin.candidateLfSha256,pin.file);
   assert.equal(pin.changed,pin.baselineLfSha256!==pin.candidateLfSha256);
   if(!files.includes(pin.file))assert.equal(pin.baselineLfSha256,pin.candidateLfSha256);
  }

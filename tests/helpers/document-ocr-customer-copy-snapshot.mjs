@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {vaultCustomerHistoricalSource,vaultCustomerHistoricalSnapshot} from "./vault-customer-copy-snapshot.mjs";
 // Newest finite historical leaf only; current renderer inputs must remain physical.
 const raw=fs.readFileSync(new URL("../fixtures/document-ocr-customer-copy-reviewed.json",import.meta.url));
 const fail="Unreviewed Document OCR customer copy",count=(source,part)=>source.split(part).length-1;
@@ -46,6 +47,7 @@ function catalogueDeclarations(source){
 }
 export function documentOcrCustomerHistoricalSource(source,file){
  assert.equal(typeof source,"string",fail);
+ source=vaultCustomerHistoricalSource(source,file);
  if(file===i18n){
   const found=catalogueDeclarations(source),next=count(source,catalogue.new);if(!found.length){assert.equal(next,0,fail+" absent catalog");return source;}
   assert.equal(next,1,fail+" partial/changed/duplicate catalog");assert.equal(found.length,108,fail+" partial/unknown declarations");
@@ -81,6 +83,7 @@ export function documentOcrCustomerHistoricalSource(source,file){
 }
 export function documentOcrCustomerHistoricalSnapshot(entries,locale){
  const index=["vi","en","zh"].indexOf(locale)+1;assert.ok(index>0,fail+" locale");assert.ok(Array.isArray(entries),fail+" entries");
+ entries=vaultCustomerHistoricalSnapshot(entries,locale);
  const owned=entries.filter(([key])=>typeof key==="string"&&key.startsWith("docOcr"));if(!owned.length)return entries;
  assert.deepEqual(owned,rows.map(row=>[row[0],row[index]]),fail+" partial/changed/unknown/duplicate/reordered catalog");return entries.filter(([key])=>!keys.includes(key));
 }

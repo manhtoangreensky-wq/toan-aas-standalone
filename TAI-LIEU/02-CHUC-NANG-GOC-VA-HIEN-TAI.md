@@ -1,5 +1,27 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 19/11/2026 — Kho tệp: giữ chức năng, bỏ lời triển khai
+
+Nguồn gốc: `docs/migration/ASSET_VAULT_CONTRACT.md`, năm hàm Vault và
+renderer chính. Ví dụ volume Railway trong hợp đồng cũ không phải chân lý
+triển khai hiện tại; chỉ dùng ownership/revision/private-delivery như source
+contract, không đổi ENV từ tài liệu cũ. Production vẫn Ubuntu VPS.
+
+| Chức năng gốc | Ứng viên giao diện | Ranh giới giữ |
+|---|---|---|
+| Lưu tệp và gắn dự án | Ô nhập, hướng dẫn đủVI/EN/ZH | Name/id/required/accept/maxLength/defaults/capability |
+| Danh sách, lọc và phân trang | Nhãn/trống/counts/actions rõ | UUID/state/offset/download active-only |
+| Xem trạng thái, tham chiếu và khôi phục | Thông tin tệp bằng chữ khách hàng | State/reason/counts/blockers/revision/restore eligibility |
+| Intro/aside giải thích triển khai | Bỏ hai khối và wrapper hai cột | Không bỏ form/panel chức năng, /assets còn trongnav |
+| Tiêu đề/mô tả shell generic | Hai entry shell và hai nhánh JS đúng route | Không sửa shared metadata hoặc locale/auth |
+| Hướng dẫn chọn tệp tối chỉ3.51:1 | Một rule darkcolor đo lại8.84:1 | Không đổi light/font/layout/motion/controls |
+
+Physical27ca và HTML đầu4ca đạt; native/hồi quy/release riêng. Không nhận
+toàn bộ interactionfeedback hoặc blob/output thật từ kiểm tra renderer.
+Nativeđãđốichiếu48views192PNG BASE/current,source151/code/core/schema/
+audit/egressgiữ,unknown996mỗiphase. Release/review vẫn cổng riêng.
+[Phiên Tester](../KIEM-THU/PHIEN-VAULT-CUSTOMER-COPY-20261119.md).
+
 ## 19/11/2026 — Chữ từ ảnh/PDF, giữ giới hạn xử lý
 
 Nguồn: `docs/migration/IMAGE_OCR_CONTRACT.md`, `PDF_OCR_CONTRACT.md`,

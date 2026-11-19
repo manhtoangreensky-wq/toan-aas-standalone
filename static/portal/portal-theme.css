@@ -23952,3 +23952,8 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-image-enhance .portal-p
   overflow: visible;
   text-overflow: clip;
 }
+
+/* Keep the file hint readable against the dark dropzone in every interaction state. */
+html[data-portal-theme="dark"] .portal-page.portal-asset-vault .portal-vault-dropzone small {
+  color: var(--portal-ink);
+}
