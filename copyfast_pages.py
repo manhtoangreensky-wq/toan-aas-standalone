@@ -107,10 +107,13 @@ _PORTAL_SHELL_COPY = {
     },
 }
 _PORTAL_SHELL_TITLES = {
+    "/documents/ocr": {"vi":"Đọc chữ từ ảnh · TOAN AAS","en":"Read text from images · TOAN AAS","zh":"识别图像文字 · TOAN AAS"},
     "/documents/pdf-to-images": {"vi":"PDF sang ảnh · TOAN AAS","en":"PDF to images · TOAN AAS","zh":"PDF 转图像 · TOAN AAS"},
     "/image/history": {"vi": "Lịch sử ảnh · TOAN AAS", "en": "Image history · TOAN AAS", "zh": "图像记录 · TOAN AAS"},
+    "/documents/pdf-ocr": {"vi":"Đọc chữ từ PDF · TOAN AAS","en":"Read text from PDF · TOAN AAS","zh":"识别 PDF 文字 · TOAN AAS"},
     "/documents/pdf-to-word": {"vi":"PDF sang Word · TOAN AAS","en":"PDF to Word · TOAN AAS","zh":"PDF 转 Word · TOAN AAS"},
     "/image/edit": {"vi": "Chỉnh ảnh · TOAN AAS", "en": "Edit images · TOAN AAS", "zh": "调整图像 · TOAN AAS"},
+    "/documents/pdf-ocr-to-word": {"vi":"PDF quét sang Word · TOAN AAS","en":"Scanned PDF to Word · TOAN AAS","zh":"扫描版 PDF 转 Word · TOAN AAS"},
     "/documents/image-to-pdf": {"vi": "Ảnh thành PDF · TOAN AAS", "en": "Images to PDF · TOAN AAS", "zh": "图像转 PDF · TOAN AAS"},
     "/documents/compress": {"vi": "Nén PDF · TOAN AAS", "en": "Compress PDF · TOAN AAS", "zh": "压缩 PDF · TOAN AAS"},
     "/image/resize": {"vi": "Đổi kích thước ảnh · TOAN AAS", "en": "Resize images · TOAN AAS", "zh": "调整图像尺寸 · TOAN AAS"},
@@ -223,6 +226,11 @@ _PORTAL_SHELL_TITLES = {
 # presentation copy. They must never interpolate account data, request state,
 # identifiers, or other private browser/server projections into first paint.
 _PORTAL_SHELL_DESCRIPTIONS = {
+    "/documents/ocr": {
+        "vi": "Đọc chữ trong ảnh đã lưu và tải về tệp văn bản. Ảnh gốc được giữ nguyên.",
+        "en": "Read text in a saved image and download a text file. The original image stays unchanged.",
+        "zh": "识别已保存图像中的文字并下载文本文件。原图像保持不变。",
+    },
     "/documents/pdf-to-images": {
         "vi": "Chuyển các trang PDF thành ảnh PNG. Nhiều trang được tải trong một tệp ZIP; tệp gốc được giữ nguyên.",
         "en": "Convert PDF pages into PNG images. Multiple pages download in one ZIP file; the original stays unchanged.",
@@ -233,6 +241,11 @@ _PORTAL_SHELL_DESCRIPTIONS = {
         "en": "Review your image edits and download completed images.",
         "zh": "查看您的图像编辑记录并下载已完成的图像。",
     },
+    "/documents/pdf-ocr": {
+        "vi": "Đọc chữ trong PDF đã lưu và tải về tệp văn bản. Tệp gốc được giữ nguyên.",
+        "en": "Read text in a saved PDF and download a text file. The original stays unchanged.",
+        "zh": "识别已保存 PDF 中的文字并下载文本文件。原文件保持不变。",
+    },
     "/documents/pdf-to-word": {
         "vi": "Chuyển phần chữ có thể bôi chọn trong PDF sang Word. Không chuyển chữ trong ảnh hoặc giữ nguyên cách dàn trang.",
         "en": "Convert selectable PDF text into Word. Text in images and the original page layout are not converted.",
@@ -242,6 +255,11 @@ _PORTAL_SHELL_DESCRIPTIONS = {
         "vi": "Chọn ảnh đã lưu, chỉnh màu và độ nét rồi tải bản PNG mới. Tệp gốc được giữ nguyên.",
         "en": "Choose a saved image, adjust color and sharpness, then download a new PNG. The original file stays unchanged.",
         "zh": "选择已保存的图像，调整色彩和锐度，然后下载新的 PNG 文件。原文件保持不变。",
+    },
+    "/documents/pdf-ocr-to-word": {
+        "vi": "Đọc chữ trong PDF quét để tạo tài liệu Word. Không giữ hình ảnh, bảng, phông chữ hay cách dàn trang.",
+        "en": "Read text in a scanned PDF to create a Word document. Images, tables, fonts and page layout are not retained.",
+        "zh": "识别扫描版 PDF 中的文字并生成 Word 文档。不保留图像、表格、字体或页面布局。",
     },
     "/documents/image-to-pdf": {
         "vi": "Chọn ảnh và ghép thành một tệp PDF. Ảnh gốc được giữ nguyên.",

@@ -1,5 +1,19 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 19/11/2026 — Đọc chữ từ ảnh, PDF và PDF quét sang Word
+
+Ứng viên đổi chữ/metadata/bố cục ba trang thành đầy đủ VI/EN/ZH; bỏ
+panel giải thích kỹ thuật và mô tả lặp, giữ form nguồn/ngôn ngữ/lịch sử/
+kho tệp/quyền. 19 phép thay/3 tệp ứng dụng/36 khóa,148 nguồn bảo vệ;
+bốn worker R1 exact. Physical10đạt18RED→28đạt;HTML đầu1đạt9RED→10đạt.
+Đọc chữ không dịch; Word chỉ chữ, không hứa giữ hình/bảng/phông/bố cục.
+PDF20MB/5trang và mã auto/vi/en không đổi.
+
+Cờ/form không chứng minh Tesseract/gói ngôn ngữ hoặc đầu ra. Không chạy
+OCR/provider/ví khi kiểm giao diện. Word cần ba phụ thuộc thật; QA chỉ
+bật trong child tạm, không đổi cấu hình máy/VPS. CI/deploy/live là cổng
+riêng. [Báo cáo](../docs/reports/document-ocr-customer-copy-20261119.md).
+
 ## 19/11/2026 — PDF sang ảnh và PDF sang Word
 
 Ứng viên dùng đúng VI/EN/ZH ở tên trang, mô tả, ô chọn PDF, xác nhận,

@@ -1,0 +1,57 @@
+task: DOCUMENT-OCR-CUSTOMER-COPY-20261119
+phase: REPORT
+goal_status: ACTIVE_INCOMPLETE
+base_sha: 8ba0d0452f86dcc3d72e5087351134902eb4e659
+branch: codex/document-ocr-customer-copy-20261119
+tracker: Issue689/comment7008143289
+dependency: PR776_DELIVERED_RECEIPTS_READBACK
+application_files_changed: 3
+application_files_protected: 148
+canonical_edits: 19
+locale_keys_added: 36
+fixture_sha256: 2784e5ec2bf31f4921f4d39fd495175dbb9871f860947d1c9b363218a453839f
+workers:
+  model: gemini-3.8-flash-high
+  sessions: 4
+  revisions: ALL_R1_EXACT
+  fields: e848b31b-be36-4038-8801-e3bd569b6b29
+  image: 3b569dc8-863e-47ca-a578-c0665a76b3c9
+  pdf: 569bac41-0255-4a3a-af0f-a46b54d013ae
+  word: c37404c0-ba40-47b9-8a8e-acede81796f5
+  root_application_takeover: false
+  application_failure_count: 0
+verification:
+  baseline_physical: 10_PASS_18_RED_14202_5964_MS
+  green_physical: 28_PASS_17278_0197_MS
+  baseline_shell: 1_PASS_9_RED_5_44_SECONDS
+  green_shell: 10_PASS_2_76_SECONDS
+  baseline_native: THREE_GROUPS_24_VIEWS_EACH_OWNED_ZERO
+  green_native: THREE_GROUPS_24_VIEWS_EACH_OWNED_ZERO
+  native_artifact_validation: 144_VIEWS_288_PNG_PARSE_CRC_HASH
+  native_unknown: 540_BASE_540_GREEN_HELD
+  portable_source: 50_PASS_18023_7063_MS
+  affected: 1866_PASS_336348_5643_MS
+  python: 71_PASS_22_39_SECONDS
+  tester_metadata: 2_PASS_31_DESELECTED_4_85_SECONDS
+  review: C0_I0_M0_ROOT_FULL_READ
+  review_sha256: ae157bbb086079095ce273abf9570f7cc90622f1117576bd999ef516f138d2e8
+  publication_manifest_files: 28
+  publication_manifest: FINAL_AFTER_DOC_CLOSURE
+  prepush: READY
+root_spec_amendment:
+  real_prerequisites: OCR_WORD_REQUIRES_PDF_OCR_AND_PDF_TO_WORD
+  applied_before_native: true
+  app_or_worker_failure: false
+release:
+  pr: NOT_CREATED
+  deploy: NOT_STARTED
+  signed_live: NOT_TESTED
+engine_runtime_language_readiness: NOT_PROVEN
+final_ocr_output: NOT_TESTED
+provider_calls: 0
+wallet_mutations: 0
+product_submissions: 0
+production_data_mutations: 0
+machine_env_writes: 0
+production_env_writes: 0
+motion: M-FINAL-01..06_LAST

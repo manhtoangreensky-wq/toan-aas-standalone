@@ -37,8 +37,15 @@ verification:
   review_sha256: 64befd51081f856063477d26be8aace38026f7f4b721004adf813820c52aca44
   prepush: READY_39_FILES_SECRET_0_SOURCE151_HELD
 release:
-  pr: NOT_CREATED
-  deploy: NOT_STARTED_FOR_THIS_BATCH
+  pr: 776
+  tested_head: 4c24489ef97ea1b4ff9b4173bb73bb6efc0d44d4
+  ci: 44512041758_TWO_SUCCESS_723S_272S
+  merge_runtime_sha: 8ba0d0452f86dcc3d72e5087351134902eb4e659
+  tree: df25393700584433ef62c44205e7f852b658adf3
+  deploy: 44515050253_SUCCESS_66_SECONDS
+  vps: TRACKED_CLEAN_3_ACTIVE_RUNNING_HEALTH_ASSETS_EXACT
+  issue_receipt: 7006239694_READBACK_EXACT
+  pr_receipt: 7007830023_READBACK_EXACT
   signed_live: NOT_TESTED
 provider_calls: 0
 wallet_mutations: 0

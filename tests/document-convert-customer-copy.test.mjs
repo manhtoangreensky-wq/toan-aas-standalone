@@ -6,6 +6,7 @@ import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
+import {documentOcrCustomerHistoricalSource} from "./helpers/document-ocr-customer-copy-snapshot.mjs";
 Error.stackTraceLimit=0;
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const BASE="a589008be5d7be371789551ffc11e750db46270b",count=(s,p)=>s.split(p).length-1;
@@ -126,20 +127,21 @@ for(const locale of ["vi","en","zh"]){
  });
 }
 test("whole physical sources differ only by declared finite fragments and exact new catalog values; baseline does not block RED registration",()=>{
- const phase=[];
+ // Only this historical source-comparator copy is staged; actual renderer still uses current physical bundles.
+ const phase=[],comparison=Object.fromEntries(Object.entries(current).map(([key,source])=>[key,documentOcrCustomerHistoricalSource(source,files[key])]));
  for(const[key,file]of [["portal",files.portal],["pages",files.pages]]){
   let expected=baseline[key];
   for(const change of Object.values(specs).flatMap(spec=>spec.changes).filter(change=>change.file===file)){assert.equal(count(expected,change.old),1);expected=expected.replace(change.old,()=>change.new);}
-  if(current[key]===baseline[key])phase.push(0);else{assert.equal(current[key],expected,file+" outside bytes");phase.push(1);}
+  if(comparison[key]===baseline[key])phase.push(0);else{assert.equal(comparison[key],expected,file+" outside bytes");phase.push(1);}
  }
  const found=[],remove=[];
- for(const match of current.i18n.matchAll(/  Object\.assign\(MESSAGES\.(vi|en|zh), (\{[^\n]+\})\);\n/g)){
+ for(const match of comparison.i18n.matchAll(/  Object\.assign\(MESSAGES\.(vi|en|zh), (\{[^\n]+\})\);\n/g)){
   const entries=Object.entries(JSON.parse(match[2])),owned=entries.filter(([key])=>key.startsWith("docConvert"));
   if(!owned.length)continue;assert.equal(owned.length,entries.length,"No foreign entries in a new finite catalog block");
   for(const[key,value]of entries){assert.ok(keys.includes(key),"No undeclared new catalog key");assert.equal(value,words(key,match[1]));found.push([match[1],key]);}
   remove.push(match[0]);
  }
- let restored=current.i18n;for(const block of remove){assert.equal(count(restored,block),1);restored=restored.replace(block,"");}
+ let restored=comparison.i18n;for(const block of remove){assert.equal(count(restored,block),1);restored=restored.replace(block,"");}
  assert.equal(restored,baseline.i18n,"All catalog bytes outside exact declared blocks remain BASE");
  if(found.length){assert.equal(found.length,84);assert.equal(new Set(found.map(row=>row.join(":"))).size,84);phase.push(1);}else phase.push(0);
  assert.equal(new Set(phase).size,1,"Whole batch, never mixed source phases");

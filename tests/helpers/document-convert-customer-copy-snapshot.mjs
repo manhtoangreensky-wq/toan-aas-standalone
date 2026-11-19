@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {documentOcrCustomerHistoricalSource,documentOcrCustomerHistoricalSnapshot} from "./document-ocr-customer-copy-snapshot.mjs";
 // Finite historical comparator only. Never pass its output to a current renderer.
 const raw=fs.readFileSync(new URL("../fixtures/document-convert-customer-copy-reviewed.json",import.meta.url));
 const fail="Unreviewed Document Convert customer copy",count=(source,part)=>source.split(part).length-1;
@@ -49,6 +50,7 @@ function catalogueDeclarations(source){
 }
 export function documentConvertCustomerHistoricalSource(source,file){
  assert.equal(typeof source,"string",fail);
+ source=documentOcrCustomerHistoricalSource(source,file);
  if(file===i18n){
   const found=catalogueDeclarations(source),next=count(source,catalogue.new);
   if(!found.length){assert.equal(next,0,fail+" absent catalog");return source;}
@@ -94,6 +96,7 @@ export function documentConvertCustomerHistoricalSource(source,file){
 }
 export function documentConvertCustomerHistoricalSnapshot(entries,locale){
  const index=["vi","en","zh"].indexOf(locale)+1;assert.ok(index>0,fail+" locale");assert.ok(Array.isArray(entries),fail+" entries");
+ entries=documentOcrCustomerHistoricalSnapshot(entries,locale);
  const owned=entries.filter(([key])=>typeof key==="string"&&key.startsWith("docConvert"));if(!owned.length)return entries;
  assert.deepEqual(owned,rows.map(row=>[row[0],row[index]]),fail+" partial/changed/unknown/duplicate/reordered catalog");
  return entries.filter(([key])=>!keys.includes(key));

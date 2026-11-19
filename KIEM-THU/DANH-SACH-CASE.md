@@ -1,5 +1,19 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## DOCUMENT-OCR-20261119 — đọc chữ từ ảnh/PDF
+
+Phiên: [DOCUMENT-OCR-CUSTOMER-COPY](PHIEN-DOCUMENT-OCR-CUSTOMER-COPY-20261119.md).
+Sửa case tại đây trước, dùng Issue689 hiện có.
+
+| Case | Mức | Thao tác | Điều kiện đạt |
+|---|---|---|---|
+| OCR-FIELD | vừa | Ba nguồn/ngôn ngữ×3locale | Nhãn/help đúng, mã auto/vi/en không đổi |
+| OCR-PAGE | vừa | Ready/trống/guard | Không panel kỹ thuật/ô trống, giữ form/history/vault |
+| OCR-WORD | nặng | Đọc giới hạn | Chỉ chữ, không giữ hình/bảng/phông/bố cục |
+| OCR-RIGHTS | nặng | Thiếu cờ/quyền/nguồn | Không bật form/sửa quyền bằng chuỗi boolean |
+| OCR-NATIVE | vừa | 72view/phase,sáng tối,bàn phím | Đúngnguồn/locale/Tab,owned0,không product/OCR/provider |
+| OCR-DELIVERY | nặng | CI→merge→deploy→receipt | ExactHEAD/tree/VPS/assetskhớp,không suy engine/outputLIVE |
+
 ## DOCUMENT-CONVERT-20261119 — PDF sang ảnh và Word
 
 Phiên: [DOCUMENT-CONVERT-CUSTOMER-COPY](PHIEN-DOCUMENT-CONVERT-CUSTOMER-COPY-20261119.md).

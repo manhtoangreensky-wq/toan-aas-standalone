@@ -10421,7 +10421,7 @@
         "copyfast_mfa.py",
         "copyfast_music_media.py"
       ],
-      "occurrences": 1229,
+      "occurrences": 1228,
       "provider": "PayOS"
     },
     {
@@ -10504,6 +10504,7 @@
         "copyfast_provider_policy.py",
         "docs/AGY-DISPATCH-POINT-20261107.md",
         "docs/reports/document-convert-customer-copy-20261119.md",
+        "docs/reports/document-ocr-customer-copy-20261119.md",
         "docs/reports/pdf-input-font16-20261116.md",
         "docs/reports/pdf-split-readability-20261116.md",
         "docs/reports/video-inner-first-three-20261110.md",
@@ -10533,10 +10534,9 @@
         "reports/prepush/R218-20261023-MUSIC-PRODUCT-READABILITY-E.md",
         "reports/prepush/R218-20261023-VOICE-AUDIT-DOCS.md",
         "reports/prepush/R218-20261024-MUSIC-REQUEST-REVIEW-FH.md",
-        "studio/script.js",
-        "video.html"
+        "studio/script.js"
       ],
-      "occurrences": 56,
+      "occurrences": 57,
       "provider": "Gemini"
     },
     {
@@ -10673,7 +10673,7 @@
         "copyfast_music_media.py",
         "copyfast_music_sfx_library_bridge.py"
       ],
-      "occurrences": 2134,
+      "occurrences": 2131,
       "provider": "Telegram"
     }
   ],
@@ -18798,39 +18798,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 623,
-  "source_files_scanned": 623,
-  "source_fingerprint_sha256": "5c3bb12df66148634de85c4d64c842c70d9077a849d8413e67df9936657c14f3",
+  "source_files_discovered": 627,
+  "source_files_scanned": 627,
+  "source_fingerprint_sha256": "bf87a6245d5737691f7e1ffd9c070ec52904d988d3415e54165e18ae07f21221",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 36071,
+      "line": 36062,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36387,
+      "line": 36378,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35735,
+      "line": 35726,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35984,
+      "line": 35975,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35356,
+      "line": 35347,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35648,
+      "line": 35639,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -19045,7 +19045,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 37507,
+      "line": 37498,
       "path": "/features"
     },
     {
