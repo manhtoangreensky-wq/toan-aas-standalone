@@ -1,5 +1,6 @@
 task: PDF-UTILITIES-CUSTOMER-COPY-20261119
 phase: REPORT
+unit_status: DELIVERED_RECEIPT_CLOSED
 goal_status: ACTIVE_INCOMPLETE
 base_sha: 513557a9ece0f8fe049884868dc5fb3a1ac2339c
 branch: codex/four-route-coverage-20261119
@@ -43,15 +44,20 @@ verification:
   native_limits_seconds: 60_180_10_5
 release:
   pr: 774
-  push: FIRST_HEAD_PUBLISHED_QA_CORRECTION_PENDING
-  deploy: NO
+  push: FINAL_HEAD_PUBLISHED
+  tested_head: e861ba65170a98b47c4e95f476d1d8980cbde7a8
+  ci_run: 44487050618
+  ci_result: BOTH_JOBS_SUCCESS
+  runtime_sha: f8932643c1408d6565a0f1574f9bdd47ffac267b
+  deploy: SUCCESS_44489322829_66_SECONDS
+  issue_receipt: 7001187976
+  pr_receipt: 7004144535
+  receipt_readback: EXACT
   signed_production_ui: NOT_TESTED
   final_pdf_output: NOT_TESTED
 provider_calls: 0
 wallet_mutations: 0
 product_submit: NO
 next:
-  - Web-only provenance and exact-head CI
-  - One PR exact-head CI merge deploy runtime receipts
   - Edit copy and mobile density after PDF delivery
 motion: M-FINAL-01..06_LAST

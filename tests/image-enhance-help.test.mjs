@@ -6,7 +6,10 @@ import {test} from 'node:test';
 import {fileURLToPath} from 'node:url';
 import {pageMetaRenderer} from './helpers/chat-page-meta-runtime.mjs';
 import {enhanceHeadingsHistoricalI18nSource} from './helpers/image-enhance-headings-snapshot.mjs';
+import {imageEditCustomerHistoricalSource} from './helpers/image-edit-customer-copy-snapshot.mjs';
 
+// LEGACY_HISTORICAL_RENDER_COMPARATOR: the reviewed Edit batch intentionally removed these six help blocks.
+// Keep all original assertions/hash/negative vectors; current Edit acceptance uses separate full physical sources.
 // Preparation only: 12 declared tests. No application source is written here.
 const R = fileURLToPath(new URL('../', import.meta.url));
 const ROUTE = '/image/edit';
@@ -25,7 +28,7 @@ const rows = authority.proposal.changes.map(row => ({
 }));
 const sources = Object.fromEntries(Object.entries({
   portal: 'static/portal/portal.js', i18n: 'static/portal/portal-i18n.js', pages: 'copyfast_pages.py'
-}).map(([key, file]) => [key, fs.readFileSync(path.join(R, file), 'utf8')]));
+}).map(([key, file]) => [key, imageEditCustomerHistoricalSource(fs.readFileSync(path.join(R, file), 'utf8').replace(/\r\n/g, '\n'), file)]));
 const slotMarker = key => `@@APPROVED_HELP_SLOT:${key}@@`;
 const count = (text, needle) => text.split(needle).length - 1;
 

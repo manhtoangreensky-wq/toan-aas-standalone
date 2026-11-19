@@ -1,5 +1,25 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## PDF đã giao, Chỉnh ảnh kế tiếp —19/11/2026
+
+- [x] PDF PR774:CI44487050618haiSUCCESS/18browser/456signedQA+456hash;
+  merge/runtimef8932643/tree94a60c88…diff0/deploy44489322829SUCCESS66s/
+  3services/health/5public+5normalassets/buildkhớp/Issue7001187976+
+  PR7004144535readbackexact. Không để PR774 mở chờ việc sau.
+- [x] Chỉnh ảnh baAGYsessions:FieldsR1/PageR2/MobileR1;22exactedits/
+  3app148protected. PageR1OLD3entitysai→R2literalcorrection;không takeover.
+- [x] BASE3PASS11RED→portablephysical14PASS/source14PASS.
+- [x] Affected75files1776PASS+Chat12PASS,khônglỗi. Chatfilter đã lặp2CSS
+  ngoài ý định,ghi đúng số thực tế/không cộng trùng/không chạy thêm.
+- [x] NativeEdit24view/48PNG/48mobilelinks≥44px,minwidth262/45owned0.
+  Root xemVI320dark/EN768landscape;badgeẩn đúngBASE,RootQAcriterionfault
+  phân tíchlạicùngartifact,khôngappfix/rerun.408paintUNKNOWN giữ.
+- [ ] Chỉnh ảnh metadata/review/prepush/provenance/onePR/CI/merge/deploy/receipt.
+- [ ] Broaderlocale/AX/recovery/auth/late/device/Safari/signedUI/output.
+- [ ] MotionM-FINAL01..06 cuối,toàn goalACTIVE/incomplete.
+
+[Báo cáo Chỉnh ảnh](../../docs/reports/image-edit-customer-copy-20261119.md).
+
 ## Nối tiếp đúng thứ tự —19/11/2026
 
 - [x] PR773 khép: CI44466426934 hai job thành công,18browser/456signedQA,

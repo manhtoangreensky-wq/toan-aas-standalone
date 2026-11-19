@@ -11013,3 +11013,16 @@ html .portal-page.portal-image-create .portal-button--primary:disabled {
   .portal-autopost-source { grid-template-columns: 28px minmax(0, 1fr); }
   .portal-autopost-status { grid-column: 2; justify-self: start; }
 }
+
+/* Compact only the manual image editor's mobile workspace navigation. */
+@media (max-width: 700px) {
+  .portal-image-enhance .portal-image-create-workflows { padding: 12px; }
+  .portal-image-enhance .portal-image-create-workflows > .portal-card-header { margin-bottom: 8px; }
+  .portal-image-enhance .portal-image-create-workflows > .portal-card-header .portal-card-subtitle { display: none; }
+  .portal-image-enhance .portal-image-create-workflow-nav { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .portal-image-enhance .portal-image-create-mode-card { min-height: 44px; padding: 10px 12px; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+  .portal-image-enhance .portal-image-create-mode-card .portal-module-copy > h3 { margin: 0; line-height: 1.5; overflow-wrap: anywhere; }
+  .portal-image-enhance .portal-image-create-mode-card .portal-module-copy > p,
+  .portal-image-enhance .portal-image-create-mode-card .portal-module-link { display: none; }
+  .portal-image-enhance .portal-image-create-mode-card .portal-badge { align-self: center; justify-self: end; white-space: normal; text-align: right; }
+}

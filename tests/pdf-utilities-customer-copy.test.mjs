@@ -6,6 +6,7 @@ import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
+import {imageEditCustomerHistoricalSource} from "./helpers/image-edit-customer-copy-snapshot.mjs";
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const BASE="513557a9ece0f8fe049884868dc5fb3a1ac2339c",hash=x=>createHash("sha256").update(x).digest("hex"),count=(s,p)=>s.split(p).length-1;
 const fixtureRaw=fs.readFileSync(path.join(ROOT,"tests/fixtures/pdf-utilities-customer-copy-reviewed.json"));
@@ -36,7 +37,8 @@ for(const edit of fixture.canonicalChanges){
   phases.push(next);
 }
 assert.ok(phases.every(x=>x===0)||phases.every(x=>x===1),"No partial batch replay");
-const sourceDigests=value=>Object.fromEntries(Object.entries(value).map(([key,source])=>[key,hash(source)]));
+// Finite historical source comparator only; actual/before renderers below still receive full physical sources.
+const sourceDigests=value=>Object.fromEntries(Object.entries(value).map(([key,source])=>[key,hash(imageEditCustomerHistoricalSource(source,files[key]))]));
 assert.deepEqual(sourceDigests(restored),sourceDigests(baseline),"Complete physical source outside approved substitutions stays BASE-exact");
 const actual=await pageMetaRenderer(current),before=await pageMetaRenderer(baseline);
 const customer='CUSTOMER media provider CSRF Facebook TikTok <img src=x onerror="literal">&';
@@ -117,7 +119,7 @@ for(const locale of ["vi","en","zh"]){
 }
 test("physical source scope is exact and no unrelated routes/catalog bytes change",()=>{
   assert.equal(phases.length,4);assert.deepEqual(sourceDigests(restored),sourceDigests(baseline));
-  for(const route of ["/documents/split","/documents/merge","/image/edit","/image/resize","/image/history"])for(const locale of ["vi","en","zh"]){
+  for(const route of ["/documents/split","/documents/merge","/image/resize","/image/history"])for(const locale of ["vi","en","zh"]){
     const now=result(actual,locale,route),old=result(before,locale,route);
     assert.equal(now.html,old.html);assert.equal(now.title,old.title);assert.equal(JSON.stringify(now.context),JSON.stringify(old.context));
   }

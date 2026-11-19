@@ -72,7 +72,7 @@ for(const locale of ["vi","en","zh"]){
       }else{
         assert.match(now.html,/data-portal-action="image-operation-enhance"/);assert.match(now.html,/data-portal-action="image-enhance-refresh"/);
         for(const name of ["source_asset_id","preset","brightness","contrast","saturation","sharpness","tone","basic_upscale"])assert.ok(now.html.includes('name="'+name+'"'));
-        assert.match(now.html,/href="\/asset-vault"/);assert.equal(count(now.html,'<ol class="portal-project-steps">'),1);
+        assert.match(now.html,/href="\/asset-vault"/);assert.equal(count(now.html,'<ol class="portal-project-steps">'),0);
         if(state==="ready"){
           assert.ok(now.html.includes(now.qa.safeText(CUSTOMER)));assert.ok(now.html.includes(now.qa.safeText(UNKNOWN)));
           assert.ok(projected.includes('<h2 class="portal-card-title">'+now.qa.safeText(COPY[locale].title)+"</h2>"),"Identical customer title stays literal");
