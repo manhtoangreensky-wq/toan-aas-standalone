@@ -1739,4 +1739,15 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | PUC-PRESERVE | nặng |Quyền/nguồn/escape/frozen/wholeoutside |Tám names/IDs/required/action/history/customer giữ |Source11PASS/scope151 |
 | PUC-LEGACY | nặng |Bốn inverse hữu hạn |Golden/assertions/negative/outside bytes giữ |285retained+1430unexecuted+19retestPASS |
 | PUC-NATIVE | vừa |Hai route×24views,keyboard thật |Noerrors/overflow/egress/writes;core/audit/source/owned0 |48view/96PNG/192nhãn/87owned0;hai startupfail giữ riêng |
-| PUC-DELIVERY | nặng |MộtPR/CI/merge/treeeq/deploy/runtime/assets |Đúngbản/từngcổng/receipts;không nhận output |PENDING |
+| PUC-DELIVERY | nặng |MộtPR/CI/merge/treeeq/deploy/runtime/assets |Đúngbản/từngcổng/receipts;không nhận output |PR774/CI44487050618/deploy44489322829/runtimef8932643/receipts closed |
+
+## IMAGE-EDIT-CUSTOMER-CLEANUP-20261119 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| IEC-RED | vừa |14physicalcases trước áp dụng |3protectedPASS11targetRED |[Phiên IEC](PHIEN-IMAGE-EDIT-CUSTOMER-COPY-20261119.md) |
+| IEC-COPY | vừa |20rowVI/EN/ZH và bỏ khung dư |Không chữ kỹ thuật/ôtrống;customer giữ |Portable14PASS/source14PASS |
+| IEC-FORM | nặng |Strictboolean/allstates/sourceempty/custom/bounds |Támfield/action/rights/escape/inputfrozen giữ |14physical/1776affected/12ChatPASS |
+| IEC-NAV | vừa |Bốnmobilelinks mỗi view |48rows≥44px/minwidth262,tên/href/current/tabIndex0 |Native24view48PNG45owned0 |
+| IEC-SCOPE | nặng |Exact22edits/3app148protected |Finiteoutside/golden/negative giữ,currentrenderer thật |Source14PASS/scopec4de6d42… |
+| IEC-DELIVERY | nặng |OnePR/exactCI/merge/deploy/runtime/receipt |Đúng bản/từngcổng,không nhận ảnh cuối |PENDING |

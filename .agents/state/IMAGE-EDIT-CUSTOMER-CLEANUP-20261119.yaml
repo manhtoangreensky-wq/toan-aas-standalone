@@ -1,0 +1,51 @@
+task: IMAGE-EDIT-CUSTOMER-CLEANUP-20261119
+phase: REPORT
+goal_status: ACTIVE_INCOMPLETE
+base_sha: f8932643c1408d6565a0f1574f9bdd47ffac267b
+branch: codex/image-edit-customer-cleanup-20261119
+tracker: Issue689/comment7004266812
+dependency: PR774_DELIVERED_RECEIPT_CLOSED
+application_files_changed: 3
+application_files_protected: 148
+canonical_edits: 22
+fixture_sha256: 7032192534419999f7528e3a6dbf08151b5db6ed96b3c49c7ecb300a6434007f
+scope_sha256: c4de6d42e9de04e794e9a79a6bfc5a50f1d3628e84d115edaa458cf4a72ac2f1
+worker:
+  model: gemini-3.8-flash-high
+  sessions: 3
+  field: R1_SOURCE_ACCEPTED
+  page: R2_SOURCE_ACCEPTED_AFTER_THREE_OLD_LITERAL_CORRECTIONS
+  mobile: R1_SOURCE_ACCEPTED
+  same_fragment_failure_count_page: 1
+  root_application_takeover: false
+verification:
+  baseline: 3_PASS_11_TARGET_RED
+  portable_physical: 14_PASS_40799_7468_MS
+  source: 14_PASS_3373_7538_MS
+  chat_css_retest: 2_PASS_4537_249_MS
+  native_views: 24
+  verified_png: 48
+  mobile_rows: 48
+  minimum_mobile_height_px: 44
+  minimum_mobile_width_px: 262
+  owned_processes_stopped: 45
+  native_observation: ACCEPTED_NOT_GLOBAL_UI_PASS
+  root_qa_badge_fault: R1_FALSE_PRESERVED_R2_SAME_ARTIFACT_CORRECTED
+  affected_regression: 1776_PASS_0_FAIL_214005_5756_MS
+  chat: 12_PASS_9347_7744_MS_INCLUDING_TWO_ALREADY_PASS_CSS
+  unknown_paint_samples: 408
+  metadata: 2_PASS_31_DESELECTED_0_84_SECONDS
+  independent_review: C0_I0_M0
+  review_sha256: 197132d24670be70cf722cad5dff547f0a60d6c23c08106f5855cefd7c80c8aa
+  prepush: READY_28_FILES_SECRET_0
+release:
+  pr: NOT_CREATED
+  deploy: NO
+  live: NOT_TESTED
+provider_calls: 0
+wallet_mutations: 0
+product_submit: NO
+next:
+  - Source commit and Web-only provenance
+  - One PR exact-head CI merge deploy runtime receipts
+motion: M-FINAL-01..06_LAST

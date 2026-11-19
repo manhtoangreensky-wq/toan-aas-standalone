@@ -3416,6 +3416,16 @@ Native cô lập 12 màn/48 phụ đề/48 ảnh giữ metadata, biểu mẫu v�
 đã được xử lý. Phát hành/runtime/signed UI được chốt riêng trên Issue689.
 [Báo cáo](../docs/reports/image-resize-result-label-20261118.md).
 
+## Chỉnh ảnh — ứng viên19/11/2026
+
+PDF đã giao PR774/runtimef8932643/CI44487050618/deploy44489322829 và receipt.
+Ứng viên Chỉnh ảnh làm dễ hiểu20dòng chữ,bỏ khung giải thích dư,giữ kho tệp
+trong chân form,thu gọn bốn lựa chọn điện thoại≥44px. Giữ tám trường,quyền,
+mã/giátrị,Tùy chỉnh,lịch sử và bản gốc;không đổi xử lý hoặc tự hứa đầu ra AI.
+Physical14/source14/native24view48PNG48mobilelinks44px/45owned0 đã đo.
+Hồi quy/review/phát hành còn chốt;chưa nhận ứng viên chạy production.
+[Báo cáo](../docs/reports/image-edit-customer-copy-20261119.md).
+
 ## Hai công cụ PDF — ứng viên ngày19/11/2026
 
 PR773 đã giao runtime513557a9, CI44466426934/deploy44468185148 và receipt

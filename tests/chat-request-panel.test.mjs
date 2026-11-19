@@ -5,7 +5,10 @@ import {requestPanelRenderer,requestPanelSources} from './helpers/chat-request-p
 import {requestPanelHistoricalSnapshot,requestPanelHistoricalPortalSource,requestPanelHistoricalCss,requestPanelCssOld,requestPanelCssNew,requestPanelSpans,requestStatusWrapRules} from './helpers/chat-request-panel-snapshot.mjs';
 import {historyHistoricalPortalSource,historyHistoricalSnapshot} from './helpers/chat-history-snapshot.mjs';
 import {pageMetaHistoricalSnapshot,pageMetaHistoricalPortalSource} from './helpers/chat-page-meta-snapshot.mjs';
+import {imageEditCustomerHistoricalSource} from './helpers/image-edit-customer-copy-snapshot.mjs';
 const live=requestPanelSources(),source={...live,portal:pageMetaHistoricalPortalSource(live.portal)},oldSource=requestPanelSources(true);
+// Historical CSS comparator only; source.css and runtime renderer retain physical CSS.
+const historicalCss=imageEditCustomerHistoricalSource(source.css,'static/portal/portal.css');
 const actual=await requestPanelRenderer(source),before=await requestPanelRenderer(oldSource);
 const current=(...args)=>{
   const result=actual(...args);
@@ -98,17 +101,17 @@ test('strict three-function spans normalize before the prior whole-detail histor
   assert.ok(requestPanelHistoricalPortalSource(source.portal+'\n// OUTSIDE_LITERAL').endsWith('// OUTSIDE_LITERAL'));
 });
 test('CSS accepts only the exact desktop property edit; all other CSS and mobile overrides remain visible to the old comparator',()=>{
-  assert.equal(requestPanelHistoricalCss(source.css),oldSource.css);assert.equal(requestPanelHistoricalCss(oldSource.css),oldSource.css);assert.equal(source.css.split(requestPanelCssNew).length-1,1);assert.equal(oldSource.css.split(requestPanelCssOld).length-1,1);
-  for(const altered of [source.css.replace(requestPanelCssNew,requestPanelCssNew.replace('repeat(2','repeat(3')),source.css+'\n'+requestPanelCssNew])assert.throws(()=>requestPanelHistoricalCss(altered),/Unreviewed Chat request CSS/);
-  const outside=source.css+'\n/* CUSTOMER media studio Bot provider Facebook TikTok */';assert.notEqual(requestPanelHistoricalCss(outside),oldSource.css);assert.ok(requestPanelHistoricalCss(outside).endsWith('TikTok */'));
+  assert.equal(requestPanelHistoricalCss(historicalCss),oldSource.css);assert.equal(requestPanelHistoricalCss(oldSource.css),oldSource.css);assert.equal(historicalCss.split(requestPanelCssNew).length-1,1);assert.equal(oldSource.css.split(requestPanelCssOld).length-1,1);
+  for(const altered of [historicalCss.replace(requestPanelCssNew,requestPanelCssNew.replace('repeat(2','repeat(3')),historicalCss+'\n'+requestPanelCssNew])assert.throws(()=>requestPanelHistoricalCss(altered),/Unreviewed Chat request CSS/);
+  const outside=historicalCss+'\n/* CUSTOMER media studio Bot provider Facebook TikTok */';assert.notEqual(requestPanelHistoricalCss(outside),oldSource.css);assert.ok(requestPanelHistoricalCss(outside).endsWith('TikTok */'));
 });
 test('status labels and values wrap instead of clipping; only the two reviewed CSS rules can project to the old source',()=>{
   for(const[old,next]of requestStatusWrapRules){
-    assert.equal(source.css.split(next).length-1,1,'Reviewed wrapping rule must be present');
-    assert.equal(source.css.includes(old),false);
-    assert.throws(()=>requestPanelHistoricalCss(source.css.replace(next,old)),/Unreviewed Chat request CSS: partial status wrap/);
-    assert.throws(()=>requestPanelHistoricalCss(source.css+'\n'+next),/Unreviewed Chat request CSS: status wrap rule count/);
-    assert.throws(()=>requestPanelHistoricalCss(source.css.replace(next,next.replace('overflow: visible','overflow: hidden'))),/Unreviewed Chat request CSS: status wrap rule count/);
+    assert.equal(historicalCss.split(next).length-1,1,'Reviewed wrapping rule must be present');
+    assert.equal(historicalCss.includes(old),false);
+    assert.throws(()=>requestPanelHistoricalCss(historicalCss.replace(next,old)),/Unreviewed Chat request CSS: partial status wrap/);
+    assert.throws(()=>requestPanelHistoricalCss(historicalCss+'\n'+next),/Unreviewed Chat request CSS: status wrap rule count/);
+    assert.throws(()=>requestPanelHistoricalCss(historicalCss.replace(next,next.replace('overflow: visible','overflow: hidden'))),/Unreviewed Chat request CSS: status wrap rule count/);
   }
-  assert.equal(requestPanelHistoricalCss(source.css),oldSource.css);
+  assert.equal(requestPanelHistoricalCss(historicalCss),oldSource.css);
 });

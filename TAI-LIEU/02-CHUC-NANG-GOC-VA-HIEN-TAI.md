@@ -2562,6 +2562,23 @@ BASE7RED/7PASS; ứng viên1566PASS/0FAIL; native12màn/48caption/48ảnh.
 Không nhận processing-output/signedproduction hoặc toàn trang đã sạch.
 CI/merge/deploy/runtime/assets phải có bằng chứng riêng.
 
+## Chỉnh ảnh — đối chiếu đúng chức năng,19/11/2026
+
+Nguồn gốc:renderImageEnhance,IMAGE_OPERATION_COPY_ROWS và menu4route tại
+GitBASEf8932643;không thêm tính năng xử lý ảnh hoặc sửa engine.
+
+| Chữ/hành vi cũ | Ứng viên | Ranh giới giữ |
+|---|---|---|
+| Preset/Cinematic/LANCZOS/UnsharpMask trong fixedcopy |Câu dễ hiểuVI/EN/ZH |20keys/mã/options/bounds/customer |
+| Intro/aside/notice/notes dài |Hero/nav/form/history,khôngôtrống |Guard/action/pagination |
+| Kho tệp trong khung bên |Giữ trong chân form |Href/quyền |
+| Bốncardmobile≥96px+nhiềuchữ |Bốndòng≥44px/tênđủ/viềnchọn |Nativehref/tabIndex/aria-current |
+| Badge đã ẩn ởBASEtheme |Tiếp tục ẩn |Không bật nhãn kỹ thuật lại |
+| BộcũHelp/Headings bảo vệ6khối đã bỏ |Phânloại rõ historicalcomparator |Golden/assertion/negative giữ |
+
+CurrentUI dùng physical/native riêng,không projection. PDF PR774 đã giao;
+không phát hành đồng thời hai đơn vị hoặc nhận signedproduction/output.
+
 ## PDF — đối chiếu đúng chức năng,19/11/2026
 
 Nguồn gốc dùng cho đơn vị này là các hàm đang có tại GitBASE513557a9:

@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
+import {imageEditCustomerHistoricalSource} from "./helpers/image-edit-customer-copy-snapshot.mjs";
 
+// LEGACY_HISTORICAL_RENDER_COMPARATOR: the reviewed Edit batch intentionally removed these six heading blocks.
+// Original assertions/hash/negative vectors remain; current Edit acceptance uses separate full physical sources.
 const ROOT=fileURLToPath(new URL("../",import.meta.url)).replace(/[\\/]$/,"");
 const AUTHORITY=new URL("./fixtures/image-enhance-headings-reviewed.json",import.meta.url);
 const SHA="8d17d4110028c6a2cd00f50bf3852e3419db70346894caffae87cf1367bc8755";
@@ -27,7 +30,8 @@ function inverse(source){
   assert.ok(allOld||allNew,"Only six exact all-OLD/all-NEW reviewed heading rows are accepted");
   let result=source;if(allNew)for(const edit of edits)result=result.replace(edit.new,()=>edit.old);return result;
 }
-const sources=pageMetaSources(),prior={...sources,i18n:inverse(sources.i18n)};
+const files={portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js",pages:"copyfast_pages.py"};
+const sources=Object.fromEntries(Object.entries(pageMetaSources()).map(([key,source])=>[key,imageEditCustomerHistoricalSource(source,files[key])])),prior={...sources,i18n:inverse(sources.i18n)};
 assert.equal(prior.portal,sources.portal);assert.equal(prior.pages,sources.pages);
 const styles=Object.fromEntries(["portal.css","portal-theme.css"].map(file=>[file,fs.readFileSync(ROOT+"/static/portal/"+file)]));
 const render=await pageMetaRenderer(sources),before=await pageMetaRenderer(prior),ROUTE="/image/edit",STATES=["guarded","loading","failed","empty","ready"],LOCALES=["vi","en","zh"];

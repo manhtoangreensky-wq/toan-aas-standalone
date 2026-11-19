@@ -24,7 +24,9 @@ BASE_SHA=513557a9ece0f8fe049884868dc5fb3a1ac2339c.
 - [x] CI774 lượt44485773134 lỗi3negativeguard QA: local3RED→đổi vị trí
   một dòng sau guard gốc→3PASS1031.4493ms; không đổi app/assertions/native.
 - [ ] Cùng PR774/provenance/finalHEADCI mới; lượt lỗi giữ nguyên.
-- [ ] Một PR → merge/treeeq → deploy đúngSHA → runtime/assets/receipt.
+- [x] PR774/CI44487050618haiSUCCESS/18+456ảnhhash→merge/runtimef8932643/
+  treeeq→deploy44489322829SUCCESS66s→3services/health/5+5assets/buildkhớp
+  →Issue7001187976/PR7004144535readbackexact.
 
 Đối chiếu VI/EN/ZH × sáng/tối ×320×844,414×896,768×414,1024×768.
 Tab/Shift+Tab thật; không submit tạo PDF, không chạm provider/ví/dữ liệu thật.

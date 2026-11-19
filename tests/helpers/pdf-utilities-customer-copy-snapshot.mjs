@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {imageEditCustomerHistoricalSource,imageEditCustomerHistoricalSnapshot} from "./image-edit-customer-copy-snapshot.mjs";
 // Historical-comparator leaf only. Current rendering/feature acceptance must keep physical bundles.
 const raw=fs.readFileSync(new URL("../fixtures/pdf-utilities-customer-copy-reviewed.json",import.meta.url));
 const SHA="fb1ffa41f9d924a11caf78b840d5ebc2a8e6a270eb49e91838868def71973870",fail="Unreviewed PDF utilities customer copy";
@@ -28,6 +29,7 @@ function ownedDeclarations(source){
 }
 export function pdfUtilitiesCustomerHistoricalSource(source,file){
   assert.equal(typeof source,"string",fail);
+  source=imageEditCustomerHistoricalSource(source,file);
   if(file!==portal&&file!==i18n)return source;
   if(file===i18n){
     const found=ownedDeclarations(source),next=count(source,catalogue.new);
@@ -67,6 +69,7 @@ export function pdfUtilitiesCustomerHistoricalSource(source,file){
 }
 export function pdfUtilitiesCustomerHistoricalSnapshot(entries,locale){
   const index=["vi","en","zh"].indexOf(locale)+1;assert.ok(index>0,fail+" locale");assert.ok(Array.isArray(entries),fail+" entries");
+  entries=imageEditCustomerHistoricalSnapshot(entries,locale);
   const owned=entries.filter(([key])=>typeof key==="string"&&namespace(key));if(!owned.length)return entries;
   assert.deepEqual(owned,rows.map(row=>[row[0],row[index]]),fail+" partial/unknown/duplicate/reordered owned catalogue");
   return entries.filter(([key])=>!keys.includes(key));

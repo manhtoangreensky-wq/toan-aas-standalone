@@ -1,0 +1,346 @@
+{
+  "task": "IMAGE-EDIT-CUSTOMER-CLEANUP-20261119",
+  "base": "f8932643c1408d6565a0f1574f9bdd47ffac267b",
+  "sourceAuthorities": [
+    {
+      "specId": "IMAGE-EDIT-FIELD-CUSTOMER-COPY-20261119",
+      "revision": "R1",
+      "conversation": "2de93bdb-93f6-406a-9a6e-69fde819c878",
+      "rawSha256": "540e8f4a7281ee7f6e7918e8608f1b99a100508246d06a0c9dab28abb01e4b3d",
+      "proposalExact": true,
+      "status": "SOURCE_PROPOSAL_ACCEPTED_NOT_APPLIED",
+      "sourceBase": "513557a9ece0f8fe049884868dc5fb3a1ac2339c",
+      "edits": 12,
+      "rows": 12,
+      "applicationWrites": 0,
+      "workerVerify": "NOT_RUN",
+      "rootNative": "NOT_RUN",
+      "dependency": "PR774_DEPLOY_AND_RECEIPT_BEFORE_APPLY",
+      "workerReport": "Exact JSON schema proposal parsed from packet.md. Output-only bounded result returned. verify=NOT_RUN. Root applies only after PR774 delivered."
+    },
+    {
+      "specId": "IMAGE-EDIT-PAGE-CUSTOMER-CLEANUP-20261119",
+      "revision": "R2",
+      "r1Conversation": "676d3212-9255-46c5-ac7b-76248c8e74b7",
+      "conversation": "e9a2f3d9-3bac-4296-a74a-beb8430a8bb1",
+      "r1RawSha256": "5361db8f39af43b804a22b0ca674fb15418edf6477a4ea501878a85474b7f8bb",
+      "rawSha256": "769b69918963117776470352ac566ee8fca335a6f895db451c58a43d9d1f3c9c",
+      "correctionExact": true,
+      "proposalWholeTargetExact": true,
+      "r1Failure": "THREE_HTML_ENTITY_ESCAPES_IN_OLD_SOURCE",
+      "sameFragmentFailures": 1,
+      "r1NewAndEightRowsPreserved": true,
+      "applicationWrites": 0,
+      "status": "SOURCE_PROPOSAL_ACCEPTED_NOT_APPLIED",
+      "tests": "NOT_RUN",
+      "workerReport": "R2 literal correction: substituted 3 occurrences of &lt;/span> with literal </span> in OLD proposal. verify: NOT_RUN."
+    },
+    {
+      "specId": "IMAGE-EDIT-MOBILE-NAV-DENSITY-20261119",
+      "revision": "R1",
+      "conversation": "ae13811a-add8-4f7e-8563-2e60282682c6",
+      "rawSha256": "d2278e4adfb61732bdb72dd5432e1cb0d9b417e1310575fe307c2e917f762a5c",
+      "proposalExact": true,
+      "status": "SOURCE_PROPOSAL_ACCEPTED_NOT_APPLIED",
+      "sourceBase": "513557a9ece0f8fe049884868dc5fb3a1ac2339c",
+      "edits": 1,
+      "rows": 0,
+      "applicationWrites": 0,
+      "workerVerify": "NOT_RUN",
+      "rootNative": "NOT_RUN",
+      "dependency": "PR774_DEPLOY_AND_RECEIPT_BEFORE_APPLY",
+      "workerReport": "Exact JSON schema proposal for IMAGE-EDIT-MOBILE-NAV-DENSITY-20261119 (R1). Verification NOT_RUN as instructed. Output-only bounded result."
+    }
+  ],
+  "canonicalChanges": [
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"field.enhance.preset.label\",\"Cách chỉnh\",\"Adjustment style\",\"调整方式\"],",
+      "old": "    [\"field.enhance.preset.label\", \"Công thức màu cục bộ\", \"Local color preset\", \"本地色彩预设\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"field.enhance.preset.cinematic\",\"Điện ảnh ấm\",\"Warm cinematic\",\"暖色电影感\"],",
+      "old": "    [\"field.enhance.preset.cinematic\", \"Cinematic ấm\", \"Warm cinematic\", \"暖色电影感\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"field.enhance.preset.help\",\"Chọn cách chỉnh có sẵn, hoặc chọn Tùy chỉnh để nhập đủ bốn mức điều chỉnh.\",\"Choose an adjustment style, or select Custom to enter all four adjustment levels.\",\"选择现成的调整方式，或选择自定义以填写全部四项调整程度。\"],",
+      "old": "    [\"field.enhance.preset.help\", \"Preset dùng thông số chuẩn từ trình chỉnh sửa cục bộ. Chỉ chọn Tùy chỉnh khi cần nhập đủ bốn thông số.\", \"Presets use canonical local-editor settings. Choose Custom only when all four settings are needed.\", \"预设使用本地编辑器的标准参数。只有需要填写四项参数时才选择自定义。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"field.enhance.custom.help\",\"Chỉ dùng với Tùy chỉnh. Mức 1.00 giữ nguyên giá trị này.\",\"Use only with Custom. A level of 1.00 keeps this value unchanged.\",\"仅用于自定义。1.00 表示保持此数值不变。\"],",
+      "old": "    [\"field.enhance.custom.help\", \"Chỉ dùng với Tùy chỉnh. 1.00 là giữ nguyên trước khi áp các bước tăng cường khác.\", \"Use only with Custom. 1.00 keeps the value unchanged before other enhancement steps.\", \"仅用于自定义。1.00 表示在其他增强步骤前保持不变。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"field.enhance.contrast.help\",\"Chỉ dùng với Tùy chỉnh. Điều chỉnh độ khác biệt giữa vùng sáng và vùng tối.\",\"Use only with Custom. Adjust the difference between light and dark areas.\",\"仅用于自定义。调整亮部与暗部之间的差异。\"],",
+      "old": "    [\"field.enhance.contrast.help\", \"Chỉ dùng với Tùy chỉnh. Không có HDR, khôi phục chi tiết hoặc chỉnh sửa AI.\", \"Use only with Custom. There is no HDR, detail recovery or AI retouching.\", \"仅用于自定义。不包含 HDR、细节恢复或 AI 修图。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"field.enhance.saturation.help\",\"Chỉ dùng với Tùy chỉnh. Nhập mức từ 0.50 đến 2.00.\",\"Use only with Custom. Enter a level from 0.50 to 2.00.\",\"仅用于自定义。请输入 0.50 至 2.00 之间的数值。\"],",
+      "old": "    [\"field.enhance.saturation.help\", \"Chỉ dùng với Tùy chỉnh. Máy chủ chặn số ngoài 0.50–2.00.\", \"Use only with Custom. The server rejects values outside 0.50–2.00.\", \"仅用于自定义。服务器拒绝 0.50–2.00 之外的数值。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"field.enhance.sharpness.help\",\"Chỉ dùng với Tùy chỉnh. Điều chỉnh độ nét có sẵn; không tạo thêm chi tiết.\",\"Use only with Custom. Adjust existing sharpness; no new detail is created.\",\"仅用于自定义。调整已有锐度，不会生成新的细节。\"],",
+      "old": "    [\"field.enhance.sharpness.help\", \"Chỉ dùng với Tùy chỉnh. Đây là bộ lọc cục bộ, không tạo chi tiết AI mới.\", \"Use only with Custom. This is a local filter and does not create new AI detail.\", \"仅用于自定义。这是本地滤镜，不会生成新的 AI 细节。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"field.enhance.tone.help\",\"Chỉ dùng với Tùy chỉnh. Các cách chỉnh có sẵn đã bao gồm sắc độ.\",\"Use only with Custom. The other adjustment styles already include their tone.\",\"仅用于自定义。其他现成调整方式已包含色调。\"],",
+      "old": "    [\"field.enhance.tone.help\", \"Chỉ dùng với Tùy chỉnh. Preset đã có sắc độ chuẩn riêng.\", \"Use only with Custom. Each preset has its own canonical tone.\", \"仅用于自定义。每个预设都有自己的标准色调。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"field.enhance.upscale.label\",\"Phóng ảnh và làm nét\",\"Enlarge and sharpen\",\"放大并锐化\"],",
+      "old": "    [\"field.enhance.upscale.label\", \"Làm nét / nâng kích thước cơ bản\", \"Basic sharpening / upscaling\", \"基础锐化 / 放大\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"field.enhance.upscale.yes\",\"Có · tối đa 2 lần, không quá 4096 điểm ảnh mỗi cạnh và 16 triệu điểm ảnh\",\"Yes · up to 2 times, within 4096 pixels per side and 16 million pixels\",\"是 · 最多 2 倍，每边不超过 4096 像素，总计不超过 1600 万像素\"],",
+      "old": "    [\"field.enhance.upscale.yes\", \"Có · tối đa 2×, theo trần 4096 px / 16 MP\", \"Yes · up to 2×, limited to 4096 px / 16 MP\", \"是 · 最高 2×，上限 4096 像素 / 16 MP\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"field.enhance.upscale.help\",\"Có thể phóng ảnh trong giới hạn trên. Ảnh quá lớn sẽ được thu nhỏ; không tạo thêm chi tiết.\",\"Images can be enlarged within these limits. Oversized images are reduced; no new detail is created.\",\"可在上述限制内放大图像。过大的图像会缩小，不会生成新的细节。\"],",
+      "old": "    [\"field.enhance.upscale.help\", \"Dùng nội suy LANCZOS và UnsharpMask cục bộ. Không phải nâng cấp AI; ảnh lớn có thể bị hạ về trần an toàn.\", \"Uses local LANCZOS interpolation and UnsharpMask. This is not AI upscaling; large images may be reduced to the safe limit.\", \"使用本地 LANCZOS 插值和 UnsharpMask。不是 AI 放大；大图可能会缩减到安全上限。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"result.preset.cinematic_warm\",\"Điện ảnh ấm\",\"Warm cinematic\",\"暖色电影感\"],",
+      "old": "    [\"result.preset.cinematic_warm\", \"Cinematic ấm\", \"Warm cinematic\", \"暖色电影感\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal.js",
+      "new": "  function renderImageEnhance(page, context) {\n    const t = (key, fallback, params) => imageOperationText(`enhance.${key}`, fallback, params);\n    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);\n    const canViewCapability = Boolean(context.capabilities && context.capabilities[\"image-operation-view\"] === true);\n    const canRunCapability = Boolean(context.capabilities && context.capabilities[\"image-operation-enhance\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"image-enhance-refresh\"] === true);\n    if (!canViewCapability) {\n      return `<article class=\"portal-page portal-image-enhance\">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.image)}</span><div><h2>${safeText(t(\"guard.title\", \"Xưởng làm ảnh rõ đang ở chế độ an toàn\"))}</h2><p>${safeText(t(\"guard.body\", \"Tiện ích chỉ mở khi Kho tài sản và kho đầu ra riêng tư của Web được máy chủ xác nhận. Web không dùng canvas trình duyệt, tác vụ Bot, nhà cung cấp hoặc đầu ra giả.\"))}</p></div></div></section></article>`;\n    }\n    const assetReadState = String(context.assetVaultReadState || \"loading\");\n    const operationReadState = String(context.imageEnhanceOperationsReadState || \"loading\");\n    const privateReadsReady = assetReadState === \"ready\" && operationReadState === \"ready\";\n    if (!privateReadsReady) {\n      const loading = assetReadState === \"loading\" || operationReadState === \"loading\";\n      const title = loading ? common(\"state.loadingTitle\", \"Đang xác minh dữ liệu riêng tư\") : common(\"state.failedTitle\", \"Chưa thể tải trạng thái riêng tư\");\n      const message = loading\n        ? t(\"loading.body\", \"Xưởng làm ảnh rõ đang tải Kho tài sản và lịch sử thuộc tài khoản hiện tại. Biểu mẫu chỉ mở sau khi cả hai phản hồi phía máy chủ hoàn tất.\")\n        : t(\"failed.body\", \"Kho tài sản hoặc lịch sử làm ảnh rõ chưa trả dữ liệu an toàn. Web đã xóa dữ liệu cũ và không hiển thị đầu ra thay thế.\");\n      const retry = !loading && canRefresh\n        ? `<div class=\"portal-form-footer\"><button class=\"portal-button portal-button--primary\" type=\"button\" data-portal-action=\"image-enhance-refresh\" data-portal-route=\"/image/edit\">${safeText(common(\"formRetry\", \"Thử lại dữ liệu riêng tư\"))}</button></div>`\n        : \"\";\n      return `<article class=\"portal-page portal-image-enhance\">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"${loading ? \"processing\" : \"guarded\"}\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${loading ? \"◌\" : \"!\"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p>${retry}</div></div></section></article>`;\n    }\n    const sources = imageVaultItems(context);\n    const operations = imageEnhanceOperationItems(context);\n    const canRun = canRunCapability && sources.length > 0;\n    const formValues = transientFormValues(\"/image/edit\");\n    const runReason = !canRunCapability\n        ? (context.imageEnhanceEnabled === true\n        ? t(\"runReason.capability\", \"Cần phiên đã xác thực, CSRF và quyền Làm ảnh rõ từ máy chủ.\")\n        : t(\"runReason.disabled\", \"Làm ảnh rõ đang được máy chủ giữ ở chế độ bảo vệ cho đến khi kho lưu trữ riêng tư được bật có chủ đích.\"))\n      : sources.length === 0\n        ? t(\"runReason.empty\", \"Hãy lưu JPEG, PNG hoặc WebP riêng tư vào Kho tài sản trước khi tạo bản sao.\")\n        : t(\"runReason.ready\", \"Nguồn → sao chép cô lập → chỉnh màu/làm nét có thể kiểm tra → PNG được mở lại và xác minh trước khi tải.\");\n    const sourceSummary = t(\"sourceCount\", \"{count} ảnh đang hoạt động\", { count: String(sources.length) });\n    const completedCount = operations.filter((item) => imageOperationState(item) === \"completed\" && item.download_ready === true).length;\n    return `<article class=\"portal-page portal-image-enhance\">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}\n       <div class=\"portal-document-operation-layout portal-document-operation-layout--single\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(t(\"form.title\", \"Tạo bản sao đã chỉnh\"))}</h2><p class=\"portal-card-subtitle\">${safeText(t(\"form.description\", \"Trình duyệt chỉ gửi mã tài sản và thông số đã giới hạn.\"))}</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"image-operation-enhance\" data-portal-route=\"/image/edit\" data-portal-confirm=\"${safeText(t(\"form.confirm\", \"Tạo PNG riêng tư theo công thức hoặc thông số đã chọn? File gốc trong Kho tài sản sẽ không bị thay đổi.\"))}\" novalidate>${renderFields(imageEnhanceFormFields(formValues), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(common(\"openVault\", \"Mở Asset Vault\"))}</a><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>${safeText(t(\"form.submit\", \"Tạo PNG riêng tư\"))}</button></div></form></section></div>\n       <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(t(\"results.title\", \"PNG đã chỉnh\"))}</h2><p class=\"portal-card-subtitle\">${safeText(t(\"results.description\", \"Chỉ thao tác thuộc tài khoản hiện tại. Tải xuống bị khóa nếu quyền sở hữu hoặc tính toàn vẹn không còn hợp lệ.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"image-enhance-refresh\" data-portal-route=\"/image/edit\"${canRefresh ? \"\" : \" disabled\"}>${safeText(common(\"refresh\", \"Làm mới\"))}</button></div>${renderImageEnhanceOperationCards(operations, context)}${renderImageOperationHistoryPagination(context, canViewCapability, \"/image/edit\", true)}</section>\n    </article>`;\n  }\n\n",
+      "old": "  function renderImageEnhance(page, context) {\n    const t = (key, fallback, params) => imageOperationText(`enhance.${key}`, fallback, params);\n    const common = (key, fallback, params) => imageOperationText(`common.${key}`, fallback, params);\n    const canViewCapability = Boolean(context.capabilities && context.capabilities[\"image-operation-view\"] === true);\n    const canRunCapability = Boolean(context.capabilities && context.capabilities[\"image-operation-enhance\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"image-enhance-refresh\"] === true);\n    if (!canViewCapability) {\n      return `<article class=\"portal-page portal-image-enhance\">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.image)}</span><div><h2>${safeText(t(\"guard.title\", \"Xưởng làm ảnh rõ đang ở chế độ an toàn\"))}</h2><p>${safeText(t(\"guard.body\", \"Tiện ích chỉ mở khi Kho tài sản và kho đầu ra riêng tư của Web được máy chủ xác nhận. Web không dùng canvas trình duyệt, tác vụ Bot, nhà cung cấp hoặc đầu ra giả.\"))}</p><div class=\"portal-state-meta\"><span>${safeText(common(\"guard.session\", \"Phiên đã xác thực\"))}</span><span>${safeText(common(\"guard.storage\", \"Kho lưu trữ riêng\"))}</span><span>${safeText(common(\"guard.noAi\", \"Không tạo AI giả\"))}</span></div></div></div></section></article>`;\n    }\n    const assetReadState = String(context.assetVaultReadState || \"loading\");\n    const operationReadState = String(context.imageEnhanceOperationsReadState || \"loading\");\n    const privateReadsReady = assetReadState === \"ready\" && operationReadState === \"ready\";\n    if (!privateReadsReady) {\n      const loading = assetReadState === \"loading\" || operationReadState === \"loading\";\n      const title = loading ? common(\"state.loadingTitle\", \"Đang xác minh dữ liệu riêng tư\") : common(\"state.failedTitle\", \"Chưa thể tải trạng thái riêng tư\");\n      const message = loading\n        ? t(\"loading.body\", \"Xưởng làm ảnh rõ đang tải Kho tài sản và lịch sử thuộc tài khoản hiện tại. Biểu mẫu chỉ mở sau khi cả hai phản hồi phía máy chủ hoàn tất.\")\n        : t(\"failed.body\", \"Kho tài sản hoặc lịch sử làm ảnh rõ chưa trả dữ liệu an toàn. Web đã xóa dữ liệu cũ và không hiển thị đầu ra thay thế.\");\n      const retry = !loading && canRefresh\n        ? `<div class=\"portal-form-footer\"><button class=\"portal-button portal-button--primary\" type=\"button\" data-portal-action=\"image-enhance-refresh\" data-portal-route=\"/image/edit\">${safeText(common(\"formRetry\", \"Thử lại dữ liệu riêng tư\"))}</button></div>`\n        : \"\";\n      return `<article class=\"portal-page portal-image-enhance\">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"${loading ? \"processing\" : \"guarded\"}\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${loading ? \"◌\" : \"!\"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class=\"portal-state-meta\"><span>${safeText(common(\"state.loadingMeta\", \"Phiên đã xác thực\"))}</span><span>${safeText(common(\"state.noCache\", \"Không lưu bộ nhớ đệm riêng tư\"))}</span><span>${safeText(common(\"state.noBrowserFallback\", \"Không dùng dữ liệu thay thế từ trình duyệt\"))}</span></div>${retry}</div></div></section></article>`;\n    }\n    const sources = imageVaultItems(context);\n    const operations = imageEnhanceOperationItems(context);\n    const canRun = canRunCapability && sources.length > 0;\n    const formValues = transientFormValues(\"/image/edit\");\n    const runReason = !canRunCapability\n        ? (context.imageEnhanceEnabled === true\n        ? t(\"runReason.capability\", \"Cần phiên đã xác thực, CSRF và quyền Làm ảnh rõ từ máy chủ.\")\n        : t(\"runReason.disabled\", \"Làm ảnh rõ đang được máy chủ giữ ở chế độ bảo vệ cho đến khi kho lưu trữ riêng tư được bật có chủ đích.\"))\n      : sources.length === 0\n        ? t(\"runReason.empty\", \"Hãy lưu JPEG, PNG hoặc WebP riêng tư vào Kho tài sản trước khi tạo bản sao.\")\n        : t(\"runReason.ready\", \"Nguồn → sao chép cô lập → chỉnh màu/làm nét có thể kiểm tra → PNG được mở lại và xác minh trước khi tải.\");\n    const sourceSummary = t(\"sourceCount\", \"{count} ảnh đang hoạt động\", { count: String(sources.length) });\n    const completedCount = operations.filter((item) => imageOperationState(item) === \"completed\" && item.download_ready === true).length;\n    return `<article class=\"portal-page portal-image-enhance\">${renderHero(page, context)}${renderImageWorkspaceNavigation(page)}\n      <section class=\"portal-document-operation-intro\"><div><span class=\"portal-section-kicker\">${safeText(t(\"intro.kicker\", \"Tiện ích xử lý ảnh trên Web\"))}</span><h2>${safeText(t(\"intro.title\", \"Làm ảnh sạch, rõ và nhất quán — không hứa hẹn AI\"))}</h2><p>${safeText(t(\"intro.body\", \"Chọn ảnh riêng tư trong Kho tài sản rồi áp công thức màu/làm nét cục bộ hoặc nhập bốn thông số tùy chỉnh. File gốc được giữ nguyên và PNG mới chỉ xuất hiện sau khi kiểm tra lại.\"))}</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>${safeText(t(\"metric.sources\", \"Nguồn thuộc tài khoản hiện tại\"))}</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>${safeText(t(\"metric.ready\", \"PNG sẵn sàng tải\"))}</dd></div></dl></section>\n       <div class=\"portal-document-operation-layout\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(t(\"form.title\", \"Tạo bản sao đã chỉnh\"))}</h2><p class=\"portal-card-subtitle\">${safeText(t(\"form.description\", \"Trình duyệt chỉ gửi mã tài sản và thông số đã giới hạn.\"))}</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"image-operation-enhance\" data-portal-route=\"/image/edit\" data-portal-confirm=\"${safeText(t(\"form.confirm\", \"Tạo PNG riêng tư theo công thức hoặc thông số đã chọn? File gốc trong Kho tài sản sẽ không bị thay đổi.\"))}\" novalidate>${renderFields(imageEnhanceFormFields(formValues), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>${safeText(t(\"form.submit\", \"Tạo PNG riêng tư\"))}</button></div></form></section><aside class=\"portal-card portal-card-pad portal-document-operation-boundary\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(t(\"boundary.title\", \"Giới hạn trung thực\"))}</h2><p class=\"portal-card-subtitle\">${safeText(t(\"boundary.description\", \"Công thức là xử lý cục bộ có thể kiểm tra, không phải lời hứa chỉnh sửa AI.\"))}</p></div></div><ol class=\"portal-project-steps\"><li><strong>1. ${safeText(t(\"step.order.title\", \"Thứ tự có thể kiểm tra\"))}</strong><span>${safeText(t(\"step.order.body\", \"Tự cân bằng → sáng → tương phản → bão hòa → nét → sắc độ, theo cùng thứ tự của trình chỉnh sửa cục bộ.\"))}</span></li><li><strong>2. ${safeText(t(\"step.upscale.title\", \"Nâng kích thước cơ bản có trần\"))}</strong><span>${safeText(t(\"step.upscale.body\", \"Nếu bật, máy chủ chỉ dùng LANCZOS và UnsharpMask tối đa 2×, giữ trần 4096 px/16 MP. Không tạo chi tiết mới.\"))}</span></li><li><strong>3. ${safeText(t(\"step.delivery.title\", \"Phát tệp riêng tư\"))}</strong><span>${safeText(t(\"step.delivery.body\", \"PNG mới được kiểm tra lại, băm lại và tải qua phiên đã xác thực; không có URL công khai hoặc bộ nhớ đệm PWA.\"))}</span></li></ol><div class=\"portal-form-footer\"><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(common(\"openVault\", \"Mở Asset Vault\"))}</a></div></aside></div>\n       <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(t(\"results.title\", \"PNG đã chỉnh\"))}</h2><p class=\"portal-card-subtitle\">${safeText(t(\"results.description\", \"Chỉ thao tác thuộc tài khoản hiện tại. Tải xuống bị khóa nếu quyền sở hữu hoặc tính toàn vẹn không còn hợp lệ.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"image-enhance-refresh\" data-portal-route=\"/image/edit\"${canRefresh ? \"\" : \" disabled\"}>${safeText(common(\"refresh\", \"Làm mới\"))}</button></div>${renderImageEnhanceOperationCards(operations, context)}${renderImageOperationHistoryPagination(context, canViewCapability, \"/image/edit\", true)}</section>\n       <section class=\"portal-card portal-card-pad\"><div class=\"portal-notice portal-notice--info\"><span class=\"portal-notice-icon\" aria-hidden=\"true\">i</span><div><strong>${safeText(t(\"notice.title\", \"Tiện ích Web độc lập\"))}</strong><p>${safeText(t(\"notice.body\", \"Làm ảnh rõ không tạo tác vụ Bot, không gọi nhà cung cấp, không trừ/cộng Xu, không tạo đơn PayOS và không dùng webhook thanh toán.\"))}</p></div></div>${renderNotes(page)}</section>\n    </article>`;\n  }\n\n"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"enhance.guard.body\",\"Không thể mở công cụ lúc này. Vui lòng tải lại trang hoặc kiểm tra quyền truy cập.\",\"This tool cannot be opened right now. Reload the page or check your access.\",\"暂时无法打开此工具。请重新加载页面或检查访问权限。\"],",
+      "old": "    [\"enhance.guard.body\", \"Tiện ích chỉ mở khi Kho tài sản và kho đầu ra riêng tư của Web được máy chủ xác nhận. Web không dùng canvas trình duyệt, tác vụ Bot, nhà cung cấp hoặc đầu ra giả.\", \"This utility opens only after the server confirms Asset Vault and private Web output storage. The Web App does not fall back to browser canvas, Bot jobs, providers or fabricated output.\", \"只有服务器确认 Asset Vault 和 Web 私有输出存储后，此工具才会开启。Web 不会回退到浏览器画布、Bot 任务、服务商或虚假输出。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"enhance.loading.body\",\"Đang tải ảnh và lịch sử chỉnh ảnh của bạn.\",\"Loading your images and edit history.\",\"正在加载您的图像与编辑记录。\"],",
+      "old": "    [\"enhance.loading.body\", \"Xưởng làm ảnh rõ đang tải Kho tài sản và lịch sử thuộc tài khoản hiện tại. Biểu mẫu chỉ mở sau khi cả hai phản hồi phía máy chủ hoàn tất.\", \"The image-enhancement studio is loading the current account's Asset Vault and history. The form opens only after both server-side responses complete.\", \"图像增强工作室正在加载当前账户的 Asset Vault 和记录。两个服务器响应完成后才会打开表单。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"enhance.failed.body\",\"Chưa tải được ảnh hoặc lịch sử chỉnh ảnh. Vui lòng thử lại.\",\"Your images or edit history could not be loaded. Please try again.\",\"未能加载您的图像或编辑记录。请重试。\"],",
+      "old": "    [\"enhance.failed.body\", \"Kho tài sản hoặc lịch sử làm ảnh rõ chưa trả dữ liệu an toàn. Web đã xóa dữ liệu cũ và không hiển thị đầu ra thay thế.\", \"Asset Vault or image-enhancement history did not return safe data. The Web App removed stale data and shows no substitute output.\", \"Asset Vault 或图像增强记录未返回安全数据。Web 已移除旧数据，不显示替代输出。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"enhance.results.description\",\"Xem tiến trình và tải ảnh sau khi xử lý hoàn tất.\",\"View progress and download images when processing is complete.\",\"查看进度，并在处理完成后下载图像。\"],",
+      "old": "    [\"enhance.results.description\", \"Chỉ thao tác thuộc tài khoản hiện tại. Tải xuống bị khóa nếu quyền sở hữu hoặc tính toàn vẹn không còn hợp lệ.\", \"Only operations from the current account are shown. Downloads stay locked if ownership or integrity is no longer valid.\", \"仅显示当前账户的操作。所有权或完整性失效时会锁定下载。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"enhance.runReason.capability\",\"Tài khoản này chưa được phép dùng công cụ.\",\"This account does not have access to this tool.\",\"此账户无权使用此工具。\"],",
+      "old": "    [\"enhance.runReason.capability\", \"Cần phiên đã xác thực, CSRF và quyền Làm ảnh rõ từ máy chủ.\", \"An authenticated session, CSRF and the server's image-enhancement capability are required.\", \"需要已验证会话、CSRF 和服务器的图像增强权限。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"enhance.runReason.disabled\",\"Không thể dùng công cụ lúc này. Vui lòng tải lại trang.\",\"This tool is unavailable right now. Please reload the page.\",\"此工具暂时无法使用。请重新加载页面。\"],",
+      "old": "    [\"enhance.runReason.disabled\", \"Làm ảnh rõ đang được máy chủ giữ ở chế độ bảo vệ cho đến khi kho lưu trữ riêng tư được bật có chủ đích.\", \"Image enhancement stays protected until private storage is intentionally enabled by the server.\", \"图像增强处于保护状态，直到服务器有意启用私有存储。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"enhance.runReason.empty\",\"Chọn ảnh JPEG, PNG hoặc WebP từ kho tệp để bắt đầu.\",\"Choose a JPEG, PNG or WebP image from your file library to begin.\",\"请从文件库选择 JPEG、PNG 或 WebP 图像以开始。\"],",
+      "old": "    [\"enhance.runReason.empty\", \"Hãy lưu JPEG, PNG hoặc WebP riêng tư vào Kho tài sản trước khi tạo bản sao.\", \"Save a private JPEG, PNG or WebP in Asset Vault before creating a copy.\", \"创建副本前，请先将私有 JPEG、PNG 或 WebP 保存到 Asset Vault。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"enhance.runReason.ready\",\"Ảnh gốc được giữ nguyên. Bạn sẽ nhận một bản sao đã chỉnh.\",\"Your original image stays unchanged. You will receive an edited copy.\",\"原图像保持不变。您将获得编辑后的副本。\"],",
+      "old": "    [\"enhance.runReason.ready\", \"Nguồn → sao chép cô lập → chỉnh màu/làm nét có thể kiểm tra → PNG được mở lại và xác minh trước khi tải.\", \"Source → isolated copy → verifiable color/sharpening → PNG reparsed and verified before download.\", \"源文件 → 隔离副本 → 可验证的色彩/锐化 → 重新解析并验证 PNG 后才能下载。\"],"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal.css",
+      "new": "ity: .62; }\n.portal-autopost-boundary { display: grid; gap: 14px; }\n.portal-autopost-boundary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }\n.portal-autopost-boundary-grid > div { display: grid; gap: 6px; min-width: 0; padding: 11px; border: 1px solid var(--portal-border); border-radius: 12px; background: var(--portal-surface-soft); }\n.portal-autopost-boundary-grid strong { color: var(--portal-text); font-size: 11px; }\n.portal-autopost-boundary-grid span { color: var(--portal-muted); font-size: 10px; line-height: 1.45; }\n@media (max-width: 980px) {\n  .portal-autopost-intro, .portal-autopost-layout { grid-template-columns: 1fr; }\n  .portal-autopost-steps ol { grid-template-columns: repeat(3, minmax(0, 1fr)); }\n  .portal-autopost-boundary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }\n}\n@media (max-width: 620px) {\n  .portal-autopost-intro { padding: 20px; border-radius: 18px; }\n  .portal-autopost-intro dl, .portal-autopost-steps ol, .portal-autopost-boundary-grid { grid-template-columns: 1fr; }\n  .portal-autopost-source { grid-template-columns: 28px minmax(0, 1fr); }\n  .portal-autopost-status { grid-column: 2; justify-self: start; }\n}\n\n/* Compact only the manual image editor's mobile workspace navigation. */\n@media (max-width: 700px) {\n  .portal-image-enhance .portal-image-create-workflows { padding: 12px; }\n  .portal-image-enhance .portal-image-create-workflows > .portal-card-header { margin-bottom: 8px; }\n  .portal-image-enhance .portal-image-create-workflows > .portal-card-header .portal-card-subtitle { display: none; }\n  .portal-image-enhance .portal-image-create-workflow-nav { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }\n  .portal-image-enhance .portal-image-create-mode-card { min-height: 44px; padding: 10px 12px; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }\n  .portal-image-enhance .portal-image-create-mode-card .portal-module-copy > h3 { margin: 0; line-height: 1.5; overflow-wrap: anywhere; }\n  .portal-image-enhance .portal-image-create-mode-card .portal-module-copy > p,\n  .portal-image-enhance .portal-image-create-mode-card .portal-module-link { display: none; }\n  .portal-image-enhance .portal-image-create-mode-card .portal-badge { align-self: center; justify-self: end; white-space: normal; text-align: right; }\n}\n",
+      "old": "ity: .62; }\n.portal-autopost-boundary { display: grid; gap: 14px; }\n.portal-autopost-boundary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }\n.portal-autopost-boundary-grid > div { display: grid; gap: 6px; min-width: 0; padding: 11px; border: 1px solid var(--portal-border); border-radius: 12px; background: var(--portal-surface-soft); }\n.portal-autopost-boundary-grid strong { color: var(--portal-text); font-size: 11px; }\n.portal-autopost-boundary-grid span { color: var(--portal-muted); font-size: 10px; line-height: 1.45; }\n@media (max-width: 980px) {\n  .portal-autopost-intro, .portal-autopost-layout { grid-template-columns: 1fr; }\n  .portal-autopost-steps ol { grid-template-columns: repeat(3, minmax(0, 1fr)); }\n  .portal-autopost-boundary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }\n}\n@media (max-width: 620px) {\n  .portal-autopost-intro { padding: 20px; border-radius: 18px; }\n  .portal-autopost-intro dl, .portal-autopost-steps ol, .portal-autopost-boundary-grid { grid-template-columns: 1fr; }\n  .portal-autopost-source { grid-template-columns: 28px minmax(0, 1fr); }\n  .portal-autopost-status { grid-column: 2; justify-self: start; }\n}\n"
+    }
+  ],
+  "fieldsRows": [
+    [
+      "field.enhance.preset.label",
+      "Cách chỉnh",
+      "Adjustment style",
+      "调整方式"
+    ],
+    [
+      "field.enhance.preset.cinematic",
+      "Điện ảnh ấm",
+      "Warm cinematic",
+      "暖色电影感"
+    ],
+    [
+      "field.enhance.preset.help",
+      "Chọn cách chỉnh có sẵn, hoặc chọn Tùy chỉnh để nhập đủ bốn mức điều chỉnh.",
+      "Choose an adjustment style, or select Custom to enter all four adjustment levels.",
+      "选择现成的调整方式，或选择自定义以填写全部四项调整程度。"
+    ],
+    [
+      "field.enhance.custom.help",
+      "Chỉ dùng với Tùy chỉnh. Mức 1.00 giữ nguyên giá trị này.",
+      "Use only with Custom. A level of 1.00 keeps this value unchanged.",
+      "仅用于自定义。1.00 表示保持此数值不变。"
+    ],
+    [
+      "field.enhance.contrast.help",
+      "Chỉ dùng với Tùy chỉnh. Điều chỉnh độ khác biệt giữa vùng sáng và vùng tối.",
+      "Use only with Custom. Adjust the difference between light and dark areas.",
+      "仅用于自定义。调整亮部与暗部之间的差异。"
+    ],
+    [
+      "field.enhance.saturation.help",
+      "Chỉ dùng với Tùy chỉnh. Nhập mức từ 0.50 đến 2.00.",
+      "Use only with Custom. Enter a level from 0.50 to 2.00.",
+      "仅用于自定义。请输入 0.50 至 2.00 之间的数值。"
+    ],
+    [
+      "field.enhance.sharpness.help",
+      "Chỉ dùng với Tùy chỉnh. Điều chỉnh độ nét có sẵn; không tạo thêm chi tiết.",
+      "Use only with Custom. Adjust existing sharpness; no new detail is created.",
+      "仅用于自定义。调整已有锐度，不会生成新的细节。"
+    ],
+    [
+      "field.enhance.tone.help",
+      "Chỉ dùng với Tùy chỉnh. Các cách chỉnh có sẵn đã bao gồm sắc độ.",
+      "Use only with Custom. The other adjustment styles already include their tone.",
+      "仅用于自定义。其他现成调整方式已包含色调。"
+    ],
+    [
+      "field.enhance.upscale.label",
+      "Phóng ảnh và làm nét",
+      "Enlarge and sharpen",
+      "放大并锐化"
+    ],
+    [
+      "field.enhance.upscale.yes",
+      "Có · tối đa 2 lần, không quá 4096 điểm ảnh mỗi cạnh và 16 triệu điểm ảnh",
+      "Yes · up to 2 times, within 4096 pixels per side and 16 million pixels",
+      "是 · 最多 2 倍，每边不超过 4096 像素，总计不超过 1600 万像素"
+    ],
+    [
+      "field.enhance.upscale.help",
+      "Có thể phóng ảnh trong giới hạn trên. Ảnh quá lớn sẽ được thu nhỏ; không tạo thêm chi tiết.",
+      "Images can be enlarged within these limits. Oversized images are reduced; no new detail is created.",
+      "可在上述限制内放大图像。过大的图像会缩小，不会生成新的细节。"
+    ],
+    [
+      "result.preset.cinematic_warm",
+      "Điện ảnh ấm",
+      "Warm cinematic",
+      "暖色电影感"
+    ]
+  ],
+  "pageRows": [
+    [
+      "enhance.guard.body",
+      "Không thể mở công cụ lúc này. Vui lòng tải lại trang hoặc kiểm tra quyền truy cập.",
+      "This tool cannot be opened right now. Reload the page or check your access.",
+      "暂时无法打开此工具。请重新加载页面或检查访问权限。"
+    ],
+    [
+      "enhance.loading.body",
+      "Đang tải ảnh và lịch sử chỉnh ảnh của bạn.",
+      "Loading your images and edit history.",
+      "正在加载您的图像与编辑记录。"
+    ],
+    [
+      "enhance.failed.body",
+      "Chưa tải được ảnh hoặc lịch sử chỉnh ảnh. Vui lòng thử lại.",
+      "Your images or edit history could not be loaded. Please try again.",
+      "未能加载您的图像或编辑记录。请重试。"
+    ],
+    [
+      "enhance.results.description",
+      "Xem tiến trình và tải ảnh sau khi xử lý hoàn tất.",
+      "View progress and download images when processing is complete.",
+      "查看进度，并在处理完成后下载图像。"
+    ],
+    [
+      "enhance.runReason.capability",
+      "Tài khoản này chưa được phép dùng công cụ.",
+      "This account does not have access to this tool.",
+      "此账户无权使用此工具。"
+    ],
+    [
+      "enhance.runReason.disabled",
+      "Không thể dùng công cụ lúc này. Vui lòng tải lại trang.",
+      "This tool is unavailable right now. Please reload the page.",
+      "此工具暂时无法使用。请重新加载页面。"
+    ],
+    [
+      "enhance.runReason.empty",
+      "Chọn ảnh JPEG, PNG hoặc WebP từ kho tệp để bắt đầu.",
+      "Choose a JPEG, PNG or WebP image from your file library to begin.",
+      "请从文件库选择 JPEG、PNG 或 WebP 图像以开始。"
+    ],
+    [
+      "enhance.runReason.ready",
+      "Ảnh gốc được giữ nguyên. Bạn sẽ nhận một bản sao đã chỉnh.",
+      "Your original image stays unchanged. You will receive an edited copy.",
+      "原图像保持不变。您将获得编辑后的副本。"
+    ]
+  ],
+  "mobileCss": [
+    {
+      "count": 1,
+      "file": "static/portal/portal.css",
+      "new": "ity: .62; }\n.portal-autopost-boundary { display: grid; gap: 14px; }\n.portal-autopost-boundary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }\n.portal-autopost-boundary-grid > div { display: grid; gap: 6px; min-width: 0; padding: 11px; border: 1px solid var(--portal-border); border-radius: 12px; background: var(--portal-surface-soft); }\n.portal-autopost-boundary-grid strong { color: var(--portal-text); font-size: 11px; }\n.portal-autopost-boundary-grid span { color: var(--portal-muted); font-size: 10px; line-height: 1.45; }\n@media (max-width: 980px) {\n  .portal-autopost-intro, .portal-autopost-layout { grid-template-columns: 1fr; }\n  .portal-autopost-steps ol { grid-template-columns: repeat(3, minmax(0, 1fr)); }\n  .portal-autopost-boundary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }\n}\n@media (max-width: 620px) {\n  .portal-autopost-intro { padding: 20px; border-radius: 18px; }\n  .portal-autopost-intro dl, .portal-autopost-steps ol, .portal-autopost-boundary-grid { grid-template-columns: 1fr; }\n  .portal-autopost-source { grid-template-columns: 28px minmax(0, 1fr); }\n  .portal-autopost-status { grid-column: 2; justify-self: start; }\n}\n\n/* Compact only the manual image editor's mobile workspace navigation. */\n@media (max-width: 700px) {\n  .portal-image-enhance .portal-image-create-workflows { padding: 12px; }\n  .portal-image-enhance .portal-image-create-workflows > .portal-card-header { margin-bottom: 8px; }\n  .portal-image-enhance .portal-image-create-workflows > .portal-card-header .portal-card-subtitle { display: none; }\n  .portal-image-enhance .portal-image-create-workflow-nav { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }\n  .portal-image-enhance .portal-image-create-mode-card { min-height: 44px; padding: 10px 12px; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }\n  .portal-image-enhance .portal-image-create-mode-card .portal-module-copy > h3 { margin: 0; line-height: 1.5; overflow-wrap: anywhere; }\n  .portal-image-enhance .portal-image-create-mode-card .portal-module-copy > p,\n  .portal-image-enhance .portal-image-create-mode-card .portal-module-link { display: none; }\n  .portal-image-enhance .portal-image-create-mode-card .portal-badge { align-self: center; justify-self: end; white-space: normal; text-align: right; }\n}\n",
+      "old": "ity: .62; }\n.portal-autopost-boundary { display: grid; gap: 14px; }\n.portal-autopost-boundary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }\n.portal-autopost-boundary-grid > div { display: grid; gap: 6px; min-width: 0; padding: 11px; border: 1px solid var(--portal-border); border-radius: 12px; background: var(--portal-surface-soft); }\n.portal-autopost-boundary-grid strong { color: var(--portal-text); font-size: 11px; }\n.portal-autopost-boundary-grid span { color: var(--portal-muted); font-size: 10px; line-height: 1.45; }\n@media (max-width: 980px) {\n  .portal-autopost-intro, .portal-autopost-layout { grid-template-columns: 1fr; }\n  .portal-autopost-steps ol { grid-template-columns: repeat(3, minmax(0, 1fr)); }\n  .portal-autopost-boundary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }\n}\n@media (max-width: 620px) {\n  .portal-autopost-intro { padding: 20px; border-radius: 18px; }\n  .portal-autopost-intro dl, .portal-autopost-steps ol, .portal-autopost-boundary-grid { grid-template-columns: 1fr; }\n  .portal-autopost-source { grid-template-columns: 28px minmax(0, 1fr); }\n  .portal-autopost-status { grid-column: 2; justify-self: start; }\n}\n"
+    }
+  ],
+  "applicationBaseline": [
+    {
+      "file": "static/portal/portal-i18n.js",
+      "beforeRawSha256": "d25f33bc9c6c5b525abe1de6a759e901d1088b57dd0709691908c74c1e828361",
+      "baselineLfSha256": "d25f33bc9c6c5b525abe1de6a759e901d1088b57dd0709691908c74c1e828361",
+      "candidateLfSha256": "8396d89fb2759e142ab3d200b7c67651148e78082e7216abbdeed0741a5c20d3",
+      "changed": true
+    },
+    {
+      "file": "static/portal/portal.css",
+      "beforeRawSha256": "ad89abaec5127f5b9aaa952502fc0d6d825367da2de239106fc4d1a6642746ea",
+      "baselineLfSha256": "ad89abaec5127f5b9aaa952502fc0d6d825367da2de239106fc4d1a6642746ea",
+      "candidateLfSha256": "86691e824085bd88b23a76b788ce1f56b25dca7fbbf2b1cb753a91a5011b7ce2",
+      "changed": true
+    },
+    {
+      "file": "static/portal/portal.js",
+      "beforeRawSha256": "a4c2447d23957e526d367b08e44b725551376bc58518346a79f88c10167ba5d8",
+      "baselineLfSha256": "a4c2447d23957e526d367b08e44b725551376bc58518346a79f88c10167ba5d8",
+      "candidateLfSha256": "c850e3ba05b4cf876f19260681eb0e6584d12119d95f064615116bbcec179638",
+      "changed": true
+    }
+  ],
+  "workerApplicationTakeover": false,
+  "rootApplicationCodeAuthored": false
+}
