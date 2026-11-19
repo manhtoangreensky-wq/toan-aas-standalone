@@ -6,6 +6,7 @@ import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
+import {documentConvertCustomerHistoricalSource} from "./helpers/document-convert-customer-copy-snapshot.mjs";
 const R=path.resolve(path.dirname(fileURLToPath(import.meta.url)),".."),BASE="f8932643c1408d6565a0f1574f9bdd47ffac267b";
 const hash=x=>createHash("sha256").update(x).digest("hex"),count=(s,p)=>s.split(p).length-1;
 const authorityRaw=fs.readFileSync(path.join(R,"tests/fixtures/image-edit-customer-copy-reviewed.json"));
@@ -18,7 +19,8 @@ assert.equal(changes.length,22);assert.equal(rows.length,20);
 const files={portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js",css:"static/portal/portal.css",pages:"copyfast_pages.py"};
 const current=Object.fromEntries(Object.entries(files).map(([key,file])=>[key,fs.readFileSync(path.join(R,file),"utf8").replace(/\r\n/g,"\n")]));
 const beforeSource=Object.fromEntries(Object.entries(files).map(([key,file])=>[key,execFileSync("git",["show",BASE+":"+file],{cwd:R,encoding:"utf8",maxBuffer:30e6}).replace(/\r\n/g,"\n")]));
-const restored={...current},phases=[];
+// Source comparator only: later exact document changes are staged here; renderers below keep current physical bundles.
+const restored=Object.fromEntries(Object.entries(current).map(([key,text])=>[key,documentConvertCustomerHistoricalSource(text,files[key])])),phases=[];
 for(const edit of changes){
  const key=Object.keys(files).find(key=>files[key]===edit.file);assert.ok(key);
  const next=count(restored[key],edit.new),old=count(restored[key],edit.old);

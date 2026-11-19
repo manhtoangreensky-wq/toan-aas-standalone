@@ -43,12 +43,19 @@ verification:
   ci_target_retest: 3_PASS_2774_7827_MS
 release:
   pr: 775
-  deploy: NO
+  tested_head: 1d13bdbe66ce5bdac74b25a23b11876d0eab7b02
+  final_ci: 44497802507_TWO_SUCCESS
+  merge_runtime_sha: a589008be5d7be371789551ffc11e750db46270b
+  full_tree: 8801ec9596083d69517f1728080984f805ea273c
+  deploy: 44501027405_SUCCESS_66_SECONDS
+  vps: TRACKED_CLEAN_3_ACTIVE_RUNNING
+  assets: 5_PUBLIC_5_NORMAL_BYTE_EXACT
+  issue_receipt: 7004266812_READBACK_EXACT
+  pr_receipt: 7005803682_READBACK_EXACT
   live: NOT_TESTED
 provider_calls: 0
 wallet_mutations: 0
 product_submit: NO
 next:
-  - Source commit and Web-only provenance
-  - One PR exact-head CI merge deploy runtime receipts
+  - Continue ordered remaining utility UI batch after this delivered closeout
 motion: M-FINAL-01..06_LAST

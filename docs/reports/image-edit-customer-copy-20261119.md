@@ -1,5 +1,20 @@
 # Chỉnh ảnh — làm sạch chữ và thu gọn menu điện thoại
 
+## Chốt phát hành PR775 — thay các dòng chờ phía dưới
+
+Đã gộp và triển khai PR775. CI cuối `44497802507` đạt cả hai job:
+Verify 13m21s, Authenticated 5m9s. Artefact trình duyệt `14515669524`
+đủ 18 trang/18 hash; artefact đăng nhập `14516941949` đủ 456 bản ghi
+và 456 hash, không lỗi. HEAD đã kiểm `1d13bdbe66ce5bdac74b25a23b11876d0eab7b02`;
+merge/runtime `a589008be5d7be371789551ffc11e750db46270b`, tree
+`8801ec9596083d69517f1728080984f805ea273c` đúng cây đã kiểm.
+Deploy `44501027405` thành công 66s; VPS sạch tệp tracked, ba dịch vụ
+active-running, health và 5 tài nguyên công khai + 5 URL thông thường khớp byte.
+Build `local-8b66fef3cb7b64e6dc43`. Receipt Issue689 `7004266812`
+và PR `7005803682` đã đọc lại đúng. Không còn PR mở của đơn vị này.
+Giao diện production có đăng nhập và đầu ra ảnh cuối vẫn NOT_TESTED;
+không dùng bằng chứng triển khai để nhận toàn goal hoàn tất.
+
 TASK=IMAGE-EDIT-CUSTOMER-CLEANUP-20261119;FSM=VERIFY.
 BASE_SHA=f8932643c1408d6565a0f1574f9bdd47ffac267b.
 BRANCH=codex/image-edit-customer-cleanup-20261119.

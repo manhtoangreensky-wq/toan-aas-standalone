@@ -1,5 +1,22 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 19/11/2026 — Chuyển đổi PDF: giữ chức năng, bỏ lời triển khai
+
+Nguồn gốc: `docs/migration/PDF_TO_IMAGES_CONTRACT.md`,
+`PDF_TO_WORD_CONTRACT.md`, hai renderer và hai factory trường nguồn.
+
+| Chức năng gốc | Ứng viên hiện tại | Ranh giới giữ |
+|---|---|---|
+| PDF một trang ra PNG, nhiều trang ra ZIP | Chữ thao tác đúng VI/EN/ZH | Không đổi tạo, kiểm hoặc giao tệp |
+| Trích chữ bôi chọn từ PDF sang DOCX | Hướng dẫn giới hạn rõ bằng ngôn ngữ người dùng | Không OCR, không hứa giữ bố cục/hình/bảng/phông |
+| Chọn PDF thuộc tài khoản, lịch sử và tải xuống | Giữ control/action/route/quyền và thẻ lịch sử | Không thay UUID, dữ liệu, API hoặc capability |
+| Intro/aside/notice/notes giải thích nội bộ | Bỏ tại đúng hai trang, không ô trống | Factory ghi chú dùng chung và mọi trang khác giữ |
+| Tên trang chờ catalog | Thêm đúng hai entry shell và hai nhánh metadata JS | Không đổi cách chọn ngôn ngữ hay đăng nhập |
+
+Physical 16 ca đạt, 7 trang bảo vệ byte-identical ở ba ngôn ngữ; HTML đầu
+7 ca đạt. Bằng chứng native/CI/VPS và các giới hạn được chốt riêng trong
+[phiên Tester](../KIEM-THU/PHIEN-DOCUMENT-CONVERT-CUSTOMER-COPY-20261119.md).
+
 ## 19/11/2026 — Loại phần giải thích không phục vụ thao tác History
 
 Nguồn:renderImageOperationHistory vàrenderNotes trongportal.js.

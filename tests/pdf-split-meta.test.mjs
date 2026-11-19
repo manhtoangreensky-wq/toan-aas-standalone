@@ -7,8 +7,10 @@ import {pageMetaRenderer,pageMetaSources} from "./helpers/chat-page-meta-runtime
 import {resizePolishHistoricalPortalSource,resizePolishHistoricalI18nSource,resizePolishHistoricalPagesSource} from "./helpers/image-resize-polish-snapshot.mjs";
 import {pdfSplitMetaHistoricalPortalSource, pdfSplitMetaHistoricalI18nSource,
   pdfSplitMetaHistoricalPagesSource,pdfSplitMetaHistoricalSnapshot} from "./helpers/pdf-split-meta-snapshot.mjs";
+import {documentConvertCustomerHistoricalSource} from "./helpers/document-convert-customer-copy-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/pdf-split-meta-reviewed.json",import.meta.url),"utf8"));
-const live=pageMetaSources(),source={portal:resizePolishHistoricalPortalSource(live.portal),i18n:resizePolishHistoricalI18nSource(live.i18n),pages:resizePolishHistoricalPagesSource(live.pages)},render=await pageMetaRenderer(source),lf=value=>value.replace(/\r\n/g,"\n");
+// Legacy metadata-render comparator: only shell-source staging is added before its existing historical inverse.
+const live=pageMetaSources(),source={portal:resizePolishHistoricalPortalSource(live.portal),i18n:resizePolishHistoricalI18nSource(live.i18n),pages:resizePolishHistoricalPagesSource(documentConvertCustomerHistoricalSource(live.pages,"copyfast_pages.py"))},render=await pageMetaRenderer(source),lf=value=>value.replace(/\r\n/g,"\n");
 assert.match(fixture.base,/^[a-f0-9]{40}$/);
 const files={portal:"static/portal/portal.js",i18n:"static/portal/portal-i18n.js",pages:"copyfast_pages.py"};
 const baseline=Object.fromEntries(Object.entries(files).map(([key,file])=>[key,lf(execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:30e6}))]));

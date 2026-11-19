@@ -10,6 +10,7 @@ import {imageSharedHistoricalI18nSource,imageSharedHistoricalPortalSource} from 
 import {resizeControlHeightHistoricalThemeSource} from "./helpers/image-resize-control-height-snapshot.mjs";
 import {pdfCompressMetaHistoricalPagesSource} from "./helpers/pdf-compress-meta-snapshot.mjs";
 import {historyCustomerCleanupHistoricalSource} from "./helpers/image-history-customer-cleanup-snapshot.mjs";
+import {documentConvertCustomerHistoricalSource} from "./helpers/document-convert-customer-copy-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-resize-plain-copy-reviewed.json",import.meta.url),"utf8"));
 const physical=pageMetaSources(),source={...physical,i18n:imageSharedHistoricalI18nSource(physical.i18n),portal:imageSharedHistoricalPortalSource(physical.portal)},render=await pageMetaRenderer(source),locales=["vi","en","zh"],cache=new Map();
 const lf=x=>x.replace(/\r\n/g,"\n"),hash=x=>createHash("sha256").update(x).digest("hex");
@@ -86,7 +87,8 @@ test("actual catalogue equals exactly 33 reviewed rows and every other applicati
   assert.equal(source.i18n,expected);assert.equal(hash(base.i18n),fixture.binding.baselineI18n);assert.equal(hash(source.i18n),fixture.binding.candidateI18n);
   assert.equal(inverse(source.i18n),base.i18n);assert.equal(inverse(base.i18n),base.i18n);
   for(const[suffix,file]of [["Portal","static/portal/portal.js"],["Pages","copyfast_pages.py"],["Integration","static/portal/integration.js"],["Theme","static/portal/portal-theme.css"]]){
-    const physical=lf(fs.readFileSync(file,"utf8")),raw=suffix==="Portal"?imageSharedHistoricalPortalSource(physical):suffix==="Theme"?resizeControlHeightHistoricalThemeSource(physical):suffix==="Pages"?pdfCompressMetaHistoricalPagesSource(physical):historyCustomerCleanupHistoricalSource(physical,file),before=lf(execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:30e6}));
+    // Historical source comparator only; the route renderer above is not changed.
+    const physical=lf(fs.readFileSync(file,"utf8")),staged=documentConvertCustomerHistoricalSource(physical,file),raw=suffix==="Portal"?imageSharedHistoricalPortalSource(staged):suffix==="Theme"?resizeControlHeightHistoricalThemeSource(staged):suffix==="Pages"?pdfCompressMetaHistoricalPagesSource(staged):historyCustomerCleanupHistoricalSource(staged,file),before=lf(execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:30e6}));
     assert.equal(raw,before,file);assert.equal(hash(raw),fixture.binding["candidate"+suffix]);
   }
 });
