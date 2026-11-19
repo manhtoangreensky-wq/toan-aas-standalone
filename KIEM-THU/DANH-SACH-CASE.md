@@ -1718,4 +1718,14 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | HCC-SOURCE | nặng |19canonicaledits/4files |147protected/oldhash/assertions/currentness giữ |Source151/finiteinverse/1904+3Node/12Python |
 | HCC-EMPTY | vừa |6trangVIENZH375light1440dark |90witness/12ảnh,0errors/egress/22owned0 |NativeEMPTYR2 |
 | HCC-FULL | vừa |4GETlỗi→retry4GETlỗi→alert→retryGET9success |Hai toast dịch/tự tắt,4ownedfailedrows,nooutput/cleanup |FULLR6:6pages24states162witness+12toast78ảnh27owned0;filenameellipsis khôngfullpaint |
-| HCC-DELIVERY | nặng |CI/merge/treeeq/deploy/runtime/assets |ĐúngHEAD,từngcổng riêng,không nhận wholelocale/PNG/motion |ReceiptIssue689/PRpending |
+| HCC-DELIVERY | nặng |CI/merge/treeeq/deploy/runtime/assets |ĐúngHEAD,từngcổng riêng,không nhận wholelocale/PNG/motion |PR772/CI44411124561/deploy44414112861/runtimebb3c5657;Issue6992184830/PR6993378170closed |
+
+## IMAGE-HISTORY-TECHNICAL-CLEANUP-20261119 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| HTC-BASE | vừa |24physicalca trước4removals |16targetRED,QAloader/negativefaultgiữriêng |[Phiên HTC](PHIEN-IMAGE-HISTORY-TECHNICAL-CLEANUP-20261119.md) |
+| HTC-SCOPE | nặng |1appfile/4AGYedits |150protected,unknownoutside/negative/sourcegiữ |Scope5decd09c…/2sourcecases |
+| HTC-PHYSICAL | vừa |VIENZH×5states/refresh±/pagination |0notes0state-meta/noempty;rights/customer/cards/downloadgiữ |24PASS/1632+3targetretests |
+| HTC-NATIVE | vừa |Actualsignedlocalhostsixviews |0notes0state-meta/loading/error/retry/toast/ownership/audit/owned0 |FULL6pages24samples162witness+12toast78ảnh27owned0;empty/guardunitonly |
+| HTC-DELIVERY | nặng |OnePR/exactCI/merge/deploy/runtime/assets |Bảnđãkiểmkhớpbảnđãgiao,từngcổngriêng |Issue689receiptpending |

@@ -81,7 +81,7 @@ for(const locale of LOCALES){
     for(const variant of CASES){
       const now=result(render,locale,variant),old=result(before,locale,variant);
       assert.equal(projectStateNodes(now.html,old.html),old.html,"No global title/body/key/customer masking");
-      assert.deepEqual(controls(now.html),controls(old.html));assert.deepEqual(meta(now.html),meta(old.html));assert.equal(meta(now.html).length,1);
+      assert.deepEqual(controls(now.html),controls(old.html));assert.deepEqual(meta(now.html),meta(old.html));assert.equal(meta(now.html).length,0,"Reviewed technical-cleanup removes nonactionable metadata without changing state copy");
       assert.equal(JSON.stringify(now.context),JSON.stringify(old.context));assert.equal(now.attributes,old.attributes);assert.equal(now.title,old.title);
       assert.equal(now.qa.renderHeader(now.page,now.context),old.qa.renderHeader(old.page,old.context));
       assert.doesNotMatch(now.html,/<form\b/);assert.doesNotMatch(now.html,/data-image-operation="/);

@@ -1,0 +1,35 @@
+{
+  "review": {
+    "specId": "IMAGE-HISTORY-TECHNICAL-NOTES-20261119",
+    "conversation": "83f531bf-39ef-4e4b-baf1-a76596166a52",
+    "rawSha256": "8621252ff170b63b05d79ab2b4048bdfb497955ddd09a4848637d88020a6272f",
+    "schemaValid": true,
+    "proposalExact": true,
+    "handoffRound": 1,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "note": "Root reviewed these two independent public-only proposals together once. Next ordered batch after current19-edit release delivery; no current application writes or runtime/output claim."
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "    </article>`;\n  }\n\n  function renderImageBrandOverlay(page, context) {",
+        "old": "      ${renderNotes(page)}\n    </article>`;\n  }\n\n  function renderImageBrandOverlay(page, context) {"
+      }
+    ],
+    "report": "IMAGE-HISTORY-TECHNICAL-NOTES-20261119 R1: Bounded proposal to omit renderNotes(page) from ready Image History footer in static/portal/portal.js. Verification NOT_RUN.",
+    "revision": "R1",
+    "specId": "IMAGE-HISTORY-TECHNICAL-NOTES-20261119",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "review": {
+    "specId": "IMAGE-HISTORY-STATE-META-20261119",
+    "conversation": "d43b069b-76b4-41e8-8e4c-f46bc0899e8d",
+    "rawSha256": "652a1d7b189fa4af22fec2bb747933b6ac1d745d24706b45b2d6079b27fac66e",
+    "schemaValid": true,
+    "proposalExact": true,
+    "handoffRound": 2,
+    "priorCodeFailures": 1,
+    "applicationApplied": false,
+    "applicationWrites": 0,
+    "tests": "NOT_RUN",
+    "baselineFailures": "NOT_RUN",
+    "branchFailures": "NOT_RUN",
+    "newFailures": "UNKNOWN",
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "status": "EXACT_PROPOSAL_NOT_APPLIED",
+    "note": "R2 corrects only R1 quote serialization. Root reviewed once, exact three substitutions; adoption waits until current19-edit release delivery."
+  },
+  "proposal": {
+    "changes": [
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "      return `<article class=\"portal-page portal-image-operation-history\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.image)}</span><div><h2>${safeText(t(\"guard.title\", \"Lịch sử ảnh đang ở chế độ an toàn\"))}</h2><p>${safeText(t(\"guard.body\", \"Máy chủ chỉ mở lịch sử ảnh Web sau khi phiên đã xác thực, Kho tài sản và thao tác ảnh được kiểm tra. Không dùng danh sách Asset, tác vụ Bot hoặc đầu ra nhà cung cấp thay thế.\"))}</p></div></div></section></article>`;",
+        "old": "      return `<article class=\"portal-page portal-image-operation-history\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.image)}</span><div><h2>${safeText(t(\"guard.title\", \"Lịch sử ảnh đang ở chế độ an toàn\"))}</h2><p>${safeText(t(\"guard.body\", \"Máy chủ chỉ mở lịch sử ảnh Web sau khi phiên đã xác thực, Kho tài sản và thao tác ảnh được kiểm tra. Không dùng danh sách Asset, tác vụ Bot hoặc đầu ra nhà cung cấp thay thế.\"))}</p><div class=\"portal-state-meta\"><span>${safeText(common(\"guard.session\", \"Phiên đã xác thực\"))}</span><span>${safeText(common(\"guard.ownerScoped\", \"Theo phạm vi tài khoản\"))}</span><span>${safeText(common(\"noSubstitute\", \"Không có đầu ra thay thế\"))}</span></div></div></div></section></article>`;"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "      return `<article class=\"portal-page portal-image-operation-history\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"processing\"><span class=\"portal-state-icon\" aria-hidden=\"true\">◌</span><div><h2>${safeText(t(\"loading.title\", \"Đang xác minh lịch sử ảnh riêng tư\"))}</h2><p>${safeText(t(\"loading.body\", \"Web Workspace đang tải các thao tác ảnh thuộc tài khoản hiện tại. Không hiển thị dữ liệu route cũ, bộ nhớ trình duyệt hoặc danh sách Bot trong lúc chờ.\"))}</p></div></div></section></article>`;",
+        "old": "      return `<article class=\"portal-page portal-image-operation-history\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"processing\"><span class=\"portal-state-icon\" aria-hidden=\"true\">◌</span><div><h2>${safeText(t(\"loading.title\", \"Đang xác minh lịch sử ảnh riêng tư\"))}</h2><p>${safeText(t(\"loading.body\", \"Web Workspace đang tải các thao tác ảnh thuộc tài khoản hiện tại. Không hiển thị dữ liệu route cũ, bộ nhớ trình duyệt hoặc danh sách Bot trong lúc chờ.\"))}</p><div class=\"portal-state-meta\"><span>${safeText(common(\"guard.session\", \"Phiên đã xác thực\"))}</span><span>${safeText(common(\"state.noCache\", \"Không lưu bộ nhớ đệm riêng tư\"))}</span><span>${safeText(common(\"state.noBrowserFallback\", \"Không dùng dữ liệu thay thế từ trình duyệt\"))}</span></div></div></div></section></article>`;"
+      },
+      {
+        "count": 1,
+        "file": "static/portal/portal.js",
+        "new": "      return `<article class=\"portal-page portal-image-operation-history\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">!</span><div><h2>${safeText(t(\"failed.title\", \"Chưa thể tải lịch sử ảnh riêng tư\"))}</h2><p>${safeText(t(\"failed.body\", \"Projection theo phạm vi tài khoản chưa trả dữ liệu an toàn. Web không thay thế bằng Kho tài sản, Bot, nhà cung cấp hoặc bản xem trước công khai.\"))}</p>${retry}</div></div></section></article>`;",
+        "old": "      return `<article class=\"portal-page portal-image-operation-history\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">!</span><div><h2>${safeText(t(\"failed.title\", \"Chưa thể tải lịch sử ảnh riêng tư\"))}</h2><p>${safeText(t(\"failed.body\", \"Projection theo phạm vi tài khoản chưa trả dữ liệu an toàn. Web không thay thế bằng Kho tài sản, Bot, nhà cung cấp hoặc bản xem trước công khai.\"))}</p><div class=\"portal-state-meta\"><span>${safeText(common(\"state.noCache\", \"Không lưu bộ nhớ đệm riêng tư\"))}</span><span>${safeText(common(\"noSubstitute\", \"Không có đầu ra thay thế\"))}</span><span>${safeText(t(\"metric.outOfScope\", \"Ngoài phạm vi\"))}</span></div>${retry}</div></div></section></article>`;"
+      }
+    ],
+    "report": "NOT_APPLIED; NOT_RUN",
+    "revision": "R2",
+    "specId": "IMAGE-HISTORY-STATE-META-20261119",
+    "status": "PROPOSED",
+    "verify": "NOT_RUN"
+  }
+}

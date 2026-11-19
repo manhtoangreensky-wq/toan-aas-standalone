@@ -1,5 +1,20 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 19/11/2026 — Loại phần giải thích không phục vụ thao tác History
+
+Nguồn:renderImageOperationHistory vàrenderNotes trongportal.js.
+
+| Thành phần gốc | Ứng viên đo được | Giữ nguyên |
+|---|---|---|
+| Hai panel giải thích triển khai | Không gọi notes ởreadyHistory | Factory/config/khóadịchchung/cáctrangkhác |
+| Ba cụm metadata ởstate | Bỏ đúng3cụm,khôngkhungtrống | h2/p/icon/quyền/retry/nhánhtrạngthái |
+| Danh sách vàphản hồi | 24physicalcađạt,1632+3retestsđạt | Khách/ID/card/phantrang/download/currentness |
+
+Khônggọiảnh/provider/ví,motionhoặcquyềnbổsung. Đây làđợttiếpsau
+PR772đãtriểnkhaibb3c5657;nativeFULL6trang24samples0notes0state-meta/
+27owned0đãkiểm;CI/deploymớiphảikiểmriêng,empty/guardnativechỉunit.
+[Phiên Tester](../KIEM-THU/PHIEN-IMAGE-HISTORY-TECHNICAL-CLEANUP-20261119.md).
+
 ## 19/11/2026 — Lịch sử ảnh không cần giải thích triển khai
 
 Nguồn gốc:customerPage("/image/history"),renderImageOperationHistory,

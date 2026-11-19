@@ -16,8 +16,11 @@ Fixedcontractcomment6992184830;không tạo Issue/Projects/PR lưu tạm.
 - [x] Review độc lậpC0/I0/M0;Root xem12toastpixel vàVI/EN/ZHready.
 - [x] Casehash6c797d60…1721lines179742LFbytes/metadata2PASS31deselected;
   prepushREADY,py_compileexit0/diffcheck0.
-- [ ] Provenance/exactHEADCI.
-- [ ] Merge/treeeq/exclusivedeploy/runtime/3services/assets/fixedreceipts.
+- [x] Provenance7982e8fc…/exactHEAD7aa19bacCI44411124561haiSUCCESS,
+  456signedQA/456hash+18browserhashđạt.
+- [x] PR772merge/runtimebb3c5657/tree252579dc…diff0/deploy44414112861
+  SUCCESS62s/3services/health5+5assets/publicbuildlocal-59e05f84fa10e240497e;
+  fixedIssue6992184830/PR6993378170closed/readbackexact.
 
 Luồng thật:trang đã đăng nhập→đọc History→đủ4lượt GET lỗi→thử lại vẫn lỗi
 đủ4lượt→thông báo cảnh báo đúnglocale→tựtắt→bỏ lỗi mạng có kiểm soát→
