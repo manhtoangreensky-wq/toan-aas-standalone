@@ -1,5 +1,19 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## VAULT-20261119 — Kho tệp
+
+Phiên: [VAULT-CUSTOMER-COPY](PHIEN-VAULT-CUSTOMER-COPY-20261119.md).
+Sửa case tại đây trước, giữ cùng Issue689; không tạo PR trước nghiệm thu.
+
+| Case | Mức | Thao tác | Điều kiện đạt |
+|---|---|---|---|
+| VAULT-FIELD | vừa | Ô nhập/bộ lọc×3locale | Nhãn/help đúng, names/options/defaults/giới hạn giữ |
+| VAULT-PAGE | vừa | Ready/trống/chưa quyền/thẻ tệp/phân trang | Bỏ khung kỹ thuật/ô trống, form/nút/điều hướng thật còn |
+| VAULT-LIFECYCLE | nặng | Xem loading/failed/active/archived/unavailable | Lý do/counts/revision/close/restore đúng locale và quyền |
+| VAULT-RIGHTS | nặng | Sáu cap false/string/absent,UUID/revision sai | Không mở download/archive/restore ngoài điều kiện thật |
+| VAULT-NATIVE | vừa | Ba locale,sáng/tối,320/414/1024/ngang768 | Đúng nguồn/keyboard/GET,owned0,không ghi sản phẩm/đọc blob |
+| VAULT-DELIVERY | nặng | CI→merge→deploy→receipt | ExactHEAD/tree/VPS/assets/readback,không suy output hoặc signedLIVE |
+
 ## DOCUMENT-OCR-20261119 — đọc chữ từ ảnh/PDF
 
 Phiên: [DOCUMENT-OCR-CUSTOMER-COPY](PHIEN-DOCUMENT-OCR-CUSTOMER-COPY-20261119.md).

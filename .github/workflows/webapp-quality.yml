@@ -93,6 +93,8 @@ jobs:
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_document_convert_locale_shell.py tests/test_document_convert_historical_static.py tests/test_document_operation_portal_contracts.py
           node --test tests/document-ocr-customer-copy.test.mjs tests/document-ocr-customer-copy-source.test.mjs
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_document_ocr_locale_shell.py
+          node --test tests/vault-customer-copy.test.mjs tests/vault-customer-copy-source.test.mjs tests/vault-hint-contrast.test.mjs tests/vault-hint-contrast-history.test.mjs
+          python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_vault_locale_shell.py
           node --test tests/pdf-input-font16.test.mjs
           node --test tests/pdf-merge-fields.test.mjs
           node --test tests/pdf-merge-contrast.test.mjs

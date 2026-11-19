@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { vaultCustomerHistoricalSource } from "./helpers/vault-customer-copy-snapshot.mjs";
 
-const portal = readFileSync("static/portal/portal.js", "utf8");
+const currentPortal = readFileSync("static/portal/portal.js", "utf8");
+// Historical fixed-copy contracts only; current Vault behavior is checked from full physical bundles.
+const portal = vaultCustomerHistoricalSource(currentPortal, "static/portal/portal.js");
 const integration = readFileSync("static/portal/integration.js", "utf8");
 const css = readFileSync("static/portal/portal.css", "utf8");
 

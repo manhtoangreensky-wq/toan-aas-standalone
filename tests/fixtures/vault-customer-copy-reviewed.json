@@ -1,0 +1,1586 @@
+{
+  "task": "ASSET-VAULT-CUSTOMER-COPY-20261119",
+  "base": "5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5",
+  "revision": "ROOT_REVIEWED_R1",
+  "sourceAuthorities": [
+    {
+      "name": "fields",
+      "specId": "ASSET-VAULT-FIELDS-20261119",
+      "revision": "R1",
+      "rootPacketPreflight": "A",
+      "conversation": "8f41e3c7-b8b9-49a1-8878-6d1c19621cbc",
+      "packetSha256": "8ab6865d2b4ed730143d40f564b977dd435d89be116676b506b6d429eb5c0c78",
+      "resultRawSha256": "c409cfe329a0623774b96d8ac5c640af9e7e7dbef20b7c49850ba20b2ade6fce",
+      "schemaValid": true,
+      "proposalExact": true,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    },
+    {
+      "name": "cards",
+      "specId": "ASSET-VAULT-CARDS-20261119",
+      "revision": "R1",
+      "rootPacketPreflight": "A",
+      "conversation": "add5be17-f2ff-4c35-a31c-a979c3a07fa4",
+      "packetSha256": "a2c8e4b9ff1375b4ba71270c4f68a180409d7a1ca95fd6d00544b63a4d536c5c",
+      "resultRawSha256": "94d5e476ebc649fa4c0642ff197decf3a43ec1a847289d6398adef5acc1703bb",
+      "schemaValid": true,
+      "proposalExact": true,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    },
+    {
+      "name": "lifecycle",
+      "specId": "ASSET-VAULT-LIFECYCLE-20261119",
+      "revision": "R1",
+      "rootPacketPreflight": "A",
+      "conversation": "4eebac00-cba8-45e9-bf16-8061ee2acc77",
+      "packetSha256": "517f21ed6686a846403785bcc2737ad7a2931f762874c205d0a622518a6d5f15",
+      "resultRawSha256": "1ca65e6382258e3b89cc8265a9b807c4777c3a499b79f9d3df5e27dd870d44b5",
+      "schemaValid": true,
+      "proposalExact": true,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    },
+    {
+      "name": "page",
+      "specId": "ASSET-VAULT-PAGE-20261119",
+      "revision": "R1",
+      "rootPacketPreflight": "A",
+      "conversation": "2567927b-81b9-4d85-bdcd-930ad91a266d",
+      "packetSha256": "64493e4931fbd6c91c22ff9bba5203d6a1f284df1d26d676c99cc122e2711ed8",
+      "resultRawSha256": "76d9f78486d1d4d1bd0fe1cb4c50497dd0656e69ebbee09b981493a5fcb78792",
+      "schemaValid": true,
+      "proposalExact": true,
+      "verify": "NOT_RUN",
+      "applicationWrites": 0
+    }
+  ],
+  "canonicalChanges": [
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function assetVaultFilterFields() {\n    return [\n      { name: \"q\", label: \"Tìm tệp\", placeholder: \"Tên hiển thị hoặc tên tệp\", maxLength: 100, wide: true },\n      { name: \"state\", label: \"Trạng thái\", control: \"select\", options: [[\"active\", \"Đang hoạt động\"], [\"archived\", \"Đã lưu trữ\"], [\"all\", \"Tất cả tệp hiển thị\"]] }\n    ];\n  }\n\n",
+      "new": "  function assetVaultFilterFields() {\n    return [\n      { name: \"q\", label: uiText(\"vaultFieldsUiSearch\", \"Tìm tệp\"), placeholder: uiText(\"vaultFieldsUiPlaceholder\", \"Tên hiển thị hoặc tên tệp\"), maxLength: 100, wide: true },\n      { name: \"state\", label: uiText(\"vaultFieldsUiState\", \"Trạng thái\"), control: \"select\", options: [[\"active\", uiText(\"vaultFieldsUiActive\", \"Đang sử dụng\")], [\"archived\", uiText(\"vaultFieldsUiArchived\", \"Đã lưu trữ\")], [\"all\", uiText(\"vaultFieldsUiAll\", \"Tất cả tệp\")]] }\n    ];\n  }\n\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function assetVaultFormFields() {\n    return [\n      { name: \"display_name\", label: \"Tên hiển thị\", placeholder: \"Ví dụ: Brief ra mắt mùa hè\", maxLength: 120, help: \"Tùy chọn. Nếu để trống, Web dùng tên tệp an toàn làm nhãn.\" },\n      { name: \"project_id\", label: \"Gắn với Project\", control: \"select\", optionsFrom: \"projects\", emptyLabel: \"Không gắn Project\", help: \"Tùy chọn; chỉ Project đang hoạt động thuộc Web account hiện tại được hiển thị.\" }\n    ];\n  }\n\n",
+      "new": "  function assetVaultFormFields() {\n    return [\n      { name: \"display_name\", label: uiText(\"vaultFieldsUiDisplayName\", \"Tên hiển thị\"), placeholder: uiText(\"vaultFieldsUiNamePlaceholder\", \"Ví dụ: Kế hoạch ra mắt mùa hè\"), maxLength: 120, help: uiText(\"vaultFieldsUiNameHelp\", \"Không bắt buộc. Để trống để dùng tên tệp.\") },\n      { name: \"project_id\", label: uiText(\"vaultFieldsUiProject\", \"Gắn với dự án\"), control: \"select\", optionsFrom: \"projects\", emptyLabel: uiText(\"vaultFieldsUiNoProject\", \"Không gắn dự án\"), help: uiText(\"vaultFieldsUiProjectHelp\", \"Không bắt buộc. Chọn một dự án của bạn.\") }\n    ];\n  }\n\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    const cards = items.length\n      ? `<div class=\"portal-vault-grid\">${items.map((item) => {\n          const id = String(item.id);\n          const itemState = String(item.state || \"\") === \"archived\" ? \"archived\" : \"active\";\n          const downloadPath = itemState === \"active\" ? vaultDownloadPath(item) : \"\";\n          const projectName = item.project_id ? (projectNames.get(String(item.project_id)) || \"Project đã liên kết\") : \"Không gắn Project\";\n          const inspect = `<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-lifecycle-open\" data-portal-route=\"/asset-vault\" data-vault-asset-id=\"${safeText(id)}\"${canInspectLifecycle ? \"\" : \" disabled title=\\\"Cần signed session và Asset Vault đang hoạt động.\\\"\"}>Kiểm tra vòng đời</button>`;\n          const actions = itemState === \"active\"\n            ? `<a class=\"portal-button portal-button--primary\" href=\"${safeText(downloadPath)}\" rel=\"noreferrer\">Tải tệp <span aria-hidden=\"true\">↓</span></a>${inspect}<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-archive\" data-portal-route=\"/asset-vault\" data-vault-asset-id=\"${safeText(id)}\" data-portal-confirm=\"Lưu trữ tệp này khỏi Asset Vault đang hoạt động? Tệp vẫn được giữ riêng tư nhưng sẽ không thể tải từ danh sách active.\"${canArchive ? \"\" : \" disabled\"}>Lưu trữ</button>`\n            : `<span class=\"portal-form-note\">Tệp đã lưu trữ; tải về đang khóa.</span>${inspect}`;\n          return `<article class=\"portal-card portal-card-pad portal-vault-card\" data-vault-asset=\"${safeText(id)}\"><div class=\"portal-card-header\"><div class=\"portal-vault-card-title\"><span class=\"portal-vault-file-icon\" aria-hidden=\"true\">${safeText(String(item.extension || \"FILE\").replace(\".\", \"\").slice(0, 5).toUpperCase())}</span><div><h2 class=\"portal-card-title\">${safeText(String(item.display_name || \"Tệp Web\"))}</h2><p class=\"portal-card-subtitle\">${safeText(String(item.original_filename || \"Tệp riêng tư\"))}</p></div></div>${badge(itemState === \"active\" ? \"ready\" : \"read_only\")}</div><dl class=\"portal-vault-meta\"><div><dt>Dung lượng</dt><dd>${safeText(vaultBytes(item.byte_size))}</dd></div><div><dt>Project</dt><dd>${safeText(projectName)}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.updated_at || item.created_at || \"—\"))}</dd></div></dl><div class=\"portal-form-footer\">${actions}</div></article>`;\n        }).join(\"\")}</div>`\n      : renderEmpty(assetVaultFilterIsActive(filter) ? \"Không có tệp phù hợp\" : \"Asset Vault chưa có tệp\", assetVaultFilterIsActive(filter) ? \"Điều chỉnh từ khóa hoặc trạng thái để xem các tệp khác trong signed Web account. Không có fallback từ Bot hoặc browser cache.\" : \"Tải tệp đầu tiên để lưu cùng Project Web. Đây không phải asset delivery hay output của job Bot.\", \"▣\");\n",
+      "new": "    const cards = items.length\n      ? `<div class=\"portal-vault-grid\">${items.map((item) => {\n          const id = String(item.id);\n          const itemState = String(item.state || \"\") === \"archived\" ? \"archived\" : \"active\";\n          const downloadPath = itemState === \"active\" ? vaultDownloadPath(item) : \"\";\n          const projectName = item.project_id ? (projectNames.get(String(item.project_id)) || uiText(\"vaultCardsUiLinkedProject\", \"Dự án đã liên kết\")) : uiText(\"vaultCardsUiNoProject\", \"Không gắn dự án\");\n          const inspect = `<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-lifecycle-open\" data-portal-route=\"/asset-vault\" data-vault-asset-id=\"${safeText(id)}\"${canInspectLifecycle ? \"\" : \" disabled title=\\\"\" + safeText(uiText(\"vaultCardsUiInspectDisabled\", \"Chưa thể xem thông tin tệp lúc này.\")) + \"\\\"\"}>${safeText(uiText(\"vaultCardsUiInspect\", \"Xem thông tin tệp\"))}</button>`;\n          const actions = itemState === \"active\"\n            ? `<a class=\"portal-button portal-button--primary\" href=\"${safeText(downloadPath)}\" rel=\"noreferrer\">${safeText(uiText(\"vaultCardsUiDownload\", \"Tải tệp\"))} <span aria-hidden=\"true\">↓</span></a>${inspect}<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-archive\" data-portal-route=\"/asset-vault\" data-vault-asset-id=\"${safeText(id)}\" data-portal-confirm=\"${safeText(uiText(\"vaultCardsUiArchiveConfirm\", \"Lưu trữ tệp này? Tệp vẫn được giữ nhưng không thể tải cho đến khi khôi phục.\"))}\"${canArchive ? \"\" : \" disabled\"}>${safeText(uiText(\"vaultCardsUiArchive\", \"Lưu trữ\"))}</button>`\n            : `<span class=\"portal-form-note\">${safeText(uiText(\"vaultCardsUiArchivedNote\", \"Tệp đã lưu trữ. Hãy khôi phục để tải lại.\"))}</span>${inspect}`;\n          return `<article class=\"portal-card portal-card-pad portal-vault-card\" data-vault-asset=\"${safeText(id)}\"><div class=\"portal-card-header\"><div class=\"portal-vault-card-title\"><span class=\"portal-vault-file-icon\" aria-hidden=\"true\">${safeText(String(item.extension || uiText(\"vaultCardsUiFileType\", \"Tệp\")).replace(\".\", \"\").slice(0, 5).toUpperCase())}</span><div><h2 class=\"portal-card-title\">${safeText(String(item.display_name || uiText(\"vaultCardsUiFileName\", \"Tệp của bạn\")))}</h2><p class=\"portal-card-subtitle\">${safeText(String(item.original_filename || uiText(\"vaultCardsUiOriginalName\", \"Tệp đã lưu\")))}</p></div></div>${badge(itemState === \"active\" ? \"ready\" : \"read_only\")}</div><dl class=\"portal-vault-meta\"><div><dt>${safeText(uiText(\"vaultCardsUiSize\", \"Dung lượng\"))}</dt><dd>${safeText(vaultBytes(item.byte_size))}</dd></div><div><dt>${safeText(uiText(\"vaultCardsUiProject\", \"Dự án\"))}</dt><dd>${safeText(projectName)}</dd></div><div><dt>${safeText(uiText(\"vaultCardsUiUpdated\", \"Cập nhật\"))}</dt><dd>${safeText(String(item.updated_at || item.created_at || \"—\"))}</dd></div></dl><div class=\"portal-form-footer\">${actions}</div></article>`;\n        }).join(\"\")}</div>`\n      : renderEmpty(assetVaultFilterIsActive(filter) ? uiText(\"vaultCardsUiFilteredTitle\", \"Không có tệp phù hợp\") : uiText(\"vaultCardsUiEmptyTitle\", \"Kho tệp đang trống\"), assetVaultFilterIsActive(filter) ? uiText(\"vaultCardsUiFilteredBody\", \"Thay đổi từ khóa hoặc trạng thái để tìm tệp khác.\") : uiText(\"vaultCardsUiEmptyBody\", \"Thêm tệp đầu tiên để lưu và dùng lại khi cần.\"), \"▣\");\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function renderAssetVaultPagination(listing) {\n    const source = listing && listing.pagination && typeof listing.pagination === \"object\" ? listing.pagination : {};\n    const offset = Number.isInteger(source.offset) ? source.offset : 0;\n    const returned = Number.isInteger(source.returned) ? source.returned : 0;\n    const previous = Number.isInteger(source.previous_offset) && source.previous_offset >= 0 ? source.previous_offset : null;\n    const next = source.has_more === true && Number.isInteger(source.next_offset) && source.next_offset > offset ? source.next_offset : null;\n    if (previous === null && next === null) return \"\";\n    const range = returned ? \"Đang hiển thị \" + String(offset + 1) + \"–\" + String(offset + returned) + \" tệp\" : \"Không có tệp ở trang này\";\n    const previousButton = previous !== null\n      ? '<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-page\" data-portal-route=\"/asset-vault\" data-asset-vault-offset=\"' + safeText(String(previous)) + '\">← Trang trước</button>'\n      : \"\";\n    const nextButton = next !== null\n      ? '<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-page\" data-portal-route=\"/asset-vault\" data-asset-vault-offset=\"' + safeText(String(next)) + '\">Trang sau →</button>'\n      : \"\";\n    return '<nav class=\"portal-vault-pagination\" aria-label=\"Phân trang Asset Vault\"><span>' + safeText(range) + \"</span><div>\" + previousButton + nextButton + \"</div></nav>\";\n  }\n\n",
+      "new": "  function renderAssetVaultPagination(listing) {\n    const source = listing && listing.pagination && typeof listing.pagination === \"object\" ? listing.pagination : {};\n    const offset = Number.isInteger(source.offset) ? source.offset : 0;\n    const returned = Number.isInteger(source.returned) ? source.returned : 0;\n    const previous = Number.isInteger(source.previous_offset) && source.previous_offset >= 0 ? source.previous_offset : null;\n    const next = source.has_more === true && Number.isInteger(source.next_offset) && source.next_offset > offset ? source.next_offset : null;\n    if (previous === null && next === null) return \"\";\n    const range = returned ? uiText(\"vaultCardsUiRange\", \"Đang hiển thị {start}–{end} tệp\", { start: String(offset + 1), end: String(offset + returned) }) : uiText(\"vaultCardsUiEmptyPage\", \"Không có tệp ở trang này\");\n    const previousButton = previous !== null\n      ? '<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-page\" data-portal-route=\"/asset-vault\" data-asset-vault-offset=\"' + safeText(String(previous)) + '\">' + safeText(uiText(\"vaultCardsUiPrevious\", \"← Trang trước\")) + '</button>'\n      : \"\";\n    const nextButton = next !== null\n      ? '<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-page\" data-portal-route=\"/asset-vault\" data-asset-vault-offset=\"' + safeText(String(next)) + '\">' + safeText(uiText(\"vaultCardsUiNext\", \"Trang sau →\")) + '</button>'\n      : \"\";\n    return '<nav class=\"portal-vault-pagination\" aria-label=\"' + safeText(uiText(\"vaultCardsUiAria\", \"Các trang trong kho tệp\")) + '\"><span>' + safeText(range) + \"</span><div>\" + previousButton + nextButton + \"</div></nav>\";\n  }\n\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function assetVaultLifecyclePanel(context, items, canRestore) {\n    const source = context && context.assetVaultLifecycle && typeof context.assetVaultLifecycle === \"object\"\n      ? context.assetVaultLifecycle\n      : {};\n    const assetId = String(source.asset_id || \"\").trim();\n    if (!validVaultAssetId(assetId)) return \"\";\n    const readState = String(source.readState || \"loading\").trim().toLowerCase();\n    const lifecycle = source.lifecycle && typeof source.lifecycle === \"object\" ? source.lifecycle : null;\n    const selectedItem = (Array.isArray(items) ? items : []).find((item) => item && String(item.id || \"\") === assetId);\n    const selectedName = selectedItem\n      ? String(selectedItem.display_name || selectedItem.original_filename || \"Tệp Asset Vault\").replace(/[\\u0000-\\u001f\\u007f]/g, \" \").replace(/\\s+/g, \" \").trim().slice(0, 180)\n      : \"Tệp đã chọn\";\n    const closeButton = '<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-lifecycle-close\" data-portal-route=\"/asset-vault\">Đóng kiểm tra</button>';\n    if (!lifecycle || readState !== \"ready\") {\n      const guarded = readState === \"guarded\" || readState === \"failed\";\n      return `<section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Vòng đời: ${safeText(selectedName)}</h2><p class=\"portal-card-subtitle\">Thông tin chỉ lấy từ API owner-scoped của Asset Vault.</p></div>${badge(guarded ? \"guarded\" : \"processing\")}</div><div class=\"portal-state\" data-state=\"${guarded ? \"guarded\" : \"processing\"}\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${guarded ? \"i\" : \"◌\"}</span><div><h2>${guarded ? \"Chưa thể kiểm tra vòng đời\" : \"Đang kiểm tra vòng đời\"}</h2><p>${guarded ? \"Portal không giữ dữ liệu cũ, không suy đoán tính sẵn sàng và không tạo download/khôi phục giả khi signed read không khả dụng.\" : \"Portal đang nạp trạng thái lifecycle đã redaction cho đúng tệp được chọn.\"}</p></div></div><div class=\"portal-form-footer\">${closeButton}</div></section>`;\n    }\n    const state = [\"active\", \"archived\", \"unavailable\"].includes(String(lifecycle.state || \"\")) ? String(lifecycle.state) : \"unavailable\";\n    const stateLabel = state === \"active\" ? \"Đang hoạt động\" : (state === \"archived\" ? \"Đã lưu trữ\" : \"Không sẵn sàng\");\n    const reasonLabels = {\n      available: \"Tệp đang hoạt động trong Asset Vault.\",\n      owner_archived: \"Tệp được owner lưu trữ; download đang khóa cho đến khi server xác minh khôi phục.\",\n      integrity_unavailable: \"Server không thể xác minh tệp private an toàn; Portal không cung cấp download hoặc khôi phục giả.\",\n      guarded: \"Server đang giữ trạng thái lifecycle ở chế độ bảo vệ.\"\n    };\n    const reason = reasonLabels[String(lifecycle.state_reason || \"guarded\")] || reasonLabels.guarded;\n    const timestamp = (value) => {\n      const text = String(value || \"\").trim();\n      return text && text.length <= 80 ? safeText(text) : \"—\";\n    };\n    const summary = lifecycle.reference_summary && typeof lifecycle.reference_summary === \"object\" ? lifecycle.reference_summary : {};\n    const totalReferences = Number.isInteger(Number(summary.total_count)) && Number(summary.total_count) >= 0 ? Number(summary.total_count) : 0;\n    const hardBlockers = Number.isInteger(Number(summary.hard_blocker_count)) && Number(summary.hard_blocker_count) >= 0 ? Number(summary.hard_blocker_count) : 0;\n    const referenceLabels = {\n      support_evidence_retention: \"Bằng chứng Support được giữ lại\",\n      media_library_reference: \"Tham chiếu Audio Library\",\n      image_direction_reference: \"Tham chiếu Image Studio\",\n      document_plan_reference: \"Tham chiếu Document Workspace\",\n      document_operation_source: \"Nguồn Document Operations\",\n      document_operation_input: \"Input Document Operations\",\n      image_operation_source: \"Nguồn Image Operations\"\n    };\n    const references = Array.isArray(summary.references)\n      ? summary.references.filter((item) => item && Object.prototype.hasOwnProperty.call(referenceLabels, String(item.reason || \"\")) && Number.isInteger(Number(item.count)) && Number(item.count) > 0).slice(0, 7)\n      : [];\n    const referenceRows = references.length\n      ? `<div class=\"portal-panel-list\">${references.map((item) => `<div class=\"portal-panel-row\"><span class=\"portal-panel-row-icon\" aria-hidden=\"true\">${item.hard_blocker === true ? \"!\" : \"•\"}</span><div><strong>${safeText(referenceLabels[String(item.reason)])}</strong><span>${safeText(String(Number(item.count)))} tham chiếu${item.hard_blocker === true ? \" · retention bắt buộc\" : \"\"}</span></div></div>`).join(\"\")}</div>`\n      : `<p class=\"portal-form-note\">Chưa có tham chiếu retained được server công bố cho tệp này.</p>`;\n    const revision = Number(lifecycle.lifecycle_revision);\n    const restoreAvailable = state === \"archived\" && lifecycle.restore_available === true && Number.isInteger(revision) && revision >= 1;\n    const restoreControl = restoreAvailable\n      ? `<button class=\"portal-button portal-button--primary\" type=\"button\" data-portal-action=\"asset-vault-lifecycle-restore\" data-portal-route=\"/asset-vault\" data-vault-asset-id=\"${safeText(assetId)}\" data-portal-confirm=\"Khôi phục tệp này vào Asset Vault đang hoạt động? Server sẽ kiểm tra integrity trước khi cho phép tải lại.\"${canRestore ? \"\" : \" disabled title=\\\"Cần signed session, CSRF và Asset Vault đang hoạt động.\\\"\"}>Khôi phục tệp</button>`\n      : `<span class=\"portal-form-note\">${state === \"active\" ? \"Tệp đang hoạt động; không cần khôi phục.\" : \"Server không cho phép khôi phục tệp này ở trạng thái hiện tại.\"}</span>`;\n    return `<section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Vòng đời: ${safeText(selectedName)}</h2><p class=\"portal-card-subtitle\">Chỉ trạng thái, lý do, thời gian và số lượng tham chiếu đã được redaction. Không hiển thị path, hash, storage key, case hay operation ID.</p></div>${badge(state === \"active\" ? \"ready\" : (state === \"archived\" ? \"read_only\" : \"guarded\"))}</div><div class=\"portal-summary-list\"><div class=\"portal-summary-item\"><span class=\"portal-summary-key\">Trạng thái</span><span class=\"portal-summary-value\">${safeText(stateLabel)}</span></div><div class=\"portal-summary-item\"><span class=\"portal-summary-key\">Lý do</span><span class=\"portal-summary-value\">${safeText(reason)}</span></div><div class=\"portal-summary-item\"><span class=\"portal-summary-key\">Cập nhật</span><span class=\"portal-summary-value\">${timestamp(lifecycle.updated_at)}</span></div><div class=\"portal-summary-item\"><span class=\"portal-summary-key\">Đã lưu trữ</span><span class=\"portal-summary-value\">${timestamp(lifecycle.archived_at)}</span></div><div class=\"portal-summary-item\"><span class=\"portal-summary-key\">Revision</span><span class=\"portal-summary-value\">${safeText(String(Number.isInteger(revision) ? revision : \"—\"))}</span></div></div><section class=\"portal-card\" style=\"margin-top:14px\"><div class=\"portal-card-header\"><div><h3 class=\"portal-card-title\">Tham chiếu retained</h3><p class=\"portal-card-subtitle\">${safeText(String(totalReferences))} tham chiếu · ${safeText(String(hardBlockers))} retention bắt buộc</p></div></div>${referenceRows}</section><div class=\"portal-form-footer\" style=\"margin-top:16px\">${restoreControl}${closeButton}</div></section>`;\n  }\n\n",
+      "new": "  function assetVaultLifecyclePanel(context, items, canRestore) {\n    const source = context && context.assetVaultLifecycle && typeof context.assetVaultLifecycle === \"object\"\n      ? context.assetVaultLifecycle\n      : {};\n    const assetId = String(source.asset_id || \"\").trim();\n    if (!validVaultAssetId(assetId)) return \"\";\n    const readState = String(source.readState || \"loading\").trim().toLowerCase();\n    const lifecycle = source.lifecycle && typeof source.lifecycle === \"object\" ? source.lifecycle : null;\n    const selectedItem = (Array.isArray(items) ? items : []).find((item) => item && String(item.id || \"\") === assetId);\n    const selectedName = selectedItem\n      ? String(selectedItem.display_name || selectedItem.original_filename || uiText(\"vaultLifecycleUiFallbackFile\", \"Tệp đã lưu\")).replace(/[\\u0000-\\u001f\\u007f]/g, \" \").replace(/\\s+/g, \" \").trim().slice(0, 180)\n      : uiText(\"vaultLifecycleUiSelected\", \"Tệp đã chọn\");\n    const closeButton = '<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-lifecycle-close\" data-portal-route=\"/asset-vault\">' + safeText(uiText(\"vaultLifecycleUiClose\", \"Đóng thông tin\")) + '</button>';\n    if (!lifecycle || readState !== \"ready\") {\n      const guarded = readState === \"guarded\" || readState === \"failed\";\n      return `<section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"vaultLifecycleUiHeading\", \"Thông tin: {name}\", { name: selectedName }))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"vaultLifecycleUiIntro\", \"Xem trạng thái và nơi tệp đang được sử dụng.\"))}</p></div>${badge(guarded ? \"guarded\" : \"processing\")}</div><div class=\"portal-state\" data-state=\"${guarded ? \"guarded\" : \"processing\"}\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${guarded ? \"i\" : \"◌\"}</span><div><h2>${guarded ? uiText(\"vaultLifecycleUiFailed\", \"Chưa thể xem thông tin tệp\") : uiText(\"vaultLifecycleUiLoading\", \"Đang tải thông tin tệp\")}</h2><p>${guarded ? uiText(\"vaultLifecycleUiFailedBody\", \"Vui lòng đóng thông tin và mở lại để thử lại.\") : uiText(\"vaultLifecycleUiLoadingBody\", \"Vui lòng chờ trong giây lát.\")}</p></div></div><div class=\"portal-form-footer\">${closeButton}</div></section>`;\n    }\n    const state = [\"active\", \"archived\", \"unavailable\"].includes(String(lifecycle.state || \"\")) ? String(lifecycle.state) : \"unavailable\";\n    const stateLabel = state === \"active\" ? uiText(\"vaultLifecycleUiActive\", \"Đang sử dụng\") : (state === \"archived\" ? uiText(\"vaultLifecycleUiArchived\", \"Đã lưu trữ\") : uiText(\"vaultLifecycleUiUnavailable\", \"Chưa thể sử dụng\"));\n    const reasonLabels = {\n      available: uiText(\"vaultLifecycleUiAvailableReason\", \"Tệp đang được lưu và có thể sử dụng.\"),\n      owner_archived: uiText(\"vaultLifecycleUiArchivedReason\", \"Tệp đã được lưu trữ. Hãy khôi phục để tải lại.\"),\n      integrity_unavailable: uiText(\"vaultLifecycleUiIntegrityReason\", \"Chưa thể sử dụng tệp này. Vui lòng liên hệ hỗ trợ.\"),\n      guarded: uiText(\"vaultLifecycleUiGuardReason\", \"Chưa thể kiểm tra trạng thái tệp. Vui lòng thử lại.\")\n    };\n    const reason = reasonLabels[String(lifecycle.state_reason || \"guarded\")] || reasonLabels.guarded;\n    const timestamp = (value) => {\n      const text = String(value || \"\").trim();\n      return text && text.length <= 80 ? safeText(text) : \"—\";\n    };\n    const summary = lifecycle.reference_summary && typeof lifecycle.reference_summary === \"object\" ? lifecycle.reference_summary : {};\n    const totalReferences = Number.isInteger(Number(summary.total_count)) && Number(summary.total_count) >= 0 ? Number(summary.total_count) : 0;\n    const hardBlockers = Number.isInteger(Number(summary.hard_blocker_count)) && Number(summary.hard_blocker_count) >= 0 ? Number(summary.hard_blocker_count) : 0;\n    const referenceLabels = {\n      support_evidence_retention: uiText(\"vaultLifecycleUiSupport\", \"Tệp đính kèm hỗ trợ\"),\n      media_library_reference: uiText(\"vaultLifecycleUiAudio\", \"Thư viện âm thanh\"),\n      image_direction_reference: uiText(\"vaultLifecycleUiImage\", \"Thiết kế ảnh\"),\n      document_plan_reference: uiText(\"vaultLifecycleUiDocument\", \"Tài liệu đã soạn\"),\n      document_operation_source: uiText(\"vaultLifecycleUiDocumentSource\", \"Nguồn xử lý tài liệu\"),\n      document_operation_input: uiText(\"vaultLifecycleUiDocumentInput\", \"Tệp dùng cho tài liệu\"),\n      image_operation_source: uiText(\"vaultLifecycleUiImageSource\", \"Nguồn chỉnh ảnh\")\n    };\n    const references = Array.isArray(summary.references)\n      ? summary.references.filter((item) => item && Object.prototype.hasOwnProperty.call(referenceLabels, String(item.reason || \"\")) && Number.isInteger(Number(item.count)) && Number(item.count) > 0).slice(0, 7)\n      : [];\n    const referenceRows = references.length\n      ? `<div class=\"portal-panel-list\">${references.map((item) => `<div class=\"portal-panel-row\"><span class=\"portal-panel-row-icon\" aria-hidden=\"true\">${item.hard_blocker === true ? \"!\" : \"•\"}</span><div><strong>${safeText(referenceLabels[String(item.reason)])}</strong><span>${safeText(uiText(\"vaultLifecycleUiReferenceCount\", \"{count} nơi sử dụng\", { count: String(Number(item.count)) }))}${item.hard_blocker === true ? uiText(\"vaultLifecycleUiRequiredSuffix\", \" · cần giữ tệp\") : \"\"}</span></div></div>`).join(\"\")}</div>`\n      : `<p class=\"portal-form-note\">${safeText(uiText(\"vaultLifecycleUiNoReferences\", \"Chưa có nơi sử dụng tệp được ghi nhận.\"))}</p>`;\n    const revision = Number(lifecycle.lifecycle_revision);\n    const restoreAvailable = state === \"archived\" && lifecycle.restore_available === true && Number.isInteger(revision) && revision >= 1;\n    const restoreControl = restoreAvailable\n      ? `<button class=\"portal-button portal-button--primary\" type=\"button\" data-portal-action=\"asset-vault-lifecycle-restore\" data-portal-route=\"/asset-vault\" data-vault-asset-id=\"${safeText(assetId)}\" data-portal-confirm=\"${safeText(uiText(\"vaultLifecycleUiRestoreConfirm\", \"Khôi phục tệp này để sử dụng và tải lại?\"))}\"${canRestore ? \"\" : \" disabled title=\\\"\" + safeText(uiText(\"vaultLifecycleUiRestoreDisabled\", \"Chưa thể khôi phục tệp lúc này.\")) + \"\\\"\"}>${safeText(uiText(\"vaultLifecycleUiRestore\", \"Khôi phục tệp\"))}</button>`\n      : `<span class=\"portal-form-note\">${state === \"active\" ? uiText(\"vaultLifecycleUiNoRestoreNeeded\", \"Tệp đang sử dụng, không cần khôi phục.\") : uiText(\"vaultLifecycleUiRestoreUnavailable\", \"Chưa thể khôi phục tệp này.\")}</span>`;\n    return `<section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"vaultLifecycleUiHeading\", \"Thông tin: {name}\", { name: selectedName }))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"vaultLifecycleUiReadyIntro\", \"Xem trạng thái và nơi tệp đang được sử dụng.\"))}</p></div>${badge(state === \"active\" ? \"ready\" : (state === \"archived\" ? \"read_only\" : \"guarded\"))}</div><div class=\"portal-summary-list\"><div class=\"portal-summary-item\"><span class=\"portal-summary-key\">${safeText(uiText(\"vaultLifecycleUiState\", \"Trạng thái\"))}</span><span class=\"portal-summary-value\">${safeText(stateLabel)}</span></div><div class=\"portal-summary-item\"><span class=\"portal-summary-key\">${safeText(uiText(\"vaultLifecycleUiReason\", \"Thông tin\"))}</span><span class=\"portal-summary-value\">${safeText(reason)}</span></div><div class=\"portal-summary-item\"><span class=\"portal-summary-key\">${safeText(uiText(\"vaultLifecycleUiUpdated\", \"Cập nhật\"))}</span><span class=\"portal-summary-value\">${timestamp(lifecycle.updated_at)}</span></div><div class=\"portal-summary-item\"><span class=\"portal-summary-key\">${safeText(uiText(\"vaultLifecycleUiArchived\", \"Đã lưu trữ\"))}</span><span class=\"portal-summary-value\">${timestamp(lifecycle.archived_at)}</span></div><div class=\"portal-summary-item\"><span class=\"portal-summary-key\">${safeText(uiText(\"vaultLifecycleUiRevision\", \"Lần cập nhật\"))}</span><span class=\"portal-summary-value\">${safeText(String(Number.isInteger(revision) ? revision : \"—\"))}</span></div></div><section class=\"portal-card\" style=\"margin-top:14px\"><div class=\"portal-card-header\"><div><h3 class=\"portal-card-title\">${safeText(uiText(\"vaultLifecycleUiReferences\", \"Nơi đang sử dụng tệp\"))}</h3><p class=\"portal-card-subtitle\">${safeText(uiText(\"vaultLifecycleUiReferenceSummary\", \"{count} nơi sử dụng · {required} nơi cần giữ tệp\", { count: String(totalReferences), required: String(hardBlockers) }))}</p></div></div>${referenceRows}</section><div class=\"portal-form-footer\" style=\"margin-top:16px\">${restoreControl}${closeButton}</div></section>`;\n  }\n\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function renderAssetVault(page, context) {\n    const deliveryNav = renderDeliveryWorkspaceNav(page.path);\n    const canView = Boolean(context.capabilities && context.capabilities[\"asset-vault-view\"] === true);\n    const canUpload = Boolean(context.capabilities && context.capabilities[\"asset-vault-upload\"] === true);\n    const canArchive = Boolean(context.capabilities && context.capabilities[\"asset-vault-archive\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"asset-vault-refresh\"] === true);\n    const canInspectLifecycle = Boolean(context.capabilities && context.capabilities[\"asset-vault-lifecycle-view\"] === true);\n    const canRestore = Boolean(context.capabilities && context.capabilities[\"asset-vault-restore\"] === true);\n    if (!canView) {\n      return `<article class=\"portal-page portal-asset-vault\">${renderHero(page, context)}${deliveryNav}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.assets)}</span><div><h2>Asset Vault đang ở chế độ an toàn</h2><p>Kho tệp Web chỉ hoạt động khi môi trường có persistent volume riêng. Không có fallback sang static, browser storage hoặc Tài sản Bot.</p><div class=\"portal-state-meta\"><span>Cần signed session</span><span>Không dùng storage công khai</span><span>Không có output giả</span></div></div></div></section></article>`;\n    }\n    const listing = assetVaultListing(context);\n    const filter = listing.filters;\n    const items = assetVaultLibraryItems(context);\n    const projectNames = new Map((Array.isArray(context.projects) ? context.projects : [])\n      .filter((project) => project && validProjectId(project.id))\n      .map((project) => [String(project.id), String(project.title || \"Project Web\")]));\n    const formValues = transientFormValues(\"/asset-vault\");\n",
+      "new": "  function renderAssetVault(page, context) {\n    const deliveryNav = renderDeliveryWorkspaceNav(page.path);\n    const canView = Boolean(context.capabilities && context.capabilities[\"asset-vault-view\"] === true);\n    const canUpload = Boolean(context.capabilities && context.capabilities[\"asset-vault-upload\"] === true);\n    const canArchive = Boolean(context.capabilities && context.capabilities[\"asset-vault-archive\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"asset-vault-refresh\"] === true);\n    const canInspectLifecycle = Boolean(context.capabilities && context.capabilities[\"asset-vault-lifecycle-view\"] === true);\n    const canRestore = Boolean(context.capabilities && context.capabilities[\"asset-vault-restore\"] === true);\n    if (!canView) {\n      return `<article class=\"portal-page portal-asset-vault\">${renderHero(page, context)}${deliveryNav}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.assets)}</span><div><h2>${safeText(uiText(\"vaultPageUiGuardTitle\", \"Chưa thể mở kho tệp\"))}</h2><p>${safeText(uiText(\"vaultPageUiGuardBody\", \"Vui lòng tải lại trang. Nếu vẫn chưa mở được, hãy liên hệ hỗ trợ.\"))}</p></div></div></section></article>`;\n    }\n    const listing = assetVaultListing(context);\n    const filter = listing.filters;\n    const items = assetVaultLibraryItems(context);\n    const projectNames = new Map((Array.isArray(context.projects) ? context.projects : [])\n      .filter((project) => project && validProjectId(project.id))\n      .map((project) => [String(project.id), String(project.title || uiText(\"vaultPageUiProjectFallback\", \"Dự án của bạn\"))]));\n    const formValues = transientFormValues(\"/asset-vault\");\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    const lifecyclePanel = assetVaultLifecyclePanel(context, items, canRestore);\n    const filterForm = '<form class=\"portal-vault-filter\" data-portal-form data-portal-no-transient data-portal-action=\"asset-vault-filter\" data-portal-route=\"/asset-vault\" novalidate>'\n      + renderFields(assetVaultFilterFields(), true, context, filter, \"asset-vault-filter\")\n      + '<div class=\"portal-form-footer\"><span class=\"portal-form-note\">Tìm kiếm chạy tại API owner-scoped trong phiên trang hiện tại; không lưu từ khóa riêng vào URL, Telegram hoặc browser storage.</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-filter-clear\" data-portal-route=\"/asset-vault\">Xóa lọc</button><button class=\"portal-button portal-button--primary\" type=\"submit\">Tìm tệp</button></div></div></form>';\n    const fileDisabled = canUpload ? \"\" : \" disabled\";\n    return `<article class=\"portal-page portal-asset-vault\">${renderHero(page, context)}${deliveryNav}\n      <section class=\"portal-vault-intro\"><div><span class=\"portal-section-kicker\">Private Web storage</span><h2>Kho tệp riêng cho Project và workflow Web</h2><p>Asset Vault dùng signed session, owner check, CSRF và private storage. Không tạo public link, preview giả, job, Xu hay PayOS.</p></div><dl><div><dt>${safeText(String(items.length))}</dt><dd>Tệp trong trang hiện tại</dd></div><div><dt>25 MB</dt><dd>Giới hạn mặc định mỗi tệp</dd></div></dl></section>\n      <div class=\"portal-vault-layout\"><section class=\"portal-card portal-card-pad portal-vault-upload\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Thêm tệp</h2><p class=\"portal-card-subtitle\">Chỉ tải định dạng được kiểm tra ở máy chủ. Tệp luôn tải về dạng attachment riêng tư.</p></div>${badge(canUpload ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"asset-vault-upload\" data-portal-route=\"/asset-vault\" novalidate>${renderFields(assetVaultFormFields(), canUpload, context, formValues)}<label class=\"portal-vault-dropzone\" for=\"portal-vault-file\"><span class=\"portal-vault-dropzone-icon\" aria-hidden=\"true\">↑</span><span><strong>Chọn tệp riêng tư</strong><small>Ảnh, video, audio, PDF, TXT/SRT/VTT hoặc DOCX · tối đa 25 MB mặc định</small></span><input id=\"portal-vault-file\" class=\"portal-vault-file-input\" name=\"file\" type=\"file\" accept=\".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.mp3,.wav,.m4a,.ogg,.pdf,.txt,.srt,.vtt,.docx\" required${fileDisabled}></label><div class=\"portal-form-footer\"><span class=\"portal-form-note\">Tệp không được gửi sang Bot, provider hoặc browser storage. Upload có idempotency và audit metadata đã sanitize.</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${fileDisabled}>Lưu vào Asset Vault</button></div></form></section><aside class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Ranh giới rõ ràng</h2><p class=\"portal-card-subtitle\">Hai thư viện phục vụ hai mục đích khác nhau.</p></div></div><ul class=\"portal-project-steps\"><li><strong>Asset Vault Web</strong><span>Tệp bạn chủ động lưu cho Project/Web workflow, owner-scoped và private.</span></li><li><strong>Tài sản Bot</strong><span>Output delivery của job canonical, có metadata/URL ký riêng ở <a href=\"/assets\">Tài sản Bot</a>.</span></li><li><strong>Không suy diễn output</strong><span>Một tệp Vault không tự trở thành input engine hoặc kết quả đã hoàn tất.</span></li></ul></aside></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Thư viện Asset Vault</h2><p class=\"portal-card-subtitle\">Chỉ tệp thuộc signed Web account hiện tại. Tệp archived vẫn có metadata để đối chiếu, nhưng download đã bị khóa đúng theo server contract.</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-refresh\" data-portal-route=\"/asset-vault\"${canRefresh ? \"\" : \" disabled\"}>Làm mới</button></div>${filterForm}${cards}${lifecyclePanel}${renderAssetVaultPagination(listing)}</section>\n    </article>`;\n  }\n\n",
+      "new": "    const lifecyclePanel = assetVaultLifecyclePanel(context, items, canRestore);\n    const filterForm = '<form class=\"portal-vault-filter\" data-portal-form data-portal-no-transient data-portal-action=\"asset-vault-filter\" data-portal-route=\"/asset-vault\" novalidate>'\n      + renderFields(assetVaultFilterFields(), true, context, filter, \"asset-vault-filter\")\n      + '<div class=\"portal-form-footer\"><span class=\"portal-form-note\">' + safeText(uiText(\"vaultPageUiFilterHint\", \"Tìm theo tên hoặc trạng thái của tệp.\")) + '</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-filter-clear\" data-portal-route=\"/asset-vault\">' + safeText(uiText(\"vaultPageUiClear\", \"Xóa lọc\")) + '</button><button class=\"portal-button portal-button--primary\" type=\"submit\">' + safeText(uiText(\"vaultPageUiFind\", \"Tìm tệp\")) + '</button></div></div></form>';\n    const fileDisabled = canUpload ? \"\" : \" disabled\";\n    return `<article class=\"portal-page portal-asset-vault\">${renderHero(page, context)}${deliveryNav}\n      <section class=\"portal-card portal-card-pad portal-vault-upload\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"vaultPageUiUploadTitle\", \"Thêm tệp\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"vaultPageUiUploadHelp\", \"Chọn tệp để lưu và dùng lại khi cần.\"))}</p></div>${badge(canUpload ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"asset-vault-upload\" data-portal-route=\"/asset-vault\" novalidate>${renderFields(assetVaultFormFields(), canUpload, context, formValues)}<label class=\"portal-vault-dropzone\" for=\"portal-vault-file\"><span class=\"portal-vault-dropzone-icon\" aria-hidden=\"true\">↑</span><span><strong>${safeText(uiText(\"vaultPageUiChooseFile\", \"Chọn tệp\"))}</strong><small>${safeText(uiText(\"vaultPageUiFileHelp\", \"Ảnh, video, âm thanh, PDF, TXT/SRT/VTT hoặc Word · mặc định tối đa 25 MB mỗi tệp\"))}</small></span><input id=\"portal-vault-file\" class=\"portal-vault-file-input\" name=\"file\" type=\"file\" accept=\".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.mp3,.wav,.m4a,.ogg,.pdf,.txt,.srt,.vtt,.docx\" required${fileDisabled}></label><div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(uiText(\"vaultPageUiUploadNote\", \"Bạn có thể xem và tải lại tệp sau khi lưu.\"))}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${fileDisabled}>${safeText(uiText(\"vaultPageUiUpload\", \"Lưu tệp\"))}</button></div></form></section>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"vaultPageUiLibraryTitle\", \"Tệp đã lưu\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"vaultPageUiLibraryHelp\", \"Xem, tìm và quản lý các tệp của bạn.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"asset-vault-refresh\" data-portal-route=\"/asset-vault\"${canRefresh ? \"\" : \" disabled\"}>${safeText(uiText(\"vaultPageUiRefresh\", \"Làm mới\"))}</button></div>${filterForm}${cards}${lifecyclePanel}${renderAssetVaultPagination(listing)}</section>\n    </article>`;\n  }\n\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    if (path === \"/image/resize\") return uiText(\"imageResizeMetaUiTitle\", \"Đổi kích thước ảnh\");",
+      "new": "    if (path === \"/asset-vault\") return uiText(\"vaultPageUiTitle\", \"Kho tệp\");\n    if (path === \"/image/resize\") return uiText(\"imageResizeMetaUiTitle\", \"Đổi kích thước ảnh\");",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    if (path === \"/image/resize\") return uiText(\"imageResizeMetaUiDescription\", \"Chọn ảnh đã lưu, đặt kích thước và tạo bản PNG mới. Tệp gốc được giữ nguyên.\");",
+      "new": "    if (path === \"/asset-vault\") return uiText(\"vaultPageUiDescription\", \"Lưu, tìm và quản lý các tệp của bạn. Xem thông tin tệp và tải lại khi cần.\");\n    if (path === \"/image/resize\") return uiText(\"imageResizeMetaUiDescription\", \"Chọn ảnh đã lưu, đặt kích thước và tạo bản PNG mới. Tệp gốc được giữ nguyên.\");",
+      "count": 1
+    },
+    {
+      "file": "copyfast_pages.py",
+      "old": "    \"/documents/ocr\": {\"vi\":\"Đọc chữ từ ảnh · TOAN AAS\",\"en\":\"Read text from images · TOAN AAS\",\"zh\":\"识别图像文字 · TOAN AAS\"},",
+      "new": "    \"/asset-vault\": {\"vi\":\"Kho tệp · TOAN AAS\",\"en\":\"File library · TOAN AAS\",\"zh\":\"文件库 · TOAN AAS\"},\n    \"/documents/ocr\": {\"vi\":\"Đọc chữ từ ảnh · TOAN AAS\",\"en\":\"Read text from images · TOAN AAS\",\"zh\":\"识别图像文字 · TOAN AAS\"},",
+      "count": 1
+    },
+    {
+      "file": "copyfast_pages.py",
+      "old": "    \"/documents/ocr\": {\n        \"vi\": \"Đọc chữ trong ảnh đã lưu và tải về tệp văn bản. Ảnh gốc được giữ nguyên.\",\n        \"en\": \"Read text in a saved image and download a text file. The original image stays unchanged.\",\n        \"zh\": \"识别已保存图像中的文字并下载文本文件。原图像保持不变。\",\n    },",
+      "new": "    \"/asset-vault\": {\n        \"vi\": \"Lưu, tìm và quản lý các tệp của bạn. Xem thông tin tệp và tải lại khi cần.\",\n        \"en\": \"Save, find and manage your files. View file details and download them when needed.\",\n        \"zh\": \"保存、查找并管理您的文件。查看文件详情，并在需要时下载。\",\n    },\n    \"/documents/ocr\": {\n        \"vi\": \"Đọc chữ trong ảnh đã lưu và tải về tệp văn bản. Ảnh gốc được giữ nguyên.\",\n        \"en\": \"Read text in a saved image and download a text file. The original image stays unchanged.\",\n        \"zh\": \"识别已保存图像中的文字并下载文本文件。原图像保持不变。\",\n    },",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  verifyEqualKeysets();",
+      "new": "  Object.assign(MESSAGES.vi, {\"vaultFieldsUiSearch\":\"Tìm tệp\",\"vaultFieldsUiPlaceholder\":\"Tên hiển thị hoặc tên tệp\",\"vaultFieldsUiState\":\"Trạng thái\",\"vaultFieldsUiActive\":\"Đang sử dụng\",\"vaultFieldsUiArchived\":\"Đã lưu trữ\",\"vaultFieldsUiAll\":\"Tất cả tệp\",\"vaultFieldsUiDisplayName\":\"Tên hiển thị\",\"vaultFieldsUiNamePlaceholder\":\"Ví dụ: Kế hoạch ra mắt mùa hè\",\"vaultFieldsUiNameHelp\":\"Không bắt buộc. Để trống để dùng tên tệp.\",\"vaultFieldsUiProject\":\"Gắn với dự án\",\"vaultFieldsUiNoProject\":\"Không gắn dự án\",\"vaultFieldsUiProjectHelp\":\"Không bắt buộc. Chọn một dự án của bạn.\",\"vaultCardsUiLinkedProject\":\"Dự án đã liên kết\",\"vaultCardsUiNoProject\":\"Không gắn dự án\",\"vaultCardsUiInspect\":\"Xem thông tin tệp\",\"vaultCardsUiInspectDisabled\":\"Chưa thể xem thông tin tệp lúc này.\",\"vaultCardsUiArchiveConfirm\":\"Lưu trữ tệp này? Tệp vẫn được giữ nhưng không thể tải cho đến khi khôi phục.\",\"vaultCardsUiDownload\":\"Tải tệp\",\"vaultCardsUiArchive\":\"Lưu trữ\",\"vaultCardsUiArchivedNote\":\"Tệp đã lưu trữ. Hãy khôi phục để tải lại.\",\"vaultCardsUiFileType\":\"Tệp\",\"vaultCardsUiFileName\":\"Tệp của bạn\",\"vaultCardsUiOriginalName\":\"Tệp đã lưu\",\"vaultCardsUiSize\":\"Dung lượng\",\"vaultCardsUiProject\":\"Dự án\",\"vaultCardsUiUpdated\":\"Cập nhật\",\"vaultCardsUiFilteredTitle\":\"Không có tệp phù hợp\",\"vaultCardsUiEmptyTitle\":\"Kho tệp đang trống\",\"vaultCardsUiFilteredBody\":\"Thay đổi từ khóa hoặc trạng thái để tìm tệp khác.\",\"vaultCardsUiEmptyBody\":\"Thêm tệp đầu tiên để lưu và dùng lại khi cần.\",\"vaultCardsUiEmptyPage\":\"Không có tệp ở trang này\",\"vaultCardsUiAria\":\"Các trang trong kho tệp\",\"vaultCardsUiPrevious\":\"← Trang trước\",\"vaultCardsUiNext\":\"Trang sau →\",\"vaultCardsUiRange\":\"Đang hiển thị {start}–{end} tệp\",\"vaultLifecycleUiFallbackFile\":\"Tệp đã lưu\",\"vaultLifecycleUiSelected\":\"Tệp đã chọn\",\"vaultLifecycleUiClose\":\"Đóng thông tin\",\"vaultLifecycleUiIntro\":\"Xem trạng thái và nơi tệp đang được sử dụng.\",\"vaultLifecycleUiFailed\":\"Chưa thể xem thông tin tệp\",\"vaultLifecycleUiLoading\":\"Đang tải thông tin tệp\",\"vaultLifecycleUiFailedBody\":\"Vui lòng đóng thông tin và mở lại để thử lại.\",\"vaultLifecycleUiLoadingBody\":\"Vui lòng chờ trong giây lát.\",\"vaultLifecycleUiActive\":\"Đang sử dụng\",\"vaultLifecycleUiArchived\":\"Đã lưu trữ\",\"vaultLifecycleUiUnavailable\":\"Chưa thể sử dụng\",\"vaultLifecycleUiAvailableReason\":\"Tệp đang được lưu và có thể sử dụng.\",\"vaultLifecycleUiArchivedReason\":\"Tệp đã được lưu trữ. Hãy khôi phục để tải lại.\",\"vaultLifecycleUiIntegrityReason\":\"Chưa thể sử dụng tệp này. Vui lòng liên hệ hỗ trợ.\",\"vaultLifecycleUiGuardReason\":\"Chưa thể kiểm tra trạng thái tệp. Vui lòng thử lại.\",\"vaultLifecycleUiSupport\":\"Tệp đính kèm hỗ trợ\",\"vaultLifecycleUiAudio\":\"Thư viện âm thanh\",\"vaultLifecycleUiImage\":\"Thiết kế ảnh\",\"vaultLifecycleUiDocument\":\"Tài liệu đã soạn\",\"vaultLifecycleUiDocumentSource\":\"Nguồn xử lý tài liệu\",\"vaultLifecycleUiDocumentInput\":\"Tệp dùng cho tài liệu\",\"vaultLifecycleUiImageSource\":\"Nguồn chỉnh ảnh\",\"vaultLifecycleUiRequiredSuffix\":\" · cần giữ tệp\",\"vaultLifecycleUiNoReferences\":\"Chưa có nơi sử dụng tệp được ghi nhận.\",\"vaultLifecycleUiRestoreConfirm\":\"Khôi phục tệp này để sử dụng và tải lại?\",\"vaultLifecycleUiRestoreDisabled\":\"Chưa thể khôi phục tệp lúc này.\",\"vaultLifecycleUiRestore\":\"Khôi phục tệp\",\"vaultLifecycleUiNoRestoreNeeded\":\"Tệp đang sử dụng, không cần khôi phục.\",\"vaultLifecycleUiRestoreUnavailable\":\"Chưa thể khôi phục tệp này.\",\"vaultLifecycleUiReadyIntro\":\"Xem trạng thái và nơi tệp đang được sử dụng.\",\"vaultLifecycleUiState\":\"Trạng thái\",\"vaultLifecycleUiReason\":\"Thông tin\",\"vaultLifecycleUiUpdated\":\"Cập nhật\",\"vaultLifecycleUiRevision\":\"Lần cập nhật\",\"vaultLifecycleUiReferences\":\"Nơi đang sử dụng tệp\",\"vaultLifecycleUiHeading\":\"Thông tin: {name}\",\"vaultLifecycleUiReferenceCount\":\"{count} nơi sử dụng\",\"vaultLifecycleUiReferenceSummary\":\"{count} nơi sử dụng · {required} nơi cần giữ tệp\",\"vaultPageUiGuardTitle\":\"Chưa thể mở kho tệp\",\"vaultPageUiGuardBody\":\"Vui lòng tải lại trang. Nếu vẫn chưa mở được, hãy liên hệ hỗ trợ.\",\"vaultPageUiProjectFallback\":\"Dự án của bạn\",\"vaultPageUiFilterHint\":\"Tìm theo tên hoặc trạng thái của tệp.\",\"vaultPageUiClear\":\"Xóa lọc\",\"vaultPageUiFind\":\"Tìm tệp\",\"vaultPageUiUploadTitle\":\"Thêm tệp\",\"vaultPageUiUploadHelp\":\"Chọn tệp để lưu và dùng lại khi cần.\",\"vaultPageUiChooseFile\":\"Chọn tệp\",\"vaultPageUiFileHelp\":\"Ảnh, video, âm thanh, PDF, TXT/SRT/VTT hoặc Word · mặc định tối đa 25 MB mỗi tệp\",\"vaultPageUiUploadNote\":\"Bạn có thể xem và tải lại tệp sau khi lưu.\",\"vaultPageUiUpload\":\"Lưu tệp\",\"vaultPageUiLibraryTitle\":\"Tệp đã lưu\",\"vaultPageUiLibraryHelp\":\"Xem, tìm và quản lý các tệp của bạn.\",\"vaultPageUiRefresh\":\"Làm mới\",\"vaultPageUiTitle\":\"Kho tệp\",\"vaultPageUiDescription\":\"Lưu, tìm và quản lý các tệp của bạn. Xem thông tin tệp và tải lại khi cần.\"});\n  Object.assign(MESSAGES.en, {\"vaultFieldsUiSearch\":\"Find files\",\"vaultFieldsUiPlaceholder\":\"Display name or filename\",\"vaultFieldsUiState\":\"Status\",\"vaultFieldsUiActive\":\"Active\",\"vaultFieldsUiArchived\":\"Archived\",\"vaultFieldsUiAll\":\"All files\",\"vaultFieldsUiDisplayName\":\"Display name\",\"vaultFieldsUiNamePlaceholder\":\"For example: Summer launch plan\",\"vaultFieldsUiNameHelp\":\"Optional. Leave blank to use the filename.\",\"vaultFieldsUiProject\":\"Link to a project\",\"vaultFieldsUiNoProject\":\"No project\",\"vaultFieldsUiProjectHelp\":\"Optional. Choose one of your projects.\",\"vaultCardsUiLinkedProject\":\"Linked project\",\"vaultCardsUiNoProject\":\"No project\",\"vaultCardsUiInspect\":\"View file details\",\"vaultCardsUiInspectDisabled\":\"File details cannot be viewed right now.\",\"vaultCardsUiArchiveConfirm\":\"Archive this file? It will be kept but cannot be downloaded until restored.\",\"vaultCardsUiDownload\":\"Download file\",\"vaultCardsUiArchive\":\"Archive\",\"vaultCardsUiArchivedNote\":\"This file is archived. Restore it to download again.\",\"vaultCardsUiFileType\":\"File\",\"vaultCardsUiFileName\":\"Your file\",\"vaultCardsUiOriginalName\":\"Saved file\",\"vaultCardsUiSize\":\"File size\",\"vaultCardsUiProject\":\"Project\",\"vaultCardsUiUpdated\":\"Updated\",\"vaultCardsUiFilteredTitle\":\"No matching files\",\"vaultCardsUiEmptyTitle\":\"Your file library is empty\",\"vaultCardsUiFilteredBody\":\"Change the search or status to find other files.\",\"vaultCardsUiEmptyBody\":\"Add your first file to save it for later use.\",\"vaultCardsUiEmptyPage\":\"No files on this page\",\"vaultCardsUiAria\":\"File library pages\",\"vaultCardsUiPrevious\":\"← Previous page\",\"vaultCardsUiNext\":\"Next page →\",\"vaultCardsUiRange\":\"Showing files {start}–{end}\",\"vaultLifecycleUiFallbackFile\":\"Saved file\",\"vaultLifecycleUiSelected\":\"Selected file\",\"vaultLifecycleUiClose\":\"Close details\",\"vaultLifecycleUiIntro\":\"View the file status and where it is used.\",\"vaultLifecycleUiFailed\":\"File details could not be loaded\",\"vaultLifecycleUiLoading\":\"Loading file details\",\"vaultLifecycleUiFailedBody\":\"Close the details and open them again to retry.\",\"vaultLifecycleUiLoadingBody\":\"Please wait a moment.\",\"vaultLifecycleUiActive\":\"Active\",\"vaultLifecycleUiArchived\":\"Archived\",\"vaultLifecycleUiUnavailable\":\"Cannot be used right now\",\"vaultLifecycleUiAvailableReason\":\"The file is saved and available to use.\",\"vaultLifecycleUiArchivedReason\":\"The file is archived. Restore it to download again.\",\"vaultLifecycleUiIntegrityReason\":\"This file cannot be used right now. Please contact support.\",\"vaultLifecycleUiGuardReason\":\"The file status could not be checked. Please try again.\",\"vaultLifecycleUiSupport\":\"Support attachments\",\"vaultLifecycleUiAudio\":\"Audio library\",\"vaultLifecycleUiImage\":\"Image design\",\"vaultLifecycleUiDocument\":\"Written documents\",\"vaultLifecycleUiDocumentSource\":\"Document processing sources\",\"vaultLifecycleUiDocumentInput\":\"Files used in documents\",\"vaultLifecycleUiImageSource\":\"Image editing sources\",\"vaultLifecycleUiRequiredSuffix\":\" · file must be kept\",\"vaultLifecycleUiNoReferences\":\"No recorded uses of this file yet.\",\"vaultLifecycleUiRestoreConfirm\":\"Restore this file so it can be used and downloaded again?\",\"vaultLifecycleUiRestoreDisabled\":\"This file cannot be restored right now.\",\"vaultLifecycleUiRestore\":\"Restore file\",\"vaultLifecycleUiNoRestoreNeeded\":\"This file is active and does not need restoring.\",\"vaultLifecycleUiRestoreUnavailable\":\"This file cannot be restored right now.\",\"vaultLifecycleUiReadyIntro\":\"View the file status and where it is used.\",\"vaultLifecycleUiState\":\"Status\",\"vaultLifecycleUiReason\":\"Details\",\"vaultLifecycleUiUpdated\":\"Updated\",\"vaultLifecycleUiRevision\":\"Update number\",\"vaultLifecycleUiReferences\":\"Where this file is used\",\"vaultLifecycleUiHeading\":\"File details: {name}\",\"vaultLifecycleUiReferenceCount\":\"{count} uses\",\"vaultLifecycleUiReferenceSummary\":\"{count} uses · {required} require the file to be kept\",\"vaultPageUiGuardTitle\":\"The file library could not be opened\",\"vaultPageUiGuardBody\":\"Reload the page. If it still cannot be opened, contact support.\",\"vaultPageUiProjectFallback\":\"Your project\",\"vaultPageUiFilterHint\":\"Find files by name or status.\",\"vaultPageUiClear\":\"Clear filters\",\"vaultPageUiFind\":\"Find files\",\"vaultPageUiUploadTitle\":\"Add a file\",\"vaultPageUiUploadHelp\":\"Choose a file to save for later use.\",\"vaultPageUiChooseFile\":\"Choose a file\",\"vaultPageUiFileHelp\":\"Images, video, audio, PDF, TXT/SRT/VTT or Word · default limit: 25 MB per file\",\"vaultPageUiUploadNote\":\"You can view and download the file after saving.\",\"vaultPageUiUpload\":\"Save file\",\"vaultPageUiLibraryTitle\":\"Saved files\",\"vaultPageUiLibraryHelp\":\"View, find and manage your files.\",\"vaultPageUiRefresh\":\"Refresh\",\"vaultPageUiTitle\":\"File library\",\"vaultPageUiDescription\":\"Save, find and manage your files. View file details and download them when needed.\"});\n  Object.assign(MESSAGES.zh, {\"vaultFieldsUiSearch\":\"查找文件\",\"vaultFieldsUiPlaceholder\":\"显示名称或文件名\",\"vaultFieldsUiState\":\"状态\",\"vaultFieldsUiActive\":\"使用中\",\"vaultFieldsUiArchived\":\"已归档\",\"vaultFieldsUiAll\":\"所有文件\",\"vaultFieldsUiDisplayName\":\"显示名称\",\"vaultFieldsUiNamePlaceholder\":\"例如：夏季发布计划\",\"vaultFieldsUiNameHelp\":\"可选。留空则使用文件名。\",\"vaultFieldsUiProject\":\"关联项目\",\"vaultFieldsUiNoProject\":\"不关联项目\",\"vaultFieldsUiProjectHelp\":\"可选。选择您的一个项目。\",\"vaultCardsUiLinkedProject\":\"已关联的项目\",\"vaultCardsUiNoProject\":\"未关联项目\",\"vaultCardsUiInspect\":\"查看文件详情\",\"vaultCardsUiInspectDisabled\":\"暂时无法查看文件详情。\",\"vaultCardsUiArchiveConfirm\":\"归档此文件？文件将被保留，但恢复前无法下载。\",\"vaultCardsUiDownload\":\"下载文件\",\"vaultCardsUiArchive\":\"归档\",\"vaultCardsUiArchivedNote\":\"此文件已归档。恢复后可再次下载。\",\"vaultCardsUiFileType\":\"文件\",\"vaultCardsUiFileName\":\"您的文件\",\"vaultCardsUiOriginalName\":\"已保存的文件\",\"vaultCardsUiSize\":\"文件大小\",\"vaultCardsUiProject\":\"项目\",\"vaultCardsUiUpdated\":\"更新时间\",\"vaultCardsUiFilteredTitle\":\"没有匹配的文件\",\"vaultCardsUiEmptyTitle\":\"文件库为空\",\"vaultCardsUiFilteredBody\":\"更改关键词或状态以查找其他文件。\",\"vaultCardsUiEmptyBody\":\"添加第一个文件，以便保存并再次使用。\",\"vaultCardsUiEmptyPage\":\"此页没有文件\",\"vaultCardsUiAria\":\"文件库分页\",\"vaultCardsUiPrevious\":\"← 上一页\",\"vaultCardsUiNext\":\"下一页 →\",\"vaultCardsUiRange\":\"显示第 {start}–{end} 个文件\",\"vaultLifecycleUiFallbackFile\":\"已保存的文件\",\"vaultLifecycleUiSelected\":\"所选文件\",\"vaultLifecycleUiClose\":\"关闭详情\",\"vaultLifecycleUiIntro\":\"查看文件状态及使用位置。\",\"vaultLifecycleUiFailed\":\"暂时无法加载文件详情\",\"vaultLifecycleUiLoading\":\"正在加载文件详情\",\"vaultLifecycleUiFailedBody\":\"请关闭详情后重新打开以重试。\",\"vaultLifecycleUiLoadingBody\":\"请稍候。\",\"vaultLifecycleUiActive\":\"使用中\",\"vaultLifecycleUiArchived\":\"已归档\",\"vaultLifecycleUiUnavailable\":\"暂时无法使用\",\"vaultLifecycleUiAvailableReason\":\"文件已保存，可供使用。\",\"vaultLifecycleUiArchivedReason\":\"文件已归档。恢复后可再次下载。\",\"vaultLifecycleUiIntegrityReason\":\"暂时无法使用此文件。请联系支持人员。\",\"vaultLifecycleUiGuardReason\":\"暂时无法检查文件状态。请重试。\",\"vaultLifecycleUiSupport\":\"支持附件\",\"vaultLifecycleUiAudio\":\"音频库\",\"vaultLifecycleUiImage\":\"图像设计\",\"vaultLifecycleUiDocument\":\"已编写的文档\",\"vaultLifecycleUiDocumentSource\":\"文档处理来源\",\"vaultLifecycleUiDocumentInput\":\"文档使用的文件\",\"vaultLifecycleUiImageSource\":\"图像编辑来源\",\"vaultLifecycleUiRequiredSuffix\":\" · 需保留文件\",\"vaultLifecycleUiNoReferences\":\"尚无此文件的使用记录。\",\"vaultLifecycleUiRestoreConfirm\":\"恢复此文件，以便再次使用和下载？\",\"vaultLifecycleUiRestoreDisabled\":\"暂时无法恢复此文件。\",\"vaultLifecycleUiRestore\":\"恢复文件\",\"vaultLifecycleUiNoRestoreNeeded\":\"此文件正在使用，无需恢复。\",\"vaultLifecycleUiRestoreUnavailable\":\"暂时无法恢复此文件。\",\"vaultLifecycleUiReadyIntro\":\"查看文件状态及使用位置。\",\"vaultLifecycleUiState\":\"状态\",\"vaultLifecycleUiReason\":\"详情\",\"vaultLifecycleUiUpdated\":\"更新时间\",\"vaultLifecycleUiRevision\":\"更新次数\",\"vaultLifecycleUiReferences\":\"文件使用位置\",\"vaultLifecycleUiHeading\":\"文件详情：{name}\",\"vaultLifecycleUiReferenceCount\":\"{count} 处使用\",\"vaultLifecycleUiReferenceSummary\":\"{count} 处使用 · {required} 处需要保留文件\",\"vaultPageUiGuardTitle\":\"暂时无法打开文件库\",\"vaultPageUiGuardBody\":\"请重新加载页面。如果仍无法打开，请联系支持人员。\",\"vaultPageUiProjectFallback\":\"您的项目\",\"vaultPageUiFilterHint\":\"按名称或状态查找文件。\",\"vaultPageUiClear\":\"清除筛选\",\"vaultPageUiFind\":\"查找文件\",\"vaultPageUiUploadTitle\":\"添加文件\",\"vaultPageUiUploadHelp\":\"选择文件以保存并再次使用。\",\"vaultPageUiChooseFile\":\"选择文件\",\"vaultPageUiFileHelp\":\"图像、视频、音频、PDF、TXT/SRT/VTT 或 Word · 默认每个文件最大 25 MB\",\"vaultPageUiUploadNote\":\"保存后可查看并下载文件。\",\"vaultPageUiUpload\":\"保存文件\",\"vaultPageUiLibraryTitle\":\"已保存的文件\",\"vaultPageUiLibraryHelp\":\"查看、查找并管理您的文件。\",\"vaultPageUiRefresh\":\"刷新\",\"vaultPageUiTitle\":\"文件库\",\"vaultPageUiDescription\":\"保存、查找并管理您的文件。查看文件详情，并在需要时下载。\"});\n  verifyEqualKeysets();",
+      "count": 1
+    }
+  ],
+  "rows": [
+    [
+      "vaultFieldsUiSearch",
+      "Tìm tệp",
+      "Find files",
+      "查找文件"
+    ],
+    [
+      "vaultFieldsUiPlaceholder",
+      "Tên hiển thị hoặc tên tệp",
+      "Display name or filename",
+      "显示名称或文件名"
+    ],
+    [
+      "vaultFieldsUiState",
+      "Trạng thái",
+      "Status",
+      "状态"
+    ],
+    [
+      "vaultFieldsUiActive",
+      "Đang sử dụng",
+      "Active",
+      "使用中"
+    ],
+    [
+      "vaultFieldsUiArchived",
+      "Đã lưu trữ",
+      "Archived",
+      "已归档"
+    ],
+    [
+      "vaultFieldsUiAll",
+      "Tất cả tệp",
+      "All files",
+      "所有文件"
+    ],
+    [
+      "vaultFieldsUiDisplayName",
+      "Tên hiển thị",
+      "Display name",
+      "显示名称"
+    ],
+    [
+      "vaultFieldsUiNamePlaceholder",
+      "Ví dụ: Kế hoạch ra mắt mùa hè",
+      "For example: Summer launch plan",
+      "例如：夏季发布计划"
+    ],
+    [
+      "vaultFieldsUiNameHelp",
+      "Không bắt buộc. Để trống để dùng tên tệp.",
+      "Optional. Leave blank to use the filename.",
+      "可选。留空则使用文件名。"
+    ],
+    [
+      "vaultFieldsUiProject",
+      "Gắn với dự án",
+      "Link to a project",
+      "关联项目"
+    ],
+    [
+      "vaultFieldsUiNoProject",
+      "Không gắn dự án",
+      "No project",
+      "不关联项目"
+    ],
+    [
+      "vaultFieldsUiProjectHelp",
+      "Không bắt buộc. Chọn một dự án của bạn.",
+      "Optional. Choose one of your projects.",
+      "可选。选择您的一个项目。"
+    ],
+    [
+      "vaultCardsUiLinkedProject",
+      "Dự án đã liên kết",
+      "Linked project",
+      "已关联的项目"
+    ],
+    [
+      "vaultCardsUiNoProject",
+      "Không gắn dự án",
+      "No project",
+      "未关联项目"
+    ],
+    [
+      "vaultCardsUiInspect",
+      "Xem thông tin tệp",
+      "View file details",
+      "查看文件详情"
+    ],
+    [
+      "vaultCardsUiInspectDisabled",
+      "Chưa thể xem thông tin tệp lúc này.",
+      "File details cannot be viewed right now.",
+      "暂时无法查看文件详情。"
+    ],
+    [
+      "vaultCardsUiArchiveConfirm",
+      "Lưu trữ tệp này? Tệp vẫn được giữ nhưng không thể tải cho đến khi khôi phục.",
+      "Archive this file? It will be kept but cannot be downloaded until restored.",
+      "归档此文件？文件将被保留，但恢复前无法下载。"
+    ],
+    [
+      "vaultCardsUiDownload",
+      "Tải tệp",
+      "Download file",
+      "下载文件"
+    ],
+    [
+      "vaultCardsUiArchive",
+      "Lưu trữ",
+      "Archive",
+      "归档"
+    ],
+    [
+      "vaultCardsUiArchivedNote",
+      "Tệp đã lưu trữ. Hãy khôi phục để tải lại.",
+      "This file is archived. Restore it to download again.",
+      "此文件已归档。恢复后可再次下载。"
+    ],
+    [
+      "vaultCardsUiFileType",
+      "Tệp",
+      "File",
+      "文件"
+    ],
+    [
+      "vaultCardsUiFileName",
+      "Tệp của bạn",
+      "Your file",
+      "您的文件"
+    ],
+    [
+      "vaultCardsUiOriginalName",
+      "Tệp đã lưu",
+      "Saved file",
+      "已保存的文件"
+    ],
+    [
+      "vaultCardsUiSize",
+      "Dung lượng",
+      "File size",
+      "文件大小"
+    ],
+    [
+      "vaultCardsUiProject",
+      "Dự án",
+      "Project",
+      "项目"
+    ],
+    [
+      "vaultCardsUiUpdated",
+      "Cập nhật",
+      "Updated",
+      "更新时间"
+    ],
+    [
+      "vaultCardsUiFilteredTitle",
+      "Không có tệp phù hợp",
+      "No matching files",
+      "没有匹配的文件"
+    ],
+    [
+      "vaultCardsUiEmptyTitle",
+      "Kho tệp đang trống",
+      "Your file library is empty",
+      "文件库为空"
+    ],
+    [
+      "vaultCardsUiFilteredBody",
+      "Thay đổi từ khóa hoặc trạng thái để tìm tệp khác.",
+      "Change the search or status to find other files.",
+      "更改关键词或状态以查找其他文件。"
+    ],
+    [
+      "vaultCardsUiEmptyBody",
+      "Thêm tệp đầu tiên để lưu và dùng lại khi cần.",
+      "Add your first file to save it for later use.",
+      "添加第一个文件，以便保存并再次使用。"
+    ],
+    [
+      "vaultCardsUiEmptyPage",
+      "Không có tệp ở trang này",
+      "No files on this page",
+      "此页没有文件"
+    ],
+    [
+      "vaultCardsUiAria",
+      "Các trang trong kho tệp",
+      "File library pages",
+      "文件库分页"
+    ],
+    [
+      "vaultCardsUiPrevious",
+      "← Trang trước",
+      "← Previous page",
+      "← 上一页"
+    ],
+    [
+      "vaultCardsUiNext",
+      "Trang sau →",
+      "Next page →",
+      "下一页 →"
+    ],
+    [
+      "vaultCardsUiRange",
+      "Đang hiển thị {start}–{end} tệp",
+      "Showing files {start}–{end}",
+      "显示第 {start}–{end} 个文件"
+    ],
+    [
+      "vaultLifecycleUiFallbackFile",
+      "Tệp đã lưu",
+      "Saved file",
+      "已保存的文件"
+    ],
+    [
+      "vaultLifecycleUiSelected",
+      "Tệp đã chọn",
+      "Selected file",
+      "所选文件"
+    ],
+    [
+      "vaultLifecycleUiClose",
+      "Đóng thông tin",
+      "Close details",
+      "关闭详情"
+    ],
+    [
+      "vaultLifecycleUiIntro",
+      "Xem trạng thái và nơi tệp đang được sử dụng.",
+      "View the file status and where it is used.",
+      "查看文件状态及使用位置。"
+    ],
+    [
+      "vaultLifecycleUiFailed",
+      "Chưa thể xem thông tin tệp",
+      "File details could not be loaded",
+      "暂时无法加载文件详情"
+    ],
+    [
+      "vaultLifecycleUiLoading",
+      "Đang tải thông tin tệp",
+      "Loading file details",
+      "正在加载文件详情"
+    ],
+    [
+      "vaultLifecycleUiFailedBody",
+      "Vui lòng đóng thông tin và mở lại để thử lại.",
+      "Close the details and open them again to retry.",
+      "请关闭详情后重新打开以重试。"
+    ],
+    [
+      "vaultLifecycleUiLoadingBody",
+      "Vui lòng chờ trong giây lát.",
+      "Please wait a moment.",
+      "请稍候。"
+    ],
+    [
+      "vaultLifecycleUiActive",
+      "Đang sử dụng",
+      "Active",
+      "使用中"
+    ],
+    [
+      "vaultLifecycleUiArchived",
+      "Đã lưu trữ",
+      "Archived",
+      "已归档"
+    ],
+    [
+      "vaultLifecycleUiUnavailable",
+      "Chưa thể sử dụng",
+      "Cannot be used right now",
+      "暂时无法使用"
+    ],
+    [
+      "vaultLifecycleUiAvailableReason",
+      "Tệp đang được lưu và có thể sử dụng.",
+      "The file is saved and available to use.",
+      "文件已保存，可供使用。"
+    ],
+    [
+      "vaultLifecycleUiArchivedReason",
+      "Tệp đã được lưu trữ. Hãy khôi phục để tải lại.",
+      "The file is archived. Restore it to download again.",
+      "文件已归档。恢复后可再次下载。"
+    ],
+    [
+      "vaultLifecycleUiIntegrityReason",
+      "Chưa thể sử dụng tệp này. Vui lòng liên hệ hỗ trợ.",
+      "This file cannot be used right now. Please contact support.",
+      "暂时无法使用此文件。请联系支持人员。"
+    ],
+    [
+      "vaultLifecycleUiGuardReason",
+      "Chưa thể kiểm tra trạng thái tệp. Vui lòng thử lại.",
+      "The file status could not be checked. Please try again.",
+      "暂时无法检查文件状态。请重试。"
+    ],
+    [
+      "vaultLifecycleUiSupport",
+      "Tệp đính kèm hỗ trợ",
+      "Support attachments",
+      "支持附件"
+    ],
+    [
+      "vaultLifecycleUiAudio",
+      "Thư viện âm thanh",
+      "Audio library",
+      "音频库"
+    ],
+    [
+      "vaultLifecycleUiImage",
+      "Thiết kế ảnh",
+      "Image design",
+      "图像设计"
+    ],
+    [
+      "vaultLifecycleUiDocument",
+      "Tài liệu đã soạn",
+      "Written documents",
+      "已编写的文档"
+    ],
+    [
+      "vaultLifecycleUiDocumentSource",
+      "Nguồn xử lý tài liệu",
+      "Document processing sources",
+      "文档处理来源"
+    ],
+    [
+      "vaultLifecycleUiDocumentInput",
+      "Tệp dùng cho tài liệu",
+      "Files used in documents",
+      "文档使用的文件"
+    ],
+    [
+      "vaultLifecycleUiImageSource",
+      "Nguồn chỉnh ảnh",
+      "Image editing sources",
+      "图像编辑来源"
+    ],
+    [
+      "vaultLifecycleUiRequiredSuffix",
+      " · cần giữ tệp",
+      " · file must be kept",
+      " · 需保留文件"
+    ],
+    [
+      "vaultLifecycleUiNoReferences",
+      "Chưa có nơi sử dụng tệp được ghi nhận.",
+      "No recorded uses of this file yet.",
+      "尚无此文件的使用记录。"
+    ],
+    [
+      "vaultLifecycleUiRestoreConfirm",
+      "Khôi phục tệp này để sử dụng và tải lại?",
+      "Restore this file so it can be used and downloaded again?",
+      "恢复此文件，以便再次使用和下载？"
+    ],
+    [
+      "vaultLifecycleUiRestoreDisabled",
+      "Chưa thể khôi phục tệp lúc này.",
+      "This file cannot be restored right now.",
+      "暂时无法恢复此文件。"
+    ],
+    [
+      "vaultLifecycleUiRestore",
+      "Khôi phục tệp",
+      "Restore file",
+      "恢复文件"
+    ],
+    [
+      "vaultLifecycleUiNoRestoreNeeded",
+      "Tệp đang sử dụng, không cần khôi phục.",
+      "This file is active and does not need restoring.",
+      "此文件正在使用，无需恢复。"
+    ],
+    [
+      "vaultLifecycleUiRestoreUnavailable",
+      "Chưa thể khôi phục tệp này.",
+      "This file cannot be restored right now.",
+      "暂时无法恢复此文件。"
+    ],
+    [
+      "vaultLifecycleUiReadyIntro",
+      "Xem trạng thái và nơi tệp đang được sử dụng.",
+      "View the file status and where it is used.",
+      "查看文件状态及使用位置。"
+    ],
+    [
+      "vaultLifecycleUiState",
+      "Trạng thái",
+      "Status",
+      "状态"
+    ],
+    [
+      "vaultLifecycleUiReason",
+      "Thông tin",
+      "Details",
+      "详情"
+    ],
+    [
+      "vaultLifecycleUiUpdated",
+      "Cập nhật",
+      "Updated",
+      "更新时间"
+    ],
+    [
+      "vaultLifecycleUiRevision",
+      "Lần cập nhật",
+      "Update number",
+      "更新次数"
+    ],
+    [
+      "vaultLifecycleUiReferences",
+      "Nơi đang sử dụng tệp",
+      "Where this file is used",
+      "文件使用位置"
+    ],
+    [
+      "vaultLifecycleUiHeading",
+      "Thông tin: {name}",
+      "File details: {name}",
+      "文件详情：{name}"
+    ],
+    [
+      "vaultLifecycleUiReferenceCount",
+      "{count} nơi sử dụng",
+      "{count} uses",
+      "{count} 处使用"
+    ],
+    [
+      "vaultLifecycleUiReferenceSummary",
+      "{count} nơi sử dụng · {required} nơi cần giữ tệp",
+      "{count} uses · {required} require the file to be kept",
+      "{count} 处使用 · {required} 处需要保留文件"
+    ],
+    [
+      "vaultPageUiGuardTitle",
+      "Chưa thể mở kho tệp",
+      "The file library could not be opened",
+      "暂时无法打开文件库"
+    ],
+    [
+      "vaultPageUiGuardBody",
+      "Vui lòng tải lại trang. Nếu vẫn chưa mở được, hãy liên hệ hỗ trợ.",
+      "Reload the page. If it still cannot be opened, contact support.",
+      "请重新加载页面。如果仍无法打开，请联系支持人员。"
+    ],
+    [
+      "vaultPageUiProjectFallback",
+      "Dự án của bạn",
+      "Your project",
+      "您的项目"
+    ],
+    [
+      "vaultPageUiFilterHint",
+      "Tìm theo tên hoặc trạng thái của tệp.",
+      "Find files by name or status.",
+      "按名称或状态查找文件。"
+    ],
+    [
+      "vaultPageUiClear",
+      "Xóa lọc",
+      "Clear filters",
+      "清除筛选"
+    ],
+    [
+      "vaultPageUiFind",
+      "Tìm tệp",
+      "Find files",
+      "查找文件"
+    ],
+    [
+      "vaultPageUiUploadTitle",
+      "Thêm tệp",
+      "Add a file",
+      "添加文件"
+    ],
+    [
+      "vaultPageUiUploadHelp",
+      "Chọn tệp để lưu và dùng lại khi cần.",
+      "Choose a file to save for later use.",
+      "选择文件以保存并再次使用。"
+    ],
+    [
+      "vaultPageUiChooseFile",
+      "Chọn tệp",
+      "Choose a file",
+      "选择文件"
+    ],
+    [
+      "vaultPageUiFileHelp",
+      "Ảnh, video, âm thanh, PDF, TXT/SRT/VTT hoặc Word · mặc định tối đa 25 MB mỗi tệp",
+      "Images, video, audio, PDF, TXT/SRT/VTT or Word · default limit: 25 MB per file",
+      "图像、视频、音频、PDF、TXT/SRT/VTT 或 Word · 默认每个文件最大 25 MB"
+    ],
+    [
+      "vaultPageUiUploadNote",
+      "Bạn có thể xem và tải lại tệp sau khi lưu.",
+      "You can view and download the file after saving.",
+      "保存后可查看并下载文件。"
+    ],
+    [
+      "vaultPageUiUpload",
+      "Lưu tệp",
+      "Save file",
+      "保存文件"
+    ],
+    [
+      "vaultPageUiLibraryTitle",
+      "Tệp đã lưu",
+      "Saved files",
+      "已保存的文件"
+    ],
+    [
+      "vaultPageUiLibraryHelp",
+      "Xem, tìm và quản lý các tệp của bạn.",
+      "View, find and manage your files.",
+      "查看、查找并管理您的文件。"
+    ],
+    [
+      "vaultPageUiRefresh",
+      "Làm mới",
+      "Refresh",
+      "刷新"
+    ],
+    [
+      "vaultPageUiTitle",
+      "Kho tệp",
+      "File library",
+      "文件库"
+    ],
+    [
+      "vaultPageUiDescription",
+      "Lưu, tìm và quản lý các tệp của bạn. Xem thông tin tệp và tải lại khi cần.",
+      "Save, find and manage your files. View file details and download them when needed.",
+      "保存、查找并管理您的文件。查看文件详情，并在需要时下载。"
+    ]
+  ],
+  "applicationBaseline": [
+    {
+      "file": "admin_ops.py",
+      "baselineLfSha256": "91a9e9b14fe4ae0af54aa3c4806661694d3240f86774b07e5b12db9b740d3e68",
+      "candidateLfSha256": "91a9e9b14fe4ae0af54aa3c4806661694d3240f86774b07e5b12db9b740d3e68",
+      "changed": false
+    },
+    {
+      "file": "affiliate_ops.py",
+      "baselineLfSha256": "fe6e604918732498c809e56318c6b05d42ecc1d8f7e8c828676d6068c6b590b4",
+      "candidateLfSha256": "fe6e604918732498c809e56318c6b05d42ecc1d8f7e8c828676d6068c6b590b4",
+      "changed": false
+    },
+    {
+      "file": "ai_assistant.py",
+      "baselineLfSha256": "968050546548369be1e1d349a250c40d2d0ff04c1a20af53b665db88e07ccb6e",
+      "candidateLfSha256": "968050546548369be1e1d349a250c40d2d0ff04c1a20af53b665db88e07ccb6e",
+      "changed": false
+    },
+    {
+      "file": "ai_media.py",
+      "baselineLfSha256": "495be3b425cc8d79be2491b3519f37115bcea0e5ba511e75ca05115fd0569dec",
+      "candidateLfSha256": "495be3b425cc8d79be2491b3519f37115bcea0e5ba511e75ca05115fd0569dec",
+      "changed": false
+    },
+    {
+      "file": "app.py",
+      "baselineLfSha256": "903aebe8620d630670b6c05edfd59c7781df46ab8e57cf8c1eb28ae201a503d5",
+      "candidateLfSha256": "903aebe8620d630670b6c05edfd59c7781df46ab8e57cf8c1eb28ae201a503d5",
+      "changed": false
+    },
+    {
+      "file": "auth.py",
+      "baselineLfSha256": "e0d33d7a89e3854a2cd5c5bb7456586a482a9c79a9a57283887bcb04e36fde81",
+      "candidateLfSha256": "e0d33d7a89e3854a2cd5c5bb7456586a482a9c79a9a57283887bcb04e36fde81",
+      "changed": false
+    },
+    {
+      "file": "auth_ops.py",
+      "baselineLfSha256": "438af891dc582e17f24f6d96e9c1037d1f217de7bfd446043aff6ac1751a8e50",
+      "candidateLfSha256": "438af891dc582e17f24f6d96e9c1037d1f217de7bfd446043aff6ac1751a8e50",
+      "changed": false
+    },
+    {
+      "file": "billing.py",
+      "baselineLfSha256": "51d9469cd555cf6d9cef9398e9e988131907c782f4ec479797dcf60cde9a7518",
+      "candidateLfSha256": "51d9469cd555cf6d9cef9398e9e988131907c782f4ec479797dcf60cde9a7518",
+      "changed": false
+    },
+    {
+      "file": "campaign.py",
+      "baselineLfSha256": "3c340dd1e528a24f828828032e9bd7555ed5e4d997479e95a1bcedcd88e56c68",
+      "candidateLfSha256": "3c340dd1e528a24f828828032e9bd7555ed5e4d997479e95a1bcedcd88e56c68",
+      "changed": false
+    },
+    {
+      "file": "campaign_ops.py",
+      "baselineLfSha256": "e42f7871571cf392bf9f4dddcc240cc9f47c67e0fde4bd33740f4bebd377be77",
+      "candidateLfSha256": "e42f7871571cf392bf9f4dddcc240cc9f47c67e0fde4bd33740f4bebd377be77",
+      "changed": false
+    },
+    {
+      "file": "coach.py",
+      "baselineLfSha256": "9dc7bcff7048d392214783121aaf01c4b8415b8b80796cffec0bfabc32702dce",
+      "candidateLfSha256": "9dc7bcff7048d392214783121aaf01c4b8415b8b80796cffec0bfabc32702dce",
+      "changed": false
+    },
+    {
+      "file": "config.py",
+      "baselineLfSha256": "25411413042e8ad814bc7f80f2f863ad4f9b8a0ded01302a29db21963e193270",
+      "candidateLfSha256": "25411413042e8ad814bc7f80f2f863ad4f9b8a0ded01302a29db21963e193270",
+      "changed": false
+    },
+    {
+      "file": "control_status.py",
+      "baselineLfSha256": "815f93031645e0c51eea38b3810014e7eb9b73038fe1f56323eb083d7e432aca",
+      "candidateLfSha256": "815f93031645e0c51eea38b3810014e7eb9b73038fe1f56323eb083d7e432aca",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_audit.py",
+      "baselineLfSha256": "5292858ef4fea614f49113568ef77d2bc5fe814c632c673113811c3ce61aebc8",
+      "candidateLfSha256": "5292858ef4fea614f49113568ef77d2bc5fe814c632c673113811c3ce61aebc8",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_automation.py",
+      "baselineLfSha256": "abf61e8ffbf507885db5d7729138f6b9f3143332422836c427af9387aaab9b14",
+      "candidateLfSha256": "abf61e8ffbf507885db5d7729138f6b9f3143332422836c427af9387aaab9b14",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_commercial.py",
+      "baselineLfSha256": "e25f28f9e2ab30ede1c833cbbab4f718ec9b8811737c20c700214ddef20e46ca",
+      "candidateLfSha256": "e25f28f9e2ab30ede1c833cbbab4f718ec9b8811737c20c700214ddef20e46ca",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_customer_directory.py",
+      "baselineLfSha256": "3f5d63d0c327c431e69339d1b11e244fbfb209ff853cbd24f69f0c760d9404a7",
+      "candidateLfSha256": "3f5d63d0c327c431e69339d1b11e244fbfb209ff853cbd24f69f0c760d9404a7",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_document_archive.py",
+      "baselineLfSha256": "16b02f83f69cbf43c9d72050e7806d067a81671ecc4fd115d5d94e4fee7d2157",
+      "candidateLfSha256": "16b02f83f69cbf43c9d72050e7806d067a81671ecc4fd115d5d94e4fee7d2157",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_erp_navigation.py",
+      "baselineLfSha256": "6815e1b6c00d1c17d7ccb5625fa9b0e587c2240a27b21ca05a5ce5dae1be06f3",
+      "candidateLfSha256": "6815e1b6c00d1c17d7ccb5625fa9b0e587c2240a27b21ca05a5ce5dae1be06f3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_security_posture.py",
+      "baselineLfSha256": "6cca07df76803f5abbabe6cb22e5b05c6eb2663ccf2698f6a5b80a4b92863044",
+      "candidateLfSha256": "6cca07df76803f5abbabe6cb22e5b05c6eb2663ccf2698f6a5b80a4b92863044",
+      "changed": false
+    },
+    {
+      "file": "copyfast_analytics_workspace.py",
+      "baselineLfSha256": "6b6f15005da6f723b8f0f2a8899e192058eed73af48433fe7bbb9184343d41ae",
+      "candidateLfSha256": "6b6f15005da6f723b8f0f2a8899e192058eed73af48433fe7bbb9184343d41ae",
+      "changed": false
+    },
+    {
+      "file": "copyfast_api.py",
+      "baselineLfSha256": "8e18ea3ae8e3a11af54673760371815fbcd4e49ea7ca4573b97971ad5ac71ecf",
+      "candidateLfSha256": "8e18ea3ae8e3a11af54673760371815fbcd4e49ea7ca4573b97971ad5ac71ecf",
+      "changed": false
+    },
+    {
+      "file": "copyfast_assets.py",
+      "baselineLfSha256": "43fb5119c0e240858041be3088e276b5b0cf2dca091eefdda681deca74be0039",
+      "candidateLfSha256": "43fb5119c0e240858041be3088e276b5b0cf2dca091eefdda681deca74be0039",
+      "changed": false
+    },
+    {
+      "file": "copyfast_audio_asset_operations.py",
+      "baselineLfSha256": "62eb392945e8712ff0bf784dbc24f908a91ec60d769bb6e3e5d364eb3932d8a8",
+      "candidateLfSha256": "62eb392945e8712ff0bf784dbc24f908a91ec60d769bb6e3e5d364eb3932d8a8",
+      "changed": false
+    },
+    {
+      "file": "copyfast_audio_change_requests.py",
+      "baselineLfSha256": "3939330b55b27d535eba5afb17b9f8c571fb790b4e5a9ed7b5f9b5adc858ce7f",
+      "candidateLfSha256": "3939330b55b27d535eba5afb17b9f8c571fb790b4e5a9ed7b5f9b5adc858ce7f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_auth.py",
+      "baselineLfSha256": "daeb3dd96b77ad76622ed4c0ebc6d0264a0dd524cbcd5dd6e316502b81bf6606",
+      "candidateLfSha256": "daeb3dd96b77ad76622ed4c0ebc6d0264a0dd524cbcd5dd6e316502b81bf6606",
+      "changed": false
+    },
+    {
+      "file": "copyfast_auth_throttle.py",
+      "baselineLfSha256": "f45ffc9e3e6c3b0dd4f0c51aa41ff91a927b67ba6ea12b7c546d6a606695616d",
+      "candidateLfSha256": "f45ffc9e3e6c3b0dd4f0c51aa41ff91a927b67ba6ea12b7c546d6a606695616d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_autopilot.py",
+      "baselineLfSha256": "542c3c819be393a40bda83701fd74f47a7a5127ae10eeab9dd96ac449e8a8a93",
+      "candidateLfSha256": "542c3c819be393a40bda83701fd74f47a7a5127ae10eeab9dd96ac449e8a8a93",
+      "changed": false
+    },
+    {
+      "file": "copyfast_autopilot_policy.py",
+      "baselineLfSha256": "d9212eddfb2b5429f26e54d9ed29005c012a90045948fb843aa86acdd60f40a1",
+      "candidateLfSha256": "d9212eddfb2b5429f26e54d9ed29005c012a90045948fb843aa86acdd60f40a1",
+      "changed": false
+    },
+    {
+      "file": "copyfast_autopilot_protocol.py",
+      "baselineLfSha256": "6bc4ebc1bd925131fecc277231a5c14663694b13ba565e0f7514387af61782bf",
+      "candidateLfSha256": "6bc4ebc1bd925131fecc277231a5c14663694b13ba565e0f7514387af61782bf",
+      "changed": false
+    },
+    {
+      "file": "copyfast_bridge.py",
+      "baselineLfSha256": "64879f12ddeb635a4abb47a03cdf7c87be10e701a82ca6773cfa0d8804c0c775",
+      "candidateLfSha256": "64879f12ddeb635a4abb47a03cdf7c87be10e701a82ca6773cfa0d8804c0c775",
+      "changed": false
+    },
+    {
+      "file": "copyfast_campaign_schedule.py",
+      "baselineLfSha256": "cb53503bb710e39289c7427b588319eca7674e57df53e2bdbe0264350b4e6e9b",
+      "candidateLfSha256": "cb53503bb710e39289c7427b588319eca7674e57df53e2bdbe0264350b4e6e9b",
+      "changed": false
+    },
+    {
+      "file": "copyfast_capability_hub.py",
+      "baselineLfSha256": "417fe0a24038622b5385801f4f1b442d78b92f7c69d32c40932a150716562c7d",
+      "candidateLfSha256": "417fe0a24038622b5385801f4f1b442d78b92f7c69d32c40932a150716562c7d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_channel_strategy.py",
+      "baselineLfSha256": "501d68b373cdf9455c07a9b8306073cbeacab9b0ec687eea1e0d8fb0f7ff09b3",
+      "candidateLfSha256": "501d68b373cdf9455c07a9b8306073cbeacab9b0ec687eea1e0d8fb0f7ff09b3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_chat_workspace.py",
+      "baselineLfSha256": "9dfcd65d3e84394d1c5605284c42e2beaf5c7e763e74e08e80b8fb6a85b1563d",
+      "candidateLfSha256": "9dfcd65d3e84394d1c5605284c42e2beaf5c7e763e74e08e80b8fb6a85b1563d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_community_trust.py",
+      "baselineLfSha256": "a5ef03b853d41bd506a50ca1009d0efbe8723472e1055f1ed974c83dc3d456f8",
+      "candidateLfSha256": "a5ef03b853d41bd506a50ca1009d0efbe8723472e1055f1ed974c83dc3d456f8",
+      "changed": false
+    },
+    {
+      "file": "copyfast_content_handoff.py",
+      "baselineLfSha256": "1a51cec09754e37766102d80cc55ae72e5553ce48f6d7589cd0399350c56d9e3",
+      "candidateLfSha256": "1a51cec09754e37766102d80cc55ae72e5553ce48f6d7589cd0399350c56d9e3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_content_studio.py",
+      "baselineLfSha256": "e93a3ed3ccc8e1697d1e8ea1a23d77e194361dbfc899020ec5e7149e080c78d2",
+      "candidateLfSha256": "e93a3ed3ccc8e1697d1e8ea1a23d77e194361dbfc899020ec5e7149e080c78d2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_customer_crm_policy.py",
+      "baselineLfSha256": "78f23f9b2b9ee8c23404ecc71e01d8f6fc46b4a1be01def2b1def5017d6b094d",
+      "candidateLfSha256": "78f23f9b2b9ee8c23404ecc71e01d8f6fc46b4a1be01def2b1def5017d6b094d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_data_controls.py",
+      "baselineLfSha256": "a7cb5b3e84d416ea6814c4891bd1cde2c5be139ffcdd3b71df089fa0558d1bbd",
+      "candidateLfSha256": "a7cb5b3e84d416ea6814c4891bd1cde2c5be139ffcdd3b71df089fa0558d1bbd",
+      "changed": false
+    },
+    {
+      "file": "copyfast_db.py",
+      "baselineLfSha256": "7ae4592bcdd02373070209f8e6ee4120276bbba3b226f1f323b293bbdf1e8689",
+      "candidateLfSha256": "7ae4592bcdd02373070209f8e6ee4120276bbba3b226f1f323b293bbdf1e8689",
+      "changed": false
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "baselineLfSha256": "cd17e9e2669e1af0631a33490b498a6876204385c9daaa8bd73d8635c2b32c2d",
+      "candidateLfSha256": "cd17e9e2669e1af0631a33490b498a6876204385c9daaa8bd73d8635c2b32c2d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_document_translate_bridge.py",
+      "baselineLfSha256": "e4fd585acc27baf01e6210cf7aa77d3fd7350cffe09aa375811db6eea8c4d114",
+      "candidateLfSha256": "e4fd585acc27baf01e6210cf7aa77d3fd7350cffe09aa375811db6eea8c4d114",
+      "changed": false
+    },
+    {
+      "file": "copyfast_document_workspace.py",
+      "baselineLfSha256": "84899b30b56bff95942c4c14a3a5a13e00409e2728140c6d4489bf1fa74918ba",
+      "candidateLfSha256": "84899b30b56bff95942c4c14a3a5a13e00409e2728140c6d4489bf1fa74918ba",
+      "changed": false
+    },
+    {
+      "file": "copyfast_finance_planning.py",
+      "baselineLfSha256": "50df4ac7076f35b8575bc3a15170c6f0ab9c628f00d329338943e38083ed7748",
+      "candidateLfSha256": "50df4ac7076f35b8575bc3a15170c6f0ab9c628f00d329338943e38083ed7748",
+      "changed": false
+    },
+    {
+      "file": "copyfast_finance_policy.py",
+      "baselineLfSha256": "06188107e21edad9e90ee643fa72b1390de0978ab546e47d110056bb3ddf0b32",
+      "candidateLfSha256": "06188107e21edad9e90ee643fa72b1390de0978ab546e47d110056bb3ddf0b32",
+      "changed": false
+    },
+    {
+      "file": "copyfast_frame_video_operations.py",
+      "baselineLfSha256": "a00519665bea97d37abfc1c015028edcb9213f432b1cad45da96a266a7646cfe",
+      "candidateLfSha256": "a00519665bea97d37abfc1c015028edcb9213f432b1cad45da96a266a7646cfe",
+      "changed": false
+    },
+    {
+      "file": "copyfast_free_prompt_gallery.py",
+      "baselineLfSha256": "b9d32e2163f473649f7f9e14e7ed3f363fbb13c3e654fa29686671afc0fb94ae",
+      "candidateLfSha256": "b9d32e2163f473649f7f9e14e7ed3f363fbb13c3e654fa29686671afc0fb94ae",
+      "changed": false
+    },
+    {
+      "file": "copyfast_governance.py",
+      "baselineLfSha256": "7550165e8d48200a105a7486ab0bb4ad923c4fe546be8411ce123121e495aee6",
+      "candidateLfSha256": "7550165e8d48200a105a7486ab0bb4ad923c4fe546be8411ce123121e495aee6",
+      "changed": false
+    },
+    {
+      "file": "copyfast_growth_review.py",
+      "baselineLfSha256": "d3e8f34f8caa5ded3f001bae8acb4dc33dfd2f9dd0e7ce26db3326ba06ee2e9b",
+      "candidateLfSha256": "d3e8f34f8caa5ded3f001bae8acb4dc33dfd2f9dd0e7ce26db3326ba06ee2e9b",
+      "changed": false
+    },
+    {
+      "file": "copyfast_guide_center.py",
+      "baselineLfSha256": "6d4ca3895c767aec4fbe133e9d34d45e76772261ea385db4acd4c366237a2040",
+      "candidateLfSha256": "6d4ca3895c767aec4fbe133e9d34d45e76772261ea385db4acd4c366237a2040",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_generation_job_bridge.py",
+      "baselineLfSha256": "86a84e46ba773f78aa3ab14148dc6670f3ec214d868a62dc12514ad63837bb3f",
+      "candidateLfSha256": "86a84e46ba773f78aa3ab14148dc6670f3ec214d868a62dc12514ad63837bb3f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "baselineLfSha256": "3d559195a68cf4102133c960e801496326be70f422ca193c8b2cbd72f8a99f9c",
+      "candidateLfSha256": "3d559195a68cf4102133c960e801496326be70f422ca193c8b2cbd72f8a99f9c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_remove_background_bridge.py",
+      "baselineLfSha256": "1a99a84d58a174841dadc4487aa3ebac5de8dfff06a9a6795a29f1ad2e5be4d5",
+      "candidateLfSha256": "1a99a84d58a174841dadc4487aa3ebac5de8dfff06a9a6795a29f1ad2e5be4d5",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_runtime.py",
+      "baselineLfSha256": "2cca79ce69712716c01548574c4b87510e33a991fdedfb174e8f8fac10d229cd",
+      "candidateLfSha256": "2cca79ce69712716c01548574c4b87510e33a991fdedfb174e8f8fac10d229cd",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "baselineLfSha256": "b6181e9b527bb729d79ad744e41fca299082674af06c33f3d343a7a123074f9c",
+      "candidateLfSha256": "b6181e9b527bb729d79ad744e41fca299082674af06c33f3d343a7a123074f9c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_transform_job_bridge.py",
+      "baselineLfSha256": "a84cf54cec611e9bf3c071668f9c9920a045fa89d76d77f8838c85e8d041bd85",
+      "candidateLfSha256": "a84cf54cec611e9bf3c071668f9c9920a045fa89d76d77f8838c85e8d041bd85",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_transform_runtime_bridge.py",
+      "baselineLfSha256": "6f75c4c1ba253d0d8ed61777dd179cf5e1a9b9e0f783b4534c0e39d563e48b7d",
+      "candidateLfSha256": "6f75c4c1ba253d0d8ed61777dd179cf5e1a9b9e0f783b4534c0e39d563e48b7d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "baselineLfSha256": "d66438fe942baec59625fc579812bc3515c17ebf7df89c83f4d284ffbacfb18c",
+      "candidateLfSha256": "d66438fe942baec59625fc579812bc3515c17ebf7df89c83f4d284ffbacfb18c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_upscale_provider.py",
+      "baselineLfSha256": "6e75037aaa163f83874d97709deb5b3d4df33a4ff7e3dd88eb46db655d496f66",
+      "candidateLfSha256": "6e75037aaa163f83874d97709deb5b3d4df33a4ff7e3dd88eb46db655d496f66",
+      "changed": false
+    },
+    {
+      "file": "copyfast_media_factory.py",
+      "baselineLfSha256": "472f69228327fa1a16993648b126b06ea1d45bcc7a7e34e6d530952e03b1135f",
+      "candidateLfSha256": "472f69228327fa1a16993648b126b06ea1d45bcc7a7e34e6d530952e03b1135f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_media_runtime.py",
+      "baselineLfSha256": "e1edb1502a425763a21fe229af72c51ea2088972912d5ed3b32f4314e8aad008",
+      "candidateLfSha256": "e1edb1502a425763a21fe229af72c51ea2088972912d5ed3b32f4314e8aad008",
+      "changed": false
+    },
+    {
+      "file": "copyfast_memory.py",
+      "baselineLfSha256": "bc3dd4c3b1b7feaf375705ae90b2989c3f92b036d64f66fffb90399e3b1817b3",
+      "candidateLfSha256": "bc3dd4c3b1b7feaf375705ae90b2989c3f92b036d64f66fffb90399e3b1817b3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_mfa.py",
+      "baselineLfSha256": "956f0f7b24d4ec0d3583b9cddbb7061078bddd19aeeb63351be9beae27e131b3",
+      "candidateLfSha256": "956f0f7b24d4ec0d3583b9cddbb7061078bddd19aeeb63351be9beae27e131b3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_multi_scene_film_job_bridge.py",
+      "baselineLfSha256": "717d2dfca4f524dc600f0016ab79ada35d939832e97d59ca65504dbc77b581b9",
+      "candidateLfSha256": "717d2dfca4f524dc600f0016ab79ada35d939832e97d59ca65504dbc77b581b9",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_job_bridge.py",
+      "baselineLfSha256": "a34baa555cbb8b8edb59a9653551831b83e7fad77ba9bc97c2569d64869106aa",
+      "candidateLfSha256": "a34baa555cbb8b8edb59a9653551831b83e7fad77ba9bc97c2569d64869106aa",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_library_bridge.py",
+      "baselineLfSha256": "d98e42bf9af170a3aef3552a9d4f8f335c3e984d8ea54a4217d1ed633b1bfb0b",
+      "candidateLfSha256": "d98e42bf9af170a3aef3552a9d4f8f335c3e984d8ea54a4217d1ed633b1bfb0b",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_media.py",
+      "baselineLfSha256": "e7be50ff71eb375ed9dd8da449453a4ea1d3fbce6fcc1f93d53590eac2bff1ca",
+      "candidateLfSha256": "e7be50ff71eb375ed9dd8da449453a4ea1d3fbce6fcc1f93d53590eac2bff1ca",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_sfx_job_bridge.py",
+      "baselineLfSha256": "51b25469eea084288c34882ffad314183cda8bb1be20210b54f8c232565f33b5",
+      "candidateLfSha256": "51b25469eea084288c34882ffad314183cda8bb1be20210b54f8c232565f33b5",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_sfx_library_bridge.py",
+      "baselineLfSha256": "d60e8ae5d7e9b1721de91a7023e4db71035b96c1fbf027a686f42e0f180bc927",
+      "candidateLfSha256": "d60e8ae5d7e9b1721de91a7023e4db71035b96c1fbf027a686f42e0f180bc927",
+      "changed": false
+    },
+    {
+      "file": "copyfast_native_read_models.py",
+      "baselineLfSha256": "a18506592f7dfcbdf6e84da7eca961a333aa71abe5ba742b27563692a3d837aa",
+      "candidateLfSha256": "a18506592f7dfcbdf6e84da7eca961a333aa71abe5ba742b27563692a3d837aa",
+      "changed": false
+    },
+    {
+      "file": "copyfast_notification_center.py",
+      "baselineLfSha256": "6e7492917c6915dbdae0c1ddf7dabba46267bdbc9e3ccafe275015da5f014eac",
+      "candidateLfSha256": "6e7492917c6915dbdae0c1ddf7dabba46267bdbc9e3ccafe275015da5f014eac",
+      "changed": false
+    },
+    {
+      "file": "copyfast_notification_protocol.py",
+      "baselineLfSha256": "c40fdae4e29ee24f015d1c3175e5595d7f270639de891ce62b5735f80898575f",
+      "candidateLfSha256": "c40fdae4e29ee24f015d1c3175e5595d7f270639de891ce62b5735f80898575f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_operations_desk.py",
+      "baselineLfSha256": "6c91ac5c4801e987dd60fcd75135898ea7ac791d99d0a791685120d8ca4e2166",
+      "candidateLfSha256": "6c91ac5c4801e987dd60fcd75135898ea7ac791d99d0a791685120d8ca4e2166",
+      "changed": false
+    },
+    {
+      "file": "copyfast_operations_jobs_policy.py",
+      "baselineLfSha256": "0cc42ec614c10a320a144c0be1d69c473d283a3d726a8ee8f61d92dc638f7b9e",
+      "candidateLfSha256": "0cc42ec614c10a320a144c0be1d69c473d283a3d726a8ee8f61d92dc638f7b9e",
+      "changed": false
+    },
+    {
+      "file": "copyfast_pages.py",
+      "baselineLfSha256": "0b0ac18f3cdb4911d9ac56657db4a5f0aeb9ae95a730537daf7fbb5c3d35bd6f",
+      "candidateLfSha256": "93382a7aa0d2a2a151ba6bcaa0daca9b216e43cb955393fa2d0b2c1eb701c48d",
+      "changed": true
+    },
+    {
+      "file": "copyfast_partner_crm.py",
+      "baselineLfSha256": "85548bb5f5b00d8eb3c4e4197f520fc3a6438a9310c28f047027385421093849",
+      "candidateLfSha256": "85548bb5f5b00d8eb3c4e4197f520fc3a6438a9310c28f047027385421093849",
+      "changed": false
+    },
+    {
+      "file": "copyfast_partner_readiness.py",
+      "baselineLfSha256": "1a6c1cda8ea73ca056e39bbcd826dca505fdb4d6d4b388fa45e90e759fa7c9a2",
+      "candidateLfSha256": "1a6c1cda8ea73ca056e39bbcd826dca505fdb4d6d4b388fa45e90e759fa7c9a2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "baselineLfSha256": "5244ee53572ea147945ec1168f3e3c51a9fb17abb657c03567f8ce8bd4ad1f8c",
+      "candidateLfSha256": "5244ee53572ea147945ec1168f3e3c51a9fb17abb657c03567f8ce8bd4ad1f8c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_product_readiness.py",
+      "baselineLfSha256": "7d9813abf1fc70742cf900d65d187dd76a8cb6635e89c1d786f0c90610eac6e9",
+      "candidateLfSha256": "7d9813abf1fc70742cf900d65d187dd76a8cb6635e89c1d786f0c90610eac6e9",
+      "changed": false
+    },
+    {
+      "file": "copyfast_product_video_dispatcher.py",
+      "baselineLfSha256": "cae77fb4849cc09201628999bfbe872060a6cd917784f8da222f9b1b2221ecf1",
+      "candidateLfSha256": "cae77fb4849cc09201628999bfbe872060a6cd917784f8da222f9b1b2221ecf1",
+      "changed": false
+    },
+    {
+      "file": "copyfast_product_video_job_bridge.py",
+      "baselineLfSha256": "1b9baaad8d65b8a41d9cc7069d85fa901c1fdb197d13e67b84705adc775a550b",
+      "candidateLfSha256": "1b9baaad8d65b8a41d9cc7069d85fa901c1fdb197d13e67b84705adc775a550b",
+      "changed": false
+    },
+    {
+      "file": "copyfast_project_packages.py",
+      "baselineLfSha256": "847a84b926585d54651758d83adcab014cce4cf9ece65ab5aa63c430bac4911f",
+      "candidateLfSha256": "847a84b926585d54651758d83adcab014cce4cf9ece65ab5aa63c430bac4911f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_projects.py",
+      "baselineLfSha256": "7ccb4c2a5210904f7d795c517aa38ef8b82724cbfba365fa7bb636d571c228a2",
+      "candidateLfSha256": "7ccb4c2a5210904f7d795c517aa38ef8b82724cbfba365fa7bb636d571c228a2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_prompt_library.py",
+      "baselineLfSha256": "277ba7675d9f8e27849b88cd5e34ccf667ff80ddcd65416f8cc59ffb2cbb492c",
+      "candidateLfSha256": "277ba7675d9f8e27849b88cd5e34ccf667ff80ddcd65416f8cc59ffb2cbb492c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_prompt_studio.py",
+      "baselineLfSha256": "6a67a3b401e747dd4589794dbad8c8a7ae290c9154a8e9852316cf41745e51cf",
+      "candidateLfSha256": "6a67a3b401e747dd4589794dbad8c8a7ae290c9154a8e9852316cf41745e51cf",
+      "changed": false
+    },
+    {
+      "file": "copyfast_provider_policy.py",
+      "baselineLfSha256": "15f47446d77f468309a33a20c63ba813d936f2aa808c3a7bf9a307cefdda3ef1",
+      "candidateLfSha256": "15f47446d77f468309a33a20c63ba813d936f2aa808c3a7bf9a307cefdda3ef1",
+      "changed": false
+    },
+    {
+      "file": "copyfast_quick_image_planner.py",
+      "baselineLfSha256": "132795c55d7e2f5b00f637c1c0c1cfb4869daf6906c663a3cca86dbbbbe3f938",
+      "candidateLfSha256": "132795c55d7e2f5b00f637c1c0c1cfb4869daf6906c663a3cca86dbbbbe3f938",
+      "changed": false
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "baselineLfSha256": "193d7fe27eb4799b0010d5695f5104d8f613e0bbd79f06ee6e033d8c6ef4301f",
+      "candidateLfSha256": "193d7fe27eb4799b0010d5695f5104d8f613e0bbd79f06ee6e033d8c6ef4301f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_registry.py",
+      "baselineLfSha256": "6a8e84966e84a4b6e7f24d79ef00b4128ec05d93f1c962aa4e43fdc41f72c517",
+      "candidateLfSha256": "6a8e84966e84a4b6e7f24d79ef00b4128ec05d93f1c962aa4e43fdc41f72c517",
+      "changed": false
+    },
+    {
+      "file": "copyfast_reliability.py",
+      "baselineLfSha256": "4cf575b64e5ff9938fe493a735c24059d8d7787c0b521640e459d5adea72b6a2",
+      "candidateLfSha256": "4cf575b64e5ff9938fe493a735c24059d8d7787c0b521640e459d5adea72b6a2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_reliability_policy.py",
+      "baselineLfSha256": "bf0d74656d61f8622ba8af3456ad9070d0db63cffa26d4f12c13a95d695f7a42",
+      "candidateLfSha256": "bf0d74656d61f8622ba8af3456ad9070d0db63cffa26d4f12c13a95d695f7a42",
+      "changed": false
+    },
+    {
+      "file": "copyfast_route_engine.py",
+      "baselineLfSha256": "53ff5fd84fa797f14b616e61b8abb4f8d7ee72bcf9c69f4da9083246195d10ea",
+      "candidateLfSha256": "53ff5fd84fa797f14b616e61b8abb4f8d7ee72bcf9c69f4da9083246195d10ea",
+      "changed": false
+    },
+    {
+      "file": "copyfast_starter_kits.py",
+      "baselineLfSha256": "79eed070462c915810aacd0db8d6b4f68c84a137534060be8b9a94af9f240cf2",
+      "candidateLfSha256": "79eed070462c915810aacd0db8d6b4f68c84a137534060be8b9a94af9f240cf2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_storyboard_grid.py",
+      "baselineLfSha256": "393ff5496569152d34cb5c354ad73831fb1dee0864f842f48daf892e5e731c87",
+      "candidateLfSha256": "393ff5496569152d34cb5c354ad73831fb1dee0864f842f48daf892e5e731c87",
+      "changed": false
+    },
+    {
+      "file": "copyfast_subdub_job_bridge.py",
+      "baselineLfSha256": "c75ea7425ad224bddde6db7e53468166994e78159d522cc741ceb54aff49f6fd",
+      "candidateLfSha256": "c75ea7425ad224bddde6db7e53468166994e78159d522cc741ceb54aff49f6fd",
+      "changed": false
+    },
+    {
+      "file": "copyfast_subtitle_asset_operations.py",
+      "baselineLfSha256": "d6f6cde4d16b43135999c0f1298ac05cb1fa19b95034f3a1f701a0bfa680b982",
+      "candidateLfSha256": "d6f6cde4d16b43135999c0f1298ac05cb1fa19b95034f3a1f701a0bfa680b982",
+      "changed": false
+    },
+    {
+      "file": "copyfast_subtitle_format_core.py",
+      "baselineLfSha256": "aa9b853999441d00badaf9aa4dadbad656040f0e190523d12852525947196367",
+      "candidateLfSha256": "aa9b853999441d00badaf9aa4dadbad656040f0e190523d12852525947196367",
+      "changed": false
+    },
+    {
+      "file": "copyfast_subtitle_workspace.py",
+      "baselineLfSha256": "c82ab41b71792bc2f4f43ff46507e481d083cef69534ddb1d459fbe105c29926",
+      "candidateLfSha256": "c82ab41b71792bc2f4f43ff46507e481d083cef69534ddb1d459fbe105c29926",
+      "changed": false
+    },
+    {
+      "file": "copyfast_support.py",
+      "baselineLfSha256": "2c7df5bb38cc71aa62ada592addde5c6109ca9bc5131ece508908f93826d347e",
+      "candidateLfSha256": "2c7df5bb38cc71aa62ada592addde5c6109ca9bc5131ece508908f93826d347e",
+      "changed": false
+    },
+    {
+      "file": "copyfast_trend_research.py",
+      "baselineLfSha256": "4b609a9971efd06c98a7ef75df59686bd7ce650bd363f3f4f80384f94dbc76d9",
+      "candidateLfSha256": "4b609a9971efd06c98a7ef75df59686bd7ce650bd363f3f4f80384f94dbc76d9",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_long_job_bridge.py",
+      "baselineLfSha256": "5b97eeef2626ab257b95850d9294e29e7df27542d78126773dfbde9e55121b6e",
+      "candidateLfSha256": "5b97eeef2626ab257b95850d9294e29e7df27542d78126773dfbde9e55121b6e",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_operations.py",
+      "baselineLfSha256": "18ed04feb3e1585b4612b5755ddbac4275bd69c8bc15e71d33efa69dba70b54a",
+      "candidateLfSha256": "18ed04feb3e1585b4612b5755ddbac4275bd69c8bc15e71d33efa69dba70b54a",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_output_copy.py",
+      "baselineLfSha256": "1e5685db200da23979b154d18633ea1982b681311582709e631960b23c78f5ec",
+      "candidateLfSha256": "1e5685db200da23979b154d18633ea1982b681311582709e631960b23c78f5ec",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_studio.py",
+      "baselineLfSha256": "0c48803356153fde8d45d1b9c8795ade9727c8232cf2bc33ac1ebe98eb82cb8f",
+      "candidateLfSha256": "0c48803356153fde8d45d1b9c8795ade9727c8232cf2bc33ac1ebe98eb82cb8f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_transform_operations.py",
+      "baselineLfSha256": "28159581d97b0310d2334cd657923204491702ba51166986552fd9c22a7a5953",
+      "candidateLfSha256": "28159581d97b0310d2334cd657923204491702ba51166986552fd9c22a7a5953",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_trend_job_bridge.py",
+      "baselineLfSha256": "9547cab30bbca3bc056eb4cfc6a3e59adbb8339019cbc7f15ee6903eb9a29f7e",
+      "candidateLfSha256": "9547cab30bbca3bc056eb4cfc6a3e59adbb8339019cbc7f15ee6903eb9a29f7e",
+      "changed": false
+    },
+    {
+      "file": "copyfast_voice_clone_runtime_bridge.py",
+      "baselineLfSha256": "77f3a3dd7609e61be70180a74e247a95d14fdb5fa1378c52aa307a4f4c6f9073",
+      "candidateLfSha256": "77f3a3dd7609e61be70180a74e247a95d14fdb5fa1378c52aa307a4f4c6f9073",
+      "changed": false
+    },
+    {
+      "file": "copyfast_voice_studio.py",
+      "baselineLfSha256": "c6f6b9dc0e86124171e615626d095749561c5190266431979cf142acbb2ad4c2",
+      "candidateLfSha256": "c6f6b9dc0e86124171e615626d095749561c5190266431979cf142acbb2ad4c2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_voice_tts_job_bridge.py",
+      "baselineLfSha256": "ed910e8d6ecb83ef40a5058c1cd5bb146f2a843af149d9fd2ddf5f8beba3dd09",
+      "candidateLfSha256": "ed910e8d6ecb83ef40a5058c1cd5bb146f2a843af149d9fd2ddf5f8beba3dd09",
+      "changed": false
+    },
+    {
+      "file": "copyfast_web_engine.py",
+      "baselineLfSha256": "2ff12604aba455837863c47721d4a5bca3605e5df91b20341e08ea53c61fdb38",
+      "candidateLfSha256": "2ff12604aba455837863c47721d4a5bca3605e5df91b20341e08ea53c61fdb38",
+      "changed": false
+    },
+    {
+      "file": "copyfast_workboard.py",
+      "baselineLfSha256": "9fdb7d695e235bd10d5ba77c3a9a604c77ab4f32db9d0b6a9a574fbd92a07301",
+      "candidateLfSha256": "9fdb7d695e235bd10d5ba77c3a9a604c77ab4f32db9d0b6a9a574fbd92a07301",
+      "changed": false
+    },
+    {
+      "file": "copyfast_workspace_draft_contract.py",
+      "baselineLfSha256": "774a544f62aac298a537129d48d001f95fa258626318864fae40853ad51fa131",
+      "candidateLfSha256": "774a544f62aac298a537129d48d001f95fa258626318864fae40853ad51fa131",
+      "changed": false
+    },
+    {
+      "file": "copyfast_workspace_setup.py",
+      "baselineLfSha256": "4db7d20624b6ddce19fdf4a7b383a639c935ef5b77c8422181811c7fecf09d1d",
+      "candidateLfSha256": "4db7d20624b6ddce19fdf4a7b383a639c935ef5b77c8422181811c7fecf09d1d",
+      "changed": false
+    },
+    {
+      "file": "customer_api.py",
+      "baselineLfSha256": "88214aba38871583b55f3935d9271b0fa5e6d4f07a5ad85727ef163de67e90a1",
+      "candidateLfSha256": "88214aba38871583b55f3935d9271b0fa5e6d4f07a5ad85727ef163de67e90a1",
+      "changed": false
+    },
+    {
+      "file": "db.py",
+      "baselineLfSha256": "38ca969a2ff86e29f263b7e16179ed9cdb63c8082c73647ea08dff6e61ba46ea",
+      "candidateLfSha256": "38ca969a2ff86e29f263b7e16179ed9cdb63c8082c73647ea08dff6e61ba46ea",
+      "changed": false
+    },
+    {
+      "file": "device_ops.py",
+      "baselineLfSha256": "03ae760c424beb8af06e13ddf3b14eb83fb799e3dbb471b37c7863cd410e7dbd",
+      "candidateLfSha256": "03ae760c424beb8af06e13ddf3b14eb83fb799e3dbb471b37c7863cd410e7dbd",
+      "changed": false
+    },
+    {
+      "file": "erp_core.py",
+      "baselineLfSha256": "ec418b60e52ce458d7028ed157976c34d566be51fcd26bb38a8e40bf84c07042",
+      "candidateLfSha256": "ec418b60e52ce458d7028ed157976c34d566be51fcd26bb38a8e40bf84c07042",
+      "changed": false
+    },
+    {
+      "file": "main.py",
+      "baselineLfSha256": "94bedbf116ac45e197a99b31251bf3def5c9c9fd5207d0df2eb2a90573d17371",
+      "candidateLfSha256": "94bedbf116ac45e197a99b31251bf3def5c9c9fd5207d0df2eb2a90573d17371",
+      "changed": false
+    },
+    {
+      "file": "media_ops.py",
+      "baselineLfSha256": "6f045229af22195aef2e664c29a3584524d562dba12856eb2b49ab9d380682ff",
+      "candidateLfSha256": "6f045229af22195aef2e664c29a3584524d562dba12856eb2b49ab9d380682ff",
+      "changed": false
+    },
+    {
+      "file": "migrate_db.py",
+      "baselineLfSha256": "7910c5ddca43952f360919eecbdeee18a7fac6a69a9a40919c908ab4fff90b6f",
+      "candidateLfSha256": "7910c5ddca43952f360919eecbdeee18a7fac6a69a9a40919c908ab4fff90b6f",
+      "changed": false
+    },
+    {
+      "file": "performance.py",
+      "baselineLfSha256": "2a278f1f1dc7d3116655bff373cb904955e3ff48cbf3ddb4833889ae357eba89",
+      "candidateLfSha256": "2a278f1f1dc7d3116655bff373cb904955e3ff48cbf3ddb4833889ae357eba89",
+      "changed": false
+    },
+    {
+      "file": "report.py",
+      "baselineLfSha256": "ca082d9e2f057c1e7922a7fa2e980aac29a816b7badd76254a5916190fef57da",
+      "candidateLfSha256": "ca082d9e2f057c1e7922a7fa2e980aac29a816b7badd76254a5916190fef57da",
+      "changed": false
+    },
+    {
+      "file": "security.py",
+      "baselineLfSha256": "3e356d4d6442bfbb17bbfa2f3a7c01860aaa9407aeb50fe7db0ba1b916d7380b",
+      "candidateLfSha256": "3e356d4d6442bfbb17bbfa2f3a7c01860aaa9407aeb50fe7db0ba1b916d7380b",
+      "changed": false
+    },
+    {
+      "file": "static/portal/admin-customer-directory.js",
+      "baselineLfSha256": "32d7f7a01f8e2f8da8b5fe3f045e63eac5831d0ea00e6a9213c11b7954c781fd",
+      "candidateLfSha256": "32d7f7a01f8e2f8da8b5fe3f045e63eac5831d0ea00e6a9213c11b7954c781fd",
+      "changed": false
+    },
+    {
+      "file": "static/portal/bundle_analyzer.html",
+      "baselineLfSha256": "3fc533c2e959bd473be72c2820fbcd591360660f86b30efd57a4e863b29683bf",
+      "candidateLfSha256": "3fc533c2e959bd473be72c2820fbcd591360660f86b30efd57a4e863b29683bf",
+      "changed": false
+    },
+    {
+      "file": "static/portal/integration.js",
+      "baselineLfSha256": "1895449f90d575a2d0ab9f6de9b5d86ae95011181a2a87016ed1eabcf4d44364",
+      "candidateLfSha256": "1895449f90d575a2d0ab9f6de9b5d86ae95011181a2a87016ed1eabcf4d44364",
+      "changed": false
+    },
+    {
+      "file": "static/portal/offline.html",
+      "baselineLfSha256": "cc8a54608aee86826d9cfec05cde52959877a6ba1b806631ea297ef1bc5c066c",
+      "candidateLfSha256": "cc8a54608aee86826d9cfec05cde52959877a6ba1b806631ea297ef1bc5c066c",
+      "changed": false
+    },
+    {
+      "file": "static/portal/offline.js",
+      "baselineLfSha256": "94c197bfb52199d41ab35dbdcf43995aa6839c4f90a28c071ddecaf2f57159d6",
+      "candidateLfSha256": "94c197bfb52199d41ab35dbdcf43995aa6839c4f90a28c071ddecaf2f57159d6",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-auth.js",
+      "baselineLfSha256": "893796a10a51b721ff33c52f3f812d9cc4624c7790dfce4c934f7a1b5cef6d86",
+      "candidateLfSha256": "893796a10a51b721ff33c52f3f812d9cc4624c7790dfce4c934f7a1b5cef6d86",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-feature-catalog-copy.js",
+      "baselineLfSha256": "72a8bd4a2897dba29aea19189d3118cc4aa872c65ee68919c4cafec05cad3006",
+      "candidateLfSha256": "72a8bd4a2897dba29aea19189d3118cc4aa872c65ee68919c4cafec05cad3006",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-features.js",
+      "baselineLfSha256": "f786ad861fcff561d5a666c47afd6d9c5dc1912d0cac02611e32fa69c231222a",
+      "candidateLfSha256": "f786ad861fcff561d5a666c47afd6d9c5dc1912d0cac02611e32fa69c231222a",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-first-paint.css",
+      "baselineLfSha256": "6c33b091b1a2378d87ba0451d71bc89401368cdb9c1c4b737d85de13f4d4eca9",
+      "candidateLfSha256": "6c33b091b1a2378d87ba0451d71bc89401368cdb9c1c4b737d85de13f4d4eca9",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "baselineLfSha256": "21acb270061ec7ce652150cabf597b023f340dd3ea9e6806fec12611f31c462d",
+      "candidateLfSha256": "2d29f11a78c58440b3bff2b73b457e03eb9a6d7ce9a2f8275f3161a2e0ba164d",
+      "changed": true
+    },
+    {
+      "file": "static/portal/portal-motion.js",
+      "baselineLfSha256": "2bd037f2b06e3a98196e4c5776497298953dbddb4ec38fcf275a19457238db90",
+      "candidateLfSha256": "2bd037f2b06e3a98196e4c5776497298953dbddb4ec38fcf275a19457238db90",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-theme.css",
+      "baselineLfSha256": "9706f04bc230531f2e4bb77a6bb0c715061711cd33ca8510104859e25285639f",
+      "candidateLfSha256": "9706f04bc230531f2e4bb77a6bb0c715061711cd33ca8510104859e25285639f",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-theme.js",
+      "baselineLfSha256": "883fb51d0fa0f644be706a14a270a8b1c0709b85c0b3159769500d286789ce3d",
+      "candidateLfSha256": "883fb51d0fa0f644be706a14a270a8b1c0709b85c0b3159769500d286789ce3d",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal.css",
+      "baselineLfSha256": "86691e824085bd88b23a76b788ce1f56b25dca7fbbf2b1cb753a91a5011b7ce2",
+      "candidateLfSha256": "86691e824085bd88b23a76b788ce1f56b25dca7fbbf2b1cb753a91a5011b7ce2",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal.js",
+      "baselineLfSha256": "adc88e1b3fe6cc8baa22be8bb22e42e4492b4a74de351bedaf56af4f25a416d2",
+      "candidateLfSha256": "8e7b42fc5d595ce9e8b15a4b0c13f286ab4e5210f31d007bc9f7ffce3098347e",
+      "changed": true
+    },
+    {
+      "file": "static/portal/service-worker.js",
+      "baselineLfSha256": "a2f2429c2656318a18c58524a534c1ccf48deb94ccd50c68a90446f53afa1cf2",
+      "candidateLfSha256": "a2f2429c2656318a18c58524a534c1ccf48deb94ccd50c68a90446f53afa1cf2",
+      "changed": false
+    },
+    {
+      "file": "static/sw.js",
+      "baselineLfSha256": "9f9f90454f22e2ee93013f92decd621cfb21915d42828bb4b98c55cb1241b82b",
+      "candidateLfSha256": "9f9f90454f22e2ee93013f92decd621cfb21915d42828bb4b98c55cb1241b82b",
+      "changed": false
+    },
+    {
+      "file": "studio/index.html",
+      "baselineLfSha256": "caded4340df065721509c3173f96edf0ef3a32531f2a267f9570ba6dc9af4d72",
+      "candidateLfSha256": "caded4340df065721509c3173f96edf0ef3a32531f2a267f9570ba6dc9af4d72",
+      "changed": false
+    },
+    {
+      "file": "studio/script.js",
+      "baselineLfSha256": "5bca28d38031c376d4a77f4c3620b69cac6788feabed1544513f764404f5fb6d",
+      "candidateLfSha256": "5bca28d38031c376d4a77f4c3620b69cac6788feabed1544513f764404f5fb6d",
+      "changed": false
+    },
+    {
+      "file": "studio/style.css",
+      "baselineLfSha256": "4c03b30d7e2dca21b0bee89ad9bcc0bde704c7bb11e259a1e8d0a95277e40013",
+      "candidateLfSha256": "4c03b30d7e2dca21b0bee89ad9bcc0bde704c7bb11e259a1e8d0a95277e40013",
+      "changed": false
+    },
+    {
+      "file": "studio/sw.js",
+      "baselineLfSha256": "9f9f90454f22e2ee93013f92decd621cfb21915d42828bb4b98c55cb1241b82b",
+      "candidateLfSha256": "9f9f90454f22e2ee93013f92decd621cfb21915d42828bb4b98c55cb1241b82b",
+      "changed": false
+    },
+    {
+      "file": "templates/dashboard.html",
+      "baselineLfSha256": "b2deda4f940d275793bd22014753e34dc114561ce103a55a6495ce1a9e8d0e20",
+      "candidateLfSha256": "b2deda4f940d275793bd22014753e34dc114561ce103a55a6495ce1a9e8d0e20",
+      "changed": false
+    },
+    {
+      "file": "templates/index.html",
+      "baselineLfSha256": "912bbae7e6edbc64e9459eea7fa90eceb507830f812276b8ff074fb28fc92850",
+      "candidateLfSha256": "912bbae7e6edbc64e9459eea7fa90eceb507830f812276b8ff074fb28fc92850",
+      "changed": false
+    },
+    {
+      "file": "templates/portal_shell.html",
+      "baselineLfSha256": "6154b2ba472319cbd7c9e690e7a21407fdd5949e8675b892a6976cd68fedb904",
+      "candidateLfSha256": "6154b2ba472319cbd7c9e690e7a21407fdd5949e8675b892a6976cd68fedb904",
+      "changed": false
+    },
+    {
+      "file": "user.py",
+      "baselineLfSha256": "1b7c977672f77e8f6d0ea13ce19bafd30b476b4141edc571f51e0da3439dc51c",
+      "candidateLfSha256": "1b7c977672f77e8f6d0ea13ce19bafd30b476b4141edc571f51e0da3439dc51c",
+      "changed": false
+    },
+    {
+      "file": "video.py",
+      "baselineLfSha256": "64b45efe43929916bc9b40137df430e3a85b067a493793fda79add0db987e16c",
+      "candidateLfSha256": "64b45efe43929916bc9b40137df430e3a85b067a493793fda79add0db987e16c",
+      "changed": false
+    },
+    {
+      "file": "workflow_engine.py",
+      "baselineLfSha256": "dc3226ae535162ceefc00edff804f15a11848690fc5dcffb9f01ab7e2a8e845b",
+      "candidateLfSha256": "dc3226ae535162ceefc00edff804f15a11848690fc5dcffb9f01ab7e2a8e845b",
+      "changed": false
+    }
+  ],
+  "applicationWrites": 0,
+  "engineRuntimeReadiness": "NOT_TESTED",
+  "finalOutput": "NOT_TESTED"
+}

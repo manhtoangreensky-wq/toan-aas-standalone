@@ -1,5 +1,25 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 19/11/2026 — Kho tệp, ứng viên sau OCR đã giao
+
+Bản chạy hiện tại đã gồm OCR PR777, runtime5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5;
+phần Kho tệp dưới đây mới ở local, chưa triển khai. Ứng viên đổi chữ đầy đủ
+VI/EN/ZH, bỏ intro/aside kỹ thuật và wrapper trống; giữ upload/bộ lọc/thẻ tệp/
+phân trang/xem thông tin/khôi phục và điều hướng thật. 12 phép thay/3app/
+90 khóa/148 nguồn bảo vệ. Physical6PASS21RED→27PASS;HTML đầu1PASS3RED→4PASS.
+
+Nghiệm thu tiếp: thêm đúng1rule màu dark từ AGYR1, tổng4app/147protected;
+hint3.51→8.84:1 đo thật. NativeBASE/current48views192PNG/owned0,
+current0finding/996unknown giữ;1921Node/Python78 và CSSselection489old+3new
+riêng đạt, không cộng overlap. Đây vẫn là ứng viên local, review/CI/deploy
+chốt riêng, không nhận blob/output thật hoặc signedproduction từ các số này.
+
+Giới hạn mặc định25MB được giữ, không đọc/đổi ENV thật để suy cấu hình.
+Không đổi quyền, UUID, revision, counts, tên tệp/dự án/ngày khách hoặc API.
+Metadata/form không chứng minh blob tải được. Integrationfeedback là phạm vi
+riêng; native/hồi quy/CI/deploy/LIVE còn cổng trong
+[báo cáo Kho tệp](../docs/reports/vault-customer-copy-20261119.md).
+
 ## 19/11/2026 — Đọc chữ từ ảnh, PDF và PDF quét sang Word
 
 Ứng viên đổi chữ/metadata/bố cục ba trang thành đầy đủ VI/EN/ZH; bỏ

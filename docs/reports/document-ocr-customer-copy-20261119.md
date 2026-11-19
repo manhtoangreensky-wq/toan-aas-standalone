@@ -1,5 +1,18 @@
 # Đọc chữ từ ảnh, PDF và PDF quét sang Word
 
+## Chốt phát hành PR777 — thay các dòng chờ lịch sử phía dưới
+
+PR777 đã gộp và triển khai. CI44531826202 đúng HEAD21176b3634bbf5abb541c108204f6961b5f84e51,
+hai job thành công897s/318s. Artefact14533963958 đủ18trang/18hash;
+artefact14534714930 đủ456bản ghi/456hash,0lỗi/provider/ví/dữ liệu production.
+Merge/runtime5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5, fulltree
+45373d6382b3f4471753a10f88112056c707fb9a khớp bản đã kiểm.
+Deploy44536393560 thành công72s; VPS trackedclean, Web/Bot/nginx active-running,
+health và5public+5normallyversionedassets byteexact; buildlocal-392adcd5d51e1f37f743.
+Receipt Issue689/comment7008143289 và PR/comment7010982669 đã đọc lại đúng.
+Không còn PR mở của đơn vị này. SignedproductionUI/Tesseract/languagepacks/
+TXT/DOCX cuối vẫn NOT_TESTED/NOT_PROVEN; toàn goal ACTIVE/incomplete, motion cuối.
+
 TASK=DOCUMENT-OCR-CUSTOMER-COPY-20261119; FSM=REPORT_LOCAL_READY.
 BASE_SHA=8ba0d0452f86dcc3d72e5087351134902eb4e659.
 TRACKER=Issue689/comment7008143289.

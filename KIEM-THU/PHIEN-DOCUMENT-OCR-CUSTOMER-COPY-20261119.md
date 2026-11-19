@@ -1,7 +1,7 @@
 # Phiên kiểm tra — đọc chữ từ ảnh/PDF
 
 TESTER_PROJECT_ID=DOCUMENT-OCR-CUSTOMER-COPY-20261119.
-STATUS=READY_FOR_EXACT_HEAD_CI.
+STATUS=DELIVERED_SCOPED_UI_EVIDENCE.
 BASE_SHA=8ba0d0452f86dcc3d72e5087351134902eb4e659.
 TRACKER=Issue689/comment7008143289.
 
@@ -24,7 +24,10 @@ TRACKER=Issue689/comment7008143289.
   ae157bbb086079095ce273abf9570f7cc90622f1117576bd999ef516f138d2e8.
   Prepush/currentops/crosswalk/canonicalchecklist hoàn tất; finalmanifest28,
   nguồn ứng dụng đã nghiệm thu giữ nguyên, không rerun các nhóm đã đạt.
-- [ ] Một PR/exact HEAD CI/merge/tree/deploy/VPS/assets/receipt.
+- [x] PR777,CI44531826202 haiSUCCESS/18browser/456signedQA/hashđủ;
+  merge/runtime5b11e63f/fulltree45373d63khớp,deploy44536393560SUCCESS72s;
+  VPS3active-running/health/5+5assets/buildkhớp,Issue7008143289 và
+  PR7010982669readbackexact. SignedUI/output vẫn riêng phía dưới.
 - [ ] Signed production/engine/runtime/language packs/TXT/DOCX cuối:
   NOT_TESTED; không tick từ cờ/form/health.
 

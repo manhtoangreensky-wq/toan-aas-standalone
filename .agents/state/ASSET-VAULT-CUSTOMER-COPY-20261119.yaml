@@ -1,0 +1,111 @@
+task: ASSET-VAULT-CUSTOMER-COPY-20261119
+phase: REPORT_LOCAL_READY_FOR_SOURCE_COMMIT_PROVENANCE_CI
+goal_status: ACTIVE_INCOMPLETE
+base_sha: 5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5
+branch: codex/vault-customer-copy-20261119
+tracker: Issue689/comment7011217772
+dependency: PR777_DELIVERED_RECEIPTS_READBACK_EXACT
+scope: VAULT_FIXED_COPY_META_TECHNICAL_PANEL_REMOVAL_ONLY
+application_changes_adopted: true
+application_files_planned: 4
+application_files_protected: 147
+canonical_edits_planned: 13
+new_keys_planned: 90
+design_raw_sha256: 30a2321435db8172f1c959fb1126372d2230023d2bb3484cfebed2be04fa0b4d
+workers:
+  model: gemini-3.8-flash-high
+  sessions: 4
+  packet_revision: R1_ROOT_PREFLIGHT_A
+  runtime_handle: 14701
+  fields_pid: 6152
+  cards_pid: 8548
+  lifecycle_pid: 9540
+  page_pid: 19424
+  output_only: true
+  shared_application_writes: 0
+  new_login_or_settings: false
+  failure_count: 0
+  grouped_review: ALL_R1_SCHEMA_LITERAL_EXACT_ONCE
+  fields_conversation: 8f41e3c7-b8b9-49a1-8878-6d1c19621cbc
+  cards_conversation: add5be17-f2ff-4c35-a31c-a979c3a07fa4
+  lifecycle_conversation: 4eebac00-cba8-45e9-bf16-8061ee2acc77
+  page_conversation: 2567927b-81b9-4d85-bdcd-930ad91a266d
+  all_processes_finished: true
+  accepted_proposal_raw_sha256: 2b895f84f77c8656811c4e732506926a677dda1eb6aa824f854670e127e8228b
+verification:
+  root_packet_preflight: 15_VM_VIEWS_11_PHYSICAL_RED_TARGETS
+  source_public_proof: FOUR_FILES_HTTP200_EXACT_LF_HASH
+  whole_physical_baseline: 6_PASS_21_INTENDED_RED_7865_4066_MS
+  whole_physical_green: 27_PASS_18314_4078_MS_ZERO_FAILURES
+  physical_test_sha256: 14e2d3cb2af2c916d8a55555d111031598d50251cf02fcac20ae7679a4a10ba1
+  physical_contract_sha256: c797cc7f092ebb7ab227513684323e24b6b02ad9b76947af77fe7db104fed37e
+  native: BASE24_CURRENT24_STORED_VALIDATED_WITH_PNG_CRC_DECODED_SCANLINES
+  native_single_elapsed_seconds: 9.649
+  native_single_view: VI_DARK_320X844
+  native_single_owned: 16_TO_0
+  native_single_unknowns: 33
+  native_single_contrast_ratio: 3.5100441173202004
+  native_full_matrix: 24_VIEWS_96_PNG_110_516S_45_OWNED0_ZERO_FINDINGS_996_UNKNOWNS_HELD
+  native_baseline: IMMUTABLE_GITBASE_24_VIEWS_96_PNG_100_978S_45_OWNED0_12_OLD_FINDINGS_996_UNKNOWNS
+  native_representatives_separate: 4_VIEWS_16_PNG_NOT_ADDED_TO_MATRIX
+  native_base_full_tracked: 2514_BLOBS_66745084_BYTES_GIT_OID_RAW_HASH_BEFORE_AFTER_EXACT
+  native_validator: STORED_ONLY_NO_NATIVE_RERUN
+  native_binding_raw_sha256: 7f3e83f0d318d27b4161e942e857007cd60c18748ce32ae6168e76980c2e782e
+  shell_baseline: 1_PASS_3_INTENDED_RED_2_49S_EXIT1
+  shell_green: 4_PASS_2_25S_EXIT0
+  regression_node: 1919_PASS_2_OLD_LITERAL_FAIL_278440_0809_MS_THEN_ONLY_2_RETEST_PASS_346_7419_MS
+  regression_node_unique: 1921_PASS_NO_WHOLE_GROUP_RETRY
+  regression_python: 74_PASS_2_OLD_LITERAL_FAIL_31_03S_THEN_ONLY_2_FAILED_PLUS_2_NEW_PASS_4_40S
+  regression_python_unique: 78_PASS_NO_WHOLE_GROUP_RETRY
+  new_source_tests: 18_PASS_3040_62_MS
+  portable_assertion_identity: ORIGINAL_27_AND_4_EXACT_AFTER_PATHS_ONLY
+  portable_bootstrap: 1_PASS_1997_0491_MS_NOT_ADDED_AGAIN_TO_27
+  contrast_source_tests: 10_PASS_4886_127_MS
+  css_affected: 40_FILES_463_PASS_19_NAMED_FAIL_4_BOOTSTRAP_FAIL_46763_3391_MS
+  css_only_failed_retest: 19_PASS_17122_7598_MS
+  css_unexecuted_and_new: 7_OLD_UNEXECUTED_PLUS_3_NEW_HISTORY_PASS_6574_7865_MS
+  css_unique_selection: 489_OLD_PLUS_3_NEW_PASS_NO_WHOLE_GROUP_RETRY_DO_NOT_ADD_TO_OVERLAPPING1921
+  source151: ALL_CANDIDATE_EXACT_4_CHANGED_147_PROTECTED_SEPARATE_CSS_AUTHORITY
+  syntax: BOTH_JS_EXIT0
+  diff_check: EXIT0
+  adoption: EXACT_MECHANICAL_WORKER_REPLAY_ZERO_ROOT_APPLICATION_TAKEOVER
+  tester_metadata: 2_PASS_31_DESELECTED_0_69S
+  tester_case_file_lines: 1795
+  tester_case_file_lf_bytes: 186040
+  tester_case_file_lf_sha256: 3366e666fc8443d05b7d359c7449d25b6cdd6f057af337bc82a5e17d4d3d4969
+  independent_review: C0_I0_M0_ROOT_FULL_READ331_LINES
+  independent_review_sha256: 3e812945f986d0085abf7b31e08e64feec0342731c230970ad30aa5879903ea1
+  prepush: READY
+  publication_manifest_files: 36
+  qa_preparation_parallel:
+    native: ROOT_DOCUMENT_CONVERT_NATIVE_PREP_NEW_ARTIFACTS_ONLY_NO_RUN
+    portable_source: ROOT_DOCUMENT_CONVERT_PHYSICAL_QA_PREP_QA_ONLY_NO_RUN
+root_spec_faults:
+  initial_unsent_r1: HTML_ATTRIBUTES_AND_SINGLE_QUOTED_CONTEXTS
+  corrected_before_handoff: true
+  worker_failure: false
+release:
+  pr: NOT_CREATED
+  deploy: NOT_STARTED
+  signed_live: NOT_TESTED
+protected_owner_state: NEVER_OPENED_OR_TOUCHED
+provider_calls: 0
+wallet_mutations: 0
+production_data_mutations: 0
+product_submissions: 0
+machine_env_writes: 0
+integration_feedback: SEPARATE_NEXT_SCOPE_NOT_CLOSED_BY_RENDERER_PACKETS
+native_observed_technical_toasts: FILTER_AND_LIFECYCLE_STILL_OLD_WORDS_SEPARATE_VAULT07_NOT_CLOSED
+contrast_prerequisite:
+  task: VAULT-HINT-CONTRAST-20261119
+  model: gemini-3.8-flash-high
+  conversation: f7770b7d-9716-4cf3-8ac4-3765d01014e6
+  status: R1_EXACT_ADOPTED_ONE_RULE_NATIVE_RATIO8_836529045485037_ZERO_FINDINGS
+  authority_raw_sha256: c58f59c1da9f1fdeff9582d2d05917d87d92e67cdf91a685bb65037898d44f7b
+  css_baseline_lf_sha256: 9706f04bc230531f2e4bb77a6bb0c715061711cd33ca8510104859e25285639f
+  css_candidate_lf_sha256: 353ce66afb195a866156ba6a1c523486dd3c8d620a082bcaf086ae7ea13825d2
+  application_writes: 1_EXACT_MECHANICAL_REPLAY
+  source151_overlay: ONE_PINNED_CSS_ONLY_OLD_COPY_AUTHORITY_IMMUTABLE
+  scope: ONE_DARK_VAULT_HINT_COLOR_RULE_ONLY_NO_LIGHT_FONT_LAYOUT_MOTION_CHANGE
+  worker_failure: 0
+motion: M-FINAL-01..06_LAST

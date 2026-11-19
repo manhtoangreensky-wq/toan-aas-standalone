@@ -7,11 +7,32 @@ requests with a freshly read revision, never with browser-held authority.
 """
 
 from pathlib import Path
+import hashlib
+import json
+import subprocess
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
+
+
+def _historical_vault_source(source: str) -> str:
+    """Only approved old-copy comparators; actual Vault UI has independent physical coverage."""
+    assert isinstance(source, str), "Unreviewed Vault historical comparison"
+    raw = (ROOT / "tests/fixtures/vault-customer-copy-reviewed.json").read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == "2b895f84f77c8656811c4e732506926a677dda1eb6aa824f854670e127e8228b"
+    edits = [row for row in json.loads(raw)["canonicalChanges"] if row["file"] == "static/portal/portal.js"]
+    assert len(edits) == 9 and all(row["count"] == 1 for row in edits)
+    phases = [source.count(row["new"]) for row in edits]
+    if all(value == 0 for value in phases):
+        return source
+    assert all(value == 1 for value in phases), "Unreviewed Vault historical comparison"
+    for row in reversed(edits):
+        source = source.replace(row["new"], row["old"], 1)
+    return source
 
 
 def _between(source: str, start: str, end: str) -> str:
@@ -21,7 +42,7 @@ def _between(source: str, start: str, end: str) -> str:
 
 
 def test_asset_vault_lifecycle_panel_is_selected_redacted_and_honest() -> None:
-    panel = _between(PORTAL, "function assetVaultLifecyclePanel", "function assetVaultFormFields")
+    panel = _between(_historical_vault_source(PORTAL), "function assetVaultLifecyclePanel", "function assetVaultFormFields")
 
     for action in ("asset-vault-lifecycle-restore", "asset-vault-lifecycle-close"):
         assert f'data-portal-action="{action}"' in panel
@@ -42,7 +63,7 @@ def test_asset_vault_lifecycle_panel_is_selected_redacted_and_honest() -> None:
 
 
 def test_asset_vault_cards_expose_inspection_for_active_and_archived_items() -> None:
-    view = _between(PORTAL, "function renderAssetVault", "const SUPPORT_CASE_STATES")
+    view = _between(_historical_vault_source(PORTAL), "function renderAssetVault", "const SUPPORT_CASE_STATES")
     assert 'const canInspectLifecycle = Boolean(context.capabilities && context.capabilities["asset-vault-lifecycle-view"] === true);' in view
     assert "const lifecyclePanel = assetVaultLifecyclePanel(context, items, canRestore);" in view
     assert 'data-portal-action="asset-vault-lifecycle-open"' in view
@@ -132,3 +153,23 @@ def test_asset_vault_lifecycle_survives_the_portal_bootstrap_projection() -> Non
     bootstrap = _between(PORTAL, "function normalizeBootstrap", "function getBootstrap")
     assert "assetVaultLifecycle: normalizeAssetVaultLifecycle(source.assetVaultLifecycle)" in bootstrap
     assert "assetVaultEnabled: source.assetVaultEnabled === true" in bootstrap
+
+
+def test_vault_historical_copy_projection_is_exact_idempotent_and_keeps_outside_bytes():
+    baseline = subprocess.check_output(["git", "show", "5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5:static/portal/portal.js"], cwd=ROOT, text=True, encoding="utf8")
+    assert _historical_vault_source(PORTAL) == baseline
+    assert _historical_vault_source(baseline) == baseline
+    assert _historical_vault_source(_historical_vault_source(PORTAL)) == baseline
+    prefix, suffix = "/* CUSTOMER media studio Facebook */\n", "\n/* UNKNOWN_OUTSIDE */"
+    assert _historical_vault_source(prefix + PORTAL + suffix) == prefix + baseline + suffix
+    assert _historical_vault_source(prefix + suffix) == prefix + suffix
+
+
+def test_vault_historical_copy_projection_rejects_partial_mixed_changed_and_duplicate_phase():
+    fixture = json.loads((ROOT / "tests/fixtures/vault-customer-copy-reviewed.json").read_bytes())
+    for row in [row for row in fixture["canonicalChanges"] if row["file"] == "static/portal/portal.js"]:
+        for broken in [PORTAL.replace(row["new"], "", 1), PORTAL.replace(row["new"], row["old"], 1), PORTAL + "\n" + row["new"], PORTAL.replace(row["new"], row["new"].replace("vault", "UNKNOWN_VAULT", 1), 1)]:
+            with pytest.raises(AssertionError):
+                _historical_vault_source(broken)
+    with pytest.raises(AssertionError):
+        _historical_vault_source(None)

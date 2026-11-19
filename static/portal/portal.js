@@ -10106,6 +10106,7 @@
     if (path === "/documents") {
       return uiText("workspaceMenu.card.documents.title", fallback);
     }
+    if (path === "/asset-vault") return uiText("vaultPageUiTitle", "Kho tệp");
     if (path === "/image/resize") return uiText("imageResizeMetaUiTitle", "Đổi kích thước ảnh");
     if (path === "/documents/ocr") return uiText("docOcrImageUiTitle", "Đọc chữ từ ảnh");
     if (path === "/documents/pdf-to-images") return uiText("docConvertImagesUiTitle", "PDF sang ảnh");
@@ -10249,6 +10250,7 @@
     if (path === "/documents") {
       return uiText("featureCatalog.entry.documents.description", fallback);
     }
+    if (path === "/asset-vault") return uiText("vaultPageUiDescription", "Lưu, tìm và quản lý các tệp của bạn. Xem thông tin tệp và tải lại khi cần.");
     if (path === "/image/resize") return uiText("imageResizeMetaUiDescription", "Chọn ảnh đã lưu, đặt kích thước và tạo bản PNG mới. Tệp gốc được giữ nguyên.");
     if (path === "/documents/ocr") return uiText("docOcrImageUiDescription", "Đọc chữ trong ảnh đã lưu và tải về tệp văn bản. Ảnh gốc được giữ nguyên.");
     if (path === "/documents/pdf-to-images") return uiText("docConvertImagesUiDescription", "Chuyển các trang PDF thành ảnh PNG. Nhiều trang được tải trong một tệp ZIP; tệp gốc được giữ nguyên.");
@@ -24916,8 +24918,8 @@ function renderAutoPostHub(page, context) {
 
   function assetVaultFilterFields() {
     return [
-      { name: "q", label: "Tìm tệp", placeholder: "Tên hiển thị hoặc tên tệp", maxLength: 100, wide: true },
-      { name: "state", label: "Trạng thái", control: "select", options: [["active", "Đang hoạt động"], ["archived", "Đã lưu trữ"], ["all", "Tất cả tệp hiển thị"]] }
+      { name: "q", label: uiText("vaultFieldsUiSearch", "Tìm tệp"), placeholder: uiText("vaultFieldsUiPlaceholder", "Tên hiển thị hoặc tên tệp"), maxLength: 100, wide: true },
+      { name: "state", label: uiText("vaultFieldsUiState", "Trạng thái"), control: "select", options: [["active", uiText("vaultFieldsUiActive", "Đang sử dụng")], ["archived", uiText("vaultFieldsUiArchived", "Đã lưu trữ")], ["all", uiText("vaultFieldsUiAll", "Tất cả tệp")]] }
     ];
   }
 
@@ -24933,14 +24935,14 @@ function renderAutoPostHub(page, context) {
     const previous = Number.isInteger(source.previous_offset) && source.previous_offset >= 0 ? source.previous_offset : null;
     const next = source.has_more === true && Number.isInteger(source.next_offset) && source.next_offset > offset ? source.next_offset : null;
     if (previous === null && next === null) return "";
-    const range = returned ? "Đang hiển thị " + String(offset + 1) + "–" + String(offset + returned) + " tệp" : "Không có tệp ở trang này";
+    const range = returned ? uiText("vaultCardsUiRange", "Đang hiển thị {start}–{end} tệp", { start: String(offset + 1), end: String(offset + returned) }) : uiText("vaultCardsUiEmptyPage", "Không có tệp ở trang này");
     const previousButton = previous !== null
-      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-page" data-portal-route="/asset-vault" data-asset-vault-offset="' + safeText(String(previous)) + '">← Trang trước</button>'
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-page" data-portal-route="/asset-vault" data-asset-vault-offset="' + safeText(String(previous)) + '">' + safeText(uiText("vaultCardsUiPrevious", "← Trang trước")) + '</button>'
       : "";
     const nextButton = next !== null
-      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-page" data-portal-route="/asset-vault" data-asset-vault-offset="' + safeText(String(next)) + '">Trang sau →</button>'
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-page" data-portal-route="/asset-vault" data-asset-vault-offset="' + safeText(String(next)) + '">' + safeText(uiText("vaultCardsUiNext", "Trang sau →")) + '</button>'
       : "";
-    return '<nav class="portal-vault-pagination" aria-label="Phân trang Asset Vault"><span>' + safeText(range) + "</span><div>" + previousButton + nextButton + "</div></nav>";
+    return '<nav class="portal-vault-pagination" aria-label="' + safeText(uiText("vaultCardsUiAria", "Các trang trong kho tệp")) + '"><span>' + safeText(range) + "</span><div>" + previousButton + nextButton + "</div></nav>";
   }
 
   function vaultBytes(value) {
@@ -24966,20 +24968,20 @@ function renderAutoPostHub(page, context) {
     const lifecycle = source.lifecycle && typeof source.lifecycle === "object" ? source.lifecycle : null;
     const selectedItem = (Array.isArray(items) ? items : []).find((item) => item && String(item.id || "") === assetId);
     const selectedName = selectedItem
-      ? String(selectedItem.display_name || selectedItem.original_filename || "Tệp Asset Vault").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 180)
-      : "Tệp đã chọn";
-    const closeButton = '<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-lifecycle-close" data-portal-route="/asset-vault">Đóng kiểm tra</button>';
+      ? String(selectedItem.display_name || selectedItem.original_filename || uiText("vaultLifecycleUiFallbackFile", "Tệp đã lưu")).replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 180)
+      : uiText("vaultLifecycleUiSelected", "Tệp đã chọn");
+    const closeButton = '<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-lifecycle-close" data-portal-route="/asset-vault">' + safeText(uiText("vaultLifecycleUiClose", "Đóng thông tin")) + '</button>';
     if (!lifecycle || readState !== "ready") {
       const guarded = readState === "guarded" || readState === "failed";
-      return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Vòng đời: ${safeText(selectedName)}</h2><p class="portal-card-subtitle">Thông tin chỉ lấy từ API owner-scoped của Asset Vault.</p></div>${badge(guarded ? "guarded" : "processing")}</div><div class="portal-state" data-state="${guarded ? "guarded" : "processing"}"><span class="portal-state-icon" aria-hidden="true">${guarded ? "i" : "◌"}</span><div><h2>${guarded ? "Chưa thể kiểm tra vòng đời" : "Đang kiểm tra vòng đời"}</h2><p>${guarded ? "Portal không giữ dữ liệu cũ, không suy đoán tính sẵn sàng và không tạo download/khôi phục giả khi signed read không khả dụng." : "Portal đang nạp trạng thái lifecycle đã redaction cho đúng tệp được chọn."}</p></div></div><div class="portal-form-footer">${closeButton}</div></section>`;
+      return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(uiText("vaultLifecycleUiHeading", "Thông tin: {name}", { name: selectedName }))}</h2><p class="portal-card-subtitle">${safeText(uiText("vaultLifecycleUiIntro", "Xem trạng thái và nơi tệp đang được sử dụng."))}</p></div>${badge(guarded ? "guarded" : "processing")}</div><div class="portal-state" data-state="${guarded ? "guarded" : "processing"}"><span class="portal-state-icon" aria-hidden="true">${guarded ? "i" : "◌"}</span><div><h2>${guarded ? uiText("vaultLifecycleUiFailed", "Chưa thể xem thông tin tệp") : uiText("vaultLifecycleUiLoading", "Đang tải thông tin tệp")}</h2><p>${guarded ? uiText("vaultLifecycleUiFailedBody", "Vui lòng đóng thông tin và mở lại để thử lại.") : uiText("vaultLifecycleUiLoadingBody", "Vui lòng chờ trong giây lát.")}</p></div></div><div class="portal-form-footer">${closeButton}</div></section>`;
     }
     const state = ["active", "archived", "unavailable"].includes(String(lifecycle.state || "")) ? String(lifecycle.state) : "unavailable";
-    const stateLabel = state === "active" ? "Đang hoạt động" : (state === "archived" ? "Đã lưu trữ" : "Không sẵn sàng");
+    const stateLabel = state === "active" ? uiText("vaultLifecycleUiActive", "Đang sử dụng") : (state === "archived" ? uiText("vaultLifecycleUiArchived", "Đã lưu trữ") : uiText("vaultLifecycleUiUnavailable", "Chưa thể sử dụng"));
     const reasonLabels = {
-      available: "Tệp đang hoạt động trong Asset Vault.",
-      owner_archived: "Tệp được owner lưu trữ; download đang khóa cho đến khi server xác minh khôi phục.",
-      integrity_unavailable: "Server không thể xác minh tệp private an toàn; Portal không cung cấp download hoặc khôi phục giả.",
-      guarded: "Server đang giữ trạng thái lifecycle ở chế độ bảo vệ."
+      available: uiText("vaultLifecycleUiAvailableReason", "Tệp đang được lưu và có thể sử dụng."),
+      owner_archived: uiText("vaultLifecycleUiArchivedReason", "Tệp đã được lưu trữ. Hãy khôi phục để tải lại."),
+      integrity_unavailable: uiText("vaultLifecycleUiIntegrityReason", "Chưa thể sử dụng tệp này. Vui lòng liên hệ hỗ trợ."),
+      guarded: uiText("vaultLifecycleUiGuardReason", "Chưa thể kiểm tra trạng thái tệp. Vui lòng thử lại.")
     };
     const reason = reasonLabels[String(lifecycle.state_reason || "guarded")] || reasonLabels.guarded;
     const timestamp = (value) => {
@@ -24990,32 +24992,32 @@ function renderAutoPostHub(page, context) {
     const totalReferences = Number.isInteger(Number(summary.total_count)) && Number(summary.total_count) >= 0 ? Number(summary.total_count) : 0;
     const hardBlockers = Number.isInteger(Number(summary.hard_blocker_count)) && Number(summary.hard_blocker_count) >= 0 ? Number(summary.hard_blocker_count) : 0;
     const referenceLabels = {
-      support_evidence_retention: "Bằng chứng Support được giữ lại",
-      media_library_reference: "Tham chiếu Audio Library",
-      image_direction_reference: "Tham chiếu Image Studio",
-      document_plan_reference: "Tham chiếu Document Workspace",
-      document_operation_source: "Nguồn Document Operations",
-      document_operation_input: "Input Document Operations",
-      image_operation_source: "Nguồn Image Operations"
+      support_evidence_retention: uiText("vaultLifecycleUiSupport", "Tệp đính kèm hỗ trợ"),
+      media_library_reference: uiText("vaultLifecycleUiAudio", "Thư viện âm thanh"),
+      image_direction_reference: uiText("vaultLifecycleUiImage", "Thiết kế ảnh"),
+      document_plan_reference: uiText("vaultLifecycleUiDocument", "Tài liệu đã soạn"),
+      document_operation_source: uiText("vaultLifecycleUiDocumentSource", "Nguồn xử lý tài liệu"),
+      document_operation_input: uiText("vaultLifecycleUiDocumentInput", "Tệp dùng cho tài liệu"),
+      image_operation_source: uiText("vaultLifecycleUiImageSource", "Nguồn chỉnh ảnh")
     };
     const references = Array.isArray(summary.references)
       ? summary.references.filter((item) => item && Object.prototype.hasOwnProperty.call(referenceLabels, String(item.reason || "")) && Number.isInteger(Number(item.count)) && Number(item.count) > 0).slice(0, 7)
       : [];
     const referenceRows = references.length
-      ? `<div class="portal-panel-list">${references.map((item) => `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${item.hard_blocker === true ? "!" : "•"}</span><div><strong>${safeText(referenceLabels[String(item.reason)])}</strong><span>${safeText(String(Number(item.count)))} tham chiếu${item.hard_blocker === true ? " · retention bắt buộc" : ""}</span></div></div>`).join("")}</div>`
-      : `<p class="portal-form-note">Chưa có tham chiếu retained được server công bố cho tệp này.</p>`;
+      ? `<div class="portal-panel-list">${references.map((item) => `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${item.hard_blocker === true ? "!" : "•"}</span><div><strong>${safeText(referenceLabels[String(item.reason)])}</strong><span>${safeText(uiText("vaultLifecycleUiReferenceCount", "{count} nơi sử dụng", { count: String(Number(item.count)) }))}${item.hard_blocker === true ? uiText("vaultLifecycleUiRequiredSuffix", " · cần giữ tệp") : ""}</span></div></div>`).join("")}</div>`
+      : `<p class="portal-form-note">${safeText(uiText("vaultLifecycleUiNoReferences", "Chưa có nơi sử dụng tệp được ghi nhận."))}</p>`;
     const revision = Number(lifecycle.lifecycle_revision);
     const restoreAvailable = state === "archived" && lifecycle.restore_available === true && Number.isInteger(revision) && revision >= 1;
     const restoreControl = restoreAvailable
-      ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="asset-vault-lifecycle-restore" data-portal-route="/asset-vault" data-vault-asset-id="${safeText(assetId)}" data-portal-confirm="Khôi phục tệp này vào Asset Vault đang hoạt động? Server sẽ kiểm tra integrity trước khi cho phép tải lại."${canRestore ? "" : " disabled title=\"Cần signed session, CSRF và Asset Vault đang hoạt động.\""}>Khôi phục tệp</button>`
-      : `<span class="portal-form-note">${state === "active" ? "Tệp đang hoạt động; không cần khôi phục." : "Server không cho phép khôi phục tệp này ở trạng thái hiện tại."}</span>`;
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Vòng đời: ${safeText(selectedName)}</h2><p class="portal-card-subtitle">Chỉ trạng thái, lý do, thời gian và số lượng tham chiếu đã được redaction. Không hiển thị path, hash, storage key, case hay operation ID.</p></div>${badge(state === "active" ? "ready" : (state === "archived" ? "read_only" : "guarded"))}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value">${safeText(stateLabel)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Lý do</span><span class="portal-summary-value">${safeText(reason)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Cập nhật</span><span class="portal-summary-value">${timestamp(lifecycle.updated_at)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Đã lưu trữ</span><span class="portal-summary-value">${timestamp(lifecycle.archived_at)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Revision</span><span class="portal-summary-value">${safeText(String(Number.isInteger(revision) ? revision : "—"))}</span></div></div><section class="portal-card" style="margin-top:14px"><div class="portal-card-header"><div><h3 class="portal-card-title">Tham chiếu retained</h3><p class="portal-card-subtitle">${safeText(String(totalReferences))} tham chiếu · ${safeText(String(hardBlockers))} retention bắt buộc</p></div></div>${referenceRows}</section><div class="portal-form-footer" style="margin-top:16px">${restoreControl}${closeButton}</div></section>`;
+      ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="asset-vault-lifecycle-restore" data-portal-route="/asset-vault" data-vault-asset-id="${safeText(assetId)}" data-portal-confirm="${safeText(uiText("vaultLifecycleUiRestoreConfirm", "Khôi phục tệp này để sử dụng và tải lại?"))}"${canRestore ? "" : " disabled title=\"" + safeText(uiText("vaultLifecycleUiRestoreDisabled", "Chưa thể khôi phục tệp lúc này.")) + "\""}>${safeText(uiText("vaultLifecycleUiRestore", "Khôi phục tệp"))}</button>`
+      : `<span class="portal-form-note">${state === "active" ? uiText("vaultLifecycleUiNoRestoreNeeded", "Tệp đang sử dụng, không cần khôi phục.") : uiText("vaultLifecycleUiRestoreUnavailable", "Chưa thể khôi phục tệp này.")}</span>`;
+    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(uiText("vaultLifecycleUiHeading", "Thông tin: {name}", { name: selectedName }))}</h2><p class="portal-card-subtitle">${safeText(uiText("vaultLifecycleUiReadyIntro", "Xem trạng thái và nơi tệp đang được sử dụng."))}</p></div>${badge(state === "active" ? "ready" : (state === "archived" ? "read_only" : "guarded"))}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("vaultLifecycleUiState", "Trạng thái"))}</span><span class="portal-summary-value">${safeText(stateLabel)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("vaultLifecycleUiReason", "Thông tin"))}</span><span class="portal-summary-value">${safeText(reason)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("vaultLifecycleUiUpdated", "Cập nhật"))}</span><span class="portal-summary-value">${timestamp(lifecycle.updated_at)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("vaultLifecycleUiArchived", "Đã lưu trữ"))}</span><span class="portal-summary-value">${timestamp(lifecycle.archived_at)}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("vaultLifecycleUiRevision", "Lần cập nhật"))}</span><span class="portal-summary-value">${safeText(String(Number.isInteger(revision) ? revision : "—"))}</span></div></div><section class="portal-card" style="margin-top:14px"><div class="portal-card-header"><div><h3 class="portal-card-title">${safeText(uiText("vaultLifecycleUiReferences", "Nơi đang sử dụng tệp"))}</h3><p class="portal-card-subtitle">${safeText(uiText("vaultLifecycleUiReferenceSummary", "{count} nơi sử dụng · {required} nơi cần giữ tệp", { count: String(totalReferences), required: String(hardBlockers) }))}</p></div></div>${referenceRows}</section><div class="portal-form-footer" style="margin-top:16px">${restoreControl}${closeButton}</div></section>`;
   }
 
   function assetVaultFormFields() {
     return [
-      { name: "display_name", label: "Tên hiển thị", placeholder: "Ví dụ: Brief ra mắt mùa hè", maxLength: 120, help: "Tùy chọn. Nếu để trống, Web dùng tên tệp an toàn làm nhãn." },
-      { name: "project_id", label: "Gắn với Project", control: "select", optionsFrom: "projects", emptyLabel: "Không gắn Project", help: "Tùy chọn; chỉ Project đang hoạt động thuộc Web account hiện tại được hiển thị." }
+      { name: "display_name", label: uiText("vaultFieldsUiDisplayName", "Tên hiển thị"), placeholder: uiText("vaultFieldsUiNamePlaceholder", "Ví dụ: Kế hoạch ra mắt mùa hè"), maxLength: 120, help: uiText("vaultFieldsUiNameHelp", "Không bắt buộc. Để trống để dùng tên tệp.") },
+      { name: "project_id", label: uiText("vaultFieldsUiProject", "Gắn với dự án"), control: "select", optionsFrom: "projects", emptyLabel: uiText("vaultFieldsUiNoProject", "Không gắn dự án"), help: uiText("vaultFieldsUiProjectHelp", "Không bắt buộc. Chọn một dự án của bạn.") }
     ];
   }
 
@@ -29315,37 +29317,36 @@ function renderAutoPostHub(page, context) {
     const canInspectLifecycle = Boolean(context.capabilities && context.capabilities["asset-vault-lifecycle-view"] === true);
     const canRestore = Boolean(context.capabilities && context.capabilities["asset-vault-restore"] === true);
     if (!canView) {
-      return `<article class="portal-page portal-asset-vault">${renderHero(page, context)}${deliveryNav}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.assets)}</span><div><h2>Asset Vault đang ở chế độ an toàn</h2><p>Kho tệp Web chỉ hoạt động khi môi trường có persistent volume riêng. Không có fallback sang static, browser storage hoặc Tài sản Bot.</p><div class="portal-state-meta"><span>Cần signed session</span><span>Không dùng storage công khai</span><span>Không có output giả</span></div></div></div></section></article>`;
+      return `<article class="portal-page portal-asset-vault">${renderHero(page, context)}${deliveryNav}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.assets)}</span><div><h2>${safeText(uiText("vaultPageUiGuardTitle", "Chưa thể mở kho tệp"))}</h2><p>${safeText(uiText("vaultPageUiGuardBody", "Vui lòng tải lại trang. Nếu vẫn chưa mở được, hãy liên hệ hỗ trợ."))}</p></div></div></section></article>`;
     }
     const listing = assetVaultListing(context);
     const filter = listing.filters;
     const items = assetVaultLibraryItems(context);
     const projectNames = new Map((Array.isArray(context.projects) ? context.projects : [])
       .filter((project) => project && validProjectId(project.id))
-      .map((project) => [String(project.id), String(project.title || "Project Web")]));
+      .map((project) => [String(project.id), String(project.title || uiText("vaultPageUiProjectFallback", "Dự án của bạn"))]));
     const formValues = transientFormValues("/asset-vault");
     const cards = items.length
       ? `<div class="portal-vault-grid">${items.map((item) => {
           const id = String(item.id);
           const itemState = String(item.state || "") === "archived" ? "archived" : "active";
           const downloadPath = itemState === "active" ? vaultDownloadPath(item) : "";
-          const projectName = item.project_id ? (projectNames.get(String(item.project_id)) || "Project đã liên kết") : "Không gắn Project";
-          const inspect = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-lifecycle-open" data-portal-route="/asset-vault" data-vault-asset-id="${safeText(id)}"${canInspectLifecycle ? "" : " disabled title=\"Cần signed session và Asset Vault đang hoạt động.\""}>Kiểm tra vòng đời</button>`;
+          const projectName = item.project_id ? (projectNames.get(String(item.project_id)) || uiText("vaultCardsUiLinkedProject", "Dự án đã liên kết")) : uiText("vaultCardsUiNoProject", "Không gắn dự án");
+          const inspect = `<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-lifecycle-open" data-portal-route="/asset-vault" data-vault-asset-id="${safeText(id)}"${canInspectLifecycle ? "" : " disabled title=\"" + safeText(uiText("vaultCardsUiInspectDisabled", "Chưa thể xem thông tin tệp lúc này.")) + "\""}>${safeText(uiText("vaultCardsUiInspect", "Xem thông tin tệp"))}</button>`;
           const actions = itemState === "active"
-            ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải tệp <span aria-hidden="true">↓</span></a>${inspect}<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-archive" data-portal-route="/asset-vault" data-vault-asset-id="${safeText(id)}" data-portal-confirm="Lưu trữ tệp này khỏi Asset Vault đang hoạt động? Tệp vẫn được giữ riêng tư nhưng sẽ không thể tải từ danh sách active."${canArchive ? "" : " disabled"}>Lưu trữ</button>`
-            : `<span class="portal-form-note">Tệp đã lưu trữ; tải về đang khóa.</span>${inspect}`;
-          return `<article class="portal-card portal-card-pad portal-vault-card" data-vault-asset="${safeText(id)}"><div class="portal-card-header"><div class="portal-vault-card-title"><span class="portal-vault-file-icon" aria-hidden="true">${safeText(String(item.extension || "FILE").replace(".", "").slice(0, 5).toUpperCase())}</span><div><h2 class="portal-card-title">${safeText(String(item.display_name || "Tệp Web"))}</h2><p class="portal-card-subtitle">${safeText(String(item.original_filename || "Tệp riêng tư"))}</p></div></div>${badge(itemState === "active" ? "ready" : "read_only")}</div><dl class="portal-vault-meta"><div><dt>Dung lượng</dt><dd>${safeText(vaultBytes(item.byte_size))}</dd></div><div><dt>Project</dt><dd>${safeText(projectName)}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${actions}</div></article>`;
+            ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${safeText(uiText("vaultCardsUiDownload", "Tải tệp"))} <span aria-hidden="true">↓</span></a>${inspect}<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-archive" data-portal-route="/asset-vault" data-vault-asset-id="${safeText(id)}" data-portal-confirm="${safeText(uiText("vaultCardsUiArchiveConfirm", "Lưu trữ tệp này? Tệp vẫn được giữ nhưng không thể tải cho đến khi khôi phục."))}"${canArchive ? "" : " disabled"}>${safeText(uiText("vaultCardsUiArchive", "Lưu trữ"))}</button>`
+            : `<span class="portal-form-note">${safeText(uiText("vaultCardsUiArchivedNote", "Tệp đã lưu trữ. Hãy khôi phục để tải lại."))}</span>${inspect}`;
+          return `<article class="portal-card portal-card-pad portal-vault-card" data-vault-asset="${safeText(id)}"><div class="portal-card-header"><div class="portal-vault-card-title"><span class="portal-vault-file-icon" aria-hidden="true">${safeText(String(item.extension || uiText("vaultCardsUiFileType", "Tệp")).replace(".", "").slice(0, 5).toUpperCase())}</span><div><h2 class="portal-card-title">${safeText(String(item.display_name || uiText("vaultCardsUiFileName", "Tệp của bạn")))}</h2><p class="portal-card-subtitle">${safeText(String(item.original_filename || uiText("vaultCardsUiOriginalName", "Tệp đã lưu")))}</p></div></div>${badge(itemState === "active" ? "ready" : "read_only")}</div><dl class="portal-vault-meta"><div><dt>${safeText(uiText("vaultCardsUiSize", "Dung lượng"))}</dt><dd>${safeText(vaultBytes(item.byte_size))}</dd></div><div><dt>${safeText(uiText("vaultCardsUiProject", "Dự án"))}</dt><dd>${safeText(projectName)}</dd></div><div><dt>${safeText(uiText("vaultCardsUiUpdated", "Cập nhật"))}</dt><dd>${safeText(String(item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${actions}</div></article>`;
         }).join("")}</div>`
-      : renderEmpty(assetVaultFilterIsActive(filter) ? "Không có tệp phù hợp" : "Asset Vault chưa có tệp", assetVaultFilterIsActive(filter) ? "Điều chỉnh từ khóa hoặc trạng thái để xem các tệp khác trong signed Web account. Không có fallback từ Bot hoặc browser cache." : "Tải tệp đầu tiên để lưu cùng Project Web. Đây không phải asset delivery hay output của job Bot.", "▣");
+      : renderEmpty(assetVaultFilterIsActive(filter) ? uiText("vaultCardsUiFilteredTitle", "Không có tệp phù hợp") : uiText("vaultCardsUiEmptyTitle", "Kho tệp đang trống"), assetVaultFilterIsActive(filter) ? uiText("vaultCardsUiFilteredBody", "Thay đổi từ khóa hoặc trạng thái để tìm tệp khác.") : uiText("vaultCardsUiEmptyBody", "Thêm tệp đầu tiên để lưu và dùng lại khi cần."), "▣");
     const lifecyclePanel = assetVaultLifecyclePanel(context, items, canRestore);
     const filterForm = '<form class="portal-vault-filter" data-portal-form data-portal-no-transient data-portal-action="asset-vault-filter" data-portal-route="/asset-vault" novalidate>'
       + renderFields(assetVaultFilterFields(), true, context, filter, "asset-vault-filter")
-      + '<div class="portal-form-footer"><span class="portal-form-note">Tìm kiếm chạy tại API owner-scoped trong phiên trang hiện tại; không lưu từ khóa riêng vào URL, Telegram hoặc browser storage.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-filter-clear" data-portal-route="/asset-vault">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm tệp</button></div></div></form>';
+      + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(uiText("vaultPageUiFilterHint", "Tìm theo tên hoặc trạng thái của tệp.")) + '</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-filter-clear" data-portal-route="/asset-vault">' + safeText(uiText("vaultPageUiClear", "Xóa lọc")) + '</button><button class="portal-button portal-button--primary" type="submit">' + safeText(uiText("vaultPageUiFind", "Tìm tệp")) + '</button></div></div></form>';
     const fileDisabled = canUpload ? "" : " disabled";
     return `<article class="portal-page portal-asset-vault">${renderHero(page, context)}${deliveryNav}
-      <section class="portal-vault-intro"><div><span class="portal-section-kicker">Private Web storage</span><h2>Kho tệp riêng cho Project và workflow Web</h2><p>Asset Vault dùng signed session, owner check, CSRF và private storage. Không tạo public link, preview giả, job, Xu hay PayOS.</p></div><dl><div><dt>${safeText(String(items.length))}</dt><dd>Tệp trong trang hiện tại</dd></div><div><dt>25 MB</dt><dd>Giới hạn mặc định mỗi tệp</dd></div></dl></section>
-      <div class="portal-vault-layout"><section class="portal-card portal-card-pad portal-vault-upload"><div class="portal-card-header"><div><h2 class="portal-card-title">Thêm tệp</h2><p class="portal-card-subtitle">Chỉ tải định dạng được kiểm tra ở máy chủ. Tệp luôn tải về dạng attachment riêng tư.</p></div>${badge(canUpload ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="asset-vault-upload" data-portal-route="/asset-vault" novalidate>${renderFields(assetVaultFormFields(), canUpload, context, formValues)}<label class="portal-vault-dropzone" for="portal-vault-file"><span class="portal-vault-dropzone-icon" aria-hidden="true">↑</span><span><strong>Chọn tệp riêng tư</strong><small>Ảnh, video, audio, PDF, TXT/SRT/VTT hoặc DOCX · tối đa 25 MB mặc định</small></span><input id="portal-vault-file" class="portal-vault-file-input" name="file" type="file" accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.mp3,.wav,.m4a,.ogg,.pdf,.txt,.srt,.vtt,.docx" required${fileDisabled}></label><div class="portal-form-footer"><span class="portal-form-note">Tệp không được gửi sang Bot, provider hoặc browser storage. Upload có idempotency và audit metadata đã sanitize.</span><button class="portal-button portal-button--primary" type="submit"${fileDisabled}>Lưu vào Asset Vault</button></div></form></section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới rõ ràng</h2><p class="portal-card-subtitle">Hai thư viện phục vụ hai mục đích khác nhau.</p></div></div><ul class="portal-project-steps"><li><strong>Asset Vault Web</strong><span>Tệp bạn chủ động lưu cho Project/Web workflow, owner-scoped và private.</span></li><li><strong>Tài sản Bot</strong><span>Output delivery của job canonical, có metadata/URL ký riêng ở <a href="/assets">Tài sản Bot</a>.</span></li><li><strong>Không suy diễn output</strong><span>Một tệp Vault không tự trở thành input engine hoặc kết quả đã hoàn tất.</span></li></ul></aside></div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thư viện Asset Vault</h2><p class="portal-card-subtitle">Chỉ tệp thuộc signed Web account hiện tại. Tệp archived vẫn có metadata để đối chiếu, nhưng download đã bị khóa đúng theo server contract.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-refresh" data-portal-route="/asset-vault"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${filterForm}${cards}${lifecyclePanel}${renderAssetVaultPagination(listing)}</section>
+      <section class="portal-card portal-card-pad portal-vault-upload"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(uiText("vaultPageUiUploadTitle", "Thêm tệp"))}</h2><p class="portal-card-subtitle">${safeText(uiText("vaultPageUiUploadHelp", "Chọn tệp để lưu và dùng lại khi cần."))}</p></div>${badge(canUpload ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="asset-vault-upload" data-portal-route="/asset-vault" novalidate>${renderFields(assetVaultFormFields(), canUpload, context, formValues)}<label class="portal-vault-dropzone" for="portal-vault-file"><span class="portal-vault-dropzone-icon" aria-hidden="true">↑</span><span><strong>${safeText(uiText("vaultPageUiChooseFile", "Chọn tệp"))}</strong><small>${safeText(uiText("vaultPageUiFileHelp", "Ảnh, video, âm thanh, PDF, TXT/SRT/VTT hoặc Word · mặc định tối đa 25 MB mỗi tệp"))}</small></span><input id="portal-vault-file" class="portal-vault-file-input" name="file" type="file" accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.mp3,.wav,.m4a,.ogg,.pdf,.txt,.srt,.vtt,.docx" required${fileDisabled}></label><div class="portal-form-footer"><span class="portal-form-note">${safeText(uiText("vaultPageUiUploadNote", "Bạn có thể xem và tải lại tệp sau khi lưu."))}</span><button class="portal-button portal-button--primary" type="submit"${fileDisabled}>${safeText(uiText("vaultPageUiUpload", "Lưu tệp"))}</button></div></form></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(uiText("vaultPageUiLibraryTitle", "Tệp đã lưu"))}</h2><p class="portal-card-subtitle">${safeText(uiText("vaultPageUiLibraryHelp", "Xem, tìm và quản lý các tệp của bạn."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-refresh" data-portal-route="/asset-vault"${canRefresh ? "" : " disabled"}>${safeText(uiText("vaultPageUiRefresh", "Làm mới"))}</button></div>${filterForm}${cards}${lifecyclePanel}${renderAssetVaultPagination(listing)}</section>
     </article>`;
   }
 

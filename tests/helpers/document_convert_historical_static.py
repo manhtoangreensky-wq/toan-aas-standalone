@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 AUTHORITIES = [
+    ("vault-customer-copy-reviewed.json", "2b895f84f77c8656811c4e732506926a677dda1eb6aa824f854670e127e8228b"),
     ("document-ocr-customer-copy-reviewed.json", "2784e5ec2bf31f4921f4d39fd495175dbb9871f860947d1c9b363218a453839f"),
     ("document-convert-customer-copy-reviewed.json", "e162e15e4ddff0899dcf69bee7134576c7fac7a2fb35fb1857e555d1e70c6b63"),
     ("image-edit-customer-copy-reviewed.json", "7032192534419999f7528e3a6dbf08151b5db6ed96b3c49c7ecb300a6434007f"),

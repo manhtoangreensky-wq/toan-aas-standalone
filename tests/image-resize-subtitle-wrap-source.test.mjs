@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {resizeSubtitleWrapHistoricalThemeSource as inverse} from "./helpers/image-resize-subtitle-wrap-snapshot.mjs";
+import {vaultHintContrastHistoricalCss} from "./helpers/vault-hint-contrast-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/image-resize-subtitle-wrap-reviewed.json",import.meta.url),"utf8")),[edit]=fixture.proposal.changes;
 const base="979b80d22a90368ec97547937e219ccbd3a02deb",file="static/portal/portal-theme.css",lf=value=>value.replace(/\r\n/g,"\n");
-const before=lf(execFileSync("git",["show",base+":"+file],{encoding:"utf8",maxBuffer:2e6})),current=lf(fs.readFileSync(file,"utf8"));
+// Source-only historical comparator copy; current CSS acceptance is independently pinned by the Vault hint suite.
+const before=lf(execFileSync("git",["show",base+":"+file],{encoding:"utf8",maxBuffer:2e6})),current=vaultHintContrastHistoricalCss(lf(fs.readFileSync(file,"utf8")),file);
 const baseCss=lf(execFileSync("git",["show",base+":static/portal/portal.css"],{encoding:"utf8",maxBuffer:2e6}));
 assert.equal(before.split(edit.old).length-1,1);const expected=before.replace(edit.old,()=>edit.new);
 test("Actual theme equals one accepted subtitle wrapping addition with every outside byte unchanged",()=>{

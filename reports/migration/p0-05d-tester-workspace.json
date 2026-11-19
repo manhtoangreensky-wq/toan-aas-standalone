@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-19",
-  "local_files_refresh_scope": "OCR customer UI: six OCR cases; fourAGY3.8FlashHighR1exact,19edits/3app/36keys,portable/source50PASS,Python71PASS. Native3BASE+3GREENgroups24viewseach/owned0; source151andengineTruth separate. Preserve historical remote/P0/48case/safety fields; Issue689comment7008143289; no newIssue/PR beforeacceptance; no signedproduction/Tesseract/language/finalOCRoutput/provider/walletclaim; motionLAST.",
+  "local_files_refresh_scope": "Vault customer UI:sixVAULTcases;fourcopyAGY3.8FlashHighR1exact12edits90keys plusoneCSSAGYR1rule,4app147protected;physical27/source18/shell4/CSS10PASS,copyNode1921/Python78andCSS489old+3newPASSseparateoverlapgroups. NativeBASE/current48views192PNG,4representatives16PNGseparate;current0findings/BASE12,996unknownspermatrixheld,fulltrackedBASE2514blob/OID/rawhashbeforeafterexact. Issue689comment7011217772;independentreview/releasepending. Preservehistoricalremote/P0/48case/safetyfields,noengine/provider/wallet/productiondata/signedLIVE/globalAAclaim,motionLAST.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1781,
-      "bytes": 184934,
-      "sha256": "5cb377539f2abddb0f23942386a2781bc38870d1dd986d9e6b4de3215f9a85ed"
+      "lines": 1795,
+      "bytes": 186040,
+      "sha256": "3366e666fc8443d05b7d359c7449d25b6cdd6f057af337bc82a5e17d4d3d4969"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
