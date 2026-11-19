@@ -2562,6 +2562,24 @@ BASE7RED/7PASS; ứng viên1566PASS/0FAIL; native12màn/48caption/48ảnh.
 Không nhận processing-output/signedproduction hoặc toàn trang đã sạch.
 CI/merge/deploy/runtime/assets phải có bằng chứng riêng.
 
+## PDF — đối chiếu đúng chức năng,19/11/2026
+
+Nguồn gốc dùng cho đơn vị này là các hàm đang có tại GitBASE513557a9:
+imageToPdfFormFields, renderPdfOptimize và renderImageToPdf. Không tuyên bố
+có thêm tính năng chuyển đổi hoặc xác minh output trong đợt câu chữ.
+
+| Chữ/hành vi gốc | Ứng viên | Ranh giới giữ |
+|---|---|---|
+| renderNotes cuối Nén PDF | Bỏ đúng một lời gọi | Factory/config/trang khác |
+| Tám nhãn/help hardcodedVI | Sáu khóaVI/EN/ZH | Names/IDs/first-required/options |
+| Intro/aside/notice/notes kỹ thuật | Chỉ hero/form/history, không ô trống | Guard/action/data/pagination |
+| Liên kết Asset Vault ở khung bên | Mở kho tệp trong chân biểu mẫu | Route và quyền |
+| Catalogue sau freeze không thể ghi | Đăng ký15khóa trước keyset/freeze | Kiểm keyset và bất biến |
+| Golden kiểm nguồn lịch sử | Finite4editinverse tại comparator | Hash/assertions/unknownbytes |
+
+Physical14/source11PASS; native48view/96PNG/192nhãn/87owned0. Không nhận
+deployed/signedproduction/output/wholelocale hoặc motion từ các kiểm tra này.
+
 ## Lịch sử ảnh — thông báo trạng thái, 19/11/2026
 
 Đối chiếu sáu dòng history.guard/loading/failed.title/body hiện hữu,

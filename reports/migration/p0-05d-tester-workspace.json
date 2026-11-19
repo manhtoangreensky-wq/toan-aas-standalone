@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-19",
-  "local_files_refresh_scope": "History technical removals: 1731 lines/180743 LF bytes, five unique HTC cases; physical24PASS, aggregate1632/1635 plus3targetretestsPASS, actualFULLsixpages24samples0notes0state-meta162witness+12toast78screens27owned0. PR772 prior delivery closed. Preserve historical remote/P0/48case/safety fields, Issue689; no production/provider/wallet claims; motion LAST.",
+  "local_files_refresh_scope": "PDF utilities: 1742 lines/181829 LF bytes, six unique PUC cases; physical14/source11 PASS; retained285 plus1430 previously unexecuted and19 named retests PASS. Native48views/96verifiedPNG/192labels/87owned0; two startup failures retained separately. PR773 delivered. Preserve historical remote/P0/48case/safety fields, Issue689; no signed production/output/provider/wallet claims; motion LAST.",
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +70,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1731,
-      "bytes": 180743,
-      "sha256": "173de69979cce3300659a9a249c10a71cd1611a5577b1e4fed4af6d77e916ae5"
+      "lines": 1742,
+      "bytes": 181829,
+      "sha256": "b5b034b1fe704da8a05f0c15a7c0f7cf404e921ddf3ddb2a182b78e7d233df5f"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

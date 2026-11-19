@@ -7,6 +7,7 @@ import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {historyCustomerCleanupHistoricalSource as inverse,historyCustomerCleanupHistoricalSnapshot as snapshot} from "./helpers/image-history-customer-cleanup-snapshot.mjs";
 import {historyTechnicalCleanupHistoricalPortalSource} from "./helpers/image-history-technical-cleanup-snapshot.mjs";
+import {pdfUtilitiesCustomerHistoricalSource} from "./helpers/pdf-utilities-customer-copy-snapshot.mjs";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),".."),BASE="7af6e2f89f99a3739d13e173b173e81e5179b969",fail=/Unreviewed History customer cleanup/,lf=value=>value.replace(/\r\n/g,"\n"),count=(source,part)=>source.split(part).length-1;
 const pins=[
   ["ready-copy","4c4a2c9cf418331701f52195c092a150627375f6281bcfab0a470f14df8a3820","IMAGE-HISTORY-READY-COPY-20261118","5eee3247-8f69-48f6-8004-bfda7e287fac",8],
@@ -17,7 +18,8 @@ const pins=[
 ];
 const authorities=pins.map(([name])=>fs.readFileSync(new URL("./fixtures/image-history-"+name+"-reviewed.json",import.meta.url))),fixtures=authorities.map(raw=>JSON.parse(raw)),edits=fixtures.flatMap(value=>value.proposal.changes);
 const files=[...new Set(edits.map(edit=>edit.file))],before=Object.fromEntries(files.map(file=>[file,lf(execFileSync("git",["show",BASE+":"+file],{cwd:root,encoding:"utf8",maxBuffer:30e6}))])),physical=Object.fromEntries(files.map(file=>[file,lf(fs.readFileSync(path.join(root,file),"utf8"))]));
-const historical=Object.fromEntries(files.map(file=>[file,file==="static/portal/portal.js"?historyTechnicalCleanupHistoricalPortalSource(physical[file]):physical[file]]));
+const pdfHistorical=Object.fromEntries(files.map(file=>[file,pdfUtilitiesCustomerHistoricalSource(physical[file],file)]));
+const historical=Object.fromEntries(files.map(file=>[file,file==="static/portal/portal.js"?historyTechnicalCleanupHistoricalPortalSource(pdfHistorical[file]):pdfHistorical[file]]));
 const unit=edit=>edit.new.startsWith(edit.old)?edit.new.slice(edit.old.length):edit.new.endsWith(edit.old)?edit.new.slice(0,-edit.old.length):edit.new;
 test("exact authority SHA/spec/conversation/count/order: READY8 STRUCTURE2 META5 FEEDBACK3 RETRY1",()=>{
   assert.equal(edits.length,19);assert.equal(files.length,4);

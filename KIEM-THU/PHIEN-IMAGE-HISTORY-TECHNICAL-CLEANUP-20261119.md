@@ -18,8 +18,9 @@ Fixedcontractcomment6992944109;khôngtạoIssue/Projects/PRlưutạm.
 - [x] Docs/5HTCcases/caseSHA173de699…1731lines180743LFbytes/
   metadata2PASS31deselected0.45s;node--check/diffcheck0/secret0files.
 - [x] IndependentreviewC0/I0/M0/Rootread/prepushREADY.
-- [ ] Provenance/exactCI.
-- [ ] OnePRmerge/treeeq/exclusivedeploy/runtime/assets/fixedreceipts.
+- [x] Provenance/exactCI44466426934 hai job,18browser/456signedQA+456hash.
+- [x] PR773merge/runtime513557a9/treeeq/deploy44468185148/3services/
+  health/5+5assets/build/fixedIssue6992944109+PR7001100236readbackexact.
 
 Không nhận guardnative hoặc newempty native nếu chưa được chạy;physical
 unit có đủ5state×3locale/refresh±/pagination/mixedcards/sameVM.

@@ -1,0 +1,206 @@
+{
+  "base": "513557a9ece0f8fe049884868dc5fb3a1ac2339c",
+  "task": "PDF-UTILITIES-CUSTOMER-COPY-20261119",
+  "revision": "ROOT_REVIEWED_R1_WITH_SPEC_AMENDMENTS",
+  "sourceAuthorities": [
+    {
+      "specId": "PDF-COMPRESS-NOTES-CLEANUP-20261119",
+      "revision": "R1",
+      "conversation": "ce980f42-58d0-422d-ae04-d61e3a1fc290",
+      "rawSha256": "a38bec3e40e90d90d176234113879e5a22340b14903b2bf841e88e4bcd65dd8a",
+      "proposalSha256": "3845612a22b69b2383fc7485e3be52f2430a19732b587c6f2b410c61369683ac",
+      "sourceProposalExact": true,
+      "originalSchemaValid": true,
+      "amendedSchemaValid": true,
+      "workerVerify": "NOT_RUN",
+      "originalReportSha256": "bb1a45885b613b41061dd22da1c933f1778f564c7e97987f476f2c7c32d271d2",
+      "recovery": null
+    },
+    {
+      "specId": "IMAGE-TO-PDF-FIELD-LOCALE-20261119",
+      "revision": "R1",
+      "conversation": "b601f267-e64d-4316-bece-787471d5309e",
+      "rawSha256": "47810925d964e0e47202571c9a6991072ab393385bf147985811f69c1e130510",
+      "proposalSha256": "4055591f79fb391f4ed8b7d252c2afea697719ae3dbfabdeb21edead4f5a45e3",
+      "sourceProposalExact": true,
+      "originalSchemaValid": true,
+      "amendedSchemaValid": true,
+      "workerVerify": "NOT_RUN",
+      "originalReportSha256": "5c5f1b4c9e9f8a73bf475c9dca5a75c376920f410879fdf1158bfaba6ad33cce",
+      "recovery": null
+    },
+    {
+      "specId": "IMAGE-TO-PDF-PAGE-CUSTOMER-CLEANUP-20261119",
+      "revision": "R1",
+      "conversation": "d1246c74-da84-4150-812d-c5463f5c42c9",
+      "rawSha256": "5e78648ae6f461cbf666845a498ff55a0a6a18c8382d32698c5a4e272af9cc98",
+      "proposalSha256": "6a64417147ab3225020db393b57ec1813da5187fe88530e2055449d4fc035ce1",
+      "sourceProposalExact": true,
+      "originalSchemaValid": false,
+      "amendedSchemaValid": true,
+      "workerVerify": "NOT_RUN",
+      "originalReportSha256": "d7301c98f6be6514782d2b3dbbb9d788aa564ece0a5c0a46a00b4fb257c2489f",
+      "recovery": {
+        "cliStatus": "ERROR",
+        "cliExit": 3,
+        "errorClass": "ROOT_INVALID_CONST_TARGET_CAUSED_SCHEMA_RETRY_AND_PRINT_TIMEOUT",
+        "completeFirstObjectChars": 16003,
+        "totalResponseChars": 46300,
+        "ignoredTailSha256": "8dd026ca1768ab5c9b50d2cb3d5dad4b892bb8127974ba444c86061ce99511b6",
+        "originalSchemaValid": false,
+        "amendedSchemaValid": true,
+        "partialValuesRepaired": false,
+        "applicationFailureCount": 0
+      }
+    }
+  ],
+  "fieldsRows": [
+    [
+      "docImageToPdfFieldLabel",
+      "Ảnh {position}",
+      "Image {position}",
+      "图像 {position}"
+    ],
+    [
+      "docImageToPdfFieldOptionalLabel",
+      "Ảnh {position} (tùy chọn)",
+      "Image {position} (optional)",
+      "图像 {position}（可选）"
+    ],
+    [
+      "docImageToPdfFieldFirstEmpty",
+      "Chọn ảnh thứ nhất",
+      "Choose the first image",
+      "选择第一张图像"
+    ],
+    [
+      "docImageToPdfFieldOptionalEmpty",
+      "Không thêm ảnh",
+      "No additional image",
+      "不添加图像"
+    ],
+    [
+      "docImageToPdfFieldFirstHelp",
+      "Ảnh này là trang đầu. Chọn JPEG, PNG hoặc WebP đã lưu trong kho tệp.",
+      "This image becomes the first page. Choose a saved JPEG, PNG or WebP image.",
+      "此图像将成为第一页。请选择文件库中已保存的 JPEG、PNG 或 WebP 图像。"
+    ],
+    [
+      "docImageToPdfFieldOptionalHelp",
+      "Thứ tự ảnh là thứ tự trang PDF. Mỗi ảnh chỉ được chọn một lần.",
+      "Image order sets the PDF page order. Each image can be selected only once.",
+      "图像顺序决定 PDF 页面顺序。每张图像只能选择一次。"
+    ]
+  ],
+  "pageRows": [
+    [
+      "docImageToPdfReadyUiChooseSource",
+      "Chọn ảnh từ kho tệp để bắt đầu.",
+      "Choose images from your file library to begin.",
+      "请从文件库选择图像以开始。"
+    ],
+    [
+      "docImageToPdfReadyUiOrderNote",
+      "Ảnh được ghép theo thứ tự đã chọn. Ảnh gốc được giữ nguyên.",
+      "Images are combined in the selected order. Original images stay unchanged.",
+      "图像将按所选顺序合并。原图像保持不变。"
+    ],
+    [
+      "docImageToPdfReadyUiFormTitle",
+      "Chọn ảnh và thứ tự trang",
+      "Choose images and page order",
+      "选择图像与页面顺序"
+    ],
+    [
+      "docImageToPdfReadyUiFormDescription",
+      "Tối đa 8 ảnh JPEG, PNG hoặc WebP. Mỗi ảnh tối đa 20 MB, tổng tối đa 40 MB.",
+      "Up to 8 JPEG, PNG or WebP images. Maximum 20 MB per image and 40 MB in total.",
+      "最多 8 张 JPEG、PNG 或 WebP 图像。每张不超过 20 MB，总计不超过 40 MB。"
+    ],
+    [
+      "docImageToPdfReadyUiConfirm",
+      "Tạo PDF theo thứ tự ảnh đã chọn? Ảnh gốc không bị thay đổi.",
+      "Create a PDF in the selected image order? The original images will not be changed.",
+      "是否按所选图像顺序创建 PDF？原图像不会更改。"
+    ],
+    [
+      "docImageToPdfReadyUiSubmit",
+      "Tạo PDF",
+      "Create PDF",
+      "创建 PDF"
+    ],
+    [
+      "docImageToPdfReadyUiResultsTitle",
+      "PDF đã tạo từ ảnh",
+      "PDFs created from images",
+      "由图像创建的 PDF"
+    ],
+    [
+      "docImageToPdfReadyUiEmptyTitle",
+      "Chưa có PDF từ ảnh",
+      "No PDFs from images yet",
+      "暂无由图像创建的 PDF"
+    ],
+    [
+      "docImageToPdfReadyUiEmptyBody",
+      "Sau khi ghép ảnh, bạn có thể xem và tải tệp PDF tại đây.",
+      "After combining images, you can view and download the PDF here.",
+      "合并图像后，您可在此查看并下载 PDF。"
+    ]
+  ],
+  "canonicalChanges": [
+    {
+      "count": 1,
+      "file": "static/portal/portal.js",
+      "new": "  function renderPdfOptimize(page, context) {\n    const canView = Boolean(context.capabilities && context.capabilities[\"document-operation-view\"] === true);\n    const canRunCapability = Boolean(context.capabilities && context.capabilities[\"document-operation-pdf-optimize\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"document-operation-refresh\"] === true);\n    if (!canView) {\n      return `<article class=\"portal-page portal-pdf-optimize\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText(\"docPdfGuardUiTitle\", \"Chưa mở được công cụ PDF\"))}</h2><p>${safeText(uiText(\"docPdfGuardUiBody\", \"Không thể tải công cụ lúc này. Vui lòng tải lại trang.\"))}</p></div></div></section></article>`;\n    }\n    const sources = pdfVaultItems(context);\n    const operations = documentOperationItems(context, \"pdf_optimize\");\n    const canRun = canRunCapability && sources.length > 0;\n    const formValues = transientFormValues(\"/documents/compress\");\n    const runReason = !canRunCapability\n      ? uiText(\"docPdfReadyUiNoPermission\", \"Tài khoản này chưa được phép dùng công cụ.\")\n      : sources.length === 0\n        ? uiText(\"docPdfReadyUiChooseOne\", \"Chọn một PDF trong kho tệp để bắt đầu.\")\n        : uiText(\"docPdfReadyUiOriginalKept\", \"Tệp gốc được giữ nguyên.\");\n    return `<article class=\"portal-page portal-pdf-optimize\">${renderHero(page, context)}\n      <div class=\"portal-document-operation-layout portal-document-operation-layout--single\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docPdfReadyUiOptimizeTitle\", \"Nén PDF\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiOptimizeDescription\", \"Chọn PDF muốn giảm dung lượng, tối đa 20 MB và 30 trang. Tệp gốc không bị thay đổi.\"))}</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-pdf-optimize\" data-portal-route=\"/documents/compress\" data-portal-confirm=\"${safeText(uiText(\"docPdfReadyUiOptimizeConfirm\", \"Nén tệp PDF đã chọn? Tệp gốc được giữ nguyên.\"))}\" novalidate>${renderFields(pdfOptimizeFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(uiText(\"docPdfReadyUiOpenFiles\", \"Mở kho tệp\"))}</a><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiOptimizeTitle\", \"Nén PDF\"))}</button></div></form></section></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docPdfReadyUiOptimizeHistory\", \"PDF đã nén\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiHistoryBody\", \"Xem tiến trình và tải tệp khi xử lý hoàn tất.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/compress\"${canRefresh ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiRefresh\", \"Làm mới\"))}</button></div>${renderDocumentOperationCards(operations, context)}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/compress\")}</section>\n    </article>`;\n  }\n\n",
+      "old": "  function renderPdfOptimize(page, context) {\n    const canView = Boolean(context.capabilities && context.capabilities[\"document-operation-view\"] === true);\n    const canRunCapability = Boolean(context.capabilities && context.capabilities[\"document-operation-pdf-optimize\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"document-operation-refresh\"] === true);\n    if (!canView) {\n      return `<article class=\"portal-page portal-pdf-optimize\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText(\"docPdfGuardUiTitle\", \"Chưa mở được công cụ PDF\"))}</h2><p>${safeText(uiText(\"docPdfGuardUiBody\", \"Không thể tải công cụ lúc này. Vui lòng tải lại trang.\"))}</p></div></div></section></article>`;\n    }\n    const sources = pdfVaultItems(context);\n    const operations = documentOperationItems(context, \"pdf_optimize\");\n    const canRun = canRunCapability && sources.length > 0;\n    const formValues = transientFormValues(\"/documents/compress\");\n    const runReason = !canRunCapability\n      ? uiText(\"docPdfReadyUiNoPermission\", \"Tài khoản này chưa được phép dùng công cụ.\")\n      : sources.length === 0\n        ? uiText(\"docPdfReadyUiChooseOne\", \"Chọn một PDF trong kho tệp để bắt đầu.\")\n        : uiText(\"docPdfReadyUiOriginalKept\", \"Tệp gốc được giữ nguyên.\");\n    return `<article class=\"portal-page portal-pdf-optimize\">${renderHero(page, context)}\n      <div class=\"portal-document-operation-layout portal-document-operation-layout--single\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docPdfReadyUiOptimizeTitle\", \"Nén PDF\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiOptimizeDescription\", \"Chọn PDF muốn giảm dung lượng, tối đa 20 MB và 30 trang. Tệp gốc không bị thay đổi.\"))}</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-pdf-optimize\" data-portal-route=\"/documents/compress\" data-portal-confirm=\"${safeText(uiText(\"docPdfReadyUiOptimizeConfirm\", \"Nén tệp PDF đã chọn? Tệp gốc được giữ nguyên.\"))}\" novalidate>${renderFields(pdfOptimizeFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(uiText(\"docPdfReadyUiOpenFiles\", \"Mở kho tệp\"))}</a><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiOptimizeTitle\", \"Nén PDF\"))}</button></div></form></section></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docPdfReadyUiOptimizeHistory\", \"PDF đã nén\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiHistoryBody\", \"Xem tiến trình và tải tệp khi xử lý hoàn tất.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/compress\"${canRefresh ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiRefresh\", \"Làm mới\"))}</button></div>${renderDocumentOperationCards(operations, context)}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/compress\")}</section>\n      ${renderNotes(page)}\n    </article>`;\n  }\n\n"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal.js",
+      "new": "  function imageToPdfFormFields() {\n    return Array.from({ length: 8 }, (_, index) => {\n      const position = index + 1;\n      return {\n        name: `source_asset_id_${position}`,\n        label: uiText(position === 1 ? \"docImageToPdfFieldLabel\" : \"docImageToPdfFieldOptionalLabel\", position === 1 ? \"Ảnh {position}\" : \"Ảnh {position} (tùy chọn)\", { position: String(position) }),\n        control: \"select\",\n        optionsFrom: \"imageVaultAssets\", referencePicker: position === 1 ? \"document-image\" : \"\",\n        emptyLabel: position === 1 ? uiText(\"docImageToPdfFieldFirstEmpty\", \"Chọn ảnh thứ nhất\") : uiText(\"docImageToPdfFieldOptionalEmpty\", \"Không thêm ảnh\"),\n        required: position === 1,\n        help: position === 1\n          ? uiText(\"docImageToPdfFieldFirstHelp\", \"Ảnh này là trang đầu. Chọn JPEG, PNG hoặc WebP đã lưu trong kho tệp.\")\n          : uiText(\"docImageToPdfFieldOptionalHelp\", \"Thứ tự ảnh là thứ tự trang PDF. Mỗi ảnh chỉ được chọn một lần.\")\n      };\n    });\n  }\n\n",
+      "old": "  function imageToPdfFormFields() {\n    return Array.from({ length: 8 }, (_, index) => {\n      const position = index + 1;\n      return {\n        name: `source_asset_id_${position}`,\n        label: `Ảnh nguồn ${position}${position === 1 ? \"\" : \" (tùy chọn)\"}`,\n        control: \"select\",\n        optionsFrom: \"imageVaultAssets\", referencePicker: position === 1 ? \"document-image\" : \"\",\n        emptyLabel: position === 1 ? \"Chọn ảnh thứ 1\" : \"Không thêm ảnh\",\n        required: position === 1,\n        help: position === 1\n          ? \"Ảnh 1 trở thành trang đầu. Chỉ JPEG, PNG hoặc WebP active của signed Web account hiện tại xuất hiện.\"\n          : \"Thứ tự slot là thứ tự trang PDF. Mỗi ảnh chỉ được chọn một lần; không dùng URL, path hoặc file browser ở bước này.\"\n      };\n    });\n  }\n\n"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal.js",
+      "new": "  function renderImageToPdf(page, context) {\n    const canView = Boolean(context.capabilities && context.capabilities[\"document-operation-view\"] === true);\n    const canRunCapability = Boolean(context.capabilities && context.capabilities[\"document-operation-image-to-pdf\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"document-operation-refresh\"] === true);\n    if (!canView) {\n      return `<article class=\"portal-page portal-image-to-pdf\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText(\"docPdfGuardUiTitle\", \"Chưa mở được công cụ PDF\"))}</h2><p>${safeText(uiText(\"docPdfGuardUiBody\", \"Không thể tải công cụ lúc này. Vui lòng tải lại trang.\"))}</p></div></div></section></article>`;\n    }\n    const sources = imageVaultItems(context);\n    const operations = documentOperationItems(context, \"image_to_pdf\");\n    const canRun = canRunCapability && sources.length > 0;\n    const formValues = transientFormValues(\"/documents/image-to-pdf\");\n    const runReason = !canRunCapability\n      ? (context.imageToPdfEnabled === true\n        ? uiText(\"docPdfReadyUiNoPermission\", \"Tài khoản này chưa được phép dùng công cụ.\")\n        : uiText(\"docPdfGuardUiBody\", \"Không thể tải công cụ lúc này. Vui lòng tải lại trang.\"))\n      : sources.length === 0\n        ? uiText(\"docImageToPdfReadyUiChooseSource\", \"Chọn ảnh từ kho tệp để bắt đầu.\")\n        : uiText(\"docImageToPdfReadyUiOrderNote\", \"Ảnh được ghép theo thứ tự đã chọn. Ảnh gốc được giữ nguyên.\");\n    return `<article class=\"portal-page portal-image-to-pdf\">${renderHero(page, context)}\n      <div class=\"portal-document-operation-layout portal-document-operation-layout--single\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docImageToPdfReadyUiFormTitle\", \"Chọn ảnh và thứ tự trang\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docImageToPdfReadyUiFormDescription\", \"Tối đa 8 ảnh JPEG, PNG hoặc WebP. Mỗi ảnh tối đa 20 MB, tổng tối đa 40 MB.\"))}</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-image-to-pdf\" data-portal-route=\"/documents/image-to-pdf\" data-portal-confirm=\"${safeText(uiText(\"docImageToPdfReadyUiConfirm\", \"Tạo PDF theo thứ tự ảnh đã chọn? Ảnh gốc không bị thay đổi.\"))}\" novalidate>${renderFields(imageToPdfFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(uiText(\"docPdfReadyUiOpenFiles\", \"Mở kho tệp\"))}</a><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>${safeText(uiText(\"docImageToPdfReadyUiSubmit\", \"Tạo PDF\"))}</button></div></form></section></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"docImageToPdfReadyUiResultsTitle\", \"PDF đã tạo từ ảnh\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"docPdfReadyUiHistoryBody\", \"Xem tiến trình và tải tệp khi xử lý hoàn tất.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/image-to-pdf\"${canRefresh ? \"\" : \" disabled\"}>${safeText(uiText(\"docPdfReadyUiRefresh\", \"Làm mới\"))}</button></div>${renderDocumentOperationCards(operations, context, uiText(\"docImageToPdfReadyUiEmptyTitle\", \"Chưa có PDF từ ảnh\"), uiText(\"docImageToPdfReadyUiEmptyBody\", \"Sau khi ghép ảnh, bạn có thể xem và tải tệp PDF tại đây.\"))}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/image-to-pdf\")}</section>\n    </article>`;\n  }\n\n",
+      "old": "  function renderImageToPdf(page, context) {\n    const canView = Boolean(context.capabilities && context.capabilities[\"document-operation-view\"] === true);\n    const canRunCapability = Boolean(context.capabilities && context.capabilities[\"document-operation-image-to-pdf\"] === true);\n    const canRefresh = Boolean(context.capabilities && context.capabilities[\"document-operation-refresh\"] === true);\n    if (!canView) {\n      return `<article class=\"portal-page portal-image-to-pdf\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-state\" data-state=\"guarded\"><span class=\"portal-state-icon\" aria-hidden=\"true\">${safeText(ICONS.document)}</span><div><h2>${safeText(uiText(\"docPdfGuardUiTitle\", \"Chưa mở được công cụ PDF\"))}</h2><p>${safeText(uiText(\"docPdfGuardUiBody\", \"Không thể tải công cụ lúc này. Vui lòng tải lại trang.\"))}</p></div></div></section></article>`;\n    }\n    const sources = imageVaultItems(context);\n    const operations = documentOperationItems(context, \"image_to_pdf\");\n    const canRun = canRunCapability && sources.length > 0;\n    const formValues = transientFormValues(\"/documents/image-to-pdf\");\n    const runReason = !canRunCapability\n      ? (context.imageToPdfEnabled === true\n        ? \"Cần signed session, CSRF và capability Image → PDF từ server.\"\n        : \"Ảnh → PDF đang được server giữ guarded cho đến khi Pillow và private storage được bật có chủ đích.\")\n      : sources.length === 0\n        ? \"Hãy lưu ít nhất một JPEG, PNG hoặc WebP private vào Asset Vault trước khi tạo PDF.\"\n        : \"Ảnh 1 → Ảnh 8 là thứ tự trang; máy chủ decode thật, kiểm tra pixel và chỉ phát attachment sau strict re-parse/hash.\";\n    const sourceSummary = sources.length === 1 ? \"1 ảnh đang hoạt động\" : `${sources.length} ảnh đang hoạt động`;\n    const completedCount = operations.filter((item) => documentOperationState(item) === \"completed\" && item.download_ready === true).length;\n    return `<article class=\"portal-page portal-image-to-pdf\">${renderHero(page, context)}\n      <section class=\"portal-document-operation-intro\"><div><span class=\"portal-section-kicker\">Web-native Document Operations</span><h2>Biến ảnh riêng tư thành PDF có kiểm tra thật</h2><p>Chọn JPEG, PNG hoặc WebP đã có trong Asset Vault. Server kiểm tra ownership, hash-copy từng nguồn vào vùng cô lập, từ chối ảnh lỗi/ảnh động/decompression-bomb, chuẩn hóa orientation và nền trắng rồi tạo PDF một trang cho mỗi ảnh. Output chỉ được phát sau khi parser và hash xác minh lại.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PDF ảnh sẵn sàng tải</dd></div></dl></section>\n      <div class=\"portal-document-operation-layout\"><section class=\"portal-card portal-card-pad portal-document-operation-form\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Chọn thứ tự ảnh</h2><p class=\"portal-card-subtitle\">Ảnh 1 trở thành trang 1, rồi tới Ảnh 2… Browser không upload bytes hoặc gửi raw file path cho thao tác này.</p></div>${badge(canRun ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"document-operation-image-to-pdf\" data-portal-route=\"/documents/image-to-pdf\" data-portal-confirm=\"Tạo PDF từ ảnh theo đúng thứ tự đã chọn? Web sẽ tạo một attachment riêng tư mới sau khi kiểm tra mọi input và output.\" novalidate>${renderFields(imageToPdfFormFields(), canRun, context, formValues)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(runReason)}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canRun ? \"\" : \" disabled\"}>Tạo PDF riêng tư</button></div></form></section><aside class=\"portal-card portal-card-pad portal-document-operation-boundary\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">Web-native, có kiểm soát</h2><p class=\"portal-card-subtitle\">Tiện ích tạo PDF riêng tư với output được xác minh trước khi phát hành.</p></div></div><ol class=\"portal-project-steps\"><li><strong>1. Thứ tự có chủ đích</strong><span>Slot Ảnh 1 đến Ảnh 8 được giữ trong request fingerprint và trở thành thứ tự trang PDF.</span></li><li><strong>2. Decode có giới hạn</strong><span>JPEG/PNG/WebP tĩnh, tối đa 20 MB mỗi ảnh, 40 MB tổng, 7.680 px mỗi cạnh, tỷ lệ 12:1, 16 MP mỗi ảnh và 32 MP mỗi lần; chặn nguồn trùng hoặc ảnh động.</span></li><li><strong>3. Delivery riêng tư</strong><span>Output được strict-reparse, hash lại và tải qua signed session; không có public URL hoặc PWA cache.</span></li></ol><div class=\"portal-form-footer\"><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">Mở Asset Vault</a></div></aside></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">PDF đã tạo từ ảnh</h2><p class=\"portal-card-subtitle\">Chỉ thao tác thuộc signed Web account hiện tại. Download không khả dụng nếu integrity hoặc ownership không còn hợp lệ.</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"document-operation-refresh\" data-portal-route=\"/documents/image-to-pdf\"${canRefresh ? \"\" : \" disabled\"}>Làm mới</button></div>${renderDocumentOperationCards(operations, context, \"Chưa có PDF từ ảnh\", \"PDF chỉ xuất hiện sau khi mọi ảnh nguồn và output đều vượt qua kiểm tra server-side. Không có output mô phỏng.\")}${renderDocumentOperationHistoryPagination(context, canView, \"/documents/image-to-pdf\")}</section>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-notice portal-notice--info\"><span class=\"portal-notice-icon\" aria-hidden=\"true\">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Artifact có lifecycle private riêng; thao tác này không thay đổi ví, thanh toán, provider hoặc webhook.</p></div></div>${renderNotes(page)}</section>\n    </article>`;\n  }\n\n"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  verifyEqualKeysets();",
+      "new": "  Object.assign(MESSAGES.vi, {\"docImageToPdfFieldLabel\":\"Ảnh {position}\",\"docImageToPdfFieldOptionalLabel\":\"Ảnh {position} (tùy chọn)\",\"docImageToPdfFieldFirstEmpty\":\"Chọn ảnh thứ nhất\",\"docImageToPdfFieldOptionalEmpty\":\"Không thêm ảnh\",\"docImageToPdfFieldFirstHelp\":\"Ảnh này là trang đầu. Chọn JPEG, PNG hoặc WebP đã lưu trong kho tệp.\",\"docImageToPdfFieldOptionalHelp\":\"Thứ tự ảnh là thứ tự trang PDF. Mỗi ảnh chỉ được chọn một lần.\"});\n  Object.assign(MESSAGES.en, {\"docImageToPdfFieldLabel\":\"Image {position}\",\"docImageToPdfFieldOptionalLabel\":\"Image {position} (optional)\",\"docImageToPdfFieldFirstEmpty\":\"Choose the first image\",\"docImageToPdfFieldOptionalEmpty\":\"No additional image\",\"docImageToPdfFieldFirstHelp\":\"This image becomes the first page. Choose a saved JPEG, PNG or WebP image.\",\"docImageToPdfFieldOptionalHelp\":\"Image order sets the PDF page order. Each image can be selected only once.\"});\n  Object.assign(MESSAGES.zh, {\"docImageToPdfFieldLabel\":\"图像 {position}\",\"docImageToPdfFieldOptionalLabel\":\"图像 {position}（可选）\",\"docImageToPdfFieldFirstEmpty\":\"选择第一张图像\",\"docImageToPdfFieldOptionalEmpty\":\"不添加图像\",\"docImageToPdfFieldFirstHelp\":\"此图像将成为第一页。请选择文件库中已保存的 JPEG、PNG 或 WebP 图像。\",\"docImageToPdfFieldOptionalHelp\":\"图像顺序决定 PDF 页面顺序。每张图像只能选择一次。\"});\n\n  Object.assign(MESSAGES.vi, {\"docImageToPdfReadyUiChooseSource\":\"Chọn ảnh từ kho tệp để bắt đầu.\",\"docImageToPdfReadyUiOrderNote\":\"Ảnh được ghép theo thứ tự đã chọn. Ảnh gốc được giữ nguyên.\",\"docImageToPdfReadyUiFormTitle\":\"Chọn ảnh và thứ tự trang\",\"docImageToPdfReadyUiFormDescription\":\"Tối đa 8 ảnh JPEG, PNG hoặc WebP. Mỗi ảnh tối đa 20 MB, tổng tối đa 40 MB.\",\"docImageToPdfReadyUiConfirm\":\"Tạo PDF theo thứ tự ảnh đã chọn? Ảnh gốc không bị thay đổi.\",\"docImageToPdfReadyUiSubmit\":\"Tạo PDF\",\"docImageToPdfReadyUiResultsTitle\":\"PDF đã tạo từ ảnh\",\"docImageToPdfReadyUiEmptyTitle\":\"Chưa có PDF từ ảnh\",\"docImageToPdfReadyUiEmptyBody\":\"Sau khi ghép ảnh, bạn có thể xem và tải tệp PDF tại đây.\"});\n  Object.assign(MESSAGES.en, {\"docImageToPdfReadyUiChooseSource\":\"Choose images from your file library to begin.\",\"docImageToPdfReadyUiOrderNote\":\"Images are combined in the selected order. Original images stay unchanged.\",\"docImageToPdfReadyUiFormTitle\":\"Choose images and page order\",\"docImageToPdfReadyUiFormDescription\":\"Up to 8 JPEG, PNG or WebP images. Maximum 20 MB per image and 40 MB in total.\",\"docImageToPdfReadyUiConfirm\":\"Create a PDF in the selected image order? The original images will not be changed.\",\"docImageToPdfReadyUiSubmit\":\"Create PDF\",\"docImageToPdfReadyUiResultsTitle\":\"PDFs created from images\",\"docImageToPdfReadyUiEmptyTitle\":\"No PDFs from images yet\",\"docImageToPdfReadyUiEmptyBody\":\"After combining images, you can view and download the PDF here.\"});\n  Object.assign(MESSAGES.zh, {\"docImageToPdfReadyUiChooseSource\":\"请从文件库选择图像以开始。\",\"docImageToPdfReadyUiOrderNote\":\"图像将按所选顺序合并。原图像保持不变。\",\"docImageToPdfReadyUiFormTitle\":\"选择图像与页面顺序\",\"docImageToPdfReadyUiFormDescription\":\"最多 8 张 JPEG、PNG 或 WebP 图像。每张不超过 20 MB，总计不超过 40 MB。\",\"docImageToPdfReadyUiConfirm\":\"是否按所选图像顺序创建 PDF？原图像不会更改。\",\"docImageToPdfReadyUiSubmit\":\"创建 PDF\",\"docImageToPdfReadyUiResultsTitle\":\"由图像创建的 PDF\",\"docImageToPdfReadyUiEmptyTitle\":\"暂无由图像创建的 PDF\",\"docImageToPdfReadyUiEmptyBody\":\"合并图像后，您可在此查看并下载 PDF。\"});\n\n  verifyEqualKeysets();",
+      "count": 1
+    }
+  ],
+  "ownerOrder": [
+    "imageToPdfFormFields",
+    "renderPdfOptimize",
+    "renderImageToPdf"
+  ],
+  "nextOwners": {
+    "imageToPdfFormFields": "validImageOperationId",
+    "renderPdfOptimize": "renderPdfToImages",
+    "renderImageToPdf": "renderImageOperationHistory"
+  },
+  "rootSpecAmendments": {
+    "pageR1A": "One extra closing parenthesis in Root target; exact complete worker-returned first JSON object matched corrected target, no new worker call.",
+    "catalogR1B": "Keep exact worker-returned15keys/45values but register before verifyEqualKeysets()/deepFreeze(MESSAGES), not method anchors after freeze.",
+    "workerApplicationFailureCount": 0,
+    "catalogKeysetAndFreezePreserved": true
+  },
+  "applicationBaseline": [
+    {
+      "file": "static/portal/portal-i18n.js",
+      "baselineLfSha256": "604af5e9b4b4b6413ce1c7810eee31843efcdd7b9d6cd14f9ef898009d56fb8d",
+      "candidateLfSha256": "d25f33bc9c6c5b525abe1de6a759e901d1088b57dd0709691908c74c1e828361"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "baselineLfSha256": "88ebcde3d071ac605b7891020807bd4d0130caca7d6ecbdb73800eab432ca1e2",
+      "candidateLfSha256": "a4c2447d23957e526d367b08e44b725551376bc58518346a79f88c10167ba5d8"
+    }
+  ],
+  "limits": "Source authority and finite historical comparator data only; not native/provider/output/production UI acceptance."
+}

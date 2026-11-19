@@ -1,5 +1,15 @@
 # Lịch sử ảnh — bỏ khối giải thích và nhãn phụ dư
 
+## Đóng phát hành PR773 —19/11/2026
+
+CI44466426934 hai job thành công;18browser/456signedQA+456hash đã xác minh.
+Merge/runtime513557a9ece0f8fe049884868dc5fb3a1ac2339c khớp testedtree
+3f2a1de9c81b17dd3ac3e2aead87d664a9d17853. Deploy44468185148 thành công70s;
+VPS trackedclean/3services/health/5+5assets/build khớp. Fixed Issue689comment
+6992944109 và PRcomment7001100236 đọc lại đúng. Các chữ PENDING/DEPLOY=NO
+bên dưới là báo cáo trước phát hành, không phải trạng thái hiện hành.
+SIGNED_PRODUCTION_UI/FINAL_IMAGE_OUTPUT=NOT_TESTED; goal tổng vẫn mở.
+
 TASK=IMAGE-HISTORY-TECHNICAL-CLEANUP-20261119.
 BASE_SHA=bb3c5657845e5eabc495706a20148230386b699c.
 BRANCH=codex/image-history-technical-cleanup-20261119;TRACKER=Issue689.
