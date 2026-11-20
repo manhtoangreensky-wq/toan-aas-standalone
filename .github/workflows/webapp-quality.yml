@@ -96,6 +96,7 @@ jobs:
           node --test tests/vault-customer-copy.test.mjs tests/vault-customer-copy-source.test.mjs tests/vault-hint-contrast.test.mjs tests/vault-hint-contrast-history.test.mjs
           node --test tests/vault-action-*.test.mjs
           node --test tests/shared-select-labels.test.mjs tests/shared-select-labels-source.test.mjs tests/shared-select-reminder-title.test.mjs tests/shared-select-reminder-title-source.test.mjs
+          node --test tests/vault-project-options.test.mjs tests/vault-project-options-source.test.mjs
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_shared_select_historical_static.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_vault_locale_shell.py
           node --test tests/pdf-input-font16.test.mjs

@@ -1,5 +1,29 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 20/11/2026 — PR780 đã giao, danh sách dự án Kho tệp kế tiếp
+
+- [x] PR780 đã gộp và triển khai đúng runtime4cf8590826846a3f3336a4d7359d53df965c226f;
+  CI44709731113 hai job thành công,18browser/456auth hash đủ.
+- [x] Deploy44735563146 thành công62s; VPS tracked-clean/3services
+  active-running/health/5+5assets/buildlocal-5c93467a21f103c91fe0 khớp.
+  Issue7033958929/PR7039553423 receipt đọc lại đúng.
+- [x] VAULT-PROJECT-OPTIONS contract Issue689/comment7039622716; một
+  nhánh dispatch/151pins/150protected; AGYR1 exact, không takeover.
+- [x] Hành vi 37 PASS/1 RED → 38 PASS; chuỗi nguồn42PASS; Node113tệp
+  3421PASS. Python16PASS/bốn lỗi trùng BASE, giữ kỳ vọng cũ.
+- [x] Review code độc lập không finding chặn; ghi đúng harness còn
+  synthetic session/page/mount và detector stubs, không nhận fullbootstrap.
+- [x] Native đại diện một + remaining năm trên chính Kho tệp, ảnh/GET/
+  chọn bàn phím/source/core/schema/auth/egress/owned0 đủ.
+  12PNG hash/CRC/full decode,16 đầu vào giữ;nativeBASE chưa chạy.
+- [ ] Prepush/Tester/manifest/secret/mộtPR/exactCI/merge/deploy/VPS/
+  assets/receipt; không mở PR giữ chỗ.
+- [ ] Locale/technical-copy còn sót, accessibility/auth lifecycle/
+  device/Safari/signedUI/finaloutput; motionM-FINAL-01..06 luôn cuối.
+
+Snapshot này thay checkbox release đang chờ của PR780 bên dưới. Không
+mở lại đơn vị đã giao hoặc dùng bằng chứng đó để nhận ứng viên mới LIVE.
+
 ## 20/11/2026 — PR779 đã giao, nhãn bộ chọn dùng chung kế tiếp
 
 - [x] PR779CI44695158108 haiSUCCESS,18browser/456authhashverified,

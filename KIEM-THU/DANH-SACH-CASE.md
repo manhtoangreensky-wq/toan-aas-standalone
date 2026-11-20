@@ -1,5 +1,19 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## VAULT-PROJECT-OPTIONS-20261120 — dự án trong Kho tệp
+
+Phiên: [VAULT-PROJECT-OPTIONS](PHIEN-VAULT-PROJECT-OPTIONS-20261120.md).
+BASE `4cf8590826846a3f3336a4d7359d53df965c226f`; Issue689/comment7039622716.
+
+| Mã | Mức | Phạm vi | Kết quả cần đạt |
+|---|---|---|---|
+| VPO-DISPATCH | nặng | Kho tệp mở trực tiếp, signed/flag/route cũ | Chỉ signed + flag bật + exact route có GET dự án mới; route cũ giữ |
+| VPO-DATA | nặng | Tên/UUID/schema/query/list bounded | Dữ liệu nguyên vẹn, không mang filter/offset của Project Board |
+| VPO-CURRENTNESS | nặng | Phản hồi muộn, logout, đổi route/session/epoch | Phản hồi cũ không merge; lỗi không giữ dữ liệu cũ |
+| VPO-NATIVE | nặng | Chính Kho tệp, VI/EN/ZH, mobile/PC | GET thật, option UUID/tên đúng và chọn được bàn phím, không upload |
+| VPO-REGRESSION | nặng | Nguồn hiện tại và đối chiếu lịch sử | 151 pins, một nhánh app; giữ kỳ vọng cũ và phân biệt lỗi BASE |
+| VPO-DELIVERY | nặng | CI/gộp/triển khai/VPS/tài nguyên/biên nhận | Đúng bản qua từng cổng; không suy đầu ra engine hoặc toàn goal |
+
 ## SHARED-SELECT-LABELS-20261120 — nhãn bộ chọn dùng chung
 
 Phiên: [SHARED-SELECT-LABELS](PHIEN-SHARED-SELECT-LABELS-20261120.md).

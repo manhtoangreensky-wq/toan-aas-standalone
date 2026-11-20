@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {vaultProjectOptionsHistoricalSource} from "./vault-project-options-snapshot.mjs";
 const raw=fs.readFileSync(new URL("../fixtures/shared-select-reminder-title-reviewed.json",import.meta.url));
 const fail="Unreviewed Shared select reminder title",hash=x=>createHash("sha256").update(x).digest("hex"),count=(s,p)=>s.split(p).length-1;
 assert.equal(hash(raw),"66d8d0d6bdf45c9bb59c8c3e3095bb67f1de44933ef73c260a31094045840132",fail);
@@ -12,6 +13,7 @@ assert.equal(edit.new,edit.old+'\n    if (path === "/reminders") return uiText("
 const owner="  function localizedPageTitle(page, context) {",next="  function documentTitle(page, context) {";
 export function sharedSelectReminderTitleHistoricalSource(source,file){
  assert.equal(typeof source,"string",fail);
+ source=vaultProjectOptionsHistoricalSource(source,file);
  if(file!==edit.file)return source;
  if(!source.includes(owner)&&!source.includes(edit.new)&&!source.includes('if (path === "/reminders") return uiText("shellNav.reminders"'))return source;
  assert.equal(count(source,owner),1,fail+" owner");assert.equal(count(source,next),1,fail+" next");
