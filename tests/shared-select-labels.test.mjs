@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
 import {BASE, sources, runtime, freeze, clone, IDS, CUSTOMER, asset, context} from "./helpers/shared-select-labels-runtime.mjs";
+import {mediaCollectionHistoricalSnapshot} from "./helpers/media-collection-locale-snapshot.mjs";
 
 const physical = sources(), baseline = sources({baseline: true});
 const LOCALES = ["vi", "en", "zh"];
@@ -72,7 +73,10 @@ for (const locale of LOCALES) {
       assert.ok(Object.isFrozen(now.messages[other]));
       assert.deepEqual(Object.keys(now.messages[other]).sort(), allKeys);
     }
-    const current = clone(now.messages[locale]), previous = clone(old.messages[locale]);
+    // This four-key BASE comparison is historical; current media acceptance
+    // independently checks all38 reviewed rows and the complete physical files.
+    const current = Object.fromEntries(mediaCollectionHistoricalSnapshot(Object.entries(clone(now.messages[locale])), locale)),
+      previous = clone(old.messages[locale]);
     assert.deepEqual(Object.keys(current).filter(key => !Object.hasOwn(previous, key)).sort(), [...KEYS].sort());
     assert.deepEqual(Object.keys(previous).filter(key => !Object.hasOwn(current, key)), []);
     for (const family of TARGETS) assert.equal(current[keyFor(family)], COPY[locale][family]);

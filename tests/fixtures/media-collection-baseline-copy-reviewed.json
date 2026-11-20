@@ -1,0 +1,204 @@
+{
+  "task": "MEDIA-COLLECTION-LOCALE-20261120",
+  "base": "4080b879ad8d6ded081aa47313bf9cac67121f0b",
+  "parentFixtureRawSha256": "f0da75ecb63d7f0abc432053441502cd8db99fcc487aa4b192a6514c84ea0515",
+  "baseI18nLfSha256": "768b1ba4102ed67b387ba4f62b98009cbcd82fb76decdc1992365aa84393aed2",
+  "baseRows": [
+    [
+      "audioWorkspace.page.description",
+      "Sắp xếp âm thanh, nhạc và hiệu ứng trong thư viện riêng; xem yêu cầu sáng tạo và lịch sử thay đổi.",
+      "Organize private Audio Asset Vault items and music/SFX briefs with version history; no provider calls or simulated audio.",
+      "管理私有音频 Asset Vault 与音乐/音效简报及版本历史，不调用服务商且不生成模拟音频。"
+    ],
+    [
+      "audioWorkspace.page.newDescription",
+      "Tạo bộ sưu tập riêng với yêu cầu âm thanh, quyền sử dụng và tài sản tham chiếu đã được máy chủ xác minh.",
+      "Create a private collection for audio briefs, usage rights and owner-checked Asset Vault references.",
+      "为音频简报、使用权和经过所有者检查的 Asset Vault 参考创建私有合集。"
+    ],
+    [
+      "audioWorkspace.workspace.guardTitle",
+      "{workspace} đang được bảo vệ",
+      "{workspace} is protected",
+      "{workspace} 受保护"
+    ],
+    [
+      "audioWorkspace.workspace.guardBody",
+      "Đăng nhập bằng phiên đã ký để mở không gian âm thanh riêng tư. Ứng dụng không nhận mã Telegram thô và không hiển thị dữ liệu âm nhạc từ Bot.",
+      "Sign in with a signed session to open the private audio workspace. The app does not accept raw Telegram IDs or expose Bot music data.",
+      "请使用已签名会话打开私有音频工作台。应用不会接受原始 Telegram ID，也不会显示 Bot 音乐数据。"
+    ],
+    [
+      "audioWorkspace.intro.title",
+      "Âm thanh được tổ chức theo ngữ cảnh, quyền sử dụng và ý định sáng tạo",
+      "Organize audio by context, usage rights and creative intent",
+      "按上下文、使用权和创作意图整理音频"
+    ],
+    [
+      "audioWorkspace.intro.body",
+      "Tạo bộ sưu tập cho yêu cầu nhạc và hiệu ứng, liên kết kế hoạch với dự án và gắn âm thanh đã có trong Kho tài sản. Đây là không gian soạn thảo; không phải trình tạo, thư viện nhà cung cấp hay trình phát âm thanh.",
+      "Create collections for music and sound-effect briefs, link planning to a project and attach audio already in Asset Vault. This is an authoring workspace, not a generator, provider library or audio player.",
+      "为音乐和音效需求创建合集，将计划关联到项目，并添加 Asset Vault 中已有的音频。这是编写工作台，不是生成器、服务商目录或音频播放器。"
+    ],
+    [
+      "audioWorkspace.quick.kicker",
+      "Công cụ biên tập nhanh",
+      "Quick authoring tool",
+      "快速编写工具"
+    ],
+    [
+      "audioWorkspace.quick.title",
+      "Lập bảng cue hiệu ứng trước khi chọn nguồn âm thanh",
+      "Draft a sound-effect cue sheet before choosing an audio source",
+      "选择音频来源前先编写音效提示表"
+    ],
+    [
+      "audioWorkspace.quick.body",
+      "Bảng cue tạo ba vị trí theo ngữ cảnh để rà soát. Đây là công cụ độc lập; không mở danh mục, xem trước, tạo tác vụ, trừ Xu hoặc gửi dữ liệu sang Telegram.",
+      "The cue sheet creates three contextual positions for review. It is a separate tool; it does not open a catalogue, preview, create jobs, charge credits or send data to Telegram.",
+      "提示表按上下文创建三个位置供审阅。这是独立工具，不会打开目录、预览、创建任务、扣费或向 Telegram 发送数据。"
+    ],
+    [
+      "audioWorkspace.quick.note",
+      "Chọn mẫu và viết yêu cầu mới trên trang riêng; không chuyển bộ sưu tập, tệp hoặc dữ liệu tài khoản sang công cụ này.",
+      "Choose a preset and write a new brief on its own page; no collection, file or account data is transferred into it.",
+      "在独立页面选择模板并编写新需求；不会向该工具传递合集、文件或账户数据。"
+    ],
+    [
+      "audioWorkspace.quick.open",
+      "Mở bảng cue hiệu ứng",
+      "Open SFX Cue Sheet",
+      "打开音效提示表"
+    ],
+    [
+      "audioWorkspace.create.body",
+      "Lưu yêu cầu sáng tạo riêng tư với kiểm tra chủ tài khoản, CSRF, chống gửi lặp và lịch sử phiên bản. Chưa có yêu cầu AI hoặc đầu ra âm thanh.",
+      "Save a private creative brief with owner, CSRF, idempotency and version-history checks. No AI request or audio output is created here.",
+      "使用账户所有者、CSRF、幂等和版本历史检查保存私有创作需求。此处不会创建 AI 请求或音频输出。"
+    ],
+    [
+      "audioWorkspace.create.note",
+      "Bộ sưu tập chỉ lưu thông tin soạn thảo. Âm thanh được gắn riêng từ Kho tài sản sau khi máy chủ kiểm tra chủ tài khoản.",
+      "The collection stores authoring metadata only. Audio is attached separately from Asset Vault after the server checks ownership.",
+      "合集仅保存编写信息。服务器检查所有权后，音频会从 Asset Vault 单独添加。"
+    ],
+    [
+      "audioWorkspace.create.field.briefHelp",
+      "Chỉ soạn thảo trong ứng dụng. Không yêu cầu mô phỏng nghệ sĩ, bài hát, giai điệu hoặc giọng nói cụ thể.",
+      "Web authoring only. Do not request imitation of a named artist, song, melody or voice.",
+      "仅用于应用内编写。不要要求模仿特定艺术家、歌曲、旋律或声音。"
+    ],
+    [
+      "audioWorkspace.create.field.descriptionHelp",
+      "Không lưu bí mật, token, OTP/CVV, số thẻ hoặc chứng từ thanh toán.",
+      "Do not store secrets, tokens, OTP/CVV, card numbers or payment documents.",
+      "不要保存密钥、令牌、OTP/CVV、卡号或付款凭证。"
+    ],
+    [
+      "audioWorkspace.create.field.projectHelp",
+      "Chỉ là liên kết kế hoạch trong ứng dụng; không tự đưa âm thanh vào gói, tác vụ hoặc bàn giao.",
+      "Web planning link only; it does not move audio into a package, job or delivery.",
+      "仅用于应用内计划关联；不会将音频自动放入套餐、任务或交付。"
+    ],
+    [
+      "audioWorkspace.create.field.rightsHelp",
+      "Ứng dụng không tự chứng nhận bản quyền, giấy phép hoặc quyền thương mại của bạn.",
+      "The Web does not certify your copyright, license or commercial rights.",
+      "应用不会认证您的版权、许可或商业使用权。"
+    ],
+    [
+      "audioWorkspace.list.body",
+      "Danh sách chỉ chứa thông tin tóm tắt thuộc tài khoản đã ký; nội dung đầy đủ chỉ nạp sau khi máy chủ kiểm tra chủ tài khoản.",
+      "The list contains only signed-account metadata and excerpts; full content loads after the server checks ownership.",
+      "列表仅包含已签名账户的元数据和摘要；服务器检查所有权后才会加载完整内容。"
+    ],
+    [
+      "audioWorkspace.filter.note",
+      "Bộ lọc chỉ dùng trong phiên hiện tại; không lưu vào bộ nhớ trình duyệt hoặc Telegram.",
+      "Filters apply only to this page session; they are not saved to browser storage or Telegram.",
+      "筛选仅用于当前页面会话，不会保存到浏览器存储或 Telegram。"
+    ],
+    [
+      "audioWorkspace.activity.kicker",
+      "DÒNG KIỂM TOÁN AN TOÀN",
+      "AUDIT-SAFE FEED",
+      "安全审计记录"
+    ],
+    [
+      "audioWorkspace.activity.body",
+      "Chỉ có nhãn thao tác, phiên bản và thời điểm; không có yêu cầu gốc, đường dẫn tệp, URL hoặc dữ liệu nhà cung cấp.",
+      "Only action labels, revisions and timestamps are shown; no raw brief, file path, URL or provider data is exposed.",
+      "仅显示操作标签、版本和时间；不会暴露原始需求、文件路径、URL 或服务商数据。"
+    ],
+    [
+      "audioWorkspace.activity.emptyBody",
+      "Dòng thời gian chỉ lưu nhãn thao tác và phiên bản; không hiển thị yêu cầu, thông tin quyền sử dụng hoặc ghi chú giấy phép.",
+      "The timeline stores action labels and revisions only; it does not show briefs, usage-rights information or license notes.",
+      "时间线仅保存操作标签和版本；不会显示需求、使用权信息或许可说明。"
+    ],
+    [
+      "audioWorkspace.event.item_attached",
+      "Đã gắn âm thanh từ Kho tài sản",
+      "Audio attached from Asset Vault",
+      "已从 Asset Vault 添加音频"
+    ],
+    [
+      "audioWorkspace.event.item_updated",
+      "Đã cập nhật thông tin âm thanh",
+      "Audio metadata updated",
+      "已更新音频信息"
+    ],
+    [
+      "audioWorkspace.event.collection_version_restored",
+      "Đã khôi phục phiên bản thông tin",
+      "Collection metadata version restored",
+      "已恢复合集信息版本"
+    ],
+    [
+      "audioWorkspace.event.item_detached",
+      "Đã gỡ tài liệu âm thanh",
+      "Audio reference detached",
+      "已移除音频参考"
+    ],
+    [
+      "audioWorkspace.collection.emptyBody",
+      "Tạo bộ sưu tập đầu tiên để sắp xếp yêu cầu, quyền sử dụng và âm thanh riêng tư đã có trong Kho tài sản.",
+      "Create your first collection to organize briefs, usage rights and private audio already in Asset Vault.",
+      "创建第一个合集，用于整理需求、使用权和 Asset Vault 中已有的私有音频。"
+    ],
+    [
+      "audioWorkspace.collection.policyGuarded",
+      "Cần bổ sung chính sách",
+      "Policy needs review",
+      "需要完善策略"
+    ],
+    [
+      "audioWorkspace.collection.note",
+      "Chỉ soạn thảo · không tạo tác vụ, trừ Xu hoặc tạo đầu ra.",
+      "Authoring only · no job, charge or output.",
+      "仅编写 · 不会创建任务、扣费或生成输出。"
+    ],
+    [
+      "audioWorkspace.policy.openAssets",
+      "Mở Kho tài sản",
+      "Open Asset Vault",
+      "打开 Asset Vault"
+    ],
+    [
+      "audioWorkspace.policy.openProjects",
+      "Mở Trung tâm dự án",
+      "Open Project Center",
+      "打开项目中心"
+    ]
+  ],
+  "newKeys": [
+    "audioWorkspace.defaults.context",
+    "audioWorkspace.defaults.rights",
+    "audioWorkspace.pagination.range",
+    "audioWorkspace.pagination.empty",
+    "audioWorkspace.pagination.previous",
+    "audioWorkspace.pagination.next",
+    "audioWorkspace.pagination.aria"
+  ],
+  "purpose": "Exact finite entry-level historical projection; current physical acceptance remains independent"
+}

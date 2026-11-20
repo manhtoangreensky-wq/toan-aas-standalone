@@ -10383,6 +10383,7 @@
         "KIEM-THU/DANH-SACH-CASE.md",
         "KIEM-THU/HUONG-DAN-TESTER.md",
         "KIEM-THU/PHIEN-IMAGE-RESIZE-POLISH-20261117.md",
+        "KIEM-THU/PHIEN-MEDIA-COLLECTION-LOCALE-20261120.md",
         "KIEM-THU/PHIEN-PDF-COMPRESS-META-20261118.md",
         "KIEM-THU/PHIEN-PDF-SPLIT-META-20261117.md",
         "KIEM-THU/PHIEN-VAULT-PROJECT-OPTIONS-20261120.md",
@@ -10418,10 +10419,9 @@
         "copyfast_governance.py",
         "copyfast_growth_review.py",
         "copyfast_image_operations.py",
-        "copyfast_media_factory.py",
-        "copyfast_mfa.py"
+        "copyfast_media_factory.py"
       ],
-      "occurrences": 1233,
+      "occurrences": 1235,
       "provider": "PayOS"
     },
     {
@@ -10505,11 +10505,14 @@
         "docs/AGY-DISPATCH-POINT-20261107.md",
         "docs/reports/document-convert-customer-copy-20261119.md",
         "docs/reports/document-ocr-customer-copy-20261119.md",
+        "docs/reports/media-collection-locale-20261120.md",
+        "docs/reports/media-collection-locale-prepush-20261120.md",
         "docs/reports/pdf-input-font16-20261116.md",
         "docs/reports/pdf-split-readability-20261116.md",
         "docs/reports/shared-select-labels-20261120.md",
         "docs/reports/vault-customer-copy-20261119.md",
         "docs/reports/video-inner-first-three-20261110.md",
+        "reports/audit/MEDIA-COLLECTION-LOCALE-20261120.json",
         "reports/audit/R218-CHECKPOINT-20261021.md",
         "reports/audit/R218-CUSTOMER-UI-REALITY-QA-20261022.json",
         "reports/audit/R218-GLOBAL-STATUS-LABELS-QA-20261021.json",
@@ -10531,12 +10534,9 @@
         "reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json",
         "reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json",
         "reports/audit/R218-VOICE-DIRECTION-CLARITY-QA-20261023.json",
-        "reports/audit/R218-VOICE-METADATA-QA-20261023.json",
-        "reports/audit/R218-VOICE-VAULT-NOTICE-CLARITY-QA-20261023.json",
-        "reports/audit/SHARED-SELECT-LABELS-20261120.json",
-        "reports/audit/VAULT-ACTION-FEEDBACK-20261120.json"
+        "reports/audit/R218-VOICE-METADATA-QA-20261023.json"
       ],
-      "occurrences": 62,
+      "occurrences": 68,
       "provider": "Gemini"
     },
     {
@@ -18798,39 +18798,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 643,
-  "source_files_scanned": 643,
-  "source_fingerprint_sha256": "4382c1cc8c1f5c542e62488af51e9a51c401f6dc5980974a18b26ba3b6f63221",
+  "source_files_discovered": 647,
+  "source_files_scanned": 647,
+  "source_fingerprint_sha256": "5721ff69c0c4f02cd3ee4ab0d781d0e287d407b620e73e9ae4aff05c56defc22",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 36064,
+      "line": 36070,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36380,
+      "line": 36386,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35728,
+      "line": 35734,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35977,
+      "line": 35983,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35349,
+      "line": 35355,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35641,
+      "line": 35647,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -19045,7 +19045,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 37500,
+      "line": 37506,
       "path": "/features"
     },
     {

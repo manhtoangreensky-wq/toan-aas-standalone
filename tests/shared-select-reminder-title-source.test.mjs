@@ -11,7 +11,7 @@ const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const raw=fs.readFileSync(new URL("./fixtures/shared-select-reminder-title-reviewed.json",import.meta.url)),fixture=JSON.parse(raw);
 const parentRaw=fs.readFileSync(new URL("./fixtures/shared-select-labels-reviewed.json",import.meta.url)),parent=JSON.parse(parentRaw);
 const hash=x=>createHash("sha256").update(x).digest("hex"),lf=s=>s.replace(/\r\n/g,"\n"),file="static/portal/portal.js",edit=fixture.canonicalChanges[0];
-const physical=lf(fs.readFileSync(path.join(ROOT,file),"utf8"));
+const physical=vaultProjectOptionsHistoricalSource(lf(fs.readFileSync(path.join(ROOT,file),"utf8")),file);
 let parentSource=lf(execFileSync("git",["show",fixture.base+":"+file],{cwd:ROOT,encoding:"utf8",maxBuffer:12e6}));
 for(const row of parent.canonicalChanges.filter(row=>row.file===file)){assert.equal(parentSource.split(row.old).length-1,1);parentSource=parentSource.replace(row.old,()=>row.new);}
 const candidate=parentSource.replace(edit.old,()=>edit.new),fail=/Unreviewed Shared select reminder title/;
@@ -26,7 +26,7 @@ test("title authority and complete physical source bind the parent four edits pl
  assert.equal(physical,candidate);assert.equal(inverse(physical,file),parentSource);
  assert.equal(parentSource.replace(edit.old+"\n",()=>edit.new+"\n"),candidate,"Decoded worker newline-pair replays exact bytes");
  for(const pin of fixture.applicationBaseline){
-  // This title-era pin comparator is historical; the newest Vault suite reads
+  // This title-era pin comparator is historical; the newest media suite reads
   // complete physical sources independently before applying any projection.
   const actual=vaultProjectOptionsHistoricalSource(lf(fs.readFileSync(path.join(ROOT,pin.file),"utf8")),pin.file);
   assert.equal(hash(actual),pin.candidateLfSha256,pin.file);

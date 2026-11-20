@@ -1,5 +1,41 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 20/11/2026 — PR781 đã giao; bộ sưu tập âm thanh kế tiếp
+
+- [x] PR781/CI44741117456 hai job thành công,18browser/456authhash đúng;
+  runtime4080b879ad8d6ded081aa47313bf9cac67121f0b/tree0eec294a exact.
+  Deploy44744844095SUCCESS62s,VPS3active-running/health/5+5assets/build
+  local-4994aee1c312395b3beb khớp;Issue7039622716/PR7040869769 readback.
+- [x] MEDIA-COLLECTION contract Issue689/comment7041067092; bốn AGY
+  Gemini3.8FlashHigh R1 exact, tám record/hai app/151pins/149protected.
+- [x] Default/Pagination/Cleanup/Catalogue:38row114value,96ca
+  51PASS45RED→96GREEN; portable96PASS. Customertruthy/escaping/
+  controls/quyền/events/version/date và mọi paginator khác giữ nguyên.
+- [x] Source-chain93PASS giữ + một reader lịch sử failed-onlyPASS;
+  review độc lập0blocker. Python121PASS/bốn lỗi cùng BASE, không sửa lan.
+- [x] Nhóm77Node:1380PASS giữ+417failed/unexecutedPASS+3navfailed-only
+  PASS=1800executablePASS,0unresolved; snapshot26PASS,Tester metadata2PASS.
+- [x] Native hai route12view/ảnh/source/schema/core/auth/egress/owned0.
+  Đại diện R3 một đã đạt, R6bảy VI/EN row đạt cùngisolation/prefixPNG;
+  tại checkpointR6 còn bốnZHfollow-up. Giữ overallfalse receipts, không lặp
+  representativePASS hoặc sửa guard/rate để ép QA. Không gửi form.
+  ChốtR3one+qualifiedR6seven+R8ZHfour,36PNGhashCRCfulldecode/214inputs
+  giữ;babindingQA/cùng151rawLFappsource,khôngnhậnR6overallPASS.
+- [ ] Ops/crosswalk/Tester/prepush/manifest/secret/mộtPR/exactCI/
+  merge/exclusive deploy/VPS/assets/receipt; không PR giữ chỗ.
+  PR782/CI44760005148 đầu dừng ởPythonhistorical comparator (45PASS1FAIL);
+  QA-onlyleafamendment42distinctcases accepted,sourceapp/nativekhôngđổi.
+  Chỉ updatePR782 rồi chờCI mới, khôngmergebản lỗi hoặc tạoPRkhác.
+  CI44762268150 quaPython, dừng82PASS4FAIL ởhistoricalsnapshot;
+  QA-onlyguardorder/3cataloguereaderfix4PASS. CIremaining59Nodefiles
+  chưa thựcthi đạt1862PASS0FAIL0skip; app/nativekhôngđổi, PR782giữcùngmục.
+- [ ] Tiếp theo: toast thao tác âm thanh còn VI trong integration;
+  detail technicalcopy/native filechooser khác; wholelocale/AX/auth/
+  device/Safari/signedUI/finaloutput. M-FINAL-01..06 luôn cuối.
+
+Đơn vị mới không mở lại Kho tệp đã giao và không thu hẹp các cổng toàn
+goal. Mọi snapshot “project-options chưa triển khai” dưới đây là lịch sử.
+
 ## 20/11/2026 — PR780 đã giao, danh sách dự án Kho tệp kế tiếp
 
 - [x] PR780 đã gộp và triển khai đúng runtime4cf8590826846a3f3336a4d7359d53df965c226f;

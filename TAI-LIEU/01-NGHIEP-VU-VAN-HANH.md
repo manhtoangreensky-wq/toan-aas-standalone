@@ -1,5 +1,33 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 20/11/2026 — PR781 đã giao; bộ sưu tập âm thanh đang nghiệm thu
+
+Production đã đối chiếu đúng runtime
+`4080b879ad8d6ded081aa47313bf9cac67121f0b`, PR781/CI44741117456
+hai job thành công, 18 bằng chứng trình duyệt và 456 bản ghi đăng nhập
+đúng hash. Deploy44744844095 thành công62s; VPS tracked-clean, ba dịch
+vụ active-running, health/5+5 tài nguyên/buildlocal-4994aee1c312395b3beb
+khớp. Issue7039622716/PR7040869769 đọc lại đúng. Trạng thái ứng viên
+Kho tệp bên dưới là lịch sử, không phải việc chưa triển khai.
+
+Ứng viên âm thanh chỉ thay chữ và dọn phần hướng dẫn trong hai tệp UI.
+Bốn phiên Antigravity trả đúng tám record: bốn fallback, một nhánh chữ
+phân trang, hai đoạn dọn khối và một block 38 dòng/114 giá trị VI/EN/ZH.
+Chỉ fallback khi thiếu dữ liệu được dịch; nội dung thật của khách, kể cả
+`general`, khoảng trắng hoặc ghi chú quyền tiếng Việt đã lưu, giữ nguyên.
+Kho tệp/Dự án chuyển xuống chân biểu mẫu; không mất form, bộ lọc, thẻ,
+phân trang, sự kiện, phiên bản, ngày hoặc quyền.
+
+96 ca vật lý BASE có51PASS/45RED →96PASS; bộ portable96PASS. Chuỗi nguồn
+94 ca đạt sau sửa đúng reader lịch sử, không đổi assertion/golden;
+151 nguồn/149 bảo vệ khớp. Python121PASS/bốn lỗi tái hiện trên nguồn BASE.
+Review độc lập không finding chặn. Hồi quy Node1800ca thực thi đạt,0lỗi
+chưa xử lý; giữ1380PASS và chỉ retest phần lỗi/chưa chạy. Native đủ12trục/
+36PNG/214inputs không đổi,source/core/schema/auth/egress/owned0; ba cohort
+QA trên cùng151appsource,khôngviếtlạireceiptfalsehoặclặp8viewđãgiữ.
+Phát hành chốt riêng; chưa nhận ứng viên đã triển khai hoặc âm thanh đầu ra.
+[Báo cáo hiện hành](../docs/reports/media-collection-locale-20261120.md).
+
 ## 20/11/2026 — nhãn đã giao; ứng viên danh sách dự án trong Kho tệp
 
 Production đã đối chiếu ở runtime `4cf8590826846a3f3336a4d7359d53df965c226f`,

@@ -6,6 +6,7 @@ import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {vaultProjectOptionsHistoricalSource as inverse} from "./helpers/vault-project-options-snapshot.mjs";
+import {mediaCollectionHistoricalSource} from "./helpers/media-collection-locale-snapshot.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const raw = fs.readFileSync(new URL("./fixtures/vault-project-options-reviewed.json", import.meta.url));
@@ -33,7 +34,7 @@ test("all151 current physical sources equal immutable candidate pins with150 pro
   assert.equal(new Set(fixture.applicationBaseline.map(row => row.file)).size, 151);
   assert.deepEqual(fixture.applicationBaseline.filter(row => row.changed).map(row => row.file), [file]);
   for (const pin of fixture.applicationBaseline) {
-    const actual = lf(fs.readFileSync(path.join(ROOT, pin.file), "utf8"));
+    const actual = mediaCollectionHistoricalSource(lf(fs.readFileSync(path.join(ROOT, pin.file), "utf8")), pin.file);
     assert.equal(hash(actual), pin.candidateLfSha256, pin.file);
     assert.equal(hash(inverse(actual, pin.file)), pin.baseLfSha256, pin.file);
     if (!pin.changed) assert.equal(pin.baseLfSha256, pin.candidateLfSha256, pin.file);
