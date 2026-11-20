@@ -7,6 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {withoutLegacyDecorativeWorkbench} from './helpers/legacy-decorative-workbench.mjs';
 import {chatDocHistoricalMarkup} from './helpers/chat-doc-access-snapshot.mjs';
 import {pageMetaHistoricalPortalSource} from './helpers/chat-page-meta-snapshot.mjs';
+import {mediaCollectionHistoricalSource} from './helpers/media-collection-locale-snapshot.mjs';
 
 // Catch the fixed AI Studio label leaking into VI/ZH, or a broad replacement
 // that translates customer/unknown labels instead of adding one finite alias.
@@ -28,6 +29,10 @@ async function actualHelper(revision){
   if(!revision)edits.push([
     "const portal=fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8');",
     'const portal='+JSON.stringify(pageMetaHistoricalPortalSource(fs.readFileSync(path.join(ROOT,'static/portal/portal.js'),'utf8')))+';'
+  ]);
+  if(!revision)edits.push([
+    "const i18n=fs.readFileSync(path.join(root,'static/portal/portal-i18n.js'),'utf8');",
+    'const i18n='+JSON.stringify(mediaCollectionHistoricalSource(fs.readFileSync(path.join(ROOT,'static/portal/portal-i18n.js'),'utf8'),'static/portal/portal-i18n.js'))+';'
   ]);
   for(const [old,next]of edits){assert.equal(source.split(old).length-1,1);source=source.replace(old,next);}
   return (await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'))).renderChild;

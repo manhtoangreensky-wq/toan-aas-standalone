@@ -1,0 +1,821 @@
+{
+  "task": "MEDIA-COLLECTION-LOCALE-20261120",
+  "base": "4080b879ad8d6ded081aa47313bf9cac67121f0b",
+  "date": "2026-11-20",
+  "status": "LOCAL_ACCEPTED_RELEASE_PENDING",
+  "tracker": {
+    "issue": 689,
+    "comment": 7041067092
+  },
+  "application": {
+    "fixtureRawSha256": "f0da75ecb63d7f0abc432053441502cd8db99fcc487aa4b192a6514c84ea0515",
+    "auxiliaryBaseCopyRawSha256": "03e14f63b5a9018f9ff948c2a4e39153ec25fc3dc8388bbff186e351175423a9",
+    "records": 8,
+    "sourcePins": 151,
+    "changedFiles": 2,
+    "protectedFiles": 149,
+    "copyRows": 38,
+    "copyValues": 114,
+    "workers": [
+      {
+        "lane": "defaults",
+        "model": "gemini-3.8-flash-high",
+        "proposalRawSha256": "0a7c9944814a85497ce9dfd45bf1be3b20c9270cb579fada7a9b7b22c63e79d1",
+        "packetSha256": "7b60d60b37e2e99032e49e4eae6e647aadda6cab0e5a2a0e1517a7c847d97a71",
+        "records": 4,
+        "proposalDecodedExact": true,
+        "workerCodeFailures": 0,
+        "applicationTakeover": false
+      },
+      {
+        "lane": "pagination",
+        "model": "gemini-3.8-flash-high",
+        "proposalRawSha256": "b5b1b1b07166cc04bc64bf50b78d965e33d52f85d52f495cccb27d5ccaa0a426",
+        "packetSha256": "fea17e83e539cde615f79b1f558c9008d3e07a91fce70f472b7c9bcce76c50d6",
+        "records": 1,
+        "proposalDecodedExact": true,
+        "workerCodeFailures": 0,
+        "applicationTakeover": false
+      },
+      {
+        "lane": "cleanup",
+        "model": "gemini-3.8-flash-high",
+        "proposalRawSha256": "bd1af315e0e6b270863af3a2027cad11854dc952b623a40b037b89dfb716ab03",
+        "packetSha256": "c6c593f7794ba522e82be22c4e892eb22a61d67f1b9dcadbdcd470d21c5f4aa7",
+        "records": 2,
+        "proposalDecodedExact": true,
+        "workerCodeFailures": 0,
+        "applicationTakeover": false
+      },
+      {
+        "lane": "catalogue",
+        "model": "gemini-3.8-flash-high",
+        "proposalRawSha256": "2e2fff85a5f747ee144260f9e86b5c32adff08ea82267844e008ce0bc2b68a42",
+        "packetSha256": "a24e85069d0bd086dc58e7ba4c67ed8850a99b2ae882b9d5b5031e8526919dc0",
+        "records": 1,
+        "proposalDecodedExact": true,
+        "workerCodeFailures": 0,
+        "applicationTakeover": false
+      }
+    ],
+    "wholeFileReplayExact": true,
+    "applicationTakeover": false,
+    "workerCodeFailures": 0
+  },
+  "behavior": {
+    "red": {
+      "file": "media-collection-red-nov20.xml",
+      "tests": 96,
+      "passed": 51,
+      "failed": 45,
+      "failedNames": [
+        "vi: new 2 defaults and 5 pagination catalogue values are literal, equal-keyset and deeply frozen",
+        "vi: exact 38-row reviewed catalogue target and all unrelated BASE messages are protected",
+        "vi: undefined defaults at values/context, values/rights, cards/context and real detail/context",
+        "vi: null defaults at values/context, values/rights, cards/context and real detail/context",
+        "vi: zero defaults at values/context, values/rights, cards/context and real detail/context",
+        "vi: false defaults at values/context, values/rights, cards/context and real detail/context",
+        "vi: empty defaults at values/context, values/rights, cards/context and real detail/context",
+        "vi: cleanup /media-workspace create=true removes only policy/layout/execution summary and retains controls, links, events and data",
+        "vi: cleanup /media-workspace/new create=true removes only policy/layout/execution summary and retains controls, links, events and data",
+        "vi: cleanup /media-workspace create=false removes only policy/layout/execution summary and retains controls, links, events and data",
+        "vi: cleanup /media-workspace/new create=false removes only policy/layout/execution summary and retains controls, links, events and data",
+        "en: new 2 defaults and 5 pagination catalogue values are literal, equal-keyset and deeply frozen",
+        "en: exact 38-row reviewed catalogue target and all unrelated BASE messages are protected",
+        "en: undefined defaults at values/context, values/rights, cards/context and real detail/context",
+        "en: null defaults at values/context, values/rights, cards/context and real detail/context",
+        "en: zero defaults at values/context, values/rights, cards/context and real detail/context",
+        "en: false defaults at values/context, values/rights, cards/context and real detail/context",
+        "en: empty defaults at values/context, values/rights, cards/context and real detail/context",
+        "en: collection pagination first next50 translates exact range/empty/buttons/aria and preserves offsets",
+        "en: collection pagination previous0 only translates exact range/empty/buttons/aria and preserves offsets",
+        "en: collection pagination both50and150 translates exact range/empty/buttons/aria and preserves offsets",
+        "en: collection pagination empty previous0 translates exact range/empty/buttons/aria and preserves offsets",
+        "en: pagination route/default wrapper and hostile label use literal localized expectations",
+        "en: cleanup /media-workspace create=true removes only policy/layout/execution summary and retains controls, links, events and data",
+        "en: cleanup /media-workspace/new create=true removes only policy/layout/execution summary and retains controls, links, events and data",
+        "en: cleanup /media-workspace create=false removes only policy/layout/execution summary and retains controls, links, events and data",
+        "en: cleanup /media-workspace/new create=false removes only policy/layout/execution summary and retains controls, links, events and data",
+        "zh: new 2 defaults and 5 pagination catalogue values are literal, equal-keyset and deeply frozen",
+        "zh: exact 38-row reviewed catalogue target and all unrelated BASE messages are protected",
+        "zh: undefined defaults at values/context, values/rights, cards/context and real detail/context",
+        "zh: null defaults at values/context, values/rights, cards/context and real detail/context",
+        "zh: zero defaults at values/context, values/rights, cards/context and real detail/context",
+        "zh: false defaults at values/context, values/rights, cards/context and real detail/context",
+        "zh: empty defaults at values/context, values/rights, cards/context and real detail/context",
+        "zh: collection pagination first next50 translates exact range/empty/buttons/aria and preserves offsets",
+        "zh: collection pagination previous0 only translates exact range/empty/buttons/aria and preserves offsets",
+        "zh: collection pagination both50and150 translates exact range/empty/buttons/aria and preserves offsets",
+        "zh: collection pagination empty previous0 translates exact range/empty/buttons/aria and preserves offsets",
+        "zh: pagination route/default wrapper and hostile label use literal localized expectations",
+        "zh: cleanup /media-workspace create=true removes only policy/layout/execution summary and retains controls, links, events and data",
+        "zh: cleanup /media-workspace/new create=true removes only policy/layout/execution summary and retains controls, links, events and data",
+        "zh: cleanup /media-workspace create=false removes only policy/layout/execution summary and retains controls, links, events and data",
+        "zh: cleanup /media-workspace/new create=false removes only policy/layout/execution summary and retains controls, links, events and data",
+        "same VM VI→EN→ZH→VI recomputes all four owned defaults without stale cached locale",
+        "missing translator defaults are Vietnamese at all four owned sites, never English or legacy general"
+      ]
+    },
+    "green": {
+      "file": "media-collection-green-nov20.xml",
+      "tests": 96,
+      "passed": 96,
+      "failed": 0,
+      "failedNames": []
+    },
+    "portable": {
+      "file": "media-collection-portable-green-nov20.xml",
+      "tests": 96,
+      "passed": 96,
+      "failed": 0,
+      "failedNames": []
+    },
+    "fullPhysicalBundles": true,
+    "exposureCount": 1,
+    "substitutedProductionFunctions": 0,
+    "syntheticDom": true,
+    "nativeNotImplied": true
+  },
+  "historical": {
+    "sourceInitial": {
+      "file": "media-collection-source-chain-nov20.xml",
+      "tests": 94,
+      "passed": 93,
+      "failed": 1,
+      "failedNames": [
+        "title authority and complete physical source bind the parent four edits plus one reviewed route branch"
+      ]
+    },
+    "sourceRetest": {
+      "file": "media-collection-source-title-adapter-nov20.xml",
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "failedNames": []
+    },
+    "finalSourceCases": 94,
+    "snapshot": {
+      "file": "media-collection-snapshot-nov20.xml",
+      "tests": 26,
+      "passed": 26,
+      "failed": 0,
+      "failedNames": []
+    },
+    "assertionsGoldenRawPinsNegativePreserved": true,
+    "finiteSourceAndEntries": true
+  },
+  "affectedNode": {
+    "files": 77,
+    "initial": {
+      "file": "media-collection-regression-nov20.xml",
+      "tests": 1638,
+      "passed": 1380,
+      "failed": 258,
+      "failedNames": [
+        "tests\\chat-cards-customer-copy.test.mjs",
+        "tests\\chat-context-cards-turn.test.mjs",
+        "tests\\chat-context-section.test.mjs",
+        "tests\\chat-dates-pages.test.mjs",
+        "tests\\chat-detail-controls.test.mjs",
+        "tests\\chat-detail-summary-editor.test.mjs",
+        "vi/chat-disabled: only approved root header/access text changes, data and all other markup remain exact",
+        "vi/chat-enabled-no-view: only approved root header/access text changes, data and all other markup remain exact",
+        "vi/chat-authoring-false: only approved root header/access text changes, data and all other markup remain exact",
+        "vi/chat-authoring-true: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents-no-view: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents-loading-false: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents-loading-true: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents-failed-false: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents-failed-true: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents-ready-false: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents-ready-true: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents/pdf-no-view: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents/pdf-loading-false: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents/pdf-loading-true: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents/pdf-failed-false: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents/pdf-failed-true: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents/pdf-ready-false: only approved root header/access text changes, data and all other markup remain exact",
+        "vi//documents/pdf-ready-true: only approved root header/access text changes, data and all other markup remain exact",
+        "en/chat-disabled: only approved root header/access text changes, data and all other markup remain exact",
+        "en/chat-enabled-no-view: only approved root header/access text changes, data and all other markup remain exact",
+        "en/chat-authoring-false: only approved root header/access text changes, data and all other markup remain exact",
+        "en/chat-authoring-true: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents-no-view: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents-loading-false: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents-loading-true: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents-failed-false: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents-failed-true: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents-ready-false: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents-ready-true: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents/pdf-no-view: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents/pdf-loading-false: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents/pdf-loading-true: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents/pdf-failed-false: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents/pdf-failed-true: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents/pdf-ready-false: only approved root header/access text changes, data and all other markup remain exact",
+        "en//documents/pdf-ready-true: only approved root header/access text changes, data and all other markup remain exact",
+        "zh/chat-disabled: only approved root header/access text changes, data and all other markup remain exact",
+        "zh/chat-enabled-no-view: only approved root header/access text changes, data and all other markup remain exact",
+        "zh/chat-authoring-false: only approved root header/access text changes, data and all other markup remain exact",
+        "zh/chat-authoring-true: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents-no-view: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents-loading-false: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents-loading-true: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents-failed-false: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents-failed-true: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents-ready-false: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents-ready-true: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents/pdf-no-view: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents/pdf-loading-false: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents/pdf-loading-true: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents/pdf-failed-false: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents/pdf-failed-true: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents/pdf-ready-false: only approved root header/access text changes, data and all other markup remain exact",
+        "zh//documents/pdf-ready-true: only approved root header/access text changes, data and all other markup remain exact",
+        "vi: exactly five new access keys, every previous catalogue value and customer title intact",
+        "en: exactly five new access keys, every previous catalogue value and customer title intact",
+        "zh: exactly five new access keys, every previous catalogue value and customer title intact",
+        "vi: historical snapshot rejects every unreviewed access value and never hides an unknown key",
+        "en: historical snapshot rejects every unreviewed access value and never hides an unknown key",
+        "zh: historical snapshot rejects every unreviewed access value and never hides an unknown key",
+        "vi/features/content: actual module-card consumer changes only exact route-root title and description",
+        "vi/features/documents: actual module-card consumer changes only exact route-root title and description",
+        "en/features/content: actual module-card consumer changes only exact route-root title and description",
+        "en/features/documents: actual module-card consumer changes only exact route-root title and description",
+        "zh/features/content: actual module-card consumer changes only exact route-root title and description",
+        "zh/features/documents: actual module-card consumer changes only exact route-root title and description",
+        "vi/customer-title/AI Chat Workspace: detail records identical to product names are not translated",
+        "vi/customer-title/Document Studio: detail records identical to product names are not translated",
+        "en/customer-title/AI Chat Workspace: detail records identical to product names are not translated",
+        "en/customer-title/Document Studio: detail records identical to product names are not translated",
+        "zh/customer-title/AI Chat Workspace: detail records identical to product names are not translated",
+        "zh/customer-title/Document Studio: detail records identical to product names are not translated",
+        "vi/chat/writefalse: actual eight-field create/detail consumer preserves names/constraints/customer options",
+        "vi/chat/writetrue: actual eight-field create/detail consumer preserves names/constraints/customer options",
+        "vi/chat/11111111-1111-4111-8111-111111111111/writefalse: actual eight-field create/detail consumer preserves names/constraints/customer options",
+        "vi/chat/11111111-1111-4111-8111-111111111111/writetrue: actual eight-field create/detail consumer preserves names/constraints/customer options",
+        "en/chat/writefalse: actual eight-field create/detail consumer preserves names/constraints/customer options",
+        "en/chat/writetrue: actual eight-field create/detail consumer preserves names/constraints/customer options",
+        "en/chat/11111111-1111-4111-8111-111111111111/writefalse: actual eight-field create/detail consumer preserves names/constraints/customer options",
+        "en/chat/11111111-1111-4111-8111-111111111111/writetrue: actual eight-field create/detail consumer preserves names/constraints/customer options",
+        "zh/chat/writefalse: actual eight-field create/detail consumer preserves names/constraints/customer options",
+        "zh/chat/writetrue: actual eight-field create/detail consumer preserves names/constraints/customer options",
+        "zh/chat/11111111-1111-4111-8111-111111111111/writefalse: actual eight-field create/detail consumer preserves names/constraints/customer options",
+        "zh/chat/11111111-1111-4111-8111-111111111111/writetrue: actual eight-field create/detail consumer preserves names/constraints/customer options",
+        "vi/intro-missing: zero-only cards omitted, real positive values remain unchanged",
+        "vi/intro-zero: zero-only cards omitted, real positive values remain unchanged",
+        "vi/intro-negative: zero-only cards omitted, real positive values remain unchanged",
+        "vi/intro-invalid: zero-only cards omitted, real positive values remain unchanged",
+        "vi/intro-total: zero-only cards omitted, real positive values remain unchanged",
+        "vi/intro-review: zero-only cards omitted, real positive values remain unchanged",
+        "vi/intro-ready: zero-only cards omitted, real positive values remain unchanged",
+        "vi/intro-thread-fallback: zero-only cards omitted, real positive values remain unchanged",
+        "en/intro-missing: zero-only cards omitted, real positive values remain unchanged",
+        "en/intro-zero: zero-only cards omitted, real positive values remain unchanged",
+        "en/intro-negative: zero-only cards omitted, real positive values remain unchanged",
+        "en/intro-invalid: zero-only cards omitted, real positive values remain unchanged",
+        "en/intro-total: zero-only cards omitted, real positive values remain unchanged",
+        "en/intro-review: zero-only cards omitted, real positive values remain unchanged",
+        "en/intro-ready: zero-only cards omitted, real positive values remain unchanged",
+        "en/intro-thread-fallback: zero-only cards omitted, real positive values remain unchanged",
+        "zh/intro-missing: zero-only cards omitted, real positive values remain unchanged",
+        "zh/intro-zero: zero-only cards omitted, real positive values remain unchanged",
+        "zh/intro-negative: zero-only cards omitted, real positive values remain unchanged",
+        "zh/intro-invalid: zero-only cards omitted, real positive values remain unchanged",
+        "zh/intro-total: zero-only cards omitted, real positive values remain unchanged",
+        "zh/intro-review: zero-only cards omitted, real positive values remain unchanged",
+        "zh/intro-ready: zero-only cards omitted, real positive values remain unchanged",
+        "zh/intro-thread-fallback: zero-only cards omitted, real positive values remain unchanged",
+        "vi/documents/false/empty: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "vi/documents/false/processing: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "vi/documents/false/completed: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "vi/documents/true/empty: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "vi/documents/true/processing: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "vi/documents/true/completed: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "vi/documents/pdf/false/empty: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "vi/documents/pdf/false/processing: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "vi/documents/pdf/false/completed: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "vi/documents/pdf/true/empty: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "vi/documents/pdf/true/processing: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "vi/documents/pdf/true/completed: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "en/documents/false/empty: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "en/documents/false/processing: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "en/documents/false/completed: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "en/documents/true/empty: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "en/documents/true/processing: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "en/documents/true/completed: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "en/documents/pdf/false/empty: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "en/documents/pdf/false/processing: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "en/documents/pdf/false/completed: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "en/documents/pdf/true/empty: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "en/documents/pdf/true/processing: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "en/documents/pdf/true/completed: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "zh/documents/false/empty: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "zh/documents/false/processing: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "zh/documents/false/completed: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "zh/documents/true/empty: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "zh/documents/true/processing: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "zh/documents/true/completed: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "zh/documents/pdf/false/empty: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "zh/documents/pdf/false/processing: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "zh/documents/pdf/false/completed: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "zh/documents/pdf/true/empty: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "zh/documents/pdf/true/processing: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "zh/documents/pdf/true/completed: nine actual tools keep readiness/links/history/counts; implementation footer removed",
+        "vi/document-loading: unrelated read/access branch is byte-exact",
+        "vi/document-failed: unrelated read/access branch is byte-exact",
+        "vi/document-guarded: unrelated read/access branch is byte-exact",
+        "en/document-loading: unrelated read/access branch is byte-exact",
+        "en/document-failed: unrelated read/access branch is byte-exact",
+        "en/document-guarded: unrelated read/access branch is byte-exact",
+        "zh/document-loading: unrelated read/access branch is byte-exact",
+        "zh/document-failed: unrelated read/access branch is byte-exact",
+        "zh/document-guarded: unrelated read/access branch is byte-exact",
+        "vi: exactly 67 approved entries; every old value/order and message meaning remains",
+        "en: exactly 67 approved entries; every old value/order and message meaning remains",
+        "zh: exactly 67 approved entries; every old value/order and message meaning remains",
+        "vi: historical adapter rejects mutated/missing values and preserves unknown keys",
+        "en: historical adapter rejects mutated/missing values and preserves unknown keys",
+        "zh: historical adapter rejects mutated/missing values and preserves unknown keys",
+        "tests\\chat-history.test.mjs",
+        "tests\\chat-request-panel.test.mjs",
+        "vi/chat/items0/createfalse: finite copy localized, controls/data and other output exact",
+        "vi/chat/items0/createtrue: finite copy localized, controls/data and other output exact",
+        "vi/chat/items1/createfalse: finite copy localized, controls/data and other output exact",
+        "vi/chat/items1/createtrue: finite copy localized, controls/data and other output exact",
+        "en/chat/items0/createfalse: finite copy localized, controls/data and other output exact",
+        "en/chat/items0/createtrue: finite copy localized, controls/data and other output exact",
+        "en/chat/items1/createfalse: finite copy localized, controls/data and other output exact",
+        "en/chat/items1/createtrue: finite copy localized, controls/data and other output exact",
+        "zh/chat/items0/createfalse: finite copy localized, controls/data and other output exact",
+        "zh/chat/items0/createtrue: finite copy localized, controls/data and other output exact",
+        "zh/chat/items1/createfalse: finite copy localized, controls/data and other output exact",
+        "zh/chat/items1/createtrue: finite copy localized, controls/data and other output exact",
+        "vi/documents/loading/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "vi/documents/loading/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "vi/documents/failed/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "vi/documents/failed/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "vi/documents/ready/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "vi/documents/ready/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "vi/documents/pdf/loading/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "vi/documents/pdf/loading/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "vi/documents/pdf/failed/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "vi/documents/pdf/failed/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "vi/documents/pdf/ready/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "vi/documents/pdf/ready/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "en/documents/loading/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "en/documents/loading/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "en/documents/failed/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "en/documents/failed/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "en/documents/ready/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "en/documents/ready/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "en/documents/pdf/loading/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "en/documents/pdf/loading/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "en/documents/pdf/failed/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "en/documents/pdf/failed/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "en/documents/pdf/ready/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "en/documents/pdf/ready/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "zh/documents/loading/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "zh/documents/loading/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "zh/documents/failed/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "zh/documents/failed/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "zh/documents/ready/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "zh/documents/ready/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "zh/documents/pdf/loading/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "zh/documents/pdf/loading/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "zh/documents/pdf/failed/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "zh/documents/pdf/failed/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "zh/documents/pdf/ready/refreshfalse: real loading/error/retry states remain, only five visible texts change",
+        "zh/documents/pdf/ready/refreshtrue: real loading/error/retry states remain, only five visible texts change",
+        "vi: exactly 32 finite additions, existing dictionary values/order and unrelated detail/customer data unchanged",
+        "en: exactly 32 finite additions, existing dictionary values/order and unrelated detail/customer data unchanged",
+        "zh: exactly 32 finite additions, existing dictionary values/order and unrelated detail/customer data unchanged",
+        "Vietnamese safety copy retains all rejected-input categories in customer language",
+        "vi: historical adapter accepts only exact reviewed entries/positions and retains unknown/customer values",
+        "en: historical adapter accepts only exact reviewed entries/positions and retains unknown/customer values",
+        "zh: historical adapter accepts only exact reviewed entries/positions and retains unknown/customer values",
+        "vi: customer workflow uses natural instructions and preserves the rest of landing",
+        "en: customer workflow uses natural instructions and preserves the rest of landing",
+        "zh: customer workflow uses natural instructions and preserves the rest of landing",
+        "vi: all 10349 released catalog entries remain unchanged",
+        "en: all 10349 released catalog entries remain unchanged",
+        "zh: all 10349 released catalog entries remain unchanged",
+        "vi: all 10424 released catalog values remain unchanged",
+        "en: all 10424 released catalog values remain unchanged",
+        "zh: all 10424 released catalog values remain unchanged",
+        "vi/missing-wallet: customer-language membership copy preserves exact real values and finite markup",
+        "vi/zero-partial-plan: customer-language membership copy preserves exact real values and finite markup",
+        "vi/VIPnamed: customer-language membership copy preserves exact real values and finite markup",
+        "vi/populatedapprovedcatalog: customer-language membership copy preserves exact real values and finite markup",
+        "en/missing-wallet: customer-language membership copy preserves exact real values and finite markup",
+        "en/zero-partial-plan: customer-language membership copy preserves exact real values and finite markup",
+        "en/VIPnamed: customer-language membership copy preserves exact real values and finite markup",
+        "en/populatedapprovedcatalog: customer-language membership copy preserves exact real values and finite markup",
+        "zh/missing-wallet: customer-language membership copy preserves exact real values and finite markup",
+        "zh/zero-partial-plan: customer-language membership copy preserves exact real values and finite markup",
+        "zh/VIPnamed: customer-language membership copy preserves exact real values and finite markup",
+        "zh/populatedapprovedcatalog: customer-language membership copy preserves exact real values and finite markup",
+        "vi/features: fixed AI Studio hero alias follows locale without translating data or changing controls",
+        "en/features: fixed AI Studio hero alias follows locale without translating data or changing controls",
+        "zh/features: fixed AI Studio hero alias follows locale without translating data or changing controls",
+        "vi: all 9951 previously released catalog entries remain unchanged",
+        "en: all 9951 previously released catalog entries remain unchanged",
+        "zh: all 9951 previously released catalog entries remain unchanged",
+        "vi: all 9509 released catalog entries remain unchanged",
+        "en: all 9509 released catalog entries remain unchanged",
+        "zh: all 9509 released catalog entries remain unchanged",
+        "vi: previous full catalog values stay unchanged",
+        "en: previous full catalog values stay unchanged",
+        "zh: previous full catalog values stay unchanged",
+        "vi:catalog preserves every preexisting translation and namespace entry",
+        "en:catalog preserves every preexisting translation and namespace entry",
+        "zh:catalog preserves every preexisting translation and namespace entry"
+      ]
+    },
+    "retainedPass": 1380,
+    "failedOrUnexecutedOnly": [
+      {
+        "file": "media-collection-failed-only-nov20/01.xml",
+        "tests": 38,
+        "passed": 38,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/02.xml",
+        "tests": 11,
+        "passed": 11,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/03.xml",
+        "tests": 11,
+        "passed": 11,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/04.xml",
+        "tests": 31,
+        "passed": 31,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/05.xml",
+        "tests": 34,
+        "passed": 34,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/06.xml",
+        "tests": 22,
+        "passed": 22,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/07.xml",
+        "tests": 72,
+        "passed": 72,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/08.xml",
+        "tests": 87,
+        "passed": 87,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/09.xml",
+        "tests": 11,
+        "passed": 11,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/10.xml",
+        "tests": 12,
+        "passed": 12,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/11.xml",
+        "tests": 55,
+        "passed": 55,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/12.xml",
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/13.xml",
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/14.xml",
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/15.xml",
+        "tests": 12,
+        "passed": 12,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/16.xml",
+        "tests": 3,
+        "passed": 0,
+        "failed": 3,
+        "failedNames": [
+          "vi/features: fixed AI Studio hero alias follows locale without translating data or changing controls",
+          "en/features: fixed AI Studio hero alias follows locale without translating data or changing controls",
+          "zh/features: fixed AI Studio hero alias follows locale without translating data or changing controls"
+        ]
+      },
+      {
+        "file": "media-collection-failed-only-nov20/17.xml",
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/18.xml",
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/19.xml",
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "failedNames": []
+      },
+      {
+        "file": "media-collection-failed-only-nov20/20.xml",
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "failedNames": []
+      }
+    ],
+    "finalNavFailedOnly": {
+      "file": "media-collection-nav-historical-retest-nov20.xml",
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "failedNames": []
+    },
+    "finalExecutablePass": 1800,
+    "finalUnresolvedFailures": 0,
+    "wholeRepositoryGreen": false
+  },
+  "python": {
+    "branch": {
+      "file": "media-collection-python-nov20.xml",
+      "tests": 125,
+      "passed": 121,
+      "failed": 4,
+      "failedNames": [
+        "test_audio_hub_board_is_a_plain_safe_projection_with_explicit_next_steps",
+        "test_audio_hub_keeps_phone_controls_at_the_required_touch_target_size",
+        "test_collection_detail_exposes_only_an_explicit_typed_audio_handoff",
+        "test_media_workspace_has_no_raw_player_provider_import_or_private_pwa_cache"
+      ]
+    },
+    "exactBaseFailedOnly": {
+      "file": "media-collection-python-base-nov20-r2.xml",
+      "tests": 4,
+      "passed": 0,
+      "failed": 4,
+      "failedNames": [
+        "test_audio_hub_board_is_a_plain_safe_projection_with_explicit_next_steps",
+        "test_audio_hub_keeps_phone_controls_at_the_required_touch_target_size",
+        "test_collection_detail_exposes_only_an_explicit_typed_audio_handoff",
+        "test_media_workspace_has_no_raw_player_provider_import_or_private_pwa_cache"
+      ]
+    },
+    "sameBaseFailures": 4,
+    "newFailures": 0,
+    "firstBaselineRunnerImportFailureNotTestExecution": true
+  },
+  "testerMetadata": {
+    "file": "media-collection-tester-metadata-final-nov20.xml",
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "failedNames": []
+  },
+  "native": {
+    "views": 12,
+    "representativeR3": 1,
+    "qualifiedR6Prefix": 7,
+    "ZHFollowupR8": 4,
+    "screenshotsHashCrcFullDecode": 36,
+    "inputsUnchanged": 214,
+    "bindings": [
+      "e562b80c48ae29ba31dbe4856af605bb2006d3ea8fbc72190b27800e81326d52",
+      "ac1d4ae980e5b646b959931ded8c23f452ba2f09b913ff08cfe0313a06a99785"
+    ],
+    "sameApplication151SourceCohort": true,
+    "sameBindingTwelveViewClaim": false,
+    "R6OverallAccepted": false,
+    "retainedPrefixDoesNotRewriteRejectedGroup": true,
+    "repeatedFullyAcceptedRepresentative": false,
+    "sourceCoreSchemaAuthEgressCodeHeld": true,
+    "unexpectedConsoleNetworkErrors": 0,
+    "ownedActiveAfterCleanup": 0,
+    "nativeBase": "NOT_RUN",
+    "earlierSynchronizationDraftSpecAndRatePacingFaultsPreserved": true,
+    "deliberatelyClearedDraftRefill": "NOT_CLAIMED_NOT_SOURCE_FALLBACK_SCOPE"
+  },
+  "review": {
+    "independentInitialBlockingFindings": 0,
+    "independentChangedQaBlockingFindings": 0,
+    "ciCommandAdded": 1,
+    "workflowOtherBehaviorUnchanged": true
+  },
+  "protected": {
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "productionDataMutations": 0,
+    "campaignStateOpened": false,
+    "botRouteEngineAuthApiBackendWalletEnvDataCssMotionUnchanged": true
+  },
+  "release": {
+    "pr": "PENDING",
+    "ci": "PENDING",
+    "merge": "PENDING",
+    "deploy": "PENDING",
+    "runtime": "PENDING",
+    "receipts": "PENDING"
+  },
+  "limits": {
+    "signedProductionUi": "NOT_TESTED",
+    "audioOutput": "NOT_TESTED",
+    "nativeNegativePermission": "NOT_EXERCISED",
+    "detailFallback": "UNIT_SOURCE_ONLY",
+    "integrationActionToasts": "NEXT_SCOPED_UNIT",
+    "deviceSafariWholeAccessibilityAuthLifecycle": "NOT_PROVEN",
+    "wholeGoalComplete": false,
+    "motion": "M-FINAL-01..06_LAST"
+  },
+  "evidence": [
+    {
+      "file": "media-collection-red-nov20.xml",
+      "rawSha256": "0d272af5988c34468260d7d85ddd789d9c84a1a6fd4b9b3d8fec6d9e7d782294"
+    },
+    {
+      "file": "media-collection-green-nov20.xml",
+      "rawSha256": "8dbd69cf3d1dd5c20b1b07f69824e786bd7d586103d48ef6a27b8ca4ff7a59f9"
+    },
+    {
+      "file": "media-collection-portable-green-nov20.xml",
+      "rawSha256": "8d6b585c17c0afb26cef218768caad8fc47542a4db1ebb0524d9c15941438185"
+    },
+    {
+      "file": "media-collection-source-chain-nov20.xml",
+      "rawSha256": "c1242ec4a8b51fe57d7f1fd619e8388f995332a838b13f43981914e604fd3a4b"
+    },
+    {
+      "file": "media-collection-source-title-adapter-nov20.xml",
+      "rawSha256": "43992f0550d6e923e57b533b8d2965f3935e552bbf1805ef8605dd8a24768995"
+    },
+    {
+      "file": "media-collection-snapshot-nov20.xml",
+      "rawSha256": "786964046f92c410b14d72e61c3d860b5a4def533d8f3519e611863e9710ce0d"
+    },
+    {
+      "file": "media-collection-regression-nov20.xml",
+      "rawSha256": "a91b0324b043cf37927e6e0f8f9c505906ea4572ecc24ccc2d4458f3ea31c512"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/01.xml",
+      "rawSha256": "6011aa722eb77b726fb45c6d0e9d8f0b5ddaa0d630f8dc614b98e6b3c3544ed4"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/02.xml",
+      "rawSha256": "a8edf9077e8df13958515760fb172432719bfdc7bab66cf4124c19070d04643e"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/03.xml",
+      "rawSha256": "9749c6d76aedb4c33a77a5bb71193306b7c0c41e87671392f4f68f247da3e319"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/04.xml",
+      "rawSha256": "1ec78b462028acf02063c10b11b80e4c11e73480ede3587ad90cb3441021c9a1"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/05.xml",
+      "rawSha256": "95a197850085d4c9f8da87f77d792d2f3bde896264c0d57d16cf6b797cbd30b2"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/06.xml",
+      "rawSha256": "e5cc56d0ae19b2e4a2891ea312c8a758580040d11b1eadec6ebaed7ea6f4b239"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/07.xml",
+      "rawSha256": "26bdf061f59a72c717e5c61cf18fc8fa599cb6402d3e15736b74cae2b4823d85"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/08.xml",
+      "rawSha256": "d863558de2cd84a60d318d8c76f6b9ae037630da98432cf5248da85bf8ac5421"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/09.xml",
+      "rawSha256": "d12ade5bc31dbf1665a9ee66761a6df151562c6149d2991add4708925110e735"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/10.xml",
+      "rawSha256": "680eba5dce0f07156813d26d1ee3a4ab6ede5373d32611257f7ee870f1f0df1c"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/11.xml",
+      "rawSha256": "11de58f8fc394daf3f3353cd6bf2045d3a35797127b29d8a24c0ea5649d57b91"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/12.xml",
+      "rawSha256": "fddd33855b3d6503c0b27daa44455c80080b4ce11f2386c38008963ccc548925"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/13.xml",
+      "rawSha256": "a0664ca7918f96bb0e97ec61d2443dec482fd100a566b619223d79e88a2e16c4"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/14.xml",
+      "rawSha256": "07409e1abbd9c67f1ab8807437a0125ff0ea2138830526ee2347cf4f4a834fe2"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/15.xml",
+      "rawSha256": "de335bf6a9f6f378f2a54f394c964f5ccf792ea69a40f77a0c21fa36bbd659a8"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/16.xml",
+      "rawSha256": "25b03a6d2c3289f635a06ad0d8cda1b9f4a1b293296bb61e32ff87586788ba6a"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/17.xml",
+      "rawSha256": "157bd0add7310de965cc5ab5fd816de07e72fc41cb385804ba419a45d46a14b1"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/18.xml",
+      "rawSha256": "d7b7b42da3a867bbb927b337584db68001703d23e47b9d160c49656da7075fc7"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/19.xml",
+      "rawSha256": "5771b0baeb69c1938b739da89619442dcdfe385dd21222967e82287a463eb23a"
+    },
+    {
+      "file": "media-collection-failed-only-nov20/20.xml",
+      "rawSha256": "1fd44dc6f55571bca31303d272770081c72190011d9c606a988aef39aee26a97"
+    },
+    {
+      "file": "media-collection-nav-historical-retest-nov20.xml",
+      "rawSha256": "a02434312081651232de850da8c0108adceb93304c3f07219f7b4c5b4201e9bd"
+    },
+    {
+      "file": "media-collection-python-nov20.xml",
+      "rawSha256": "67dda60cf612812ebbf2489a5452c89ea1f547a4dbab3a5d209669900a9606ce"
+    },
+    {
+      "file": "media-collection-python-base-nov20-r2.xml",
+      "rawSha256": "104171668acc9c250218cd21864ecd07ce6dd5b7e3ec9a1a478e6c161edde5ba"
+    },
+    {
+      "file": "media-collection-tester-metadata-final-nov20.xml",
+      "rawSha256": "513fc78e67e2be3aff61e1295dfd36521d7e41ec4d952941c88cd06eeb58ee86"
+    },
+    {
+      "file": "media-collection-native-all-evidence-nov20.json",
+      "rawSha256": "c03d09c37b167494312079a9d972f91547825cfc0d73c2cdd0f0a15a8feb66a6"
+    },
+    {
+      "file": "media-collection-review-nov20.md",
+      "rawSha256": "29500108e81e453c6390f120a0b5db427de597d323c9c978a2274b1368ab0c68"
+    },
+    {
+      "file": "media-collection-review-supplement-nov20.md",
+      "rawSha256": "af1998abcd701e1555073d86eb2fd9ea899402bded34a8e5179513935c35f7d0"
+    }
+  ]
+}

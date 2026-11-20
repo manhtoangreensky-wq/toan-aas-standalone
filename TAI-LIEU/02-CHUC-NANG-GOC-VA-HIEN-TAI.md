@@ -1,5 +1,27 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 20/11/2026 — bộ sưu tập âm thanh: giữ chức năng, sửa chữ khách nhìn
+
+Nguồn gốc: `docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md` và năm
+renderer/helper hiện có tại BASE4080b879. Đây vẫn là nơi quản lý yêu cầu
+và liên kết tệp âm thanh đã lưu; không thêm engine, trình phát hay đầu ra.
+
+| Hiện trạng nguồn BASE | Ứng viên | Ranh giới giữ |
+|---|---|---|
+| Default `general` và ghi chú quyền VI cố định | Hai fallback VI/EN/ZH tại bốn biểu thức | Mọi truthy customer value và String/escaping giữ |
+| Bộ phân trang media dùng câu VI | Nhánh chữ chỉ đúng tuple bộ sưu tập | Signature/offset/route/action và media-audio-page giữ |
+| Policy-aside/wrapper và execution-summary lộ chi tiết nội bộ | Bỏ đúng lời gọi/wrapper/span | Policy function/guard/event/version/date không đổi |
+| Hai link cần dùng nằm ở aside | Chuyển vào footer tạo mới | Kho tệp/Dự án và quyền không mất |
+| Câu hướng dẫn/nhãn hoạt động mang thuật ngữ triển khai | 31 key hiện có viết lại, bảy key mới | Dữ liệu khách/server không bị dịch tự động |
+| Comparator cũ kiểm nguồn của đợt trước | Inverse hữu hạn sáu vùng đã khóa | Assertion/golden/raw hash/negative giữ; current151 độc lập |
+
+96 ca vật lý và96 portable đạt; 94 ca chuỗi nguồn đạt, Python121PASS/bốn
+lỗi cùng BASE. Node1800executablePASS;native12trục/36PNG/214inputs giữ,
+source/core/schema/auth/egress/owned0. Native dùng ba cohortQA cùng
+151appsource,R6overallfalsevẫn giữ;release cònchốt riêng. PR781 đã giao runtimeBASE,
+CI44741117456/deploy44744844095/receipts đọc lại đúng. Không diễn giải
+các snapshot ứng viên cũ thành hiện trạng hoặc suy toàn bộ locale đã xong.
+
 ## 20/11/2026 — nguồn lựa chọn dự án tại Kho tệp
 
 Nguồn gốc: `docs/migration/ASSET_VAULT_CONTRACT.md` và reader Web riêng tài

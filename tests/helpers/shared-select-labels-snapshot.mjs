@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import {mediaCollectionHistoricalSnapshot} from "./media-collection-locale-snapshot.mjs";
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {sharedSelectReminderTitleHistoricalSource} from './shared-select-reminder-title-snapshot.mjs';
@@ -78,6 +79,7 @@ export function sharedSelectLabelsHistoricalSource(source,file){
  return inverseExact(source,[catalogue]);
 }
 export function sharedSelectLabelsHistoricalSnapshot(entries,locale){
+ entries=mediaCollectionHistoricalSnapshot(entries,locale);
  const index=['vi','en','zh'].indexOf(locale)+1;
  assert.ok(index>0,fail+' locale');assert.ok(Array.isArray(entries),fail+' entries');
  assert.ok(entries.every(entry=>Array.isArray(entry)&&entry.length===2),fail+' entry shape');

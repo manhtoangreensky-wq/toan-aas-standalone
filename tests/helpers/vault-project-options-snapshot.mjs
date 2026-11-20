@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {mediaCollectionHistoricalSource} from "./media-collection-locale-snapshot.mjs";
 
 const raw = fs.readFileSync(new URL("../fixtures/vault-project-options-reviewed.json", import.meta.url));
 const fail = "Unreviewed Vault project options";
@@ -21,6 +22,7 @@ const owner = "  async function hydrate() {", next = "  async function hydrateCa
 // complete physical sources and all151 pins in vault-project-options-source.
 export function vaultProjectOptionsHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail);
+  source = mediaCollectionHistoricalSource(source, file);
   if (file !== edit.file) return source;
   if (!source.includes(owner) && !source.includes(edit.old) && !source.includes(edit.new)) return source;
   assert.equal(count(source, owner), 1, fail + " owner");

@@ -1,5 +1,21 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## MEDIA-COLLECTION-LOCALE-20261120 — bộ sưu tập âm thanh
+
+Phiên: [MEDIA-COLLECTION-LOCALE](PHIEN-MEDIA-COLLECTION-LOCALE-20261120.md).
+BASE `4080b879ad8d6ded081aa47313bf9cac67121f0b`; Issue689/comment7041067092.
+Sửa case tại đây trước; không tạo PR/thẻ giữ chỗ.
+
+| Mã | Mức | Phạm vi | Kết quả cần đạt |
+|---|---|---|---|
+| MC-DEFAULTS | nặng | Bốn fallback VI/EN/ZH, falsy/truthy | Chỉ default ứng dụng dịch; general/câu VI cũ/khoảng trắng/customer giữ |
+| MC-PAGINATION | nặng | Tuple bộ sưu tập, offset/route/ARIA | Câu đúng locale, offset0/50/150 giữ; mọi consumer khác bằng BASE |
+| MC-CLEANUP | vừa | Danh sách/tạo mới và phần chung Audio Hub | Không aside/wrapper/span dư, đủ hai link và form/filter/list/events/quyền |
+| MC-COPY | vừa | 38 dòng/114 giá trị, đổi locale cùng VM | Bảy key mới/31 key hiện có đúng, catalogue equal/frozen; không đổi key khác |
+| MC-NATIVE | nặng | Hai route×VI/EN/ZH×320dark/1440light | Signed GET thật, UUID/tên/keyboard/draft/geometry/console/owned0; không gửi form |
+| MC-REGRESSION | nặng | Candidate physical151/149 protected và historical leaf | Khóa nguồn mới trước inverse, giữ golden/assertions; lỗi BASE phân biệt |
+| MC-DELIVERY | nặng | Một PR/exactCI/merge/deploy/VPS/assets/receipt | Đúng bản qua từng cổng; không suy provider output hoặc toàn goal |
+
 ## VAULT-PROJECT-OPTIONS-20261120 — dự án trong Kho tệp
 
 Phiên: [VAULT-PROJECT-OPTIONS](PHIEN-VAULT-PROJECT-OPTIONS-20261120.md).

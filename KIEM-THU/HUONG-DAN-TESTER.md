@@ -1,5 +1,20 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Bộ sưu tập âm thanh — 20/11/2026
+
+Dùng [phiên hiện hành](PHIEN-MEDIA-COLLECTION-LOCALE-20261120.md) và
+các case MC trong nguồn danh sách case. Kiểm hai trang danh sách/tạo mới
+ở từng ngôn ngữ. Không tạo bộ sưu tập hoặc tải tệp thật khi chỉ kiểm chữ.
+Tên/nội dung do khách nhập, kể cả chữ tiếng Anh đã lưu, phải giữ nguyên.
+Chỉ câu mặc định do ứng dụng tạo mới phải theo ngôn ngữ giao diện.
+
+Chọn dự án bằng bàn phím; nhập `general`, khoảng trắng và ghi chú quyền
+VI cũ, rồi làm mới bằng GET để kiểm bản gõ còn nguyên. Phân trang phải
+giữ đúng bộ sưu tập và đường dẫn. Kho tệp/Dự án nằm tại chân biểu mẫu;
+không còn khung giải thích nội bộ nhưng các điều khiển vẫn dùng được.
+Ghi riêng thông báo thao tác cũ trong integration; không lấy các nhãn
+catalogue đã đạt để nhận toàn trang thuần ngôn ngữ.
+
 ## Đợt locale/motion/responsive — 08/11/2026
 
 Nguồn hiện tại: [phiên Tester](PHIEN-LOCALE-20261108.md) và

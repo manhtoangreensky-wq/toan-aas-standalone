@@ -1,0 +1,1289 @@
+{
+  "task": "MEDIA-COLLECTION-LOCALE-20261120",
+  "base": "4080b879ad8d6ded081aa47313bf9cac67121f0b",
+  "date": "2026-11-20",
+  "parentFixtureRawSha256": "9faedb1fe8c1aff3d456a658f82dd107a4d4fab7690c51eb071b1d93dc53edee",
+  "canonicalChanges": [
+    {
+      "file": "static/portal/portal.js",
+      "old": "String(source.use_context || \"general\")",
+      "new": "String(source.use_context || audioWorkspaceText(\"defaults.context\", \"Sử dụng chung\"))",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "String(source.rights_note || \"Tôi xác nhận có quyền sử dụng các tệp và brief trong collection này.\")",
+      "new": "String(source.rights_note || audioWorkspaceText(\"defaults.rights\", \"Tôi xác nhận có quyền sử dụng các tệp và yêu cầu trong bộ sưu tập này.\"))",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "String(item.use_context || \"general\")",
+      "new": "String(item.use_context || audioWorkspaceText(\"defaults.context\", \"Sử dụng chung\"))",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "String(collection.use_context || \"general\")",
+      "new": "String(collection.use_context || audioWorkspaceText(\"defaults.context\", \"Sử dụng chung\"))",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    } : {\n      range: \"Đang hiển thị \" + String(offset + 1) + \"–\" + String(offset + returned) + \" \" + label,",
+      "new": "    } : className === \"portal-media-pagination\" && action === \"media-workspace-page\" ? {\n      range: audioWorkspaceText(\"pagination.range\", \"Đang hiển thị {from}–{to} {label}\", { from: String(offset + 1), to: String(offset + returned), label }),\n      empty: audioWorkspaceText(\"pagination.empty\", \"Không có {label} ở trang này\", { label }),\n      previous: audioWorkspaceText(\"pagination.previous\", \"← Trang trước\"),\n      next: audioWorkspaceText(\"pagination.next\", \"Trang sau →\"),\n      aria: audioWorkspaceText(\"pagination.aria\", \"Phân trang {label}\", { label })\n    } : {\n      range: \"Đang hiển thị \" + String(offset + 1) + \"–\" + String(offset + returned) + \" \" + label,",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "      <div class=\"portal-media-workspace-layout\"><section class=\"portal-card portal-card-pad portal-media-create\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"create.title\", \"Create audio collection\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"create.body\", \"Save a private creative brief with owner, CSRF, idempotency and version-history checks. No AI request or audio output is created here.\"))}</p></div>${badge(canCreate ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"media-collection-create\" data-portal-route=\"${safeText(page.routePath || page.path)}\" novalidate>${renderFields(mediaCollectionShellFormFields(), canCreate, context, values)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"create.note\", \"The collection stores authoring metadata only. Audio is attached separately from Asset Vault after the server checks ownership.\"))}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canCreate ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"create.submit\", \"Create collection\"))}</button></div></form></section>${renderMediaPolicy(context)}</div>",
+      "new": "      <section class=\"portal-card portal-card-pad portal-media-create\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"create.title\", \"Create audio collection\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"create.body\", \"Save a private creative brief with owner, CSRF, idempotency and version-history checks. No AI request or audio output is created here.\"))}</p></div>${badge(canCreate ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"media-collection-create\" data-portal-route=\"${safeText(page.routePath || page.path)}\" novalidate>${renderFields(mediaCollectionShellFormFields(), canCreate, context, values)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"create.note\", \"The collection stores authoring metadata only. Audio is attached separately from Asset Vault after the server checks ownership.\"))}</span><div class=\"portal-inline-actions\"><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(audioWorkspaceText(\"policy.openAssets\", \"Mở Kho tệp\"))}</a><a class=\"portal-button portal-button--quiet\" href=\"/projects\">${safeText(audioWorkspaceText(\"policy.openProjects\", \"Mở Dự án\"))}</a><button class=\"portal-button portal-button--primary\" type=\"submit\"${canCreate ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"create.submit\", \"Create collection\"))}</button></div></div></form></section>",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "<span class=\"portal-form-note\">${safeText(audioWorkspaceExecutionStatus(execution.authoring || \"ready\"))} ${safeText(audioWorkspaceText(\"activity.authoring\", \"authoring\"))} · ${safeText(audioWorkspaceExecutionStatus(execution.generation || \"guarded\"))} ${safeText(audioWorkspaceText(\"activity.generation\", \"processing\"))}</span>",
+      "new": "",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  verifyEqualKeysets();",
+      "new": "  Object.assign(MESSAGES.vi, {\"audioWorkspace.defaults.context\":\"Sử dụng chung\",\"audioWorkspace.defaults.rights\":\"Tôi xác nhận có quyền sử dụng các tệp và yêu cầu trong bộ sưu tập này.\",\"audioWorkspace.pagination.range\":\"Đang hiển thị {from}–{to} {label}\",\"audioWorkspace.pagination.empty\":\"Không có {label} ở trang này\",\"audioWorkspace.pagination.previous\":\"← Trang trước\",\"audioWorkspace.pagination.next\":\"Trang sau →\",\"audioWorkspace.pagination.aria\":\"Phân trang {label}\",\"audioWorkspace.page.description\":\"Sắp xếp yêu cầu, tệp âm thanh đã lưu và lịch sử thay đổi của bạn.\",\"audioWorkspace.page.newDescription\":\"Tạo bộ sưu tập để lưu yêu cầu âm thanh và thông tin quyền sử dụng.\",\"audioWorkspace.workspace.guardTitle\":\"Chưa thể mở {workspace}\",\"audioWorkspace.workspace.guardBody\":\"Đăng nhập và kiểm tra quyền truy cập để mở thư viện âm thanh của bạn.\",\"audioWorkspace.intro.title\":\"Sắp xếp yêu cầu và âm thanh của bạn\",\"audioWorkspace.intro.body\":\"Sắp xếp yêu cầu nhạc và hiệu ứng, liên kết dự án và thêm các tệp âm thanh đã lưu vào bộ sưu tập.\",\"audioWorkspace.quick.kicker\":\"CÔNG CỤ ÂM THANH\",\"audioWorkspace.quick.title\":\"Lên danh sách hiệu ứng âm thanh trước khi chọn tệp\",\"audioWorkspace.quick.body\":\"Chọn mẫu và mô tả bối cảnh để sắp xếp ba thời điểm cần hiệu ứng âm thanh.\",\"audioWorkspace.quick.note\":\"Công cụ mở ở trang riêng; nội dung bộ sưu tập không được điền sẵn.\",\"audioWorkspace.quick.open\":\"Mở danh sách hiệu ứng âm thanh\",\"audioWorkspace.create.body\":\"Lưu yêu cầu âm thanh và thông tin quyền sử dụng trong một bộ sưu tập riêng.\",\"audioWorkspace.create.note\":\"Sau khi tạo, mở bộ sưu tập để thêm âm thanh từ Kho tệp.\",\"audioWorkspace.create.field.briefHelp\":\"Không yêu cầu bắt chước nghệ sĩ, bài hát, giai điệu hoặc giọng nói cụ thể.\",\"audioWorkspace.create.field.descriptionHelp\":\"Không nhập mật khẩu, mã xác nhận, số thẻ hoặc thông tin thanh toán.\",\"audioWorkspace.create.field.projectHelp\":\"Không bắt buộc. Chọn dự án để sắp xếp bộ sưu tập.\",\"audioWorkspace.create.field.rightsHelp\":\"Bạn chịu trách nhiệm kiểm tra quyền sử dụng trước khi đăng hoặc chia sẻ.\",\"audioWorkspace.list.body\":\"Tìm và mở bộ sưu tập đã lưu của bạn.\",\"audioWorkspace.filter.note\":\"Bộ lọc chỉ áp dụng cho lần tìm hiện tại.\",\"audioWorkspace.activity.kicker\":\"HOẠT ĐỘNG\",\"audioWorkspace.activity.body\":\"Xem các thay đổi gần đây của bộ sưu tập.\",\"audioWorkspace.activity.emptyBody\":\"Các thao tác với bộ sưu tập sẽ xuất hiện tại đây.\",\"audioWorkspace.event.item_attached\":\"Đã thêm âm thanh từ Kho tệp\",\"audioWorkspace.event.item_updated\":\"Đã cập nhật thông tin âm thanh\",\"audioWorkspace.event.collection_version_restored\":\"Đã khôi phục phiên bản bộ sưu tập\",\"audioWorkspace.event.item_detached\":\"Đã gỡ âm thanh khỏi bộ sưu tập\",\"audioWorkspace.collection.emptyBody\":\"Tạo bộ sưu tập đầu tiên để lưu yêu cầu và liên kết các tệp âm thanh đã lưu.\",\"audioWorkspace.collection.policyGuarded\":\"Cần xem lại yêu cầu\",\"audioWorkspace.collection.note\":\"Mở bộ sưu tập để xem, thêm và sắp xếp các tệp âm thanh đã lưu.\",\"audioWorkspace.policy.openAssets\":\"Mở Kho tệp\",\"audioWorkspace.policy.openProjects\":\"Mở Dự án\"});\n\n  Object.assign(MESSAGES.en, {\"audioWorkspace.defaults.context\":\"General use\",\"audioWorkspace.defaults.rights\":\"I confirm that I have the right to use the files and brief in this collection.\",\"audioWorkspace.pagination.range\":\"Showing {from}–{to} {label}\",\"audioWorkspace.pagination.empty\":\"No {label} on this page\",\"audioWorkspace.pagination.previous\":\"← Previous\",\"audioWorkspace.pagination.next\":\"Next →\",\"audioWorkspace.pagination.aria\":\"{label} pagination\",\"audioWorkspace.page.description\":\"Organize your briefs, saved audio files and change history.\",\"audioWorkspace.page.newDescription\":\"Create a collection for your audio brief and usage-rights information.\",\"audioWorkspace.workspace.guardTitle\":\"Unable to open {workspace}\",\"audioWorkspace.workspace.guardBody\":\"Sign in and check your access to open your audio library.\",\"audioWorkspace.intro.title\":\"Organize your briefs and audio\",\"audioWorkspace.intro.body\":\"Organize music and sound-effect briefs, link a project and add saved audio files to a collection.\",\"audioWorkspace.quick.kicker\":\"AUDIO TOOL\",\"audioWorkspace.quick.title\":\"Plan sound effects before choosing a file\",\"audioWorkspace.quick.body\":\"Choose a preset and describe the scene to plan three sound-effect moments.\",\"audioWorkspace.quick.note\":\"The tool opens on a separate page; collection content is not prefilled.\",\"audioWorkspace.quick.open\":\"Open the sound-effect planner\",\"audioWorkspace.create.body\":\"Save your audio brief and usage-rights information in a private collection.\",\"audioWorkspace.create.note\":\"After creating the collection, open it to add audio from the file library.\",\"audioWorkspace.create.field.briefHelp\":\"Do not request imitation of a specific artist, song, melody or voice.\",\"audioWorkspace.create.field.descriptionHelp\":\"Do not enter passwords, verification codes, card numbers or payment details.\",\"audioWorkspace.create.field.projectHelp\":\"Optional. Choose a project to organize the collection.\",\"audioWorkspace.create.field.rightsHelp\":\"You are responsible for checking usage rights before publishing or sharing.\",\"audioWorkspace.list.body\":\"Find and open your saved collections.\",\"audioWorkspace.filter.note\":\"Filters apply to the current search only.\",\"audioWorkspace.activity.kicker\":\"ACTIVITY\",\"audioWorkspace.activity.body\":\"View recent changes to your collections.\",\"audioWorkspace.activity.emptyBody\":\"Collection activity will appear here.\",\"audioWorkspace.event.item_attached\":\"Audio added from file library\",\"audioWorkspace.event.item_updated\":\"Audio details updated\",\"audioWorkspace.event.collection_version_restored\":\"Collection version restored\",\"audioWorkspace.event.item_detached\":\"Audio removed from collection\",\"audioWorkspace.collection.emptyBody\":\"Create your first collection to save a brief and link saved audio files.\",\"audioWorkspace.collection.policyGuarded\":\"Review the brief\",\"audioWorkspace.collection.note\":\"Open the collection to view, add and organize saved audio files.\",\"audioWorkspace.policy.openAssets\":\"Open file library\",\"audioWorkspace.policy.openProjects\":\"Open projects\"});\n\n  Object.assign(MESSAGES.zh, {\"audioWorkspace.defaults.context\":\"通用用途\",\"audioWorkspace.defaults.rights\":\"我确认有权使用此合集中的文件和创作需求。\",\"audioWorkspace.pagination.range\":\"正在显示第 {from}–{to} 个{label}\",\"audioWorkspace.pagination.empty\":\"此页没有{label}\",\"audioWorkspace.pagination.previous\":\"← 上一页\",\"audioWorkspace.pagination.next\":\"下一页 →\",\"audioWorkspace.pagination.aria\":\"{label}分页\",\"audioWorkspace.page.description\":\"整理您的创作需求、已保存的音频文件和修改记录。\",\"audioWorkspace.page.newDescription\":\"创建合集，保存音频创作需求和使用权信息。\",\"audioWorkspace.workspace.guardTitle\":\"暂时无法打开{workspace}\",\"audioWorkspace.workspace.guardBody\":\"请登录并检查访问权限，以打开您的音频库。\",\"audioWorkspace.intro.title\":\"整理您的创作需求和音频\",\"audioWorkspace.intro.body\":\"整理音乐和音效需求，关联项目，并将已保存的音频文件添加到合集。\",\"audioWorkspace.quick.kicker\":\"音频工具\",\"audioWorkspace.quick.title\":\"选择文件前先规划音效\",\"audioWorkspace.quick.body\":\"选择模板并描述场景，规划三个需要音效的时刻。\",\"audioWorkspace.quick.note\":\"工具将在独立页面打开，不会预填合集内容。\",\"audioWorkspace.quick.open\":\"打开音效规划工具\",\"audioWorkspace.create.body\":\"在私有合集中保存音频创作需求和使用权信息。\",\"audioWorkspace.create.note\":\"创建合集后，打开合集以添加文件库中的音频。\",\"audioWorkspace.create.field.briefHelp\":\"不要要求模仿特定艺术家、歌曲、旋律或声音。\",\"audioWorkspace.create.field.descriptionHelp\":\"请勿输入密码、验证码、卡号或付款信息。\",\"audioWorkspace.create.field.projectHelp\":\"可选。选择项目以整理合集。\",\"audioWorkspace.create.field.rightsHelp\":\"发布或分享前，请自行检查使用权。\",\"audioWorkspace.list.body\":\"查找并打开您已保存的合集。\",\"audioWorkspace.filter.note\":\"筛选仅适用于当前搜索。\",\"audioWorkspace.activity.kicker\":\"活动\",\"audioWorkspace.activity.body\":\"查看合集的最近修改。\",\"audioWorkspace.activity.emptyBody\":\"合集操作记录将显示在此处。\",\"audioWorkspace.event.item_attached\":\"已从文件库添加音频\",\"audioWorkspace.event.item_updated\":\"已更新音频信息\",\"audioWorkspace.event.collection_version_restored\":\"已恢复合集版本\",\"audioWorkspace.event.item_detached\":\"已从合集中移除音频\",\"audioWorkspace.collection.emptyBody\":\"创建第一个合集，保存创作需求并关联已保存的音频文件。\",\"audioWorkspace.collection.policyGuarded\":\"请检查创作需求\",\"audioWorkspace.collection.note\":\"打开合集，查看、添加和整理已保存的音频文件。\",\"audioWorkspace.policy.openAssets\":\"打开文件库\",\"audioWorkspace.policy.openProjects\":\"打开项目\"});\n\n  verifyEqualKeysets();",
+      "count": 1
+    }
+  ],
+  "workers": [
+    {
+      "lane": "defaults",
+      "model": "gemini-3.8-flash-high",
+      "proposalRawSha256": "0a7c9944814a85497ce9dfd45bf1be3b20c9270cb579fada7a9b7b22c63e79d1",
+      "packetSha256": "7b60d60b37e2e99032e49e4eae6e647aadda6cab0e5a2a0e1517a7c847d97a71",
+      "records": 4,
+      "proposalDecodedExact": true,
+      "workerCodeFailures": 0,
+      "applicationTakeover": false
+    },
+    {
+      "lane": "pagination",
+      "model": "gemini-3.8-flash-high",
+      "proposalRawSha256": "b5b1b1b07166cc04bc64bf50b78d965e33d52f85d52f495cccb27d5ccaa0a426",
+      "packetSha256": "fea17e83e539cde615f79b1f558c9008d3e07a91fce70f472b7c9bcce76c50d6",
+      "records": 1,
+      "proposalDecodedExact": true,
+      "workerCodeFailures": 0,
+      "applicationTakeover": false
+    },
+    {
+      "lane": "cleanup",
+      "model": "gemini-3.8-flash-high",
+      "proposalRawSha256": "bd1af315e0e6b270863af3a2027cad11854dc952b623a40b037b89dfb716ab03",
+      "packetSha256": "c6c593f7794ba522e82be22c4e892eb22a61d67f1b9dcadbdcd470d21c5f4aa7",
+      "records": 2,
+      "proposalDecodedExact": true,
+      "workerCodeFailures": 0,
+      "applicationTakeover": false
+    },
+    {
+      "lane": "catalogue",
+      "model": "gemini-3.8-flash-high",
+      "proposalRawSha256": "2e2fff85a5f747ee144260f9e86b5c32adff08ea82267844e008ce0bc2b68a42",
+      "packetSha256": "a24e85069d0bd086dc58e7ba4c67ed8850a99b2ae882b9d5b5031e8526919dc0",
+      "records": 1,
+      "proposalDecodedExact": true,
+      "workerCodeFailures": 0,
+      "applicationTakeover": false
+    }
+  ],
+  "copyTargetRawSha256": "1f4e06c59da7d871228cfdb833c28bcaad21f4549eb298da1bdd59c325b949c9",
+  "copyRows": [
+    [
+      "defaults.context",
+      "Sử dụng chung",
+      "General use",
+      "通用用途"
+    ],
+    [
+      "defaults.rights",
+      "Tôi xác nhận có quyền sử dụng các tệp và yêu cầu trong bộ sưu tập này.",
+      "I confirm that I have the right to use the files and brief in this collection.",
+      "我确认有权使用此合集中的文件和创作需求。"
+    ],
+    [
+      "pagination.range",
+      "Đang hiển thị {from}–{to} {label}",
+      "Showing {from}–{to} {label}",
+      "正在显示第 {from}–{to} 个{label}"
+    ],
+    [
+      "pagination.empty",
+      "Không có {label} ở trang này",
+      "No {label} on this page",
+      "此页没有{label}"
+    ],
+    [
+      "pagination.previous",
+      "← Trang trước",
+      "← Previous",
+      "← 上一页"
+    ],
+    [
+      "pagination.next",
+      "Trang sau →",
+      "Next →",
+      "下一页 →"
+    ],
+    [
+      "pagination.aria",
+      "Phân trang {label}",
+      "{label} pagination",
+      "{label}分页"
+    ],
+    [
+      "page.description",
+      "Sắp xếp yêu cầu, tệp âm thanh đã lưu và lịch sử thay đổi của bạn.",
+      "Organize your briefs, saved audio files and change history.",
+      "整理您的创作需求、已保存的音频文件和修改记录。"
+    ],
+    [
+      "page.newDescription",
+      "Tạo bộ sưu tập để lưu yêu cầu âm thanh và thông tin quyền sử dụng.",
+      "Create a collection for your audio brief and usage-rights information.",
+      "创建合集，保存音频创作需求和使用权信息。"
+    ],
+    [
+      "workspace.guardTitle",
+      "Chưa thể mở {workspace}",
+      "Unable to open {workspace}",
+      "暂时无法打开{workspace}"
+    ],
+    [
+      "workspace.guardBody",
+      "Đăng nhập và kiểm tra quyền truy cập để mở thư viện âm thanh của bạn.",
+      "Sign in and check your access to open your audio library.",
+      "请登录并检查访问权限，以打开您的音频库。"
+    ],
+    [
+      "intro.title",
+      "Sắp xếp yêu cầu và âm thanh của bạn",
+      "Organize your briefs and audio",
+      "整理您的创作需求和音频"
+    ],
+    [
+      "intro.body",
+      "Sắp xếp yêu cầu nhạc và hiệu ứng, liên kết dự án và thêm các tệp âm thanh đã lưu vào bộ sưu tập.",
+      "Organize music and sound-effect briefs, link a project and add saved audio files to a collection.",
+      "整理音乐和音效需求，关联项目，并将已保存的音频文件添加到合集。"
+    ],
+    [
+      "quick.kicker",
+      "CÔNG CỤ ÂM THANH",
+      "AUDIO TOOL",
+      "音频工具"
+    ],
+    [
+      "quick.title",
+      "Lên danh sách hiệu ứng âm thanh trước khi chọn tệp",
+      "Plan sound effects before choosing a file",
+      "选择文件前先规划音效"
+    ],
+    [
+      "quick.body",
+      "Chọn mẫu và mô tả bối cảnh để sắp xếp ba thời điểm cần hiệu ứng âm thanh.",
+      "Choose a preset and describe the scene to plan three sound-effect moments.",
+      "选择模板并描述场景，规划三个需要音效的时刻。"
+    ],
+    [
+      "quick.note",
+      "Công cụ mở ở trang riêng; nội dung bộ sưu tập không được điền sẵn.",
+      "The tool opens on a separate page; collection content is not prefilled.",
+      "工具将在独立页面打开，不会预填合集内容。"
+    ],
+    [
+      "quick.open",
+      "Mở danh sách hiệu ứng âm thanh",
+      "Open the sound-effect planner",
+      "打开音效规划工具"
+    ],
+    [
+      "create.body",
+      "Lưu yêu cầu âm thanh và thông tin quyền sử dụng trong một bộ sưu tập riêng.",
+      "Save your audio brief and usage-rights information in a private collection.",
+      "在私有合集中保存音频创作需求和使用权信息。"
+    ],
+    [
+      "create.note",
+      "Sau khi tạo, mở bộ sưu tập để thêm âm thanh từ Kho tệp.",
+      "After creating the collection, open it to add audio from the file library.",
+      "创建合集后，打开合集以添加文件库中的音频。"
+    ],
+    [
+      "create.field.briefHelp",
+      "Không yêu cầu bắt chước nghệ sĩ, bài hát, giai điệu hoặc giọng nói cụ thể.",
+      "Do not request imitation of a specific artist, song, melody or voice.",
+      "不要要求模仿特定艺术家、歌曲、旋律或声音。"
+    ],
+    [
+      "create.field.descriptionHelp",
+      "Không nhập mật khẩu, mã xác nhận, số thẻ hoặc thông tin thanh toán.",
+      "Do not enter passwords, verification codes, card numbers or payment details.",
+      "请勿输入密码、验证码、卡号或付款信息。"
+    ],
+    [
+      "create.field.projectHelp",
+      "Không bắt buộc. Chọn dự án để sắp xếp bộ sưu tập.",
+      "Optional. Choose a project to organize the collection.",
+      "可选。选择项目以整理合集。"
+    ],
+    [
+      "create.field.rightsHelp",
+      "Bạn chịu trách nhiệm kiểm tra quyền sử dụng trước khi đăng hoặc chia sẻ.",
+      "You are responsible for checking usage rights before publishing or sharing.",
+      "发布或分享前，请自行检查使用权。"
+    ],
+    [
+      "list.body",
+      "Tìm và mở bộ sưu tập đã lưu của bạn.",
+      "Find and open your saved collections.",
+      "查找并打开您已保存的合集。"
+    ],
+    [
+      "filter.note",
+      "Bộ lọc chỉ áp dụng cho lần tìm hiện tại.",
+      "Filters apply to the current search only.",
+      "筛选仅适用于当前搜索。"
+    ],
+    [
+      "activity.kicker",
+      "HOẠT ĐỘNG",
+      "ACTIVITY",
+      "活动"
+    ],
+    [
+      "activity.body",
+      "Xem các thay đổi gần đây của bộ sưu tập.",
+      "View recent changes to your collections.",
+      "查看合集的最近修改。"
+    ],
+    [
+      "activity.emptyBody",
+      "Các thao tác với bộ sưu tập sẽ xuất hiện tại đây.",
+      "Collection activity will appear here.",
+      "合集操作记录将显示在此处。"
+    ],
+    [
+      "event.item_attached",
+      "Đã thêm âm thanh từ Kho tệp",
+      "Audio added from file library",
+      "已从文件库添加音频"
+    ],
+    [
+      "event.item_updated",
+      "Đã cập nhật thông tin âm thanh",
+      "Audio details updated",
+      "已更新音频信息"
+    ],
+    [
+      "event.collection_version_restored",
+      "Đã khôi phục phiên bản bộ sưu tập",
+      "Collection version restored",
+      "已恢复合集版本"
+    ],
+    [
+      "event.item_detached",
+      "Đã gỡ âm thanh khỏi bộ sưu tập",
+      "Audio removed from collection",
+      "已从合集中移除音频"
+    ],
+    [
+      "collection.emptyBody",
+      "Tạo bộ sưu tập đầu tiên để lưu yêu cầu và liên kết các tệp âm thanh đã lưu.",
+      "Create your first collection to save a brief and link saved audio files.",
+      "创建第一个合集，保存创作需求并关联已保存的音频文件。"
+    ],
+    [
+      "collection.policyGuarded",
+      "Cần xem lại yêu cầu",
+      "Review the brief",
+      "请检查创作需求"
+    ],
+    [
+      "collection.note",
+      "Mở bộ sưu tập để xem, thêm và sắp xếp các tệp âm thanh đã lưu.",
+      "Open the collection to view, add and organize saved audio files.",
+      "打开合集，查看、添加和整理已保存的音频文件。"
+    ],
+    [
+      "policy.openAssets",
+      "Mở Kho tệp",
+      "Open file library",
+      "打开文件库"
+    ],
+    [
+      "policy.openProjects",
+      "Mở Dự án",
+      "Open projects",
+      "打开项目"
+    ]
+  ],
+  "historicalFragments": [
+    {
+      "file": "static/portal/portal.js",
+      "owner": "  function renderMemoryPagination(",
+      "next": "  function renderMemoryNotePagination(",
+      "old": "  function renderMemoryPagination(listing, label, action, route, offsetAttribute, className) {\n    const source = listing && listing.pagination && typeof listing.pagination === \"object\" ? listing.pagination : {};\n    const offset = Number.isInteger(source.offset) ? source.offset : 0;\n    const returned = Number.isInteger(source.returned) ? source.returned : 0;\n    const previous = Number.isInteger(source.previous_offset) && source.previous_offset >= 0 ? source.previous_offset : null;\n    const next = source.has_more === true && Number.isInteger(source.next_offset) && source.next_offset > offset ? source.next_offset : null;\n    if (previous === null && next === null) return \"\";\n    const memoryCopy = className === \"portal-memory-pagination\" || !className ? {\n      range: memoryText(\"pagination.range\", \"Đang hiển thị {from}–{to} {label}\", { from: String(offset + 1), to: String(offset + returned), label }),\n      empty: memoryText(\"pagination.empty\", \"Không có {label} ở trang này\", { label }),\n      previous: memoryText(\"pagination.previous\", \"← Trang trước\"),\n      next: memoryText(\"pagination.next\", \"Trang sau →\"),\n      aria: memoryText(\"pagination.aria\", \"Phân trang {label}\", { label })\n    } : className === \"portal-music-library-pagination\" ? {\n      range: musicLibraryText(\"pagination.range\", \"Đang hiển thị {from}–{to} {label}\", { from: String(offset + 1), to: String(offset + returned), label }),\n      empty: musicLibraryText(\"pagination.empty\", \"Không có {label} ở trang này\", { label }),\n      previous: musicLibraryText(\"pagination.previous\", \"← Trang trước\"),\n      next: musicLibraryText(\"pagination.next\", \"Trang sau →\"),\n      aria: musicLibraryText(\"pagination.aria\", \"Phân trang {label}\", { label })\n    } : {\n      range: \"Đang hiển thị \" + String(offset + 1) + \"–\" + String(offset + returned) + \" \" + label,\n      empty: \"Không có \" + label + \" ở trang này\",\n      previous: \"← Trang trước\",\n      next: \"Trang sau →\",\n      aria: \"Phân trang \" + label\n    };\n    const range = returned ? memoryCopy.range : memoryCopy.empty;\n    const previousButton = previous !== null\n      ? '<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"' + safeText(action) + '\" data-portal-route=\"' + safeText(route) + '\" ' + offsetAttribute + '=\"' + safeText(String(previous)) + '\">' + safeText(memoryCopy.previous) + '</button>'\n      : \"\";\n    const nextButton = next !== null\n      ? '<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"' + safeText(action) + '\" data-portal-route=\"' + safeText(route) + '\" ' + offsetAttribute + '=\"' + safeText(String(next)) + '\">' + safeText(memoryCopy.next) + '</button>'\n      : \"\";\n    return '<nav class=\"' + safeText(className || \"portal-memory-pagination\") + '\" aria-label=\"' + safeText(memoryCopy.aria) + '\"><span>' + safeText(range) + \"</span><div>\" + previousButton + nextButton + \"</div></nav>\";\n  }\n\n",
+      "new": "  function renderMemoryPagination(listing, label, action, route, offsetAttribute, className) {\n    const source = listing && listing.pagination && typeof listing.pagination === \"object\" ? listing.pagination : {};\n    const offset = Number.isInteger(source.offset) ? source.offset : 0;\n    const returned = Number.isInteger(source.returned) ? source.returned : 0;\n    const previous = Number.isInteger(source.previous_offset) && source.previous_offset >= 0 ? source.previous_offset : null;\n    const next = source.has_more === true && Number.isInteger(source.next_offset) && source.next_offset > offset ? source.next_offset : null;\n    if (previous === null && next === null) return \"\";\n    const memoryCopy = className === \"portal-memory-pagination\" || !className ? {\n      range: memoryText(\"pagination.range\", \"Đang hiển thị {from}–{to} {label}\", { from: String(offset + 1), to: String(offset + returned), label }),\n      empty: memoryText(\"pagination.empty\", \"Không có {label} ở trang này\", { label }),\n      previous: memoryText(\"pagination.previous\", \"← Trang trước\"),\n      next: memoryText(\"pagination.next\", \"Trang sau →\"),\n      aria: memoryText(\"pagination.aria\", \"Phân trang {label}\", { label })\n    } : className === \"portal-music-library-pagination\" ? {\n      range: musicLibraryText(\"pagination.range\", \"Đang hiển thị {from}–{to} {label}\", { from: String(offset + 1), to: String(offset + returned), label }),\n      empty: musicLibraryText(\"pagination.empty\", \"Không có {label} ở trang này\", { label }),\n      previous: musicLibraryText(\"pagination.previous\", \"← Trang trước\"),\n      next: musicLibraryText(\"pagination.next\", \"Trang sau →\"),\n      aria: musicLibraryText(\"pagination.aria\", \"Phân trang {label}\", { label })\n    } : className === \"portal-media-pagination\" && action === \"media-workspace-page\" ? {\n      range: audioWorkspaceText(\"pagination.range\", \"Đang hiển thị {from}–{to} {label}\", { from: String(offset + 1), to: String(offset + returned), label }),\n      empty: audioWorkspaceText(\"pagination.empty\", \"Không có {label} ở trang này\", { label }),\n      previous: audioWorkspaceText(\"pagination.previous\", \"← Trang trước\"),\n      next: audioWorkspaceText(\"pagination.next\", \"Trang sau →\"),\n      aria: audioWorkspaceText(\"pagination.aria\", \"Phân trang {label}\", { label })\n    } : {\n      range: \"Đang hiển thị \" + String(offset + 1) + \"–\" + String(offset + returned) + \" \" + label,\n      empty: \"Không có \" + label + \" ở trang này\",\n      previous: \"← Trang trước\",\n      next: \"Trang sau →\",\n      aria: \"Phân trang \" + label\n    };\n    const range = returned ? memoryCopy.range : memoryCopy.empty;\n    const previousButton = previous !== null\n      ? '<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"' + safeText(action) + '\" data-portal-route=\"' + safeText(route) + '\" ' + offsetAttribute + '=\"' + safeText(String(previous)) + '\">' + safeText(memoryCopy.previous) + '</button>'\n      : \"\";\n    const nextButton = next !== null\n      ? '<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"' + safeText(action) + '\" data-portal-route=\"' + safeText(route) + '\" ' + offsetAttribute + '=\"' + safeText(String(next)) + '\">' + safeText(memoryCopy.next) + '</button>'\n      : \"\";\n    return '<nav class=\"' + safeText(className || \"portal-memory-pagination\") + '\" aria-label=\"' + safeText(memoryCopy.aria) + '\"><span>' + safeText(range) + \"</span><div>\" + previousButton + nextButton + \"</div></nav>\";\n  }\n\n"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "owner": "  function mediaCollectionValues(",
+      "next": "  function mediaEventLabel(",
+      "old": "  function mediaCollectionValues(value) {\n    const source = value && typeof value === \"object\" ? value : {};\n    return {\n      title: String(source.title || \"\"), description: String(source.description || \"\"), creative_brief: String(source.creative_brief || \"\"),\n      prompt_mode: MEDIA_PROMPT_MODES.some(([key]) => key === String(source.prompt_mode || \"\")) ? String(source.prompt_mode) : \"background\",\n      use_context: String(source.use_context || \"general\"), tags: mediaCollectionTags(source.tags).join(\", \"),\n      project_id: String(source.project_id || \"\"), rights_note: String(source.rights_note || \"Tôi xác nhận có quyền sử dụng các tệp và brief trong collection này.\")\n    };\n  }\n\n",
+      "new": "  function mediaCollectionValues(value) {\n    const source = value && typeof value === \"object\" ? value : {};\n    return {\n      title: String(source.title || \"\"), description: String(source.description || \"\"), creative_brief: String(source.creative_brief || \"\"),\n      prompt_mode: MEDIA_PROMPT_MODES.some(([key]) => key === String(source.prompt_mode || \"\")) ? String(source.prompt_mode) : \"background\",\n      use_context: String(source.use_context || audioWorkspaceText(\"defaults.context\", \"Sử dụng chung\")), tags: mediaCollectionTags(source.tags).join(\", \"),\n      project_id: String(source.project_id || \"\"), rights_note: String(source.rights_note || audioWorkspaceText(\"defaults.rights\", \"Tôi xác nhận có quyền sử dụng các tệp và yêu cầu trong bộ sưu tập này.\"))\n    };\n  }\n\n"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "owner": "  function renderMediaCollectionCards(",
+      "next": "  function renderMediaPolicy(",
+      "old": "  function renderMediaCollectionCards(items, route) {\n    if (!items.length) return renderEmpty(audioWorkspaceText(\"collection.emptyTitle\", \"No audio collections yet\"), audioWorkspaceText(\"collection.emptyBody\", \"Create your first collection to organize briefs, usage rights and private audio already in Asset Vault.\"), ICONS.music);\n    return `<div class=\"portal-media-collection-grid\">${items.map((item) => {\n      const id = String(item.id || \"\");\n      const policy = item.policy && typeof item.policy === \"object\" ? item.policy : {};\n      const policyBadge = policy.status === \"guarded\" ? `<span class=\"portal-media-policy-flag\">${safeText(audioWorkspaceText(\"collection.policyGuarded\", \"Policy needs review\"))}</span>` : \"\";\n      const target = mediaWorkspaceCollectionRoute({ routePath: route }, id);\n      return `<article class=\"portal-card portal-card-pad portal-media-collection-card\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(mediaModeLabel(item.prompt_mode))} · ${safeText(String(item.use_context || \"general\"))}</span><h3 class=\"portal-card-title\">${safeText(String(item.title || audioWorkspaceText(\"collection.defaultTitle\", \"Audio collection\")))}</h3><p class=\"portal-card-subtitle\">${safeText(String(item.brief_excerpt || item.description_excerpt || audioWorkspaceText(\"collection.defaultBrief\", \"No brief is available to display.\")))}</p></div>${badge(mediaCollectionState(item.state))}</div><div class=\"portal-media-card-meta\"><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(mediaCollectionStateLabel(item.state))}</span><span>${safeText(String(item.updated_at || item.created_at || \"—\"))}</span></div>${policyBadge}${renderMediaTags(item.tags)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"collection.note\", \"Authoring only · no job, charge or output.\"))}</span><a class=\"portal-button portal-button--quiet\" href=\"${safeText(target)}\">${safeText(audioWorkspaceText(\"collection.open\", \"Open collection\"))} <span aria-hidden=\"true\">→</span></a></div></article>`;\n    }).join(\"\")}</div>`;\n  }\n\n",
+      "new": "  function renderMediaCollectionCards(items, route) {\n    if (!items.length) return renderEmpty(audioWorkspaceText(\"collection.emptyTitle\", \"No audio collections yet\"), audioWorkspaceText(\"collection.emptyBody\", \"Create your first collection to organize briefs, usage rights and private audio already in Asset Vault.\"), ICONS.music);\n    return `<div class=\"portal-media-collection-grid\">${items.map((item) => {\n      const id = String(item.id || \"\");\n      const policy = item.policy && typeof item.policy === \"object\" ? item.policy : {};\n      const policyBadge = policy.status === \"guarded\" ? `<span class=\"portal-media-policy-flag\">${safeText(audioWorkspaceText(\"collection.policyGuarded\", \"Policy needs review\"))}</span>` : \"\";\n      const target = mediaWorkspaceCollectionRoute({ routePath: route }, id);\n      return `<article class=\"portal-card portal-card-pad portal-media-collection-card\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(mediaModeLabel(item.prompt_mode))} · ${safeText(String(item.use_context || audioWorkspaceText(\"defaults.context\", \"Sử dụng chung\")))}</span><h3 class=\"portal-card-title\">${safeText(String(item.title || audioWorkspaceText(\"collection.defaultTitle\", \"Audio collection\")))}</h3><p class=\"portal-card-subtitle\">${safeText(String(item.brief_excerpt || item.description_excerpt || audioWorkspaceText(\"collection.defaultBrief\", \"No brief is available to display.\")))}</p></div>${badge(mediaCollectionState(item.state))}</div><div class=\"portal-media-card-meta\"><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(mediaCollectionStateLabel(item.state))}</span><span>${safeText(String(item.updated_at || item.created_at || \"—\"))}</span></div>${policyBadge}${renderMediaTags(item.tags)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"collection.note\", \"Authoring only · no job, charge or output.\"))}</span><a class=\"portal-button portal-button--quiet\" href=\"${safeText(target)}\">${safeText(audioWorkspaceText(\"collection.open\", \"Open collection\"))} <span aria-hidden=\"true\">→</span></a></div></article>`;\n    }).join(\"\")}</div>`;\n  }\n\n"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "owner": "  function renderMediaWorkspace(",
+      "next": "  function mediaAudioOperationHandoffAsset(",
+      "old": "  function renderMediaWorkspace(page, context) {\n    const route = String(page.routePath || page.path || \"/media-workspace\");\n    const audioHub = isAudioHubRoute(route);\n    const canView = Boolean(context.capabilities && context.capabilities[\"media-workspace-view\"] === true);\n    const canCreate = Boolean(context.capabilities && context.capabilities[\"media-workspace-create\"] === true);\n    const workspaceLabel = audioHub\n      ? audioWorkspaceText(\"workspace.hubLabel\", \"Audio Production Hub\")\n      : audioWorkspaceText(\"workspace.libraryLabel\", \"Audio Library\");\n    if (!canView) return `<article class=\"portal-page ${audioHub ? \"portal-audio-hub\" : \"portal-media-workspace\"}\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\">${renderEmpty(audioWorkspaceText(\"workspace.guardTitle\", \"{workspace} is protected\", { workspace: workspaceLabel }), audioWorkspaceText(\"workspace.guardBody\", \"Sign in with a signed session to open the private audio workspace. The app does not accept raw Telegram IDs or expose Bot music data.\"), ICONS.music)}</section></article>`;\n    const summary = context.mediaWorkspaceSummary && typeof context.mediaWorkspaceSummary === \"object\" ? context.mediaWorkspaceSummary : {};\n    const collections = summary.collections && typeof summary.collections === \"object\" ? summary.collections : {};\n    const items = summary.items && typeof summary.items === \"object\" ? summary.items : {};\n    const execution = summary.execution && typeof summary.execution === \"object\" ? summary.execution : {};\n    const listing = mediaWorkspaceListing(context);\n    const filter = listing.filters;\n    const values = mediaCollectionValues({ ...transientFormValues(page.routePath || page.path), prompt_mode: transientFormValues(page.routePath || page.path).prompt_mode || \"background\" });\n    const filterFields = [\n      { name: \"q\", label: audioWorkspaceText(\"filter.searchLabel\", \"Search collections\"), placeholder: audioWorkspaceText(\"filter.searchPlaceholder\", \"Name, brief or description…\"), maxLength: 100, wide: true },\n      { name: \"tag\", label: audioWorkspaceText(\"filter.tagLabel\", \"Tag\"), placeholder: audioWorkspaceText(\"filter.tagPlaceholder\", \"Example: launch\"), maxLength: 48 },\n      { name: \"prompt_mode\", label: audioWorkspaceText(\"filter.modeLabel\", \"Brief type\"), control: \"select\", options: audioWorkspaceModeOptions(), emptyLabel: audioWorkspaceText(\"filter.modeAll\", \"All types\") },\n      { name: \"state\", label: audioWorkspaceText(\"filter.stateLabel\", \"Status\"), control: \"select\", options: [[\"all\", audioWorkspaceText(\"filter.stateAll\", \"All\")], [\"active\", audioWorkspaceText(\"filter.stateActive\", \"Active\")], [\"archived\", audioWorkspaceText(\"filter.stateArchived\", \"Archived\")]] }\n    ];\n    const events = Array.isArray(context.mediaWorkspaceEvents) ? context.mediaWorkspaceEvents.slice(0, 8) : [];\n    const eventList = events.length ? `<div class=\"portal-media-events\">${events.map((item) => `<div><span aria-hidden=\"true\">•</span><span><strong>${safeText(mediaEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || \"—\"))}</small></span></div>`).join(\"\")}</div>` : renderEmpty(audioWorkspaceText(\"activity.emptyTitle\", \"No activity yet\"), audioWorkspaceText(\"activity.emptyBody\", \"The timeline stores action labels and revisions only; it does not show briefs, usage-rights information or license notes.\"), \"○\");\n    const overview = audioHub ? renderAudioHubOverview(summary) : `<section class=\"portal-media-workspace-intro\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"intro.kicker\", \"PRIVATE AUDIO LIBRARY\"))}</span><h2>${safeText(audioWorkspaceText(\"intro.title\", \"Organize audio by context, usage rights and creative intent\"))}</h2><p>${safeText(audioWorkspaceText(\"intro.body\", \"Create collections for music and sound-effect briefs, link planning to a project and attach audio already in Asset Vault. This is an authoring workspace, not a generator, provider library or audio player.\"))}</p></div><dl><div><dt>${safeText(String(Number(collections.active || 0)))}</dt><dd>${safeText(audioWorkspaceText(\"intro.active\", \"Active\"))}</dd></div><div><dt>${safeText(String(Number(items.total || 0)))}</dt><dd>${safeText(audioWorkspaceText(\"intro.references\", \"Audio references\"))}</dd></div><div><dt>${safeText(String(Number(items.favorites || 0)))}</dt><dd>${safeText(audioWorkspaceText(\"intro.favorites\", \"Favorites\"))}</dd></div></dl></section>`;\n    const nextSteps = audioHub ? renderAudioHubNextSteps() : `<section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"quick.kicker\", \"Quick authoring tool\"))}</span><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"quick.title\", \"Draft a sound-effect cue sheet before choosing an audio source\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"quick.body\", \"The cue sheet creates three contextual positions for review. It is a separate tool; it does not open a catalogue, preview, create jobs, charge credits or send data to Telegram.\"))}</p></div>${badge(\"ready\")}</div><div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"quick.note\", \"Choose a preset and write a new brief on its own page; no collection, file or account data is transferred into it.\"))}</span><a class=\"portal-button portal-button--primary\" href=\"/media-workspace/sfx-cue-sheet\">${safeText(audioWorkspaceText(\"quick.open\", \"Open SFX Cue Sheet\"))} <span aria-hidden=\"true\">→</span></a></div></section>`;\n    return `<article class=\"portal-page ${audioHub ? \"portal-audio-hub\" : \"portal-media-workspace\"}\">${renderHero(page, context)}\n      ${overview}\n      ${nextSteps}\n      <div class=\"portal-media-workspace-layout\"><section class=\"portal-card portal-card-pad portal-media-create\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"create.title\", \"Create audio collection\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"create.body\", \"Save a private creative brief with owner, CSRF, idempotency and version-history checks. No AI request or audio output is created here.\"))}</p></div>${badge(canCreate ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"media-collection-create\" data-portal-route=\"${safeText(page.routePath || page.path)}\" novalidate>${renderFields(mediaCollectionShellFormFields(), canCreate, context, values)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"create.note\", \"The collection stores authoring metadata only. Audio is attached separately from Asset Vault after the server checks ownership.\"))}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canCreate ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"create.submit\", \"Create collection\"))}</button></div></form></section>${renderMediaPolicy(context)}</div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"list.title\", \"Find and continue a collection\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"list.body\", \"The list contains only signed-account metadata and excerpts; full content loads after the server checks ownership.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"media-workspace-refresh\" data-portal-route=\"${safeText(route)}\">${safeText(audioWorkspaceText(\"list.refresh\", \"Refresh\"))}</button></div><form class=\"portal-media-filter\" data-portal-form data-portal-no-transient data-portal-action=\"media-workspace-filter\" data-portal-route=\"${safeText(route)}\" novalidate>${renderFields(filterFields, true, context, filter)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"filter.note\", \"Filters apply only to this page session; they are not saved to browser storage or Telegram.\"))}</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"media-workspace-filter-clear\" data-portal-route=\"${safeText(route)}\">${safeText(audioWorkspaceText(\"filter.clear\", \"Clear filters\"))}</button><button class=\"portal-button portal-button--primary\" type=\"submit\">${safeText(audioWorkspaceText(\"filter.submit\", \"Search collections\"))}</button></div></div></form>${renderMediaCollectionCards(mediaCollectionItems(context), route)}${renderMediaWorkspacePagination(listing, route)}</section>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"activity.kicker\", \"AUDIT-SAFE FEED\"))}</span><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"activity.title\", \"Recent activity\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"activity.body\", \"Only action labels, revisions and timestamps are shown; no raw brief, file path, URL or provider data is exposed.\"))}</p></div><span class=\"portal-form-note\">${safeText(audioWorkspaceExecutionStatus(execution.authoring || \"ready\"))} ${safeText(audioWorkspaceText(\"activity.authoring\", \"authoring\"))} · ${safeText(audioWorkspaceExecutionStatus(execution.generation || \"guarded\"))} ${safeText(audioWorkspaceText(\"activity.generation\", \"processing\"))}</span></div>${eventList}</section>\n    </article>`;\n  }\n\n",
+      "new": "  function renderMediaWorkspace(page, context) {\n    const route = String(page.routePath || page.path || \"/media-workspace\");\n    const audioHub = isAudioHubRoute(route);\n    const canView = Boolean(context.capabilities && context.capabilities[\"media-workspace-view\"] === true);\n    const canCreate = Boolean(context.capabilities && context.capabilities[\"media-workspace-create\"] === true);\n    const workspaceLabel = audioHub\n      ? audioWorkspaceText(\"workspace.hubLabel\", \"Audio Production Hub\")\n      : audioWorkspaceText(\"workspace.libraryLabel\", \"Audio Library\");\n    if (!canView) return `<article class=\"portal-page ${audioHub ? \"portal-audio-hub\" : \"portal-media-workspace\"}\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\">${renderEmpty(audioWorkspaceText(\"workspace.guardTitle\", \"{workspace} is protected\", { workspace: workspaceLabel }), audioWorkspaceText(\"workspace.guardBody\", \"Sign in with a signed session to open the private audio workspace. The app does not accept raw Telegram IDs or expose Bot music data.\"), ICONS.music)}</section></article>`;\n    const summary = context.mediaWorkspaceSummary && typeof context.mediaWorkspaceSummary === \"object\" ? context.mediaWorkspaceSummary : {};\n    const collections = summary.collections && typeof summary.collections === \"object\" ? summary.collections : {};\n    const items = summary.items && typeof summary.items === \"object\" ? summary.items : {};\n    const execution = summary.execution && typeof summary.execution === \"object\" ? summary.execution : {};\n    const listing = mediaWorkspaceListing(context);\n    const filter = listing.filters;\n    const values = mediaCollectionValues({ ...transientFormValues(page.routePath || page.path), prompt_mode: transientFormValues(page.routePath || page.path).prompt_mode || \"background\" });\n    const filterFields = [\n      { name: \"q\", label: audioWorkspaceText(\"filter.searchLabel\", \"Search collections\"), placeholder: audioWorkspaceText(\"filter.searchPlaceholder\", \"Name, brief or description…\"), maxLength: 100, wide: true },\n      { name: \"tag\", label: audioWorkspaceText(\"filter.tagLabel\", \"Tag\"), placeholder: audioWorkspaceText(\"filter.tagPlaceholder\", \"Example: launch\"), maxLength: 48 },\n      { name: \"prompt_mode\", label: audioWorkspaceText(\"filter.modeLabel\", \"Brief type\"), control: \"select\", options: audioWorkspaceModeOptions(), emptyLabel: audioWorkspaceText(\"filter.modeAll\", \"All types\") },\n      { name: \"state\", label: audioWorkspaceText(\"filter.stateLabel\", \"Status\"), control: \"select\", options: [[\"all\", audioWorkspaceText(\"filter.stateAll\", \"All\")], [\"active\", audioWorkspaceText(\"filter.stateActive\", \"Active\")], [\"archived\", audioWorkspaceText(\"filter.stateArchived\", \"Archived\")]] }\n    ];\n    const events = Array.isArray(context.mediaWorkspaceEvents) ? context.mediaWorkspaceEvents.slice(0, 8) : [];\n    const eventList = events.length ? `<div class=\"portal-media-events\">${events.map((item) => `<div><span aria-hidden=\"true\">•</span><span><strong>${safeText(mediaEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || \"—\"))}</small></span></div>`).join(\"\")}</div>` : renderEmpty(audioWorkspaceText(\"activity.emptyTitle\", \"No activity yet\"), audioWorkspaceText(\"activity.emptyBody\", \"The timeline stores action labels and revisions only; it does not show briefs, usage-rights information or license notes.\"), \"○\");\n    const overview = audioHub ? renderAudioHubOverview(summary) : `<section class=\"portal-media-workspace-intro\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"intro.kicker\", \"PRIVATE AUDIO LIBRARY\"))}</span><h2>${safeText(audioWorkspaceText(\"intro.title\", \"Organize audio by context, usage rights and creative intent\"))}</h2><p>${safeText(audioWorkspaceText(\"intro.body\", \"Create collections for music and sound-effect briefs, link planning to a project and attach audio already in Asset Vault. This is an authoring workspace, not a generator, provider library or audio player.\"))}</p></div><dl><div><dt>${safeText(String(Number(collections.active || 0)))}</dt><dd>${safeText(audioWorkspaceText(\"intro.active\", \"Active\"))}</dd></div><div><dt>${safeText(String(Number(items.total || 0)))}</dt><dd>${safeText(audioWorkspaceText(\"intro.references\", \"Audio references\"))}</dd></div><div><dt>${safeText(String(Number(items.favorites || 0)))}</dt><dd>${safeText(audioWorkspaceText(\"intro.favorites\", \"Favorites\"))}</dd></div></dl></section>`;\n    const nextSteps = audioHub ? renderAudioHubNextSteps() : `<section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"quick.kicker\", \"Quick authoring tool\"))}</span><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"quick.title\", \"Draft a sound-effect cue sheet before choosing an audio source\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"quick.body\", \"The cue sheet creates three contextual positions for review. It is a separate tool; it does not open a catalogue, preview, create jobs, charge credits or send data to Telegram.\"))}</p></div>${badge(\"ready\")}</div><div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"quick.note\", \"Choose a preset and write a new brief on its own page; no collection, file or account data is transferred into it.\"))}</span><a class=\"portal-button portal-button--primary\" href=\"/media-workspace/sfx-cue-sheet\">${safeText(audioWorkspaceText(\"quick.open\", \"Open SFX Cue Sheet\"))} <span aria-hidden=\"true\">→</span></a></div></section>`;\n    return `<article class=\"portal-page ${audioHub ? \"portal-audio-hub\" : \"portal-media-workspace\"}\">${renderHero(page, context)}\n      ${overview}\n      ${nextSteps}\n      <section class=\"portal-card portal-card-pad portal-media-create\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"create.title\", \"Create audio collection\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"create.body\", \"Save a private creative brief with owner, CSRF, idempotency and version-history checks. No AI request or audio output is created here.\"))}</p></div>${badge(canCreate ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"media-collection-create\" data-portal-route=\"${safeText(page.routePath || page.path)}\" novalidate>${renderFields(mediaCollectionShellFormFields(), canCreate, context, values)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"create.note\", \"The collection stores authoring metadata only. Audio is attached separately from Asset Vault after the server checks ownership.\"))}</span><div class=\"portal-inline-actions\"><a class=\"portal-button portal-button--quiet\" href=\"/asset-vault\">${safeText(audioWorkspaceText(\"policy.openAssets\", \"Mở Kho tệp\"))}</a><a class=\"portal-button portal-button--quiet\" href=\"/projects\">${safeText(audioWorkspaceText(\"policy.openProjects\", \"Mở Dự án\"))}</a><button class=\"portal-button portal-button--primary\" type=\"submit\"${canCreate ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"create.submit\", \"Create collection\"))}</button></div></div></form></section>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"list.title\", \"Find and continue a collection\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"list.body\", \"The list contains only signed-account metadata and excerpts; full content loads after the server checks ownership.\"))}</p></div><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"media-workspace-refresh\" data-portal-route=\"${safeText(route)}\">${safeText(audioWorkspaceText(\"list.refresh\", \"Refresh\"))}</button></div><form class=\"portal-media-filter\" data-portal-form data-portal-no-transient data-portal-action=\"media-workspace-filter\" data-portal-route=\"${safeText(route)}\" novalidate>${renderFields(filterFields, true, context, filter)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"filter.note\", \"Filters apply only to this page session; they are not saved to browser storage or Telegram.\"))}</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"media-workspace-filter-clear\" data-portal-route=\"${safeText(route)}\">${safeText(audioWorkspaceText(\"filter.clear\", \"Clear filters\"))}</button><button class=\"portal-button portal-button--primary\" type=\"submit\">${safeText(audioWorkspaceText(\"filter.submit\", \"Search collections\"))}</button></div></div></form>${renderMediaCollectionCards(mediaCollectionItems(context), route)}${renderMediaWorkspacePagination(listing, route)}</section>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"activity.kicker\", \"AUDIT-SAFE FEED\"))}</span><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"activity.title\", \"Recent activity\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"activity.body\", \"Only action labels, revisions and timestamps are shown; no raw brief, file path, URL or provider data is exposed.\"))}</p></div></div>${eventList}</section>\n    </article>`;\n  }\n\n"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "owner": "  function renderMediaWorkspaceDetail(",
+      "next": "  function contentStudioKindOptions(",
+      "old": "  function renderMediaWorkspaceDetail(page, context) {\n    const detail = context.mediaCollectionDetail && typeof context.mediaCollectionDetail === \"object\" ? context.mediaCollectionDetail : {};\n    const collection = detail.collection && typeof detail.collection === \"object\" && validMediaCollectionId(detail.collection.id) && String(detail.collection.id) === String(page.recordId || \"\") ? detail.collection : null;\n    const canView = Boolean(context.capabilities && context.capabilities[\"media-workspace-view\"] === true);\n    const route = page.routePath || page.path;\n    const audioHub = isAudioHubRoute(route);\n    const collectionHome = audioHub ? \"/audio-hub\" : \"/media-workspace\";\n    if (!canView || !collection) return `<article class=\"portal-page ${audioHub ? \"portal-audio-hub-detail\" : \"portal-media-workspace-detail\"}\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\">${renderEmpty(audioWorkspaceText(\"detail.notFoundTitle\", \"Không tìm thấy bộ sưu tập âm thanh\"), audioWorkspaceText(\"detail.notFoundBody\", \"Bộ sưu tập có thể không thuộc tài khoản hiện tại, đã bị gỡ hoặc chưa được máy chủ xác minh.\"), ICONS.music)}<div class=\"portal-form-footer\"><a class=\"portal-button portal-button--primary\" href=\"${collectionHome}\">${safeText(audioWorkspaceText(audioHub ? \"detail.backHub\" : \"detail.backLibrary\", audioHub ? \"Về Trung tâm sản xuất âm thanh\" : \"Về Thư viện âm thanh\"))}</a></div></section></article>`;\n    const state = String(collection.state || \"active\");\n    const writable = state === \"active\";\n    const canUpdate = Boolean(context.capabilities && context.capabilities[\"media-workspace-update\"] === true && writable);\n    const canArchive = Boolean(context.capabilities && context.capabilities[\"media-workspace-archive\"] === true && writable);\n    const canRestore = Boolean(context.capabilities && context.capabilities[\"media-workspace-restore\"] === true && !writable);\n    const canDuplicate = Boolean(context.capabilities && context.capabilities[\"media-workspace-duplicate\"] === true);\n    const canRestoreVersion = Boolean(context.capabilities && context.capabilities[\"media-workspace-restore-version\"] === true && writable);\n    const canCompose = Boolean(context.capabilities && context.capabilities[\"media-workspace-compose\"] === true && writable);\n    const canAttach = Boolean(context.capabilities && context.capabilities[\"media-workspace-item-attach\"] === true && writable);\n    const canItemUpdate = Boolean(context.capabilities && context.capabilities[\"media-workspace-item-update\"] === true && writable);\n    const canOpenAudioOperations = Boolean(context.capabilities && context.capabilities[\"audio-asset-operation-view\"] === true);\n    const values = mediaCollectionValues(collection);\n    const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 100) : [];\n    const items = Array.isArray(detail.items) ? detail.items.filter((item) => item && validMediaCollectionId(item.id)).slice(0, 250) : [];\n    const composer = context.mediaComposer && typeof context.mediaComposer === \"object\" && String(context.mediaComposer.collection_id || \"\") === String(collection.id) ? context.mediaComposer : {};\n    const directions = Array.isArray(composer.directions) ? composer.directions.filter((item) => item && typeof item.prompt === \"string\").slice(0, 3) : [];\n    const policy = collection.policy && typeof collection.policy === \"object\" ? collection.policy : {};\n    const audioListing = mediaAudioAssetListing(context);\n    const audioFilter = audioListing.filters;\n    const audioPicker = `<form class=\"portal-media-filter portal-media-audio-filter\" data-portal-form data-portal-no-transient data-portal-action=\"media-audio-filter\" data-portal-route=\"${safeText(route)}\" novalidate>${renderFields(mediaAudioAssetFilterFields(), true, context, audioFilter)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"detail.attachFilterNote\", \"Tìm trong Kho tài sản riêng theo tên hiển thị hoặc tên tệp. Kết quả không tải, phát hay sao chép tệp.\"))}</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"media-audio-filter-clear\" data-portal-route=\"${safeText(route)}\">${safeText(audioWorkspaceText(\"detail.clearFilter\", \"Xóa bộ lọc\"))}</button><button class=\"portal-button portal-button--primary\" type=\"submit\">${safeText(audioWorkspaceText(\"detail.searchAudio\", \"Tìm âm thanh\"))}</button></div></div></form>${renderMediaAudioAssetPagination(audioListing, route)}`;\n    const stateAction = writable\n      ? `<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"media-collection-archive\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\" data-portal-confirm=\"${safeText(audioWorkspaceText(\"detail.archiveConfirm\", \"Lưu trữ bộ sưu tập này? Tham chiếu âm thanh vẫn giữ trong Kho tài sản riêng.\"))}\"${canArchive ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.archive\", \"Lưu trữ bộ sưu tập\"))}</button>`\n      : `<button class=\"portal-button portal-button--primary\" type=\"button\" data-portal-action=\"media-collection-restore\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\"${canRestore ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.restore\", \"Khôi phục bộ sưu tập\"))}</button>`;\n    const versionList = versions.length ? `<div class=\"portal-version-list\">${versions.map((version) => `<div class=\"portal-version-row\"><span><strong>v${safeText(String(version.revision))}</strong><small>${safeText(String(version.title || audioWorkspaceText(\"detail.collectionTitle\", \"Bộ sưu tập âm thanh\")))} · ${safeText(mediaModeLabel(version.prompt_mode))} · ${safeText(String(version.created_at || \"—\"))}</small></span>${Number(version.revision) === Number(collection.revision) ? `<span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"detail.versionOpen\", \"Đang mở\"))}</span>` : `<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"media-collection-restore-version\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\" data-media-collection-version=\"${safeText(String(version.revision))}\" data-portal-confirm=\"${safeText(audioWorkspaceText(\"detail.versionRestoreConfirm\", \"Khôi phục phiên bản {revision} thành phiên bản thông tin mới? Tham chiếu âm thanh hiện tại không bị thay đổi.\", { revision: String(version.revision) }))}\"${canRestoreVersion ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.versionRestore\", \"Khôi phục\"))}</button>`}</div>`).join(\"\")}</div>` : renderEmpty(audioWorkspaceText(\"detail.noHistoryTitle\", \"Chưa có lịch sử\"), audioWorkspaceText(\"detail.noHistoryBody\", \"Phiên bản đầu tiên được lưu khi bộ sưu tập được tạo và không bị ghi đè âm thầm.\"), \"○\");\n    const composerResult = directions.length && composer.execution === \"local_deterministic_draft_only\" && composer.provider_called === false && composer.charge_started === false\n      ? `<div class=\"portal-media-composer-result\">${directions.map((direction) => `<article><span class=\"portal-section-kicker\">${safeText(String(direction.title || audioWorkspaceText(\"detail.directionFallback\", \"Hướng yêu cầu\")))}</span><h3>${safeText(String(direction.intent || \"\"))}</h3><pre>${safeText(direction.prompt)}</pre></article>`).join(\"\")}</div>`\n      : \"\";\n    const policyNotice = policy.status === \"guarded\" ? `<div class=\"portal-notice portal-notice--warning\"><span class=\"portal-notice-icon\" aria-hidden=\"true\">!</span><div><strong>${safeText(audioWorkspaceText(\"detail.policyTitle\", \"Yêu cầu đang được bảo vệ bởi chính sách\"))}</strong><p>${safeText(audioWorkspaceText(\"detail.policyBody\", \"Hãy bỏ yêu cầu mô phỏng nghệ sĩ, bài hát, giai điệu hoặc giọng cụ thể trước khi dùng công cụ. Ứng dụng không đánh giá hoặc chứng nhận bản quyền.\"))}</p></div></div>` : \"\";\n    const audioHubBoard = audioHub ? renderAudioHubCollectionBoard(collection, items, context, route) : \"\";\n    return `<article class=\"portal-page ${audioHub ? \"portal-audio-hub-detail\" : \"portal-media-workspace-detail\"}\">${renderHero(page, context)}\n      <section class=\"portal-media-detail-summary\"><div><span class=\"portal-section-kicker\">${safeText(mediaModeLabel(collection.prompt_mode))} · ${safeText(String(collection.use_context || \"general\"))}</span><h2>${safeText(String(collection.title || audioWorkspaceText(\"detail.collectionTitle\", \"Bộ sưu tập âm thanh\")))}</h2><p>${safeText(String(collection.description_excerpt || audioWorkspaceText(\"detail.collectionBody\", \"Bộ sưu tập riêng của tài khoản Web hiện tại.\")))}</p>${renderMediaTags(collection.tags)}</div><dl><div><dt>${safeText(audioWorkspaceText(\"detail.revision\", \"Phiên bản\"))}</dt><dd>v${safeText(String(collection.revision || 1))}</dd></div><div><dt>${safeText(audioWorkspaceText(\"detail.references\", \"Tham chiếu\"))}</dt><dd>${safeText(String(Number(detail.item_count || items.length)))}/${safeText(String(Number(detail.item_limit || 250)))}</dd></div><div><dt>${safeText(audioWorkspaceText(\"detail.status\", \"Trạng thái\"))}</dt><dd>${badge(mediaCollectionState(collection.state))}</dd></div></dl></section>\n      ${policyNotice}${audioHubBoard}<div class=\"portal-media-detail-grid\"><section class=\"portal-card portal-card-pad portal-media-editor\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"detail.collectionEditor\", \"Trình chỉnh sửa bộ sưu tập\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"detail.collectionEditorBody\", \"Mỗi lần lưu thông tin tạo phiên bản mới. Máy chủ kiểm tra chủ tài khoản, CSRF, chống gửi lặp, chính sách và phiên bản trước khi ghi.\"))}</p></div>${badge(mediaCollectionState(collection.state))}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"media-collection-update\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\" novalidate>${renderFields(mediaCollectionFormFields(), canUpdate, context, values)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"detail.noProviderAction\", \"Không gọi dịch vụ, tạo tác vụ, trừ Xu hoặc tạo đầu ra khi lưu bộ sưu tập.\"))}</span><div class=\"portal-inline-actions\">${stateAction}<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"media-collection-duplicate\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\"${canDuplicate ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.duplicate\", \"Nhân bản thông tin\"))}</button><button class=\"portal-button portal-button--primary\" type=\"submit\"${canUpdate ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.saveRevision\", \"Lưu phiên bản mới\"))}</button></div></div></form></section>\n        <aside class=\"portal-card portal-card-pad portal-media-composer\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"detail.composerKicker\", \"Bản nháp cục bộ\"))}</span><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"detail.composerTitle\", \"Ba hướng yêu cầu cục bộ\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"detail.composerBody\", \"Công cụ chỉ sắp xếp lại yêu cầu đã lưu thành văn bản. Không gọi AI, tạo âm thanh, tạo tác vụ, trừ Xu hoặc gọi dịch vụ.\"))}</p></div>${badge(canCompose ? \"read_only\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"media-collection-compose\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\" novalidate><div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"detail.composerGuard\", \"Cần yêu cầu âm thanh hợp lệ và không bị chính sách bảo vệ.\"))}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canCompose ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.composeAction\", \"Tạo hướng yêu cầu\"))}</button></div></form>${composerResult || `<p class=\"portal-form-note\">${safeText(audioWorkspaceText(\"detail.composeEmpty\", \"Kết quả chỉ tồn tại trong phiên hiện tại; không tự lưu hoặc gửi tới bộ xử lý.\"))}</p>`}</aside></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"detail.assetReferences\", \"Tham chiếu Kho tài sản\"))}</span><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"detail.attachTitle\", \"Gắn âm thanh riêng\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"detail.attachDescription\", \"Chỉ audio đang hoạt động thuộc tài khoản hiện tại. Không có liên kết, tải lên mới, trình phát, dạng sóng hoặc bản xem trước dịch vụ trong bộ sưu tập.\"))}</p></div>${badge(canAttach ? \"ready\" : \"guarded\")}</div>${audioPicker}<form class=\"portal-form portal-media-attach-form\" data-portal-form data-portal-action=\"media-item-attach\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\" novalidate>${renderFields(mediaAttachFields(context), canAttach, context, { role: \"music\", license_note: audioWorkspaceText(\"detail.licensePlaceholder\", \"Tôi chịu trách nhiệm kiểm tra quyền sử dụng trước khi đăng.\") })}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"detail.attachFooter\", \"Việc gắn chỉ tạo tham chiếu riêng; tệp gốc không bị sao chép, đổi trạng thái hoặc biến thành đầu ra.\"))}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canAttach ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.attachSubmit\", \"Gắn âm thanh từ Kho tài sản\"))}</button></div></form><div class=\"portal-media-item-grid\">${items.length ? items.map((item) => mediaItemEditor(item, collection, canItemUpdate, route, canOpenAudioOperations)).join(\"\") : renderEmpty(audioWorkspaceText(\"detail.emptyItemsTitle\", \"Chưa có âm thanh tham chiếu\"), audioWorkspaceText(\"detail.emptyItemsBody\", \"Chọn âm thanh đã có trong Kho tài sản để gắn vào bộ sưu tập. Tệp không được tạo hoặc tải lại tại đây.\"), ICONS.assets)}</div></section>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"detail.versionHistory\", \"Lịch sử phiên bản\"))}</span><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"detail.versionTitle\", \"Lịch sử thông tin\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"detail.versionBody\", \"Khôi phục luôn tạo phiên bản mới; tham chiếu âm thanh hiện tại không bị tự động đảo theo lịch sử thông tin.\"))}</p></div></div>${versionList}</section>\n      <section class=\"portal-card portal-card-pad portal-media-detail-boundary\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"detail.deliveryBoundary\", \"Ranh giới giao tệp\"))}</span><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"detail.deliveryBody\", \"Tệp vẫn đi qua Kho tài sản riêng\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"detail.deliveryDescription\", \"Nếu tệp còn hoạt động, nút tải dùng tuyến tệp riêng đã có. Bộ sưu tập không tạo liên kết công khai, phát trực tiếp, bản xem trước hay xác nhận đầu ra.\"))}</p></div></div>${renderNotes(page)}</section>\n    </article>`;\n  }\n\n  // Creative Content Studio remains separate from generic /content/* bridge\n  // forms. It owns private Web authoring records and local draft scaffolds.\n  const CONTENT_STUDIO_KINDS = Object.freeze([\n    [\"caption_hashtag\", \"Caption & hashtag\"], [\"content_ideas\", \"Ý tưởng nội dung\"],\n    [\"hook_script\", \"Hook & script\"], [\"content_pack\", \"Content pack\"], [\"storyboard\", \"Storyboard\"]\n  ]);\n\n",
+      "new": "  function renderMediaWorkspaceDetail(page, context) {\n    const detail = context.mediaCollectionDetail && typeof context.mediaCollectionDetail === \"object\" ? context.mediaCollectionDetail : {};\n    const collection = detail.collection && typeof detail.collection === \"object\" && validMediaCollectionId(detail.collection.id) && String(detail.collection.id) === String(page.recordId || \"\") ? detail.collection : null;\n    const canView = Boolean(context.capabilities && context.capabilities[\"media-workspace-view\"] === true);\n    const route = page.routePath || page.path;\n    const audioHub = isAudioHubRoute(route);\n    const collectionHome = audioHub ? \"/audio-hub\" : \"/media-workspace\";\n    if (!canView || !collection) return `<article class=\"portal-page ${audioHub ? \"portal-audio-hub-detail\" : \"portal-media-workspace-detail\"}\">${renderHero(page, context)}<section class=\"portal-card portal-card-pad\">${renderEmpty(audioWorkspaceText(\"detail.notFoundTitle\", \"Không tìm thấy bộ sưu tập âm thanh\"), audioWorkspaceText(\"detail.notFoundBody\", \"Bộ sưu tập có thể không thuộc tài khoản hiện tại, đã bị gỡ hoặc chưa được máy chủ xác minh.\"), ICONS.music)}<div class=\"portal-form-footer\"><a class=\"portal-button portal-button--primary\" href=\"${collectionHome}\">${safeText(audioWorkspaceText(audioHub ? \"detail.backHub\" : \"detail.backLibrary\", audioHub ? \"Về Trung tâm sản xuất âm thanh\" : \"Về Thư viện âm thanh\"))}</a></div></section></article>`;\n    const state = String(collection.state || \"active\");\n    const writable = state === \"active\";\n    const canUpdate = Boolean(context.capabilities && context.capabilities[\"media-workspace-update\"] === true && writable);\n    const canArchive = Boolean(context.capabilities && context.capabilities[\"media-workspace-archive\"] === true && writable);\n    const canRestore = Boolean(context.capabilities && context.capabilities[\"media-workspace-restore\"] === true && !writable);\n    const canDuplicate = Boolean(context.capabilities && context.capabilities[\"media-workspace-duplicate\"] === true);\n    const canRestoreVersion = Boolean(context.capabilities && context.capabilities[\"media-workspace-restore-version\"] === true && writable);\n    const canCompose = Boolean(context.capabilities && context.capabilities[\"media-workspace-compose\"] === true && writable);\n    const canAttach = Boolean(context.capabilities && context.capabilities[\"media-workspace-item-attach\"] === true && writable);\n    const canItemUpdate = Boolean(context.capabilities && context.capabilities[\"media-workspace-item-update\"] === true && writable);\n    const canOpenAudioOperations = Boolean(context.capabilities && context.capabilities[\"audio-asset-operation-view\"] === true);\n    const values = mediaCollectionValues(collection);\n    const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 100) : [];\n    const items = Array.isArray(detail.items) ? detail.items.filter((item) => item && validMediaCollectionId(item.id)).slice(0, 250) : [];\n    const composer = context.mediaComposer && typeof context.mediaComposer === \"object\" && String(context.mediaComposer.collection_id || \"\") === String(collection.id) ? context.mediaComposer : {};\n    const directions = Array.isArray(composer.directions) ? composer.directions.filter((item) => item && typeof item.prompt === \"string\").slice(0, 3) : [];\n    const policy = collection.policy && typeof collection.policy === \"object\" ? collection.policy : {};\n    const audioListing = mediaAudioAssetListing(context);\n    const audioFilter = audioListing.filters;\n    const audioPicker = `<form class=\"portal-media-filter portal-media-audio-filter\" data-portal-form data-portal-no-transient data-portal-action=\"media-audio-filter\" data-portal-route=\"${safeText(route)}\" novalidate>${renderFields(mediaAudioAssetFilterFields(), true, context, audioFilter)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"detail.attachFilterNote\", \"Tìm trong Kho tài sản riêng theo tên hiển thị hoặc tên tệp. Kết quả không tải, phát hay sao chép tệp.\"))}</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"media-audio-filter-clear\" data-portal-route=\"${safeText(route)}\">${safeText(audioWorkspaceText(\"detail.clearFilter\", \"Xóa bộ lọc\"))}</button><button class=\"portal-button portal-button--primary\" type=\"submit\">${safeText(audioWorkspaceText(\"detail.searchAudio\", \"Tìm âm thanh\"))}</button></div></div></form>${renderMediaAudioAssetPagination(audioListing, route)}`;\n    const stateAction = writable\n      ? `<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"media-collection-archive\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\" data-portal-confirm=\"${safeText(audioWorkspaceText(\"detail.archiveConfirm\", \"Lưu trữ bộ sưu tập này? Tham chiếu âm thanh vẫn giữ trong Kho tài sản riêng.\"))}\"${canArchive ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.archive\", \"Lưu trữ bộ sưu tập\"))}</button>`\n      : `<button class=\"portal-button portal-button--primary\" type=\"button\" data-portal-action=\"media-collection-restore\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\"${canRestore ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.restore\", \"Khôi phục bộ sưu tập\"))}</button>`;\n    const versionList = versions.length ? `<div class=\"portal-version-list\">${versions.map((version) => `<div class=\"portal-version-row\"><span><strong>v${safeText(String(version.revision))}</strong><small>${safeText(String(version.title || audioWorkspaceText(\"detail.collectionTitle\", \"Bộ sưu tập âm thanh\")))} · ${safeText(mediaModeLabel(version.prompt_mode))} · ${safeText(String(version.created_at || \"—\"))}</small></span>${Number(version.revision) === Number(collection.revision) ? `<span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"detail.versionOpen\", \"Đang mở\"))}</span>` : `<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"media-collection-restore-version\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\" data-media-collection-version=\"${safeText(String(version.revision))}\" data-portal-confirm=\"${safeText(audioWorkspaceText(\"detail.versionRestoreConfirm\", \"Khôi phục phiên bản {revision} thành phiên bản thông tin mới? Tham chiếu âm thanh hiện tại không bị thay đổi.\", { revision: String(version.revision) }))}\"${canRestoreVersion ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.versionRestore\", \"Khôi phục\"))}</button>`}</div>`).join(\"\")}</div>` : renderEmpty(audioWorkspaceText(\"detail.noHistoryTitle\", \"Chưa có lịch sử\"), audioWorkspaceText(\"detail.noHistoryBody\", \"Phiên bản đầu tiên được lưu khi bộ sưu tập được tạo và không bị ghi đè âm thầm.\"), \"○\");\n    const composerResult = directions.length && composer.execution === \"local_deterministic_draft_only\" && composer.provider_called === false && composer.charge_started === false\n      ? `<div class=\"portal-media-composer-result\">${directions.map((direction) => `<article><span class=\"portal-section-kicker\">${safeText(String(direction.title || audioWorkspaceText(\"detail.directionFallback\", \"Hướng yêu cầu\")))}</span><h3>${safeText(String(direction.intent || \"\"))}</h3><pre>${safeText(direction.prompt)}</pre></article>`).join(\"\")}</div>`\n      : \"\";\n    const policyNotice = policy.status === \"guarded\" ? `<div class=\"portal-notice portal-notice--warning\"><span class=\"portal-notice-icon\" aria-hidden=\"true\">!</span><div><strong>${safeText(audioWorkspaceText(\"detail.policyTitle\", \"Yêu cầu đang được bảo vệ bởi chính sách\"))}</strong><p>${safeText(audioWorkspaceText(\"detail.policyBody\", \"Hãy bỏ yêu cầu mô phỏng nghệ sĩ, bài hát, giai điệu hoặc giọng cụ thể trước khi dùng công cụ. Ứng dụng không đánh giá hoặc chứng nhận bản quyền.\"))}</p></div></div>` : \"\";\n    const audioHubBoard = audioHub ? renderAudioHubCollectionBoard(collection, items, context, route) : \"\";\n    return `<article class=\"portal-page ${audioHub ? \"portal-audio-hub-detail\" : \"portal-media-workspace-detail\"}\">${renderHero(page, context)}\n      <section class=\"portal-media-detail-summary\"><div><span class=\"portal-section-kicker\">${safeText(mediaModeLabel(collection.prompt_mode))} · ${safeText(String(collection.use_context || audioWorkspaceText(\"defaults.context\", \"Sử dụng chung\")))}</span><h2>${safeText(String(collection.title || audioWorkspaceText(\"detail.collectionTitle\", \"Bộ sưu tập âm thanh\")))}</h2><p>${safeText(String(collection.description_excerpt || audioWorkspaceText(\"detail.collectionBody\", \"Bộ sưu tập riêng của tài khoản Web hiện tại.\")))}</p>${renderMediaTags(collection.tags)}</div><dl><div><dt>${safeText(audioWorkspaceText(\"detail.revision\", \"Phiên bản\"))}</dt><dd>v${safeText(String(collection.revision || 1))}</dd></div><div><dt>${safeText(audioWorkspaceText(\"detail.references\", \"Tham chiếu\"))}</dt><dd>${safeText(String(Number(detail.item_count || items.length)))}/${safeText(String(Number(detail.item_limit || 250)))}</dd></div><div><dt>${safeText(audioWorkspaceText(\"detail.status\", \"Trạng thái\"))}</dt><dd>${badge(mediaCollectionState(collection.state))}</dd></div></dl></section>\n      ${policyNotice}${audioHubBoard}<div class=\"portal-media-detail-grid\"><section class=\"portal-card portal-card-pad portal-media-editor\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"detail.collectionEditor\", \"Trình chỉnh sửa bộ sưu tập\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"detail.collectionEditorBody\", \"Mỗi lần lưu thông tin tạo phiên bản mới. Máy chủ kiểm tra chủ tài khoản, CSRF, chống gửi lặp, chính sách và phiên bản trước khi ghi.\"))}</p></div>${badge(mediaCollectionState(collection.state))}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"media-collection-update\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\" novalidate>${renderFields(mediaCollectionFormFields(), canUpdate, context, values)}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"detail.noProviderAction\", \"Không gọi dịch vụ, tạo tác vụ, trừ Xu hoặc tạo đầu ra khi lưu bộ sưu tập.\"))}</span><div class=\"portal-inline-actions\">${stateAction}<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"media-collection-duplicate\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\"${canDuplicate ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.duplicate\", \"Nhân bản thông tin\"))}</button><button class=\"portal-button portal-button--primary\" type=\"submit\"${canUpdate ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.saveRevision\", \"Lưu phiên bản mới\"))}</button></div></div></form></section>\n        <aside class=\"portal-card portal-card-pad portal-media-composer\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"detail.composerKicker\", \"Bản nháp cục bộ\"))}</span><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"detail.composerTitle\", \"Ba hướng yêu cầu cục bộ\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"detail.composerBody\", \"Công cụ chỉ sắp xếp lại yêu cầu đã lưu thành văn bản. Không gọi AI, tạo âm thanh, tạo tác vụ, trừ Xu hoặc gọi dịch vụ.\"))}</p></div>${badge(canCompose ? \"read_only\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-action=\"media-collection-compose\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\" novalidate><div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"detail.composerGuard\", \"Cần yêu cầu âm thanh hợp lệ và không bị chính sách bảo vệ.\"))}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canCompose ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.composeAction\", \"Tạo hướng yêu cầu\"))}</button></div></form>${composerResult || `<p class=\"portal-form-note\">${safeText(audioWorkspaceText(\"detail.composeEmpty\", \"Kết quả chỉ tồn tại trong phiên hiện tại; không tự lưu hoặc gửi tới bộ xử lý.\"))}</p>`}</aside></div>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"detail.assetReferences\", \"Tham chiếu Kho tài sản\"))}</span><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"detail.attachTitle\", \"Gắn âm thanh riêng\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"detail.attachDescription\", \"Chỉ audio đang hoạt động thuộc tài khoản hiện tại. Không có liên kết, tải lên mới, trình phát, dạng sóng hoặc bản xem trước dịch vụ trong bộ sưu tập.\"))}</p></div>${badge(canAttach ? \"ready\" : \"guarded\")}</div>${audioPicker}<form class=\"portal-form portal-media-attach-form\" data-portal-form data-portal-action=\"media-item-attach\" data-portal-route=\"${safeText(route)}\" data-media-collection-id=\"${safeText(String(collection.id))}\" data-media-collection-revision=\"${safeText(String(collection.revision))}\" novalidate>${renderFields(mediaAttachFields(context), canAttach, context, { role: \"music\", license_note: audioWorkspaceText(\"detail.licensePlaceholder\", \"Tôi chịu trách nhiệm kiểm tra quyền sử dụng trước khi đăng.\") })}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(audioWorkspaceText(\"detail.attachFooter\", \"Việc gắn chỉ tạo tham chiếu riêng; tệp gốc không bị sao chép, đổi trạng thái hoặc biến thành đầu ra.\"))}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canAttach ? \"\" : \" disabled\"}>${safeText(audioWorkspaceText(\"detail.attachSubmit\", \"Gắn âm thanh từ Kho tài sản\"))}</button></div></form><div class=\"portal-media-item-grid\">${items.length ? items.map((item) => mediaItemEditor(item, collection, canItemUpdate, route, canOpenAudioOperations)).join(\"\") : renderEmpty(audioWorkspaceText(\"detail.emptyItemsTitle\", \"Chưa có âm thanh tham chiếu\"), audioWorkspaceText(\"detail.emptyItemsBody\", \"Chọn âm thanh đã có trong Kho tài sản để gắn vào bộ sưu tập. Tệp không được tạo hoặc tải lại tại đây.\"), ICONS.assets)}</div></section>\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"detail.versionHistory\", \"Lịch sử phiên bản\"))}</span><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"detail.versionTitle\", \"Lịch sử thông tin\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"detail.versionBody\", \"Khôi phục luôn tạo phiên bản mới; tham chiếu âm thanh hiện tại không bị tự động đảo theo lịch sử thông tin.\"))}</p></div></div>${versionList}</section>\n      <section class=\"portal-card portal-card-pad portal-media-detail-boundary\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(audioWorkspaceText(\"detail.deliveryBoundary\", \"Ranh giới giao tệp\"))}</span><h2 class=\"portal-card-title\">${safeText(audioWorkspaceText(\"detail.deliveryBody\", \"Tệp vẫn đi qua Kho tài sản riêng\"))}</h2><p class=\"portal-card-subtitle\">${safeText(audioWorkspaceText(\"detail.deliveryDescription\", \"Nếu tệp còn hoạt động, nút tải dùng tuyến tệp riêng đã có. Bộ sưu tập không tạo liên kết công khai, phát trực tiếp, bản xem trước hay xác nhận đầu ra.\"))}</p></div></div>${renderNotes(page)}</section>\n    </article>`;\n  }\n\n  // Creative Content Studio remains separate from generic /content/* bridge\n  // forms. It owns private Web authoring records and local draft scaffolds.\n  const CONTENT_STUDIO_KINDS = Object.freeze([\n    [\"caption_hashtag\", \"Caption & hashtag\"], [\"content_ideas\", \"Ý tưởng nội dung\"],\n    [\"hook_script\", \"Hook & script\"], [\"content_pack\", \"Content pack\"], [\"storyboard\", \"Storyboard\"]\n  ]);\n\n"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "owner": "  function verifyEqualKeysets() {",
+      "next": "  function deepFreeze(value) {",
+      "old": "  verifyEqualKeysets();\n\n  function deepFreeze(value) {",
+      "new": "  Object.assign(MESSAGES.vi, {\"audioWorkspace.defaults.context\":\"Sử dụng chung\",\"audioWorkspace.defaults.rights\":\"Tôi xác nhận có quyền sử dụng các tệp và yêu cầu trong bộ sưu tập này.\",\"audioWorkspace.pagination.range\":\"Đang hiển thị {from}–{to} {label}\",\"audioWorkspace.pagination.empty\":\"Không có {label} ở trang này\",\"audioWorkspace.pagination.previous\":\"← Trang trước\",\"audioWorkspace.pagination.next\":\"Trang sau →\",\"audioWorkspace.pagination.aria\":\"Phân trang {label}\",\"audioWorkspace.page.description\":\"Sắp xếp yêu cầu, tệp âm thanh đã lưu và lịch sử thay đổi của bạn.\",\"audioWorkspace.page.newDescription\":\"Tạo bộ sưu tập để lưu yêu cầu âm thanh và thông tin quyền sử dụng.\",\"audioWorkspace.workspace.guardTitle\":\"Chưa thể mở {workspace}\",\"audioWorkspace.workspace.guardBody\":\"Đăng nhập và kiểm tra quyền truy cập để mở thư viện âm thanh của bạn.\",\"audioWorkspace.intro.title\":\"Sắp xếp yêu cầu và âm thanh của bạn\",\"audioWorkspace.intro.body\":\"Sắp xếp yêu cầu nhạc và hiệu ứng, liên kết dự án và thêm các tệp âm thanh đã lưu vào bộ sưu tập.\",\"audioWorkspace.quick.kicker\":\"CÔNG CỤ ÂM THANH\",\"audioWorkspace.quick.title\":\"Lên danh sách hiệu ứng âm thanh trước khi chọn tệp\",\"audioWorkspace.quick.body\":\"Chọn mẫu và mô tả bối cảnh để sắp xếp ba thời điểm cần hiệu ứng âm thanh.\",\"audioWorkspace.quick.note\":\"Công cụ mở ở trang riêng; nội dung bộ sưu tập không được điền sẵn.\",\"audioWorkspace.quick.open\":\"Mở danh sách hiệu ứng âm thanh\",\"audioWorkspace.create.body\":\"Lưu yêu cầu âm thanh và thông tin quyền sử dụng trong một bộ sưu tập riêng.\",\"audioWorkspace.create.note\":\"Sau khi tạo, mở bộ sưu tập để thêm âm thanh từ Kho tệp.\",\"audioWorkspace.create.field.briefHelp\":\"Không yêu cầu bắt chước nghệ sĩ, bài hát, giai điệu hoặc giọng nói cụ thể.\",\"audioWorkspace.create.field.descriptionHelp\":\"Không nhập mật khẩu, mã xác nhận, số thẻ hoặc thông tin thanh toán.\",\"audioWorkspace.create.field.projectHelp\":\"Không bắt buộc. Chọn dự án để sắp xếp bộ sưu tập.\",\"audioWorkspace.create.field.rightsHelp\":\"Bạn chịu trách nhiệm kiểm tra quyền sử dụng trước khi đăng hoặc chia sẻ.\",\"audioWorkspace.list.body\":\"Tìm và mở bộ sưu tập đã lưu của bạn.\",\"audioWorkspace.filter.note\":\"Bộ lọc chỉ áp dụng cho lần tìm hiện tại.\",\"audioWorkspace.activity.kicker\":\"HOẠT ĐỘNG\",\"audioWorkspace.activity.body\":\"Xem các thay đổi gần đây của bộ sưu tập.\",\"audioWorkspace.activity.emptyBody\":\"Các thao tác với bộ sưu tập sẽ xuất hiện tại đây.\",\"audioWorkspace.event.item_attached\":\"Đã thêm âm thanh từ Kho tệp\",\"audioWorkspace.event.item_updated\":\"Đã cập nhật thông tin âm thanh\",\"audioWorkspace.event.collection_version_restored\":\"Đã khôi phục phiên bản bộ sưu tập\",\"audioWorkspace.event.item_detached\":\"Đã gỡ âm thanh khỏi bộ sưu tập\",\"audioWorkspace.collection.emptyBody\":\"Tạo bộ sưu tập đầu tiên để lưu yêu cầu và liên kết các tệp âm thanh đã lưu.\",\"audioWorkspace.collection.policyGuarded\":\"Cần xem lại yêu cầu\",\"audioWorkspace.collection.note\":\"Mở bộ sưu tập để xem, thêm và sắp xếp các tệp âm thanh đã lưu.\",\"audioWorkspace.policy.openAssets\":\"Mở Kho tệp\",\"audioWorkspace.policy.openProjects\":\"Mở Dự án\"});\n\n  Object.assign(MESSAGES.en, {\"audioWorkspace.defaults.context\":\"General use\",\"audioWorkspace.defaults.rights\":\"I confirm that I have the right to use the files and brief in this collection.\",\"audioWorkspace.pagination.range\":\"Showing {from}–{to} {label}\",\"audioWorkspace.pagination.empty\":\"No {label} on this page\",\"audioWorkspace.pagination.previous\":\"← Previous\",\"audioWorkspace.pagination.next\":\"Next →\",\"audioWorkspace.pagination.aria\":\"{label} pagination\",\"audioWorkspace.page.description\":\"Organize your briefs, saved audio files and change history.\",\"audioWorkspace.page.newDescription\":\"Create a collection for your audio brief and usage-rights information.\",\"audioWorkspace.workspace.guardTitle\":\"Unable to open {workspace}\",\"audioWorkspace.workspace.guardBody\":\"Sign in and check your access to open your audio library.\",\"audioWorkspace.intro.title\":\"Organize your briefs and audio\",\"audioWorkspace.intro.body\":\"Organize music and sound-effect briefs, link a project and add saved audio files to a collection.\",\"audioWorkspace.quick.kicker\":\"AUDIO TOOL\",\"audioWorkspace.quick.title\":\"Plan sound effects before choosing a file\",\"audioWorkspace.quick.body\":\"Choose a preset and describe the scene to plan three sound-effect moments.\",\"audioWorkspace.quick.note\":\"The tool opens on a separate page; collection content is not prefilled.\",\"audioWorkspace.quick.open\":\"Open the sound-effect planner\",\"audioWorkspace.create.body\":\"Save your audio brief and usage-rights information in a private collection.\",\"audioWorkspace.create.note\":\"After creating the collection, open it to add audio from the file library.\",\"audioWorkspace.create.field.briefHelp\":\"Do not request imitation of a specific artist, song, melody or voice.\",\"audioWorkspace.create.field.descriptionHelp\":\"Do not enter passwords, verification codes, card numbers or payment details.\",\"audioWorkspace.create.field.projectHelp\":\"Optional. Choose a project to organize the collection.\",\"audioWorkspace.create.field.rightsHelp\":\"You are responsible for checking usage rights before publishing or sharing.\",\"audioWorkspace.list.body\":\"Find and open your saved collections.\",\"audioWorkspace.filter.note\":\"Filters apply to the current search only.\",\"audioWorkspace.activity.kicker\":\"ACTIVITY\",\"audioWorkspace.activity.body\":\"View recent changes to your collections.\",\"audioWorkspace.activity.emptyBody\":\"Collection activity will appear here.\",\"audioWorkspace.event.item_attached\":\"Audio added from file library\",\"audioWorkspace.event.item_updated\":\"Audio details updated\",\"audioWorkspace.event.collection_version_restored\":\"Collection version restored\",\"audioWorkspace.event.item_detached\":\"Audio removed from collection\",\"audioWorkspace.collection.emptyBody\":\"Create your first collection to save a brief and link saved audio files.\",\"audioWorkspace.collection.policyGuarded\":\"Review the brief\",\"audioWorkspace.collection.note\":\"Open the collection to view, add and organize saved audio files.\",\"audioWorkspace.policy.openAssets\":\"Open file library\",\"audioWorkspace.policy.openProjects\":\"Open projects\"});\n\n  Object.assign(MESSAGES.zh, {\"audioWorkspace.defaults.context\":\"通用用途\",\"audioWorkspace.defaults.rights\":\"我确认有权使用此合集中的文件和创作需求。\",\"audioWorkspace.pagination.range\":\"正在显示第 {from}–{to} 个{label}\",\"audioWorkspace.pagination.empty\":\"此页没有{label}\",\"audioWorkspace.pagination.previous\":\"← 上一页\",\"audioWorkspace.pagination.next\":\"下一页 →\",\"audioWorkspace.pagination.aria\":\"{label}分页\",\"audioWorkspace.page.description\":\"整理您的创作需求、已保存的音频文件和修改记录。\",\"audioWorkspace.page.newDescription\":\"创建合集，保存音频创作需求和使用权信息。\",\"audioWorkspace.workspace.guardTitle\":\"暂时无法打开{workspace}\",\"audioWorkspace.workspace.guardBody\":\"请登录并检查访问权限，以打开您的音频库。\",\"audioWorkspace.intro.title\":\"整理您的创作需求和音频\",\"audioWorkspace.intro.body\":\"整理音乐和音效需求，关联项目，并将已保存的音频文件添加到合集。\",\"audioWorkspace.quick.kicker\":\"音频工具\",\"audioWorkspace.quick.title\":\"选择文件前先规划音效\",\"audioWorkspace.quick.body\":\"选择模板并描述场景，规划三个需要音效的时刻。\",\"audioWorkspace.quick.note\":\"工具将在独立页面打开，不会预填合集内容。\",\"audioWorkspace.quick.open\":\"打开音效规划工具\",\"audioWorkspace.create.body\":\"在私有合集中保存音频创作需求和使用权信息。\",\"audioWorkspace.create.note\":\"创建合集后，打开合集以添加文件库中的音频。\",\"audioWorkspace.create.field.briefHelp\":\"不要要求模仿特定艺术家、歌曲、旋律或声音。\",\"audioWorkspace.create.field.descriptionHelp\":\"请勿输入密码、验证码、卡号或付款信息。\",\"audioWorkspace.create.field.projectHelp\":\"可选。选择项目以整理合集。\",\"audioWorkspace.create.field.rightsHelp\":\"发布或分享前，请自行检查使用权。\",\"audioWorkspace.list.body\":\"查找并打开您已保存的合集。\",\"audioWorkspace.filter.note\":\"筛选仅适用于当前搜索。\",\"audioWorkspace.activity.kicker\":\"活动\",\"audioWorkspace.activity.body\":\"查看合集的最近修改。\",\"audioWorkspace.activity.emptyBody\":\"合集操作记录将显示在此处。\",\"audioWorkspace.event.item_attached\":\"已从文件库添加音频\",\"audioWorkspace.event.item_updated\":\"已更新音频信息\",\"audioWorkspace.event.collection_version_restored\":\"已恢复合集版本\",\"audioWorkspace.event.item_detached\":\"已从合集中移除音频\",\"audioWorkspace.collection.emptyBody\":\"创建第一个合集，保存创作需求并关联已保存的音频文件。\",\"audioWorkspace.collection.policyGuarded\":\"请检查创作需求\",\"audioWorkspace.collection.note\":\"打开合集，查看、添加和整理已保存的音频文件。\",\"audioWorkspace.policy.openAssets\":\"打开文件库\",\"audioWorkspace.policy.openProjects\":\"打开项目\"});\n\n  verifyEqualKeysets();\n\n  function deepFreeze(value) {"
+    }
+  ],
+  "applicationBaseline": [
+    {
+      "file": "admin_ops.py",
+      "baseLfSha256": "91a9e9b14fe4ae0af54aa3c4806661694d3240f86774b07e5b12db9b740d3e68",
+      "candidateLfSha256": "91a9e9b14fe4ae0af54aa3c4806661694d3240f86774b07e5b12db9b740d3e68",
+      "changed": false
+    },
+    {
+      "file": "affiliate_ops.py",
+      "baseLfSha256": "fe6e604918732498c809e56318c6b05d42ecc1d8f7e8c828676d6068c6b590b4",
+      "candidateLfSha256": "fe6e604918732498c809e56318c6b05d42ecc1d8f7e8c828676d6068c6b590b4",
+      "changed": false
+    },
+    {
+      "file": "ai_assistant.py",
+      "baseLfSha256": "968050546548369be1e1d349a250c40d2d0ff04c1a20af53b665db88e07ccb6e",
+      "candidateLfSha256": "968050546548369be1e1d349a250c40d2d0ff04c1a20af53b665db88e07ccb6e",
+      "changed": false
+    },
+    {
+      "file": "ai_media.py",
+      "baseLfSha256": "495be3b425cc8d79be2491b3519f37115bcea0e5ba511e75ca05115fd0569dec",
+      "candidateLfSha256": "495be3b425cc8d79be2491b3519f37115bcea0e5ba511e75ca05115fd0569dec",
+      "changed": false
+    },
+    {
+      "file": "app.py",
+      "baseLfSha256": "903aebe8620d630670b6c05edfd59c7781df46ab8e57cf8c1eb28ae201a503d5",
+      "candidateLfSha256": "903aebe8620d630670b6c05edfd59c7781df46ab8e57cf8c1eb28ae201a503d5",
+      "changed": false
+    },
+    {
+      "file": "auth.py",
+      "baseLfSha256": "e0d33d7a89e3854a2cd5c5bb7456586a482a9c79a9a57283887bcb04e36fde81",
+      "candidateLfSha256": "e0d33d7a89e3854a2cd5c5bb7456586a482a9c79a9a57283887bcb04e36fde81",
+      "changed": false
+    },
+    {
+      "file": "auth_ops.py",
+      "baseLfSha256": "438af891dc582e17f24f6d96e9c1037d1f217de7bfd446043aff6ac1751a8e50",
+      "candidateLfSha256": "438af891dc582e17f24f6d96e9c1037d1f217de7bfd446043aff6ac1751a8e50",
+      "changed": false
+    },
+    {
+      "file": "billing.py",
+      "baseLfSha256": "51d9469cd555cf6d9cef9398e9e988131907c782f4ec479797dcf60cde9a7518",
+      "candidateLfSha256": "51d9469cd555cf6d9cef9398e9e988131907c782f4ec479797dcf60cde9a7518",
+      "changed": false
+    },
+    {
+      "file": "campaign.py",
+      "baseLfSha256": "3c340dd1e528a24f828828032e9bd7555ed5e4d997479e95a1bcedcd88e56c68",
+      "candidateLfSha256": "3c340dd1e528a24f828828032e9bd7555ed5e4d997479e95a1bcedcd88e56c68",
+      "changed": false
+    },
+    {
+      "file": "campaign_ops.py",
+      "baseLfSha256": "e42f7871571cf392bf9f4dddcc240cc9f47c67e0fde4bd33740f4bebd377be77",
+      "candidateLfSha256": "e42f7871571cf392bf9f4dddcc240cc9f47c67e0fde4bd33740f4bebd377be77",
+      "changed": false
+    },
+    {
+      "file": "coach.py",
+      "baseLfSha256": "9dc7bcff7048d392214783121aaf01c4b8415b8b80796cffec0bfabc32702dce",
+      "candidateLfSha256": "9dc7bcff7048d392214783121aaf01c4b8415b8b80796cffec0bfabc32702dce",
+      "changed": false
+    },
+    {
+      "file": "config.py",
+      "baseLfSha256": "25411413042e8ad814bc7f80f2f863ad4f9b8a0ded01302a29db21963e193270",
+      "candidateLfSha256": "25411413042e8ad814bc7f80f2f863ad4f9b8a0ded01302a29db21963e193270",
+      "changed": false
+    },
+    {
+      "file": "control_status.py",
+      "baseLfSha256": "815f93031645e0c51eea38b3810014e7eb9b73038fe1f56323eb083d7e432aca",
+      "candidateLfSha256": "815f93031645e0c51eea38b3810014e7eb9b73038fe1f56323eb083d7e432aca",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_audit.py",
+      "baseLfSha256": "5292858ef4fea614f49113568ef77d2bc5fe814c632c673113811c3ce61aebc8",
+      "candidateLfSha256": "5292858ef4fea614f49113568ef77d2bc5fe814c632c673113811c3ce61aebc8",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_automation.py",
+      "baseLfSha256": "abf61e8ffbf507885db5d7729138f6b9f3143332422836c427af9387aaab9b14",
+      "candidateLfSha256": "abf61e8ffbf507885db5d7729138f6b9f3143332422836c427af9387aaab9b14",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_commercial.py",
+      "baseLfSha256": "e25f28f9e2ab30ede1c833cbbab4f718ec9b8811737c20c700214ddef20e46ca",
+      "candidateLfSha256": "e25f28f9e2ab30ede1c833cbbab4f718ec9b8811737c20c700214ddef20e46ca",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_customer_directory.py",
+      "baseLfSha256": "3f5d63d0c327c431e69339d1b11e244fbfb209ff853cbd24f69f0c760d9404a7",
+      "candidateLfSha256": "3f5d63d0c327c431e69339d1b11e244fbfb209ff853cbd24f69f0c760d9404a7",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_document_archive.py",
+      "baseLfSha256": "16b02f83f69cbf43c9d72050e7806d067a81671ecc4fd115d5d94e4fee7d2157",
+      "candidateLfSha256": "16b02f83f69cbf43c9d72050e7806d067a81671ecc4fd115d5d94e4fee7d2157",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_erp_navigation.py",
+      "baseLfSha256": "6815e1b6c00d1c17d7ccb5625fa9b0e587c2240a27b21ca05a5ce5dae1be06f3",
+      "candidateLfSha256": "6815e1b6c00d1c17d7ccb5625fa9b0e587c2240a27b21ca05a5ce5dae1be06f3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_admin_security_posture.py",
+      "baseLfSha256": "6cca07df76803f5abbabe6cb22e5b05c6eb2663ccf2698f6a5b80a4b92863044",
+      "candidateLfSha256": "6cca07df76803f5abbabe6cb22e5b05c6eb2663ccf2698f6a5b80a4b92863044",
+      "changed": false
+    },
+    {
+      "file": "copyfast_analytics_workspace.py",
+      "baseLfSha256": "6b6f15005da6f723b8f0f2a8899e192058eed73af48433fe7bbb9184343d41ae",
+      "candidateLfSha256": "6b6f15005da6f723b8f0f2a8899e192058eed73af48433fe7bbb9184343d41ae",
+      "changed": false
+    },
+    {
+      "file": "copyfast_api.py",
+      "baseLfSha256": "8e18ea3ae8e3a11af54673760371815fbcd4e49ea7ca4573b97971ad5ac71ecf",
+      "candidateLfSha256": "8e18ea3ae8e3a11af54673760371815fbcd4e49ea7ca4573b97971ad5ac71ecf",
+      "changed": false
+    },
+    {
+      "file": "copyfast_assets.py",
+      "baseLfSha256": "43fb5119c0e240858041be3088e276b5b0cf2dca091eefdda681deca74be0039",
+      "candidateLfSha256": "43fb5119c0e240858041be3088e276b5b0cf2dca091eefdda681deca74be0039",
+      "changed": false
+    },
+    {
+      "file": "copyfast_audio_asset_operations.py",
+      "baseLfSha256": "62eb392945e8712ff0bf784dbc24f908a91ec60d769bb6e3e5d364eb3932d8a8",
+      "candidateLfSha256": "62eb392945e8712ff0bf784dbc24f908a91ec60d769bb6e3e5d364eb3932d8a8",
+      "changed": false
+    },
+    {
+      "file": "copyfast_audio_change_requests.py",
+      "baseLfSha256": "3939330b55b27d535eba5afb17b9f8c571fb790b4e5a9ed7b5f9b5adc858ce7f",
+      "candidateLfSha256": "3939330b55b27d535eba5afb17b9f8c571fb790b4e5a9ed7b5f9b5adc858ce7f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_auth.py",
+      "baseLfSha256": "daeb3dd96b77ad76622ed4c0ebc6d0264a0dd524cbcd5dd6e316502b81bf6606",
+      "candidateLfSha256": "daeb3dd96b77ad76622ed4c0ebc6d0264a0dd524cbcd5dd6e316502b81bf6606",
+      "changed": false
+    },
+    {
+      "file": "copyfast_auth_throttle.py",
+      "baseLfSha256": "f45ffc9e3e6c3b0dd4f0c51aa41ff91a927b67ba6ea12b7c546d6a606695616d",
+      "candidateLfSha256": "f45ffc9e3e6c3b0dd4f0c51aa41ff91a927b67ba6ea12b7c546d6a606695616d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_autopilot.py",
+      "baseLfSha256": "542c3c819be393a40bda83701fd74f47a7a5127ae10eeab9dd96ac449e8a8a93",
+      "candidateLfSha256": "542c3c819be393a40bda83701fd74f47a7a5127ae10eeab9dd96ac449e8a8a93",
+      "changed": false
+    },
+    {
+      "file": "copyfast_autopilot_policy.py",
+      "baseLfSha256": "d9212eddfb2b5429f26e54d9ed29005c012a90045948fb843aa86acdd60f40a1",
+      "candidateLfSha256": "d9212eddfb2b5429f26e54d9ed29005c012a90045948fb843aa86acdd60f40a1",
+      "changed": false
+    },
+    {
+      "file": "copyfast_autopilot_protocol.py",
+      "baseLfSha256": "6bc4ebc1bd925131fecc277231a5c14663694b13ba565e0f7514387af61782bf",
+      "candidateLfSha256": "6bc4ebc1bd925131fecc277231a5c14663694b13ba565e0f7514387af61782bf",
+      "changed": false
+    },
+    {
+      "file": "copyfast_bridge.py",
+      "baseLfSha256": "64879f12ddeb635a4abb47a03cdf7c87be10e701a82ca6773cfa0d8804c0c775",
+      "candidateLfSha256": "64879f12ddeb635a4abb47a03cdf7c87be10e701a82ca6773cfa0d8804c0c775",
+      "changed": false
+    },
+    {
+      "file": "copyfast_campaign_schedule.py",
+      "baseLfSha256": "cb53503bb710e39289c7427b588319eca7674e57df53e2bdbe0264350b4e6e9b",
+      "candidateLfSha256": "cb53503bb710e39289c7427b588319eca7674e57df53e2bdbe0264350b4e6e9b",
+      "changed": false
+    },
+    {
+      "file": "copyfast_capability_hub.py",
+      "baseLfSha256": "417fe0a24038622b5385801f4f1b442d78b92f7c69d32c40932a150716562c7d",
+      "candidateLfSha256": "417fe0a24038622b5385801f4f1b442d78b92f7c69d32c40932a150716562c7d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_channel_strategy.py",
+      "baseLfSha256": "501d68b373cdf9455c07a9b8306073cbeacab9b0ec687eea1e0d8fb0f7ff09b3",
+      "candidateLfSha256": "501d68b373cdf9455c07a9b8306073cbeacab9b0ec687eea1e0d8fb0f7ff09b3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_chat_workspace.py",
+      "baseLfSha256": "9dfcd65d3e84394d1c5605284c42e2beaf5c7e763e74e08e80b8fb6a85b1563d",
+      "candidateLfSha256": "9dfcd65d3e84394d1c5605284c42e2beaf5c7e763e74e08e80b8fb6a85b1563d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_community_trust.py",
+      "baseLfSha256": "a5ef03b853d41bd506a50ca1009d0efbe8723472e1055f1ed974c83dc3d456f8",
+      "candidateLfSha256": "a5ef03b853d41bd506a50ca1009d0efbe8723472e1055f1ed974c83dc3d456f8",
+      "changed": false
+    },
+    {
+      "file": "copyfast_content_handoff.py",
+      "baseLfSha256": "1a51cec09754e37766102d80cc55ae72e5553ce48f6d7589cd0399350c56d9e3",
+      "candidateLfSha256": "1a51cec09754e37766102d80cc55ae72e5553ce48f6d7589cd0399350c56d9e3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_content_studio.py",
+      "baseLfSha256": "e93a3ed3ccc8e1697d1e8ea1a23d77e194361dbfc899020ec5e7149e080c78d2",
+      "candidateLfSha256": "e93a3ed3ccc8e1697d1e8ea1a23d77e194361dbfc899020ec5e7149e080c78d2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_customer_crm_policy.py",
+      "baseLfSha256": "78f23f9b2b9ee8c23404ecc71e01d8f6fc46b4a1be01def2b1def5017d6b094d",
+      "candidateLfSha256": "78f23f9b2b9ee8c23404ecc71e01d8f6fc46b4a1be01def2b1def5017d6b094d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_data_controls.py",
+      "baseLfSha256": "a7cb5b3e84d416ea6814c4891bd1cde2c5be139ffcdd3b71df089fa0558d1bbd",
+      "candidateLfSha256": "a7cb5b3e84d416ea6814c4891bd1cde2c5be139ffcdd3b71df089fa0558d1bbd",
+      "changed": false
+    },
+    {
+      "file": "copyfast_db.py",
+      "baseLfSha256": "7ae4592bcdd02373070209f8e6ee4120276bbba3b226f1f323b293bbdf1e8689",
+      "candidateLfSha256": "7ae4592bcdd02373070209f8e6ee4120276bbba3b226f1f323b293bbdf1e8689",
+      "changed": false
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "baseLfSha256": "cd17e9e2669e1af0631a33490b498a6876204385c9daaa8bd73d8635c2b32c2d",
+      "candidateLfSha256": "cd17e9e2669e1af0631a33490b498a6876204385c9daaa8bd73d8635c2b32c2d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_document_translate_bridge.py",
+      "baseLfSha256": "e4fd585acc27baf01e6210cf7aa77d3fd7350cffe09aa375811db6eea8c4d114",
+      "candidateLfSha256": "e4fd585acc27baf01e6210cf7aa77d3fd7350cffe09aa375811db6eea8c4d114",
+      "changed": false
+    },
+    {
+      "file": "copyfast_document_workspace.py",
+      "baseLfSha256": "84899b30b56bff95942c4c14a3a5a13e00409e2728140c6d4489bf1fa74918ba",
+      "candidateLfSha256": "84899b30b56bff95942c4c14a3a5a13e00409e2728140c6d4489bf1fa74918ba",
+      "changed": false
+    },
+    {
+      "file": "copyfast_finance_planning.py",
+      "baseLfSha256": "50df4ac7076f35b8575bc3a15170c6f0ab9c628f00d329338943e38083ed7748",
+      "candidateLfSha256": "50df4ac7076f35b8575bc3a15170c6f0ab9c628f00d329338943e38083ed7748",
+      "changed": false
+    },
+    {
+      "file": "copyfast_finance_policy.py",
+      "baseLfSha256": "06188107e21edad9e90ee643fa72b1390de0978ab546e47d110056bb3ddf0b32",
+      "candidateLfSha256": "06188107e21edad9e90ee643fa72b1390de0978ab546e47d110056bb3ddf0b32",
+      "changed": false
+    },
+    {
+      "file": "copyfast_frame_video_operations.py",
+      "baseLfSha256": "a00519665bea97d37abfc1c015028edcb9213f432b1cad45da96a266a7646cfe",
+      "candidateLfSha256": "a00519665bea97d37abfc1c015028edcb9213f432b1cad45da96a266a7646cfe",
+      "changed": false
+    },
+    {
+      "file": "copyfast_free_prompt_gallery.py",
+      "baseLfSha256": "b9d32e2163f473649f7f9e14e7ed3f363fbb13c3e654fa29686671afc0fb94ae",
+      "candidateLfSha256": "b9d32e2163f473649f7f9e14e7ed3f363fbb13c3e654fa29686671afc0fb94ae",
+      "changed": false
+    },
+    {
+      "file": "copyfast_governance.py",
+      "baseLfSha256": "7550165e8d48200a105a7486ab0bb4ad923c4fe546be8411ce123121e495aee6",
+      "candidateLfSha256": "7550165e8d48200a105a7486ab0bb4ad923c4fe546be8411ce123121e495aee6",
+      "changed": false
+    },
+    {
+      "file": "copyfast_growth_review.py",
+      "baseLfSha256": "d3e8f34f8caa5ded3f001bae8acb4dc33dfd2f9dd0e7ce26db3326ba06ee2e9b",
+      "candidateLfSha256": "d3e8f34f8caa5ded3f001bae8acb4dc33dfd2f9dd0e7ce26db3326ba06ee2e9b",
+      "changed": false
+    },
+    {
+      "file": "copyfast_guide_center.py",
+      "baseLfSha256": "6d4ca3895c767aec4fbe133e9d34d45e76772261ea385db4acd4c366237a2040",
+      "candidateLfSha256": "6d4ca3895c767aec4fbe133e9d34d45e76772261ea385db4acd4c366237a2040",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_generation_job_bridge.py",
+      "baseLfSha256": "86a84e46ba773f78aa3ab14148dc6670f3ec214d868a62dc12514ad63837bb3f",
+      "candidateLfSha256": "86a84e46ba773f78aa3ab14148dc6670f3ec214d868a62dc12514ad63837bb3f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "baseLfSha256": "3d559195a68cf4102133c960e801496326be70f422ca193c8b2cbd72f8a99f9c",
+      "candidateLfSha256": "3d559195a68cf4102133c960e801496326be70f422ca193c8b2cbd72f8a99f9c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_remove_background_bridge.py",
+      "baseLfSha256": "1a99a84d58a174841dadc4487aa3ebac5de8dfff06a9a6795a29f1ad2e5be4d5",
+      "candidateLfSha256": "1a99a84d58a174841dadc4487aa3ebac5de8dfff06a9a6795a29f1ad2e5be4d5",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_runtime.py",
+      "baseLfSha256": "2cca79ce69712716c01548574c4b87510e33a991fdedfb174e8f8fac10d229cd",
+      "candidateLfSha256": "2cca79ce69712716c01548574c4b87510e33a991fdedfb174e8f8fac10d229cd",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "baseLfSha256": "b6181e9b527bb729d79ad744e41fca299082674af06c33f3d343a7a123074f9c",
+      "candidateLfSha256": "b6181e9b527bb729d79ad744e41fca299082674af06c33f3d343a7a123074f9c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_transform_job_bridge.py",
+      "baseLfSha256": "a84cf54cec611e9bf3c071668f9c9920a045fa89d76d77f8838c85e8d041bd85",
+      "candidateLfSha256": "a84cf54cec611e9bf3c071668f9c9920a045fa89d76d77f8838c85e8d041bd85",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_transform_runtime_bridge.py",
+      "baseLfSha256": "6f75c4c1ba253d0d8ed61777dd179cf5e1a9b9e0f783b4534c0e39d563e48b7d",
+      "candidateLfSha256": "6f75c4c1ba253d0d8ed61777dd179cf5e1a9b9e0f783b4534c0e39d563e48b7d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_upscale_job_bridge.py",
+      "baseLfSha256": "d66438fe942baec59625fc579812bc3515c17ebf7df89c83f4d284ffbacfb18c",
+      "candidateLfSha256": "d66438fe942baec59625fc579812bc3515c17ebf7df89c83f4d284ffbacfb18c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_image_upscale_provider.py",
+      "baseLfSha256": "6e75037aaa163f83874d97709deb5b3d4df33a4ff7e3dd88eb46db655d496f66",
+      "candidateLfSha256": "6e75037aaa163f83874d97709deb5b3d4df33a4ff7e3dd88eb46db655d496f66",
+      "changed": false
+    },
+    {
+      "file": "copyfast_media_factory.py",
+      "baseLfSha256": "472f69228327fa1a16993648b126b06ea1d45bcc7a7e34e6d530952e03b1135f",
+      "candidateLfSha256": "472f69228327fa1a16993648b126b06ea1d45bcc7a7e34e6d530952e03b1135f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_media_runtime.py",
+      "baseLfSha256": "e1edb1502a425763a21fe229af72c51ea2088972912d5ed3b32f4314e8aad008",
+      "candidateLfSha256": "e1edb1502a425763a21fe229af72c51ea2088972912d5ed3b32f4314e8aad008",
+      "changed": false
+    },
+    {
+      "file": "copyfast_memory.py",
+      "baseLfSha256": "bc3dd4c3b1b7feaf375705ae90b2989c3f92b036d64f66fffb90399e3b1817b3",
+      "candidateLfSha256": "bc3dd4c3b1b7feaf375705ae90b2989c3f92b036d64f66fffb90399e3b1817b3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_mfa.py",
+      "baseLfSha256": "956f0f7b24d4ec0d3583b9cddbb7061078bddd19aeeb63351be9beae27e131b3",
+      "candidateLfSha256": "956f0f7b24d4ec0d3583b9cddbb7061078bddd19aeeb63351be9beae27e131b3",
+      "changed": false
+    },
+    {
+      "file": "copyfast_multi_scene_film_job_bridge.py",
+      "baseLfSha256": "717d2dfca4f524dc600f0016ab79ada35d939832e97d59ca65504dbc77b581b9",
+      "candidateLfSha256": "717d2dfca4f524dc600f0016ab79ada35d939832e97d59ca65504dbc77b581b9",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_job_bridge.py",
+      "baseLfSha256": "a34baa555cbb8b8edb59a9653551831b83e7fad77ba9bc97c2569d64869106aa",
+      "candidateLfSha256": "a34baa555cbb8b8edb59a9653551831b83e7fad77ba9bc97c2569d64869106aa",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_library_bridge.py",
+      "baseLfSha256": "d98e42bf9af170a3aef3552a9d4f8f335c3e984d8ea54a4217d1ed633b1bfb0b",
+      "candidateLfSha256": "d98e42bf9af170a3aef3552a9d4f8f335c3e984d8ea54a4217d1ed633b1bfb0b",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_media.py",
+      "baseLfSha256": "e7be50ff71eb375ed9dd8da449453a4ea1d3fbce6fcc1f93d53590eac2bff1ca",
+      "candidateLfSha256": "e7be50ff71eb375ed9dd8da449453a4ea1d3fbce6fcc1f93d53590eac2bff1ca",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_sfx_job_bridge.py",
+      "baseLfSha256": "51b25469eea084288c34882ffad314183cda8bb1be20210b54f8c232565f33b5",
+      "candidateLfSha256": "51b25469eea084288c34882ffad314183cda8bb1be20210b54f8c232565f33b5",
+      "changed": false
+    },
+    {
+      "file": "copyfast_music_sfx_library_bridge.py",
+      "baseLfSha256": "d60e8ae5d7e9b1721de91a7023e4db71035b96c1fbf027a686f42e0f180bc927",
+      "candidateLfSha256": "d60e8ae5d7e9b1721de91a7023e4db71035b96c1fbf027a686f42e0f180bc927",
+      "changed": false
+    },
+    {
+      "file": "copyfast_native_read_models.py",
+      "baseLfSha256": "a18506592f7dfcbdf6e84da7eca961a333aa71abe5ba742b27563692a3d837aa",
+      "candidateLfSha256": "a18506592f7dfcbdf6e84da7eca961a333aa71abe5ba742b27563692a3d837aa",
+      "changed": false
+    },
+    {
+      "file": "copyfast_notification_center.py",
+      "baseLfSha256": "6e7492917c6915dbdae0c1ddf7dabba46267bdbc9e3ccafe275015da5f014eac",
+      "candidateLfSha256": "6e7492917c6915dbdae0c1ddf7dabba46267bdbc9e3ccafe275015da5f014eac",
+      "changed": false
+    },
+    {
+      "file": "copyfast_notification_protocol.py",
+      "baseLfSha256": "c40fdae4e29ee24f015d1c3175e5595d7f270639de891ce62b5735f80898575f",
+      "candidateLfSha256": "c40fdae4e29ee24f015d1c3175e5595d7f270639de891ce62b5735f80898575f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_operations_desk.py",
+      "baseLfSha256": "6c91ac5c4801e987dd60fcd75135898ea7ac791d99d0a791685120d8ca4e2166",
+      "candidateLfSha256": "6c91ac5c4801e987dd60fcd75135898ea7ac791d99d0a791685120d8ca4e2166",
+      "changed": false
+    },
+    {
+      "file": "copyfast_operations_jobs_policy.py",
+      "baseLfSha256": "0cc42ec614c10a320a144c0be1d69c473d283a3d726a8ee8f61d92dc638f7b9e",
+      "candidateLfSha256": "0cc42ec614c10a320a144c0be1d69c473d283a3d726a8ee8f61d92dc638f7b9e",
+      "changed": false
+    },
+    {
+      "file": "copyfast_pages.py",
+      "baseLfSha256": "93382a7aa0d2a2a151ba6bcaa0daca9b216e43cb955393fa2d0b2c1eb701c48d",
+      "candidateLfSha256": "93382a7aa0d2a2a151ba6bcaa0daca9b216e43cb955393fa2d0b2c1eb701c48d",
+      "changed": false
+    },
+    {
+      "file": "copyfast_partner_crm.py",
+      "baseLfSha256": "85548bb5f5b00d8eb3c4e4197f520fc3a6438a9310c28f047027385421093849",
+      "candidateLfSha256": "85548bb5f5b00d8eb3c4e4197f520fc3a6438a9310c28f047027385421093849",
+      "changed": false
+    },
+    {
+      "file": "copyfast_partner_readiness.py",
+      "baseLfSha256": "1a6c1cda8ea73ca056e39bbcd826dca505fdb4d6d4b388fa45e90e759fa7c9a2",
+      "candidateLfSha256": "1a6c1cda8ea73ca056e39bbcd826dca505fdb4d6d4b388fa45e90e759fa7c9a2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_pricing_policy.py",
+      "baseLfSha256": "5244ee53572ea147945ec1168f3e3c51a9fb17abb657c03567f8ce8bd4ad1f8c",
+      "candidateLfSha256": "5244ee53572ea147945ec1168f3e3c51a9fb17abb657c03567f8ce8bd4ad1f8c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_product_readiness.py",
+      "baseLfSha256": "7d9813abf1fc70742cf900d65d187dd76a8cb6635e89c1d786f0c90610eac6e9",
+      "candidateLfSha256": "7d9813abf1fc70742cf900d65d187dd76a8cb6635e89c1d786f0c90610eac6e9",
+      "changed": false
+    },
+    {
+      "file": "copyfast_product_video_dispatcher.py",
+      "baseLfSha256": "cae77fb4849cc09201628999bfbe872060a6cd917784f8da222f9b1b2221ecf1",
+      "candidateLfSha256": "cae77fb4849cc09201628999bfbe872060a6cd917784f8da222f9b1b2221ecf1",
+      "changed": false
+    },
+    {
+      "file": "copyfast_product_video_job_bridge.py",
+      "baseLfSha256": "1b9baaad8d65b8a41d9cc7069d85fa901c1fdb197d13e67b84705adc775a550b",
+      "candidateLfSha256": "1b9baaad8d65b8a41d9cc7069d85fa901c1fdb197d13e67b84705adc775a550b",
+      "changed": false
+    },
+    {
+      "file": "copyfast_project_packages.py",
+      "baseLfSha256": "847a84b926585d54651758d83adcab014cce4cf9ece65ab5aa63c430bac4911f",
+      "candidateLfSha256": "847a84b926585d54651758d83adcab014cce4cf9ece65ab5aa63c430bac4911f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_projects.py",
+      "baseLfSha256": "7ccb4c2a5210904f7d795c517aa38ef8b82724cbfba365fa7bb636d571c228a2",
+      "candidateLfSha256": "7ccb4c2a5210904f7d795c517aa38ef8b82724cbfba365fa7bb636d571c228a2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_prompt_library.py",
+      "baseLfSha256": "277ba7675d9f8e27849b88cd5e34ccf667ff80ddcd65416f8cc59ffb2cbb492c",
+      "candidateLfSha256": "277ba7675d9f8e27849b88cd5e34ccf667ff80ddcd65416f8cc59ffb2cbb492c",
+      "changed": false
+    },
+    {
+      "file": "copyfast_prompt_studio.py",
+      "baseLfSha256": "6a67a3b401e747dd4589794dbad8c8a7ae290c9154a8e9852316cf41745e51cf",
+      "candidateLfSha256": "6a67a3b401e747dd4589794dbad8c8a7ae290c9154a8e9852316cf41745e51cf",
+      "changed": false
+    },
+    {
+      "file": "copyfast_provider_policy.py",
+      "baseLfSha256": "15f47446d77f468309a33a20c63ba813d936f2aa808c3a7bf9a307cefdda3ef1",
+      "candidateLfSha256": "15f47446d77f468309a33a20c63ba813d936f2aa808c3a7bf9a307cefdda3ef1",
+      "changed": false
+    },
+    {
+      "file": "copyfast_quick_image_planner.py",
+      "baseLfSha256": "132795c55d7e2f5b00f637c1c0c1cfb4869daf6906c663a3cca86dbbbbe3f938",
+      "candidateLfSha256": "132795c55d7e2f5b00f637c1c0c1cfb4869daf6906c663a3cca86dbbbbe3f938",
+      "changed": false
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "baseLfSha256": "193d7fe27eb4799b0010d5695f5104d8f613e0bbd79f06ee6e033d8c6ef4301f",
+      "candidateLfSha256": "193d7fe27eb4799b0010d5695f5104d8f613e0bbd79f06ee6e033d8c6ef4301f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_registry.py",
+      "baseLfSha256": "6a8e84966e84a4b6e7f24d79ef00b4128ec05d93f1c962aa4e43fdc41f72c517",
+      "candidateLfSha256": "6a8e84966e84a4b6e7f24d79ef00b4128ec05d93f1c962aa4e43fdc41f72c517",
+      "changed": false
+    },
+    {
+      "file": "copyfast_reliability.py",
+      "baseLfSha256": "4cf575b64e5ff9938fe493a735c24059d8d7787c0b521640e459d5adea72b6a2",
+      "candidateLfSha256": "4cf575b64e5ff9938fe493a735c24059d8d7787c0b521640e459d5adea72b6a2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_reliability_policy.py",
+      "baseLfSha256": "bf0d74656d61f8622ba8af3456ad9070d0db63cffa26d4f12c13a95d695f7a42",
+      "candidateLfSha256": "bf0d74656d61f8622ba8af3456ad9070d0db63cffa26d4f12c13a95d695f7a42",
+      "changed": false
+    },
+    {
+      "file": "copyfast_route_engine.py",
+      "baseLfSha256": "53ff5fd84fa797f14b616e61b8abb4f8d7ee72bcf9c69f4da9083246195d10ea",
+      "candidateLfSha256": "53ff5fd84fa797f14b616e61b8abb4f8d7ee72bcf9c69f4da9083246195d10ea",
+      "changed": false
+    },
+    {
+      "file": "copyfast_starter_kits.py",
+      "baseLfSha256": "79eed070462c915810aacd0db8d6b4f68c84a137534060be8b9a94af9f240cf2",
+      "candidateLfSha256": "79eed070462c915810aacd0db8d6b4f68c84a137534060be8b9a94af9f240cf2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_storyboard_grid.py",
+      "baseLfSha256": "393ff5496569152d34cb5c354ad73831fb1dee0864f842f48daf892e5e731c87",
+      "candidateLfSha256": "393ff5496569152d34cb5c354ad73831fb1dee0864f842f48daf892e5e731c87",
+      "changed": false
+    },
+    {
+      "file": "copyfast_subdub_job_bridge.py",
+      "baseLfSha256": "c75ea7425ad224bddde6db7e53468166994e78159d522cc741ceb54aff49f6fd",
+      "candidateLfSha256": "c75ea7425ad224bddde6db7e53468166994e78159d522cc741ceb54aff49f6fd",
+      "changed": false
+    },
+    {
+      "file": "copyfast_subtitle_asset_operations.py",
+      "baseLfSha256": "d6f6cde4d16b43135999c0f1298ac05cb1fa19b95034f3a1f701a0bfa680b982",
+      "candidateLfSha256": "d6f6cde4d16b43135999c0f1298ac05cb1fa19b95034f3a1f701a0bfa680b982",
+      "changed": false
+    },
+    {
+      "file": "copyfast_subtitle_format_core.py",
+      "baseLfSha256": "aa9b853999441d00badaf9aa4dadbad656040f0e190523d12852525947196367",
+      "candidateLfSha256": "aa9b853999441d00badaf9aa4dadbad656040f0e190523d12852525947196367",
+      "changed": false
+    },
+    {
+      "file": "copyfast_subtitle_workspace.py",
+      "baseLfSha256": "c82ab41b71792bc2f4f43ff46507e481d083cef69534ddb1d459fbe105c29926",
+      "candidateLfSha256": "c82ab41b71792bc2f4f43ff46507e481d083cef69534ddb1d459fbe105c29926",
+      "changed": false
+    },
+    {
+      "file": "copyfast_support.py",
+      "baseLfSha256": "2c7df5bb38cc71aa62ada592addde5c6109ca9bc5131ece508908f93826d347e",
+      "candidateLfSha256": "2c7df5bb38cc71aa62ada592addde5c6109ca9bc5131ece508908f93826d347e",
+      "changed": false
+    },
+    {
+      "file": "copyfast_trend_research.py",
+      "baseLfSha256": "4b609a9971efd06c98a7ef75df59686bd7ce650bd363f3f4f80384f94dbc76d9",
+      "candidateLfSha256": "4b609a9971efd06c98a7ef75df59686bd7ce650bd363f3f4f80384f94dbc76d9",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_long_job_bridge.py",
+      "baseLfSha256": "5b97eeef2626ab257b95850d9294e29e7df27542d78126773dfbde9e55121b6e",
+      "candidateLfSha256": "5b97eeef2626ab257b95850d9294e29e7df27542d78126773dfbde9e55121b6e",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_operations.py",
+      "baseLfSha256": "18ed04feb3e1585b4612b5755ddbac4275bd69c8bc15e71d33efa69dba70b54a",
+      "candidateLfSha256": "18ed04feb3e1585b4612b5755ddbac4275bd69c8bc15e71d33efa69dba70b54a",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_output_copy.py",
+      "baseLfSha256": "1e5685db200da23979b154d18633ea1982b681311582709e631960b23c78f5ec",
+      "candidateLfSha256": "1e5685db200da23979b154d18633ea1982b681311582709e631960b23c78f5ec",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_studio.py",
+      "baseLfSha256": "0c48803356153fde8d45d1b9c8795ade9727c8232cf2bc33ac1ebe98eb82cb8f",
+      "candidateLfSha256": "0c48803356153fde8d45d1b9c8795ade9727c8232cf2bc33ac1ebe98eb82cb8f",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_transform_operations.py",
+      "baseLfSha256": "28159581d97b0310d2334cd657923204491702ba51166986552fd9c22a7a5953",
+      "candidateLfSha256": "28159581d97b0310d2334cd657923204491702ba51166986552fd9c22a7a5953",
+      "changed": false
+    },
+    {
+      "file": "copyfast_video_trend_job_bridge.py",
+      "baseLfSha256": "9547cab30bbca3bc056eb4cfc6a3e59adbb8339019cbc7f15ee6903eb9a29f7e",
+      "candidateLfSha256": "9547cab30bbca3bc056eb4cfc6a3e59adbb8339019cbc7f15ee6903eb9a29f7e",
+      "changed": false
+    },
+    {
+      "file": "copyfast_voice_clone_runtime_bridge.py",
+      "baseLfSha256": "77f3a3dd7609e61be70180a74e247a95d14fdb5fa1378c52aa307a4f4c6f9073",
+      "candidateLfSha256": "77f3a3dd7609e61be70180a74e247a95d14fdb5fa1378c52aa307a4f4c6f9073",
+      "changed": false
+    },
+    {
+      "file": "copyfast_voice_studio.py",
+      "baseLfSha256": "c6f6b9dc0e86124171e615626d095749561c5190266431979cf142acbb2ad4c2",
+      "candidateLfSha256": "c6f6b9dc0e86124171e615626d095749561c5190266431979cf142acbb2ad4c2",
+      "changed": false
+    },
+    {
+      "file": "copyfast_voice_tts_job_bridge.py",
+      "baseLfSha256": "ed910e8d6ecb83ef40a5058c1cd5bb146f2a843af149d9fd2ddf5f8beba3dd09",
+      "candidateLfSha256": "ed910e8d6ecb83ef40a5058c1cd5bb146f2a843af149d9fd2ddf5f8beba3dd09",
+      "changed": false
+    },
+    {
+      "file": "copyfast_web_engine.py",
+      "baseLfSha256": "2ff12604aba455837863c47721d4a5bca3605e5df91b20341e08ea53c61fdb38",
+      "candidateLfSha256": "2ff12604aba455837863c47721d4a5bca3605e5df91b20341e08ea53c61fdb38",
+      "changed": false
+    },
+    {
+      "file": "copyfast_workboard.py",
+      "baseLfSha256": "9fdb7d695e235bd10d5ba77c3a9a604c77ab4f32db9d0b6a9a574fbd92a07301",
+      "candidateLfSha256": "9fdb7d695e235bd10d5ba77c3a9a604c77ab4f32db9d0b6a9a574fbd92a07301",
+      "changed": false
+    },
+    {
+      "file": "copyfast_workspace_draft_contract.py",
+      "baseLfSha256": "774a544f62aac298a537129d48d001f95fa258626318864fae40853ad51fa131",
+      "candidateLfSha256": "774a544f62aac298a537129d48d001f95fa258626318864fae40853ad51fa131",
+      "changed": false
+    },
+    {
+      "file": "copyfast_workspace_setup.py",
+      "baseLfSha256": "4db7d20624b6ddce19fdf4a7b383a639c935ef5b77c8422181811c7fecf09d1d",
+      "candidateLfSha256": "4db7d20624b6ddce19fdf4a7b383a639c935ef5b77c8422181811c7fecf09d1d",
+      "changed": false
+    },
+    {
+      "file": "customer_api.py",
+      "baseLfSha256": "88214aba38871583b55f3935d9271b0fa5e6d4f07a5ad85727ef163de67e90a1",
+      "candidateLfSha256": "88214aba38871583b55f3935d9271b0fa5e6d4f07a5ad85727ef163de67e90a1",
+      "changed": false
+    },
+    {
+      "file": "db.py",
+      "baseLfSha256": "38ca969a2ff86e29f263b7e16179ed9cdb63c8082c73647ea08dff6e61ba46ea",
+      "candidateLfSha256": "38ca969a2ff86e29f263b7e16179ed9cdb63c8082c73647ea08dff6e61ba46ea",
+      "changed": false
+    },
+    {
+      "file": "device_ops.py",
+      "baseLfSha256": "03ae760c424beb8af06e13ddf3b14eb83fb799e3dbb471b37c7863cd410e7dbd",
+      "candidateLfSha256": "03ae760c424beb8af06e13ddf3b14eb83fb799e3dbb471b37c7863cd410e7dbd",
+      "changed": false
+    },
+    {
+      "file": "erp_core.py",
+      "baseLfSha256": "ec418b60e52ce458d7028ed157976c34d566be51fcd26bb38a8e40bf84c07042",
+      "candidateLfSha256": "ec418b60e52ce458d7028ed157976c34d566be51fcd26bb38a8e40bf84c07042",
+      "changed": false
+    },
+    {
+      "file": "main.py",
+      "baseLfSha256": "94bedbf116ac45e197a99b31251bf3def5c9c9fd5207d0df2eb2a90573d17371",
+      "candidateLfSha256": "94bedbf116ac45e197a99b31251bf3def5c9c9fd5207d0df2eb2a90573d17371",
+      "changed": false
+    },
+    {
+      "file": "media_ops.py",
+      "baseLfSha256": "6f045229af22195aef2e664c29a3584524d562dba12856eb2b49ab9d380682ff",
+      "candidateLfSha256": "6f045229af22195aef2e664c29a3584524d562dba12856eb2b49ab9d380682ff",
+      "changed": false
+    },
+    {
+      "file": "migrate_db.py",
+      "baseLfSha256": "7910c5ddca43952f360919eecbdeee18a7fac6a69a9a40919c908ab4fff90b6f",
+      "candidateLfSha256": "7910c5ddca43952f360919eecbdeee18a7fac6a69a9a40919c908ab4fff90b6f",
+      "changed": false
+    },
+    {
+      "file": "performance.py",
+      "baseLfSha256": "2a278f1f1dc7d3116655bff373cb904955e3ff48cbf3ddb4833889ae357eba89",
+      "candidateLfSha256": "2a278f1f1dc7d3116655bff373cb904955e3ff48cbf3ddb4833889ae357eba89",
+      "changed": false
+    },
+    {
+      "file": "report.py",
+      "baseLfSha256": "ca082d9e2f057c1e7922a7fa2e980aac29a816b7badd76254a5916190fef57da",
+      "candidateLfSha256": "ca082d9e2f057c1e7922a7fa2e980aac29a816b7badd76254a5916190fef57da",
+      "changed": false
+    },
+    {
+      "file": "security.py",
+      "baseLfSha256": "3e356d4d6442bfbb17bbfa2f3a7c01860aaa9407aeb50fe7db0ba1b916d7380b",
+      "candidateLfSha256": "3e356d4d6442bfbb17bbfa2f3a7c01860aaa9407aeb50fe7db0ba1b916d7380b",
+      "changed": false
+    },
+    {
+      "file": "static/portal/admin-customer-directory.js",
+      "baseLfSha256": "32d7f7a01f8e2f8da8b5fe3f045e63eac5831d0ea00e6a9213c11b7954c781fd",
+      "candidateLfSha256": "32d7f7a01f8e2f8da8b5fe3f045e63eac5831d0ea00e6a9213c11b7954c781fd",
+      "changed": false
+    },
+    {
+      "file": "static/portal/bundle_analyzer.html",
+      "baseLfSha256": "3fc533c2e959bd473be72c2820fbcd591360660f86b30efd57a4e863b29683bf",
+      "candidateLfSha256": "3fc533c2e959bd473be72c2820fbcd591360660f86b30efd57a4e863b29683bf",
+      "changed": false
+    },
+    {
+      "file": "static/portal/integration.js",
+      "baseLfSha256": "ae2814495b109821d0b770be78e253e4a5d0a7ddefc2eeeed6b05f1ac5c0c0a5",
+      "candidateLfSha256": "ae2814495b109821d0b770be78e253e4a5d0a7ddefc2eeeed6b05f1ac5c0c0a5",
+      "changed": false
+    },
+    {
+      "file": "static/portal/offline.html",
+      "baseLfSha256": "cc8a54608aee86826d9cfec05cde52959877a6ba1b806631ea297ef1bc5c066c",
+      "candidateLfSha256": "cc8a54608aee86826d9cfec05cde52959877a6ba1b806631ea297ef1bc5c066c",
+      "changed": false
+    },
+    {
+      "file": "static/portal/offline.js",
+      "baseLfSha256": "94c197bfb52199d41ab35dbdcf43995aa6839c4f90a28c071ddecaf2f57159d6",
+      "candidateLfSha256": "94c197bfb52199d41ab35dbdcf43995aa6839c4f90a28c071ddecaf2f57159d6",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-auth.js",
+      "baseLfSha256": "893796a10a51b721ff33c52f3f812d9cc4624c7790dfce4c934f7a1b5cef6d86",
+      "candidateLfSha256": "893796a10a51b721ff33c52f3f812d9cc4624c7790dfce4c934f7a1b5cef6d86",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-feature-catalog-copy.js",
+      "baseLfSha256": "72a8bd4a2897dba29aea19189d3118cc4aa872c65ee68919c4cafec05cad3006",
+      "candidateLfSha256": "72a8bd4a2897dba29aea19189d3118cc4aa872c65ee68919c4cafec05cad3006",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-features.js",
+      "baseLfSha256": "f786ad861fcff561d5a666c47afd6d9c5dc1912d0cac02611e32fa69c231222a",
+      "candidateLfSha256": "f786ad861fcff561d5a666c47afd6d9c5dc1912d0cac02611e32fa69c231222a",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-first-paint.css",
+      "baseLfSha256": "6c33b091b1a2378d87ba0451d71bc89401368cdb9c1c4b737d85de13f4d4eca9",
+      "candidateLfSha256": "6c33b091b1a2378d87ba0451d71bc89401368cdb9c1c4b737d85de13f4d4eca9",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "baseLfSha256": "768b1ba4102ed67b387ba4f62b98009cbcd82fb76decdc1992365aa84393aed2",
+      "candidateLfSha256": "c8081d758b380a7826153af5d6554690712b3516c7e8c82395a5f83ccc83ae91",
+      "changed": true
+    },
+    {
+      "file": "static/portal/portal-motion.js",
+      "baseLfSha256": "2bd037f2b06e3a98196e4c5776497298953dbddb4ec38fcf275a19457238db90",
+      "candidateLfSha256": "2bd037f2b06e3a98196e4c5776497298953dbddb4ec38fcf275a19457238db90",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-theme.css",
+      "baseLfSha256": "353ce66afb195a866156ba6a1c523486dd3c8d620a082bcaf086ae7ea13825d2",
+      "candidateLfSha256": "353ce66afb195a866156ba6a1c523486dd3c8d620a082bcaf086ae7ea13825d2",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal-theme.js",
+      "baseLfSha256": "883fb51d0fa0f644be706a14a270a8b1c0709b85c0b3159769500d286789ce3d",
+      "candidateLfSha256": "883fb51d0fa0f644be706a14a270a8b1c0709b85c0b3159769500d286789ce3d",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal.css",
+      "baseLfSha256": "86691e824085bd88b23a76b788ce1f56b25dca7fbbf2b1cb753a91a5011b7ce2",
+      "candidateLfSha256": "86691e824085bd88b23a76b788ce1f56b25dca7fbbf2b1cb753a91a5011b7ce2",
+      "changed": false
+    },
+    {
+      "file": "static/portal/portal.js",
+      "baseLfSha256": "11f9b1ab0fda5b0f4aa26538a14d72c94053a2cdf8def49c60754c9ae638b214",
+      "candidateLfSha256": "12de338b80cff22b7c9494ca66076369492e53a50835ef03eba752c45bfb6f21",
+      "changed": true
+    },
+    {
+      "file": "static/portal/service-worker.js",
+      "baseLfSha256": "a2f2429c2656318a18c58524a534c1ccf48deb94ccd50c68a90446f53afa1cf2",
+      "candidateLfSha256": "a2f2429c2656318a18c58524a534c1ccf48deb94ccd50c68a90446f53afa1cf2",
+      "changed": false
+    },
+    {
+      "file": "static/sw.js",
+      "baseLfSha256": "9f9f90454f22e2ee93013f92decd621cfb21915d42828bb4b98c55cb1241b82b",
+      "candidateLfSha256": "9f9f90454f22e2ee93013f92decd621cfb21915d42828bb4b98c55cb1241b82b",
+      "changed": false
+    },
+    {
+      "file": "studio/index.html",
+      "baseLfSha256": "caded4340df065721509c3173f96edf0ef3a32531f2a267f9570ba6dc9af4d72",
+      "candidateLfSha256": "caded4340df065721509c3173f96edf0ef3a32531f2a267f9570ba6dc9af4d72",
+      "changed": false
+    },
+    {
+      "file": "studio/script.js",
+      "baseLfSha256": "5bca28d38031c376d4a77f4c3620b69cac6788feabed1544513f764404f5fb6d",
+      "candidateLfSha256": "5bca28d38031c376d4a77f4c3620b69cac6788feabed1544513f764404f5fb6d",
+      "changed": false
+    },
+    {
+      "file": "studio/style.css",
+      "baseLfSha256": "4c03b30d7e2dca21b0bee89ad9bcc0bde704c7bb11e259a1e8d0a95277e40013",
+      "candidateLfSha256": "4c03b30d7e2dca21b0bee89ad9bcc0bde704c7bb11e259a1e8d0a95277e40013",
+      "changed": false
+    },
+    {
+      "file": "studio/sw.js",
+      "baseLfSha256": "9f9f90454f22e2ee93013f92decd621cfb21915d42828bb4b98c55cb1241b82b",
+      "candidateLfSha256": "9f9f90454f22e2ee93013f92decd621cfb21915d42828bb4b98c55cb1241b82b",
+      "changed": false
+    },
+    {
+      "file": "templates/dashboard.html",
+      "baseLfSha256": "b2deda4f940d275793bd22014753e34dc114561ce103a55a6495ce1a9e8d0e20",
+      "candidateLfSha256": "b2deda4f940d275793bd22014753e34dc114561ce103a55a6495ce1a9e8d0e20",
+      "changed": false
+    },
+    {
+      "file": "templates/index.html",
+      "baseLfSha256": "912bbae7e6edbc64e9459eea7fa90eceb507830f812276b8ff074fb28fc92850",
+      "candidateLfSha256": "912bbae7e6edbc64e9459eea7fa90eceb507830f812276b8ff074fb28fc92850",
+      "changed": false
+    },
+    {
+      "file": "templates/portal_shell.html",
+      "baseLfSha256": "6154b2ba472319cbd7c9e690e7a21407fdd5949e8675b892a6976cd68fedb904",
+      "candidateLfSha256": "6154b2ba472319cbd7c9e690e7a21407fdd5949e8675b892a6976cd68fedb904",
+      "changed": false
+    },
+    {
+      "file": "user.py",
+      "baseLfSha256": "1b7c977672f77e8f6d0ea13ce19bafd30b476b4141edc571f51e0da3439dc51c",
+      "candidateLfSha256": "1b7c977672f77e8f6d0ea13ce19bafd30b476b4141edc571f51e0da3439dc51c",
+      "changed": false
+    },
+    {
+      "file": "video.py",
+      "baseLfSha256": "64b45efe43929916bc9b40137df430e3a85b067a493793fda79add0db987e16c",
+      "candidateLfSha256": "64b45efe43929916bc9b40137df430e3a85b067a493793fda79add0db987e16c",
+      "changed": false
+    },
+    {
+      "file": "workflow_engine.py",
+      "baseLfSha256": "dc3226ae535162ceefc00edff804f15a11848690fc5dcffb9f01ab7e2a8e845b",
+      "candidateLfSha256": "dc3226ae535162ceefc00edff804f15a11848690fc5dcffb9f01ab7e2a8e845b",
+      "changed": false
+    }
+  ],
+  "limits": {
+    "fullPhysicalVM": true,
+    "exposureCount": 1,
+    "replacedProductionFunctions": 0,
+    "nativeBase": "NOT_RUN",
+    "providerOutput": "NOT_PROVEN",
+    "noGlobalLocaleClaim": true
+  }
+}
