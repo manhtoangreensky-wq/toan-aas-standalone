@@ -1,5 +1,24 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 21/11/2026 — phản hồi sau đọc bộ sưu tập âm thanh
+
+Nguồn gốc vẫn là `docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md`,
+mục Lifecycle/API, và dispatcher/readers thực tại BASEfb1bbcf1. Chức
+năng quản lý yêu cầu/liên kết tệp giữ nguyên; không thêm engine/player.
+PR782 đã giao qua CI44783966598/deploy44787944401/runtimeBASE.
+
+| BASE đã đo | Ứng viên hiện tại | Bằng chứng/ranh giới |
+|---|---|---|
+| Action luôn báo success sau await dù reader thất bại hoặc cũ | Chỉ lượt hiện tại ready được báo success; lỗi cảnh báo, cũ im lặng | 187ca BASE2PASS185RED; thêm5counterRED; GREEN192PASS |
+| List/detail cùng ghi read-state | Giữ counter chính và snapshot counter còn lại | Không sửa reader, counter lifecycle, return hoặc API |
+| Câu VI lẫn tên triển khai nội bộ | Tám key mới,24giá trị VI/EN/ZH | Không dịch dữ liệu khách hoặc raw server message ngoài scope |
+| Page có capability strict true | Giữ biểu thức nguyên vẹn, chỉ dịch cảnh báo | Các giá trị false/null/số/chuỗi/object không mở quyền |
+| Detail action không có control hiển thị | Giữ nguyên, không thêm nút | Native detail-toast NOT_REACHABLE; physical dispatcher có test |
+
+Hồi quy3662NodePASS,Python15PASS3sameBASEFAIL;native6view48PNG đầy đủ,
+source/core/schema/auth/egress/owned0 giữ. Release chưa chốt, không nhận
+whole-app locale/AX/motion hoặc âm thanh đầu ra đã hoàn tất.
+
 ## 20/11/2026 — bộ sưu tập âm thanh: giữ chức năng, sửa chữ khách nhìn
 
 Nguồn gốc: `docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md` và năm

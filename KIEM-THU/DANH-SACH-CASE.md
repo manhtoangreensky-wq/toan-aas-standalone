@@ -1,5 +1,21 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## MEDIA-READ-FEEDBACK-20261121 — phản hồi đọc âm thanh
+
+Phiên: [MEDIA-READ-FEEDBACK](PHIEN-MEDIA-READ-FEEDBACK-20261121.md).
+BASE `fb1bbcf1fa7d36ba0745082229d9d1237d488364`; Issue689/comment7047062064.
+Sửa case tại đây trước; không tạo issue/PR giữ chỗ.
+
+| Mã | Mức | Phạm vi | Kết quả cần đạt |
+|---|---|---|---|---|
+| MRF-READ | nặng | Filter/clear/page/list-refresh/detail-refresh | Currentready kể cả empty success; currentfailed warning, không success |
+| MRF-CURRENTNESS | nặng | Same/cross-action, route/session/logout/counter và detail secondary-await | Cũ im lặng, không lấy ready/failed của lượt khác |
+| MRF-COPY | vừa | Tám câu VI/EN/ZH, thiếu/empty/hostile translator | Đúng locale/fallbackVI/plaintext, dữ liệu khách giữ |
+| MRF-PAGE-GUARD | nặng | Capability strict true | Không thay biểu thức hoặc mở quyền từ giá trị truthy khác |
+| MRF-SOURCE | nặng | Hai appfile,5record và151pins/149protected | Loader/API/auth/CSS/motion cùng assertion/golden cũ giữ |
+| MRF-NATIVE | nặng | VI/EN/ZH×320dark/1440light, control thật | GET lỗi/phục hồi/cũ/geometry/focus/console, không POST sản phẩm |
+| MRF-DELIVERY | nặng | MộtPR/exactCI/merge/deploy/VPS/assets/receipt | Đúng bản qua từng cổng, không suy fullgoal hoặc output |
+
 ## MEDIA-COLLECTION-LOCALE-20261120 — bộ sưu tập âm thanh
 
 Phiên: [MEDIA-COLLECTION-LOCALE](PHIEN-MEDIA-COLLECTION-LOCALE-20261120.md).
