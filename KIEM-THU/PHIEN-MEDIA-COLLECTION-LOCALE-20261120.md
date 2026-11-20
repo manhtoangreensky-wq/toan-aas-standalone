@@ -29,6 +29,10 @@ auth/schema/quyền/Bot/provider/ví/PayOS/ENV/dữ liệu/CSS/motion.
   local2RED→Pythonleaf/27new+15dependentcases42distinctaccepted.
   Giữ37PASS, năm detached failures đổiindex→find và25changednegativePASS;
   khôngthayassertion/golden hoặc chạy lại native/app. CI trênHEADmới cònmở.
+- [x] CI44762268150 tìm bốn historicalsnapshot guard/reader mismatch:
+  82PASS4FAIL, failed-only retest4PASS sau QA-onlyfix. Ngày21/11,
+ 59tệpCIlocaleNode chưa thựcthi đạt1862PASS0FAIL0skip; giữ inputguard/
+  erroridentity/assertion/golden và toàn bộ source/native đã nghiệm thu.
 - [x] Nhóm Node77tệp:1380PASS giữ +417failed/unexecutedPASS +
   ba nav failed-onlyPASS =1800executablePASS/0unresolved. Không full rerun.
 - [x] Native hai route×VI/EN/ZH×320dark/1440light; một đại diện rồi

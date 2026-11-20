@@ -665,6 +665,7 @@
   "release": {
     "pr": 782,
     "firstFailedCi": 44760005148,
+    "secondFailedCi": 44762268150,
     "nextCi": "PENDING_QA_ONLY_HEAD",
     "merge": "PENDING",
     "deploy": "PENDING",
@@ -837,6 +838,26 @@
     {
       "file": "media-collection-ci-first-failure-nov20.json",
       "rawSha256": "7f5f60ace31db9a1851027b416c3ffa50002b0fbc3c2235e3c3fdd9a86d07b27"
+    },
+    {
+      "file": "media-collection-ci-shared-snapshot-retest-nov20.xml",
+      "rawSha256": "f42ba2888007ec00566968dde16fec3d1508638f14cadc0a4a0e78058d15d6aa"
+    },
+    {
+      "file": "media-ci-unexecuted-nov20.xml",
+      "rawSha256": "23ecd7545c4a65ba374e5243b7cabe6fec2c65b0c0354f4b83ffb8e1d3962037"
+    },
+    {
+      "file": "media-collection-ci-second-failure-nov20.json",
+      "rawSha256": "5ce3da70b631e408b146d5d72683f7ecafd401d846ae747feb0ad0727415a486"
+    },
+    {
+      "file": "media-ci-unexecuted-selection-nov20.json",
+      "rawSha256": "a1cd1e25c99025d6f44756f822b925e69f2849a5395958015c4ebfaa83f85d9e"
+    },
+    {
+      "file": "media-ci-unexecuted-exit-nov20.json",
+      "rawSha256": "413b2825f737c3250856b4fd47826b41698ed15369ea2c56d0c498f06c8375d3"
     }
   ],
   "ciFirstAttempt": {
@@ -889,5 +910,60 @@
     "applicationSourceChanges": 0,
     "nativeReruns": 0,
     "independentBlockingFindings": 0
+  },
+  "ciSecondAttempt": {
+    "task": "MEDIA-COLLECTION-LOCALE-20261120",
+    "localAmendmentDate": "2026-11-21",
+    "pr": 782,
+    "run": 44762268150,
+    "head": "b0b2c58d473aa688dd6ff971fc1a8ae1094a1546",
+    "conclusion": "failure",
+    "failedStep": "Video Studio locale and navigation presentation regressions",
+    "commandTests": 86,
+    "commandPassed": 82,
+    "commandFailed": 4,
+    "classification": "HISTORICAL_SNAPSHOT_GUARD_ORDER_AND_THREE_BASE_CATALOGUE_READERS",
+    "fix": "Preserve original Shared Select input guards before composing newer media inverse; use finite media snapshot only in three historical catalogue comparisons",
+    "oldAssertionsGoldensPinsPreserved": true,
+    "applicationSourceChanges": 0,
+    "workerCodeFailures": 0,
+    "nativeReruns": 0,
+    "failedOnlyRetest": {
+      "tests": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "previouslyUnexecutedCiLocaleNode": {
+      "files": 59,
+      "tests": 1862,
+      "passed": 1862,
+      "failed": 0,
+      "skipped": 0
+    },
+    "merge": "NOT_RUN",
+    "deploy": "NOT_RUN"
+  },
+  "sharedSnapshotCiAmendment": {
+    "localDate": "2026-11-21",
+    "failedOnly": {
+      "file": "media-collection-ci-shared-snapshot-retest-nov20.xml",
+      "tests": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "previouslyUnexecuted": {
+      "file": "media-ci-unexecuted-nov20.xml",
+      "tests": 1862,
+      "passed": 1862,
+      "failed": 0,
+      "skipped": 0,
+      "files": 59
+    },
+    "originalGuardOrderAndErrorIdentityRestored": true,
+    "threeHistoricalReadersUseFiniteProjection": true,
+    "oldAssertionsGoldensRawPinsUnchanged": true,
+    "applicationSourceChanges": 0,
+    "nativeReruns": 0
   }
 }

@@ -143,10 +143,20 @@ owner-order hiện có bắt trường hợp đó; nhóm25negative bị ảnh h�
 lại; không mô tả lệnh này là “chỉ chạy năm”. Không đổi application/native.
 CI thêm một lệnh Python, tổnghai lệnh mới cho baNode/mộtPython suite.
 
+CI kế tiếp44762268150 qua lỗi Python rồi dừng ở Shared Select:
+86ca/82PASS4FAIL. Ngày21/11/2026 chỉ sửa QA: giữ các input guard cũ
+trước khi gọi media snapshot để giữ đúng error identity; ba so sánh
+catalogue lịch sử nhận newest finite media projection. Không thay bất
+kỳ assertion/golden/rawpin hoặc renderer/runtime test input. Chạy riêng
+bốn ca lỗi đạt4/4. Nhóm59tệp Node trong các lệnh CI chưa được thực thi
+đã chạy một lần,1862PASS/0FAIL/0skip. Các nhóm đã đạt và native giữ nguyên.
+Manifest mới30scoped+2Webprovenance=32tệp; chỉ cập nhật cùngPR782.
+
 Prepush/Tester/manifest/secret, một PR, CI đúng HEAD, merge-tree,
 exclusive deploy, VPS/assets/build và receipt đọc lại đều là cổng riêng.
 Tại thời điểm bản này: local đã nghiệm thu và PR782 đã mở, chưa
-merge/deploy đơn vị âm thanh. PR nhận QA-only amendment; CI phải chạy trên HEAD mới.
+merge/deploy đơn vị âm thanh. PR nhận QA-only amendment ngày21/11;
+CI phải chạy trên HEAD mới, không lấy một trong hai CI thất bại làm PASS.
 Biên nhận cùng tracker thay thế trạng thái release khi đã giao.
 
 PROVIDER_CALLS=0.

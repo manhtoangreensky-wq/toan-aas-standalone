@@ -79,10 +79,10 @@ export function sharedSelectLabelsHistoricalSource(source,file){
  return inverseExact(source,[catalogue]);
 }
 export function sharedSelectLabelsHistoricalSnapshot(entries,locale){
- entries=mediaCollectionHistoricalSnapshot(entries,locale);
  const index=['vi','en','zh'].indexOf(locale)+1;
  assert.ok(index>0,fail+' locale');assert.ok(Array.isArray(entries),fail+' entries');
  assert.ok(entries.every(entry=>Array.isArray(entry)&&entry.length===2),fail+' entry shape');
+ entries=mediaCollectionHistoricalSnapshot(entries,locale);
  const owned=entries.filter(([key])=>typeof key==='string'&&key.startsWith('sharedSelect'));
  if(!owned.length)return entries;
  assert.deepEqual(owned,rows.map(row=>[row[0],row[index]]),fail+' partial/changed/duplicate/reordered/unknown catalogue rows');

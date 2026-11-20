@@ -60,6 +60,11 @@ giữ chỗ; giữ tracker hiện tại và hai mẫu issue có sẵn.
   Pythonleaf và27ca mới; ba tệp42ca tổng37PASS5negativeFAIL rồi25negative
   affectedPASS sauindex→find, giữ42distinctcase. Không app/nativechange.
   Manifest cuối29scoped+2provenance=31tệp; CI cần đúngHEADQA-amendment.
+- CI44762268150 tiếp theo qua Python rồi dừng82PASS4FAIL ở Shared
+  Select. QA-only sửa thứ tự guard và ba reader catalogue; bốn failed
+  cases đạt4/4. Rà toàn bộ các lệnh CI chưa tới và chạy59tệp Node chưa
+  thực thi:1862PASS/0FAIL/0skip, không lặp các nhóm đã đạt. Manifest
+  cuối ngày21/11 là30scoped+2provenance=32tệp, app/native không đổi.
 
 ## 4. Xuất bản và giới hạn
 

@@ -26,6 +26,9 @@
   PR782/CI44760005148 đầu dừng ởPythonhistorical comparator (45PASS1FAIL);
   QA-onlyleafamendment42distinctcases accepted,sourceapp/nativekhôngđổi.
   Chỉ updatePR782 rồi chờCI mới, khôngmergebản lỗi hoặc tạoPRkhác.
+  CI44762268150 quaPython, dừng82PASS4FAIL ởhistoricalsnapshot;
+  QA-onlyguardorder/3cataloguereaderfix4PASS. CIremaining59Nodefiles
+  chưa thựcthi đạt1862PASS0FAIL0skip; app/nativekhôngđổi, PR782giữcùngmục.
 - [ ] Tiếp theo: toast thao tác âm thanh còn VI trong integration;
   detail technicalcopy/native filechooser khác; wholelocale/AX/auth/
   device/Safari/signedUI/finaloutput. M-FINAL-01..06 luôn cuối.
