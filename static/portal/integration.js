@@ -17456,6 +17456,12 @@
     }
   }
 
+  function mediaReadFeedbackText(key, fallback) {
+    const i18n = window.TOANAASI18n;
+    const value = i18n && typeof i18n.t === "function" ? i18n.t("mediaReadFeedback." + key) : "";
+    return typeof value === "string" && value ? value : fallback;
+  }
+
   function mediaWorkspaceRequestIsCurrent(requestEpoch, currentEpoch, sessionEpoch, expectedPath) {
     return requestEpoch === currentEpoch
       && sessionEpoch === mediaWorkspaceSessionEpoch
@@ -28911,14 +28917,30 @@
         const filter = action === "media-workspace-filter-clear"
           ? { q: "", tag: "", prompt_mode: "", state: "all" }
           : mediaWorkspaceFilterPayload(fields);
-        await hydrateMediaWorkspace(filter, 0);
-        toast(filter.q || filter.tag || filter.prompt_mode || filter.state !== "all" ? "Đã áp dụng bộ lọc Audio Library." : "Đã hiển thị toàn bộ audio collection riêng tư.");
+        const feedbackSessionEpoch = mediaWorkspaceSessionEpoch;
+        const feedbackPath = currentPortalPath();
+        const feedbackEpoch = mediaWorkspaceListHydrationEpoch + 1;
+        const feedbackDetailEpoch = mediaWorkspaceDetailHydrationEpoch;
+        const result = await hydrateMediaWorkspace(filter, 0);
+        if (!mediaWorkspaceRequestIsCurrent(feedbackEpoch, mediaWorkspaceListHydrationEpoch, feedbackSessionEpoch, feedbackPath)) return;
+        if (feedbackDetailEpoch !== mediaWorkspaceDetailHydrationEpoch) return;
+        if (base().mediaWorkspaceReadState === "failed") throw new Error(mediaReadFeedbackText("readFailed", "Chưa tải được danh sách bộ sưu tập âm thanh. Hãy thử lại."));
+        if (!result || result.stale === true || base().mediaWorkspaceReadState !== "ready") return;
+        toast(filter.q || filter.tag || filter.prompt_mode || filter.state !== "all" ? mediaReadFeedbackText("filtered", "Đã lọc bộ sưu tập âm thanh.") : mediaReadFeedbackText("all", "Đã hiển thị tất cả bộ sưu tập âm thanh."));
         return;
       }
       if (action === "media-workspace-page") {
-        if (!(base().capabilities && base().capabilities["media-workspace-page"] === true)) throw new Error("Cần signed Web session để xem Audio Library riêng tư.");
-        await hydrateMediaWorkspace(undefined, mediaWorkspaceListOffset(fields.__mediaCollectionOffset));
-        toast("Đã tải trang Audio Collection từ API owner-scoped.");
+        if (!(base().capabilities && base().capabilities["media-workspace-page"] === true)) throw new Error(mediaReadFeedbackText("pageUnavailable", "Chưa thể chuyển trang bộ sưu tập âm thanh lúc này."));
+        const feedbackSessionEpoch = mediaWorkspaceSessionEpoch;
+        const feedbackPath = currentPortalPath();
+        const feedbackEpoch = mediaWorkspaceListHydrationEpoch + 1;
+        const feedbackDetailEpoch = mediaWorkspaceDetailHydrationEpoch;
+        const result = await hydrateMediaWorkspace(undefined, mediaWorkspaceListOffset(fields.__mediaCollectionOffset));
+        if (!mediaWorkspaceRequestIsCurrent(feedbackEpoch, mediaWorkspaceListHydrationEpoch, feedbackSessionEpoch, feedbackPath)) return;
+        if (feedbackDetailEpoch !== mediaWorkspaceDetailHydrationEpoch) return;
+        if (base().mediaWorkspaceReadState === "failed") throw new Error(mediaReadFeedbackText("readFailed", "Chưa tải được danh sách bộ sưu tập âm thanh. Hãy thử lại."));
+        if (!result || result.stale === true || base().mediaWorkspaceReadState !== "ready") return;
+        toast(mediaReadFeedbackText("page", "Đã tải danh sách bộ sưu tập âm thanh."));
         return;
       }
       if (action === "media-audio-filter" || action === "media-audio-filter-clear") {
@@ -28936,9 +28958,16 @@
       }
       if (action === "media-workspace-refresh") {
         const collectionId = mediaWorkspaceCollectionIdFromPath(route);
-        if (collectionId) await hydrateMediaCollection(collectionId, route);
-        else await hydrateMediaWorkspace();
-        toast("Đã làm mới Audio Library & Briefing của Web account hiện tại.");
+        const feedbackSessionEpoch = mediaWorkspaceSessionEpoch;
+        const feedbackPath = currentPortalPath();
+        const feedbackEpoch = collectionId ? mediaWorkspaceDetailHydrationEpoch + 1 : mediaWorkspaceListHydrationEpoch + 1;
+        const feedbackOtherEpoch = collectionId ? mediaWorkspaceListHydrationEpoch : mediaWorkspaceDetailHydrationEpoch;
+        const result = collectionId ? await hydrateMediaCollection(collectionId, route) : await hydrateMediaWorkspace();
+        if (!mediaWorkspaceRequestIsCurrent(feedbackEpoch, collectionId ? mediaWorkspaceDetailHydrationEpoch : mediaWorkspaceListHydrationEpoch, feedbackSessionEpoch, feedbackPath)) return;
+        if (feedbackOtherEpoch !== (collectionId ? mediaWorkspaceListHydrationEpoch : mediaWorkspaceDetailHydrationEpoch)) return;
+        if (base().mediaWorkspaceReadState === "failed") throw new Error(collectionId ? mediaReadFeedbackText("detailFailed", "Chưa tải được thông tin bộ sưu tập âm thanh. Hãy thử lại.") : mediaReadFeedbackText("readFailed", "Chưa tải được danh sách bộ sưu tập âm thanh. Hãy thử lại."));
+        if (!result || result.stale === true || base().mediaWorkspaceReadState !== "ready") return;
+        toast(collectionId ? mediaReadFeedbackText("detailRefreshed", "Đã làm mới thông tin bộ sưu tập âm thanh.") : mediaReadFeedbackText("refreshed", "Đã làm mới danh sách bộ sưu tập âm thanh."));
         return;
       }
       if (action === "media-audio-operation-handoff") {

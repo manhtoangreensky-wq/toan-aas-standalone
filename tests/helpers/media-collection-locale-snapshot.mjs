@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {mediaReadFeedbackHistoricalSource, mediaReadFeedbackHistoricalSnapshot} from "./media-read-feedback-snapshot.mjs";
 
 const raw = fs.readFileSync(new URL("../fixtures/media-collection-locale-reviewed.json", import.meta.url));
 const fail = "Unreviewed media collection locale", count = (value, part) => value.split(part).length - 1;
@@ -23,10 +24,11 @@ assert.equal(fixture.parentFixtureRawSha256,
 const markers = ["vi", "en", "zh"].map(locale =>
   "  Object.assign(MESSAGES." + locale + ', {"audioWorkspace.defaults.context":');
 
-// Finite historical input projection only. Current acceptance independently
-// compares complete physical files with the exact eight-record candidate and151 pins.
+// Finite historical input projection only. PR782's eight-record candidate and
+// pins remain historical; newest acceptance separately binds raw physical files.
 export function mediaCollectionHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail);
+  source = mediaReadFeedbackHistoricalSource(source, file);
   for (const group of fixture.historicalFragments.filter(row => row.file === file)) {
     if (file.endsWith("/portal.js")) {
       if (!source.includes(group.owner) && !source.includes(group.next)) continue;
@@ -64,12 +66,13 @@ export function mediaCollectionHistoricalSource(source, file) {
   return source;
 }
 
-// Entry-level companion for old full-catalogue goldens. The exact current38
+// Entry-level companion for old full-catalogue goldens. PR782's exact reviewed38
 // values must be present before restoring31 old values and removing7 additions.
 export function mediaCollectionHistoricalSnapshot(entries, locale) {
   const index = ["vi", "en", "zh"].indexOf(locale) + 1;
   assert.ok(index > 0 && Array.isArray(entries), fail + " snapshot input");
   assert.ok(entries.every(entry => Array.isArray(entry) && entry.length === 2), fail + " snapshot shape");
+  entries = mediaReadFeedbackHistoricalSnapshot(entries, locale);
   const added = new Set(baseline.newKeys);
   if (!entries.some(([key]) => added.has(key))) return entries;
   const expected = fixture.copyRows.map(row => ["audioWorkspace." + row[0], row[index]]);

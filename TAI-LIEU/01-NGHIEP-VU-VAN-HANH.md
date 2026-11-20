@@ -1,5 +1,27 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 21/11/2026 — PR782 đã giao; phản hồi đọc âm thanh đang nghiệm thu
+
+PR782 đã gộp và triển khai; runtime
+`fb1bbcf1fa7d36ba0745082229d9d1237d488364`, CI44783966598 hai job
+thành công, deploy44787944401 thành công70s. VPS ba dịch vụ active-running,
+nguồn/tài nguyên đúng; Issue7041067092 và PR7046821131 đã đọc lại đúng.
+Các trạng thái “ứng viên âm thanh/chưa phát hành” của mục20/11 dưới đây
+là lịch sử, không phải bản đang chạy.
+
+Đơn vị kế tiếp chỉ sửa thông báo sau lọc/xóa lọc/chuyển trang/làm mới
+bộ sưu tập âm thanh. Lượt hiện tại tải được mới báo thành công; danh
+sách rỗng hợp lệ vẫn là thành công; lỗi đọc báo thử lại; phản hồi cũ do
+lượt mới/đổi trang/phiên thoát không hiện nhầm. Tám câu cố định có đủ
+VI/EN/ZH; tên/nội dung khách và API/quyền/truy vấn/phân trang không đổi.
+
+192ca thực thi trên hai bundle vật lý đạt;151nguồn/149tệp bảo vệ giữ.
+Hồi quy136Nodefile3662PASS;Python15PASS3lỗi cùngBASE. NativeR4 đủ6view/
+48PNG hashCRCdecode,source/core/schema/auth/egress giữ vàowned0. Phát
+hành còn mở; không nhận ứng viên đã có trên production.
+Detail hiện không có nút làm mới, nên không dựng nút giả để nhận native
+toast; nhánh dispatcher này có bằng chứng kiểm thử riêng.
+
 ## 20/11/2026 — PR781 đã giao; bộ sưu tập âm thanh đang nghiệm thu
 
 Production đã đối chiếu đúng runtime

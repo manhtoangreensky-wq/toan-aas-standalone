@@ -6,6 +6,7 @@ import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {mediaCollectionHistoricalSource as inverse} from "./helpers/media-collection-locale-snapshot.mjs";
+import {mediaReadFeedbackHistoricalSource} from "./helpers/media-read-feedback-snapshot.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const raw = fs.readFileSync(new URL("./fixtures/media-collection-locale-reviewed.json", import.meta.url));
@@ -14,14 +15,17 @@ const lf = value => value.replace(/\r\n/g, "\n"), fail = /Unreviewed media colle
 const files = ["static/portal/portal.js", "static/portal/portal-i18n.js"];
 const bases = Object.fromEntries(files.map(file => [file, lf(execFileSync("git",
   ["show", fixture.base + ":" + file], {cwd: ROOT, encoding: "utf8", maxBuffer: 30e6}))]));
-const physical = Object.fromEntries(files.map(file => [file, lf(fs.readFileSync(path.join(ROOT, file), "utf8"))]));
+// PR782 evidence is historical. Strip only the five newer reviewed records;
+// newest raw physical acceptance lives in media-read-feedback-source/runtime.
+const physical = Object.fromEntries(files.map(file => [file,
+  mediaReadFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT, file), "utf8")), file)]));
 const candidates = {...bases};
 for (const edit of fixture.canonicalChanges) {
   assert.equal(edit.count, 1); assert.equal(candidates[edit.file].split(edit.old).length - 1, 1);
   candidates[edit.file] = candidates[edit.file].replace(edit.old, () => edit.new);
 }
 
-test("four immutable worker proposals are exactly eight records on two complete physical application files", () => {
+test("historical PR782: four immutable worker proposals remain exactly eight records on two complete projected application files", () => {
   assert.equal(hash(raw), "f0da75ecb63d7f0abc432053441502cd8db99fcc487aa4b192a6514c84ea0515");
   assert.equal(fixture.task, "MEDIA-COLLECTION-LOCALE-20261120");
   assert.equal(fixture.canonicalChanges.length, 8); assert.equal(fixture.workers.length, 4);
@@ -42,12 +46,12 @@ test("four immutable worker proposals are exactly eight records on two complete 
   }
 });
 
-test("all151 current physical application sources are pinned with149 protected BASE files", () => {
+test("historical PR782: all151 application pins retain149 protected BASE files after finite newest projection", () => {
   assert.equal(fixture.applicationBaseline.length, 151);
   assert.equal(new Set(fixture.applicationBaseline.map(row => row.file)).size, 151);
   assert.deepEqual(fixture.applicationBaseline.filter(row => row.changed).map(row => row.file).sort(), files.toSorted());
   for (const pin of fixture.applicationBaseline) {
-    const actual = lf(fs.readFileSync(path.join(ROOT, pin.file), "utf8"));
+    const actual = mediaReadFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT, pin.file), "utf8")), pin.file);
     assert.equal(hash(actual), pin.candidateLfSha256, pin.file);
     assert.equal(hash(inverse(actual, pin.file)), pin.baseLfSha256, pin.file);
     if (!pin.changed) assert.equal(pin.baseLfSha256, pin.candidateLfSha256, pin.file);

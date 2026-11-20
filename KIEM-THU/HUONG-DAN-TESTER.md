@@ -1,5 +1,18 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phản hồi đọc âm thanh — 21/11/2026
+
+Dùng [phiên hiện hành](PHIEN-MEDIA-READ-FEEDBACK-20261121.md) và các case
+MRF trong danh sách case. Kiểm từng ngôn ngữ, lọc/xóa lọc/chuyển trang/
+làm mới trên danh sách bằng control có thật. Tải lỗi không được báo
+thành công; danh sách rỗng hợp lệ không thành lỗi. Đổi trang hoặc có lượt
+tải mới thì thông báo từ lượt cũ không được hiện chen vào.
+
+Không tạo bộ sưu tập, gửi form, tải tệp hoặc gọi dịch vụ âm thanh để kiểm
+thông báo. Detail hiện không có nút làm mới: ghi rõ không thể thao tác
+native, không tự thêm control hoặc phát hành động giả. Các kiểm thử
+dispatcher riêng không thay bằng chứng có control trên giao diện.
+
 ## Bộ sưu tập âm thanh — 20/11/2026
 
 Dùng [phiên hiện hành](PHIEN-MEDIA-COLLECTION-LOCALE-20261120.md) và

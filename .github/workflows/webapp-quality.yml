@@ -98,6 +98,7 @@ jobs:
           node --test tests/shared-select-labels.test.mjs tests/shared-select-labels-source.test.mjs tests/shared-select-reminder-title.test.mjs tests/shared-select-reminder-title-source.test.mjs
           node --test tests/vault-project-options.test.mjs tests/vault-project-options-source.test.mjs
           node --test tests/media-collection-locale.test.mjs tests/media-collection-locale-source.test.mjs tests/media-collection-locale-snapshot.test.mjs
+          node --test tests/media-read-feedback.test.mjs tests/media-read-feedback-source.test.mjs tests/media-read-feedback-snapshot.test.mjs
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_media_collection_historical_static.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_shared_select_historical_static.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_vault_locale_shell.py

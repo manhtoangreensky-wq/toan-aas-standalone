@@ -1,5 +1,36 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 21/11/2026 — PR782 đã giao; phản hồi đọc âm thanh
+
+- [x] PR782/CI44783966598 haiSUCCESS; deploy44787944401SUCCESS70s;
+  runtimefb1bbcf1fa7d36ba0745082229d9d1237d488364/tree15c4023f
+  exact;VPS3active-running/health/5+5assets/buildlocal-154a890da96f0a5fb8c8.
+  Issue7041067092/PR7046821131 đã đọc lại đúng. Releasecheckbox cũ
+  của đơn vị bộ sưu tập dưới đây là snapshot lịch sử, không mở lại.
+- [x] MRF contractIssue689/comment7047062064; támkey/24literal
+  VI/EN/ZH, bốnphiếuCLI3.8FlashHigh exact5record, Rootghéptuần tự.
+  Workerfailure0/takeoverfalse; chỉintegration/i18n,151pin149protected.
+- [x] MRF physical187BASE2PASS185RED+5counterRED →192GREEN,
+  không inverse trong runtime hiện tại. Failedwarning/emptysuccess/
+  staleimlặng, giữ strictpagecapability và secondaryawait readers.
+- [x] Historical106uniquePASS; portability2local+2LF targetedPASS
+  sau1RED; giữ fixture/golden/erroridentity. Reviewnhóm0blocker.
+- [x] Hồi quy136Nodefile3662PASS0FAIL0skip. Python15PASS/3lỗi tái
+  hiện đúng BASE, không sửa Portal/Prompt Library ngoài scope.
+- [x] MRF-native R4:6view/48ảnhmới hashCRCfulldecode; control list thật,
+  detail GET/source/core/schema/auth/egress/owned0;48abort12heldGET,
+  không unexpectedconsole/network. Detail
+  refresh không có control nên nativeNOT_REACHABLE và physicalriêng.
+  R1QAstartupthiếutopology;R2/R3observerđứtcontextkhiđổi trangthật;
+  giữreceiptfalse,appkhôngđổi. R4quan sátngoàidocument,khôngtạoDOM.
+  Genericbuttonfocus vềBODY đã đo;Tab thật vẫn tới,backlog riêng.
+- [ ] MRF-prepush/Tester/audit/manifest/CI/mộtPR/merge/exclusive
+  deploy/VPS/assets/build/receipt cùng tracker đọc lại đúng.
+- [ ] Còn lại theo thứ tự:media-audioactions/validation/write-copy và
+  detailcopy, locale toàn app/contrast/AX/auth/device/Safari/signedUI.
+  Genericbuttonfocus nếu native tái hiện phải giữ finding riêng,
+  không nhận sửa xong trong đơn vị thông báo. MotionM-FINAL01..06 cuối.
+
 ## 20/11/2026 — PR781 đã giao; bộ sưu tập âm thanh kế tiếp
 
 - [x] PR781/CI44741117456 hai job thành công,18browser/456authhash đúng;
