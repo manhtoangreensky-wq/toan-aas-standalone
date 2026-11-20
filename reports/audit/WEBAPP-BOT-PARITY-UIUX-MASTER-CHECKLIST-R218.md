@@ -1,5 +1,34 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 20/11/2026 — PR779 đã giao, nhãn bộ chọn dùng chung kế tiếp
+
+- [x] PR779CI44695158108 haiSUCCESS,18browser/456authhashverified,
+  merge/runtime46423a6df9af67ac7ccabd88686d4cb42523a078,
+  deploy44697995955SUCCESS65s,VPS3active-running/health/5+5assets/buildkhớp,
+  Issue7019553829/PR7033751040receiptreadbackexact.
+- [x] Shared-select soi nguồn:3expressions/4key12value;124renderFields
+  occurrences/123line-sites1file. PDF/imagefallbackkhôngthểtới giữnguyên.
+- [x] BaAGY3.8FlashHighR1 output-only độc lập đãkhởi chạy;nguồn/MAPpublic
+  proofexact. Issue689comment7033958929contractreadbackexact.
+- [x] Fullphysical nhãn 43 PASS / 19 RED → 62 PASS; tiêu đề Nhắc việc
+  3 PASS / 4 RED → 7 PASS; chuỗi nguồn hiện tại 32 PASS, 151 pins giữ.
+- [x] Nhóm Node bị ảnh hưởng 5305 ca thực thi PASS, một bootstrap thiếu
+  nguồn Bot trùng BASE; Python hợp 126 PASS / 17 lỗi BASE, metadata 2 PASS.
+- [x] Native GET thật/chọn bàn phím: chín cấu hình / 18 PNG trước sửa
+  tiêu đề + ba cấu hình / sáu PNG sau sửa; giữ receipt remaining `false`,
+  không chạy lại chín PASS và không nhận 12 cấu hình cùng binding.
+- [x] Review độc lập không finding chặn; source/core/schema/auth/egress
+  giữ và tiến trình sở hữu còn 0.
+- [x] 24 PNG hash/kích thước/CRC/IEND/full decode đạt; 30 đầu vào giữ.
+  Báo cáo trước push/ops/crosswalk/Tester và metadata hai ca đã cập nhật.
+- [ ] Manifest cụ thể và quét secret trước xuất bản.
+- [ ] OnePR/exactCI/merge/deploy/VPS/assets/receipt;khôngPRgiữchỗ.
+- [ ] Broaderlocale/AX/auth/live/device/Safari/finaloutput cònmở;
+  M-FINAL01..06luôncuối.
+
+Snapshot này đóng phần release cònpending của PR779 ở mục cũ phía dưới;
+giữ lịch sử bằng chứng,không mở lại pipeline đãgiao.
+
 ## 20/11/2026 — Kho tệp đã giao, phản hồi thao tác kế tiếp
 
 - [x] PR778 đã gộp;exactCI44564519425 hai job đạt,deploy44595126642

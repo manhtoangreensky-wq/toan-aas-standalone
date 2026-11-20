@@ -1,0 +1,334 @@
+{
+  "task": "SHARED-SELECT-LABELS-20261120",
+  "date": "2026-11-20",
+  "status": "LOCAL_ACCEPTED_RELEASE_PENDING",
+  "base": "46423a6df9af67ac7ccabd88686d4cb42523a078",
+  "tracker": {
+    "issue": 689,
+    "comment": 7033958929
+  },
+  "ownerCampaignStateOpened": false,
+  "application": {
+    "records": 5,
+    "rendererOptionExpressions": 3,
+    "routeOwnedTitleBranch": 1,
+    "catalogueBlock": 1,
+    "translationKeys": 4,
+    "translationValues": 12,
+    "changedFiles": 2,
+    "protectedFiles": 149,
+    "sourcePins": 151,
+    "parentFixtureRawSha256": "7cb67db3464cb45d3e0b243f388affb981fd4f5780e0ebb28105865885786817",
+    "titleFixtureRawSha256": "66d8d0d6bdf45c9bb59c8c3e3095bb67f1de44933ef73c260a31094045840132",
+    "sources": [
+      {
+        "file": "static/portal/portal-i18n.js",
+        "candidateLfSha256": "768b1ba4102ed67b387ba4f62b98009cbcd82fb76decdc1992365aa84393aed2"
+      },
+      {
+        "file": "static/portal/portal.js",
+        "candidateLfSha256": "11f9b1ab0fda5b0f4aa26538a14d72c94053a2cdf8def49c60754c9ae638b214"
+      }
+    ],
+    "model": "gemini-3.8-flash-high",
+    "independentLabelWorkers": 3,
+    "titleWorker": 1,
+    "workerCodeFailures": 0,
+    "applicationTakeover": false,
+    "transportOnlySchemaAmendment": true,
+    "titleProposalTerminalNewlinePairOnly": true,
+    "titleWholeFileApplicationReplayExact": true
+  },
+  "targeted": {
+    "labelsRed": {
+      "file": "shared-select-red-nov20.xml",
+      "tests": 62,
+      "passed": 43,
+      "failed": 19,
+      "failedCaseNames": [
+        "vi/catalogue: exactly four added frozen keys, equal locale keysets, all other BASE entries unchanged",
+        "vi/projects: every existing falsy name gets the exact localized fallback",
+        "vi/memoryNotes: every existing falsy name gets the exact localized fallback",
+        "en/catalogue: exactly four added frozen keys, equal locale keysets, all other BASE entries unchanged",
+        "en/projects: every existing falsy name gets the exact localized fallback",
+        "en/memoryNotes: every existing falsy name gets the exact localized fallback",
+        "en/voiceProfiles: every existing falsy name gets the exact localized fallback",
+        "en/voice: default suffix applies only to strict true and is localized independently of name",
+        "zh/catalogue: exactly four added frozen keys, equal locale keysets, all other BASE entries unchanged",
+        "zh/projects: every existing falsy name gets the exact localized fallback",
+        "zh/memoryNotes: every existing falsy name gets the exact localized fallback",
+        "zh/voiceProfiles: every existing falsy name gets the exact localized fallback",
+        "zh/voice: default suffix applies only to strict true and is localized independently of name",
+        "projects/same-VM: locale changes recompute fallback and default suffix without cached labels",
+        "projects/missing-translator: unchanged uiText boundary falls back to VI, including default suffix",
+        "memoryNotes/same-VM: locale changes recompute fallback and default suffix without cached labels",
+        "memoryNotes/missing-translator: unchanged uiText boundary falls back to VI, including default suffix",
+        "voiceProfiles/same-VM: locale changes recompute fallback and default suffix without cached labels",
+        "voiceProfiles/missing-translator: unchanged uiText boundary falls back to VI, including default suffix"
+      ]
+    },
+    "labelsGreen": {
+      "file": "shared-select-green-nov20.xml",
+      "tests": 62,
+      "passed": 62,
+      "failed": 0,
+      "failedCaseNames": []
+    },
+    "titleRed": {
+      "file": "shared-select-reminder-title-red-nov20.xml",
+      "tests": 7,
+      "passed": 3,
+      "failed": 4,
+      "failedCaseNames": [
+        "vi: reminders uses its existing route label for real generic server title and stale language title",
+        "en: reminders uses its existing route label for real generic server title and stale language title",
+        "zh: reminders uses its existing route label for real generic server title and stale language title",
+        "same VM locale changes immediately recompute reminder page and tab titles"
+      ]
+    },
+    "titleGreen": {
+      "file": "shared-select-reminder-title-green-nov20.xml",
+      "tests": 7,
+      "passed": 7,
+      "failed": 0,
+      "failedCaseNames": []
+    },
+    "currentPhysicalSourceAndHistoricalChain": {
+      "file": "shared-select-title-source-chain-nov20.xml",
+      "tests": 32,
+      "passed": 32,
+      "failed": 0,
+      "failedCaseNames": []
+    },
+    "portableRawBodyExact": 2,
+    "oldAssertionsGoldensFixturesAndNegativeCasesPreserved": true,
+    "fullGreenGroupRerun": false
+  },
+  "affectedNode": {
+    "selectedFiles": 306,
+    "initial": {
+      "file": "shared-select-affected-node-nov20.xml",
+      "tests": 5306,
+      "passed": 5303,
+      "failed": 3,
+      "failedCaseNames": [
+        "tests\\v0-video-shared-contracts.test.mjs",
+        "generic select options strictly filter tts_ready and format default marker (en)",
+        "generic select options strictly filter tts_ready and format default marker (zh)"
+      ]
+    },
+    "failedNamedRetest": {
+      "file": "shared-select-voice-two-failed-nov20.xml",
+      "tests": 2,
+      "passed": 2,
+      "failed": 0,
+      "failedCaseNames": []
+    },
+    "finalExecutablePassed": 5305,
+    "remainingBootstrap": 1,
+    "wholeRepositoryGreen": false,
+    "bootstrapReason": "External Bot authority unavailable; exact BASE changed-source inputs reproduce the same bootstrap.",
+    "fullGroupRerun": false
+  },
+  "python": {
+    "initial": {
+      "file": "shared-select-python-regression-nov20.xml",
+      "tests": 138,
+      "passed": 119,
+      "failed": 19,
+      "failedCaseNames": [
+        "test_vault_historical_copy_projection_is_exact_idempotent_and_keeps_outside_bytes",
+        "test_memory_reminder_listing_is_paged_transient_and_preserves_existing_links_explicitly",
+        "test_quote_capable_workflows_keep_fresh_receipts_while_chat_workspace_is_guarded",
+        "test_storyboard_shortcut_uses_the_native_text_composer_while_image_transform_keeps_its_contract",
+        "test_video_music_and_dubbing_forms_forward_the_bot_planning_controls",
+        "test_mobile_workspace_dock_is_signed_session_only_and_navigation_only",
+        "test_feature_catalog_discloses_all_mapped_customer_workflows_without_faking_readiness",
+        "test_account_activity_is_a_sanitized_web_owned_owner_history",
+        "test_project_center_is_a_web_owned_versioned_workspace_without_bot_execution",
+        "test_asset_vault_is_a_separate_private_web_surface",
+        "test_payment_entry_ux_keeps_manual_and_payos_as_isolated_web_actions",
+        "test_account_exposes_bot_preferences_only_as_safe_handoffs",
+        "test_ticket_bot_handoff_never_moves_a_ticket_thread_or_identifier_to_telegram",
+        "test_account_profile_editor_only_targets_web_owned_defaults",
+        "test_guarded_feature_execution_keeps_web_authoring_primary_and_bot_companion_optional",
+        "test_voice_output_preview_and_history_views_do_not_overclaim_unmapped_delivery",
+        "test_campaign_planner_is_a_web_owned_account_scoped_board_not_bot_campaign_automation",
+        "test_support_pages_are_native_case_workspaces_not_primary_bot_ticket_cards",
+        "test_current_and_prior_phases_restore_same_exact_historical_portal_without_touching_outside_bytes"
+      ]
+    },
+    "exactBaseFailedOnly": {
+      "file": "shared-select-python-base-failures-nov20.xml",
+      "tests": 19,
+      "passed": 2,
+      "failed": 17,
+      "failedCaseNames": [
+        "test_memory_reminder_listing_is_paged_transient_and_preserves_existing_links_explicitly",
+        "test_quote_capable_workflows_keep_fresh_receipts_while_chat_workspace_is_guarded",
+        "test_storyboard_shortcut_uses_the_native_text_composer_while_image_transform_keeps_its_contract",
+        "test_video_music_and_dubbing_forms_forward_the_bot_planning_controls",
+        "test_mobile_workspace_dock_is_signed_session_only_and_navigation_only",
+        "test_feature_catalog_discloses_all_mapped_customer_workflows_without_faking_readiness",
+        "test_account_activity_is_a_sanitized_web_owned_owner_history",
+        "test_project_center_is_a_web_owned_versioned_workspace_without_bot_execution",
+        "test_asset_vault_is_a_separate_private_web_surface",
+        "test_payment_entry_ux_keeps_manual_and_payos_as_isolated_web_actions",
+        "test_account_exposes_bot_preferences_only_as_safe_handoffs",
+        "test_ticket_bot_handoff_never_moves_a_ticket_thread_or_identifier_to_telegram",
+        "test_account_profile_editor_only_targets_web_owned_defaults",
+        "test_guarded_feature_execution_keeps_web_authoring_primary_and_bot_companion_optional",
+        "test_voice_output_preview_and_history_views_do_not_overclaim_unmapped_delivery",
+        "test_campaign_planner_is_a_web_owned_account_scoped_board_not_bot_campaign_automation",
+        "test_support_pages_are_native_case_workspaces_not_primary_bot_ticket_cards"
+      ]
+    },
+    "failedAndNewGuardsAfterTitle": {
+      "file": "shared-select-python-title-chain-nov20.xml",
+      "tests": 7,
+      "passed": 7,
+      "failed": 0,
+      "failedCaseNames": []
+    },
+    "unionPassed": 126,
+    "remainingSameBaseFailures": 17,
+    "newFailures": 0,
+    "retestNotDoubleCounted": true
+  },
+  "testerMetadata": {
+    "file": "shared-select-tester-final-metadata-nov20.xml",
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "failedCaseNames": []
+  },
+  "native": {
+    "beforeTitleAccepted": 9,
+    "beforeTitlePngs": 18,
+    "afterTitleAccepted": 3,
+    "afterTitlePngs": 6,
+    "actualRealGetAndNativeKeyboard": true,
+    "sameSourceTwelveViewClaim": false,
+    "priorPartialOverallAccepted": false,
+    "repeatedAcceptedViews": 0,
+    "pngFullDecodeCrcHashVerified": 24,
+    "oldReceiptsPreserved": true,
+    "finalBindingRawSha256": "2c85b24ff4898c7a25231d887fdcbef78c2192c0f40cb15776f41b889a3caf98",
+    "sourceCoreSchemaAuthAuditEgressCodeHeld": true,
+    "ownedActiveAfterCleanup": 0,
+    "unexpectedConsoleOrNetworkErrors": 0,
+    "voiceCanonicalSource": "NOT_TESTED_CANONICAL_PROFILE_SOURCE_OUT_OF_SCOPE"
+  },
+  "review": {
+    "independentBlockingFindings": 0,
+    "finalCommentOnlyCorrection": true,
+    "ciAddedCommands": 2,
+    "workflowTriggersPermissionsDependenciesTimeoutsDeployUnchanged": true
+  },
+  "protected": {
+    "authApiBackendWalletProviderEnvCssLayoutMotionUnchanged": true,
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "productionDataMutations": 0,
+    "envMutations": 0,
+    "botAccess": false
+  },
+  "release": {
+    "pr": "PENDING",
+    "ci": "PENDING",
+    "merge": "PENDING",
+    "deploy": "PENDING",
+    "runtime": "PENDING",
+    "receipt": "PENDING"
+  },
+  "next": [
+    "VAULT-PROJECT-OPTIONS-20261120",
+    "App-owned general default and unrelated technical/mixed-language copy"
+  ],
+  "limits": {
+    "signedProductionUi": "NOT_TESTED",
+    "nativeVoiceCanonicalProfile": "NOT_TESTED",
+    "finalOutput": "NOT_TESTED",
+    "deviceSafariGlobalAccessibility": "NOT_PROVEN",
+    "wholeGoalComplete": false,
+    "motion": "M-FINAL-01..06_LAST"
+  },
+  "evidence": [
+    {
+      "file": "shared-select-red-nov20.xml",
+      "rawSha256": "d27e824526c45f2e7c5d7c7dc636f119be86d5be30d1d879698718230f5f2733"
+    },
+    {
+      "file": "shared-select-green-nov20.xml",
+      "rawSha256": "2c0b67cff1a5b366f8fb7712ed6a31b326ae47fbcb1e2ef1c7acabdb371ab7c6"
+    },
+    {
+      "file": "shared-select-reminder-title-red-nov20.xml",
+      "rawSha256": "1cbbb5671659025a639f2df401f4aeeac8c374d1066b5977e90e89767f4bf760"
+    },
+    {
+      "file": "shared-select-reminder-title-green-nov20.xml",
+      "rawSha256": "22ee44daaba28a2c00d3d55709000655cad09ab54abaef771c2a4fb9bafb01e2"
+    },
+    {
+      "file": "shared-select-title-source-chain-nov20.xml",
+      "rawSha256": "16241bdab6af7b3cd5f6411db6a22ac9e6db5bc6b5d380efe03081308e4df3cd"
+    },
+    {
+      "file": "shared-select-affected-node-nov20.xml",
+      "rawSha256": "8e6e3c582a21ee30b063718ee35e6ed89a31d585d4bb79545cfd845d3790ae94"
+    },
+    {
+      "file": "shared-select-voice-two-failed-nov20.xml",
+      "rawSha256": "e616f5be76c1cac4264c67a71f726e3ce8f075755c97f1e6ea57192588dea978"
+    },
+    {
+      "file": "shared-select-python-regression-nov20.xml",
+      "rawSha256": "10c89b55de4d86181e97a12261d410778d5e39e2f53c0f39041316a15e2f64d4"
+    },
+    {
+      "file": "shared-select-python-base-failures-nov20.xml",
+      "rawSha256": "1b8faea5e9f275392f21af06d554f4e4a4c4a1f5963ac3872ebb0db773cf1d52"
+    },
+    {
+      "file": "shared-select-python-title-chain-nov20.xml",
+      "rawSha256": "1e4a1f0122890a5f26128c8617207a0ff56c7ad747359071efd753ea95ab0e03"
+    },
+    {
+      "file": "shared-select-tester-final-metadata-nov20.xml",
+      "rawSha256": "ccfb7ff556cd963112911648f33a4c7ff3e06f1d6894405da7bdfb2bb9476c0a"
+    },
+    {
+      "file": "shared-select-portability-proof-nov20.json",
+      "rawSha256": "1fe8f7c14287af9330cbccd6e8cb12751e4b011a4a8c5a9161f15f01f4f35eb3"
+    },
+    {
+      "file": "shared-select-v0-base-bootstrap-nov20.log",
+      "rawSha256": "2050bab24a6b6c007ad317713759025396d482a48ea590b445ae0e2b22689606"
+    },
+    {
+      "file": "shared-select-python-base-inputs-nov20.json",
+      "rawSha256": "64ea24cbea22959b783787ae0726e8394b9e43091d28f04ddff7ff6be1eaba19"
+    },
+    {
+      "file": "shared-select-final-review-nov20.md",
+      "rawSha256": "7c9094baeb0dc4f7ae58b388ba6298a69607eaea2e39cf13a3086a8d9c81ab53"
+    },
+    {
+      "file": "shared-select-24png-validation-nov20.py",
+      "rawSha256": "10080467217d670d19413ff2bf4074049d1eceff87e7dad5c8598e32eacf5f32"
+    },
+    {
+      "file": "shared-select-24png-validation-nov20.json",
+      "rawSha256": "4db66562444b3f6689cc2984862265245f66928af566691c40d4de390b03a02e"
+    },
+    {
+      "file": "shared-select-native-followup-nov20/run-shared-select-title-followup-nov20-01/native-summary.json",
+      "rawSha256": "7d0a1ff24caa85ebf4913263f7fdd06669c4f778681ee8c696e5289b33688436"
+    },
+    {
+      "file": "shared-select-native-followup-nov20/run-shared-select-title-followup-nov20-01/isolation-summary.json",
+      "rawSha256": "71c9044bedbbcbd205990a9c21af826dcfa1a747bb68b999d480e34cb79ca844"
+    }
+  ]
+}
