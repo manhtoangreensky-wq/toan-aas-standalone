@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
 import vm from 'node:vm';
+import {sharedSelectLabelsHistoricalSource} from './helpers/shared-select-labels-snapshot.mjs';
 
 const source=fs.readFileSync('static/portal/portal.js','utf8');
 const catalog=fs.readFileSync('static/portal/portal-i18n.js','utf8');
@@ -97,6 +98,12 @@ for(const locale of ['vi','en','zh']){
     assert.doesNotMatch(trueHtml,new RegExp(literalExpectations.noPreview));
   });
   test(`generic select options strictly filter tts_ready and format default marker (${locale})`,()=>{
+    // Historical generic-marker assertion only; current generic locale behavior
+    // is covered by the independent full-physical shared-select suite.
+    const historicalSource=sharedSelectLabelsHistoricalSource(source,'static/portal/portal.js');
+    const historicalContext={...context};vm.createContext(historicalContext);
+    const start=historicalSource.indexOf('  function renderFields('),end=historicalSource.indexOf('  function statusMessage(',start);
+    assert.ok(start>=0&&end>start);vm.runInContext(historicalSource.slice(start,end),historicalContext);
     const badFlags=[false,undefined,null,0,1,-1,'','false','true','0','1',{},[]];
     for(const bad of badFlags){
       const voiceProfiles=[
@@ -106,7 +113,7 @@ for(const locale of ['vi','en','zh']){
         {display_name:'Missing ID',tts_ready:true,is_default:true}
       ];
       const snapshot=JSON.stringify(voiceProfiles);
-      const html=context.renderFields([
+      const html=historicalContext.renderFields([
         {name:'voice_profile_id',label:'Voice',control:'select',optionsFrom:'voiceProfiles',emptyLabel:'Choose voice',required:true}
       ],true,{voiceProfiles},{});
       assert.equal(JSON.stringify(voiceProfiles),snapshot);

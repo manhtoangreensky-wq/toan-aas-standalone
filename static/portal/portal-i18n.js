@@ -22581,6 +22581,12 @@
 
   Object.assign(MESSAGES.zh, {"vaultFeedback.refreshed":"文件库已刷新。","vaultFeedback.filtered":"文件已筛选。","vaultFeedback.active":"已显示可用文件。","vaultFeedback.page":"文件列表已加载。","vaultFeedback.readFailed":"未能加载文件列表，请重试。","vaultFeedback.lifecycleFailed":"未能加载文件详情，请重试。","vaultFeedback.searchQueryInvalid":"搜索词最多可包含 100 个有效字符。","vaultFeedback.filterStateInvalid":"文件状态筛选条件无效。","vaultFeedback.lifecycleReadAssetInvalid":"文件无效，无法查看详情。","vaultFeedback.lifecycleResponseInvalid":"暂时无法加载文件详情，请重试。","vaultFeedback.lifecycleOpenAssetInvalid":"文件无效。","vaultFeedback.lifecycleOpenRouteRequired":"只能在当前打开的文件库中查看文件详情。","vaultFeedback.lifecycleSessionRequired":"暂时无法查看文件详情，请刷新页面后重试。","vaultFeedback.lifecycleCloseRouteRequired":"只能在当前打开的文件库中关闭文件详情。","vaultFeedback.privateReadSessionRequired":"暂时无法查看文件库，请刷新页面后重试。","vaultFeedback.lifecycleLoaded":"文件详情已加载。","vaultFeedback.uploadFileInvalid":"请先选择有效文件，再保存到文件库。","vaultFeedback.uploadDisplayNameTooLong":"显示名称不能超过 120 个字符。","vaultFeedback.uploadProjectInvalid":"关联的项目无效。","vaultFeedback.uploadPending":"文件正在保存，请等待文件库响应。","vaultFeedback.uploadAssetResponseInvalid":"文件库尚未返回有效的文件信息。","vaultFeedback.uploaded":"文件已保存到文件库。","vaultFeedback.archiveAssetIdInvalid":"文件编号无效。","vaultFeedback.archiveRouteRequired":"只能在当前打开的文件库中归档文件。","vaultFeedback.archiveSessionRequired":"暂时无法归档文件，请刷新页面后重试。","vaultFeedback.archivePending":"文件正在归档，请等待文件库响应。","vaultFeedback.archiveStateUnavailable":"此文件目前无法归档，请重新加载文件详情。","vaultFeedback.lifecycleVersionInvalid":"暂时无法读取最新文件详情，请重新加载后重试。","vaultFeedback.archived":"文件已归档。","vaultFeedback.restoreAssetInvalid":"文件无效。","vaultFeedback.restoreRouteRequired":"只能在当前打开的文件库中恢复文件。","vaultFeedback.restoreSessionRequired":"暂时无法恢复文件，请刷新页面后重试。","vaultFeedback.restorePending":"正在检查文件以进行恢复，请等待文件库响应。","vaultFeedback.restoreStateUnavailable":"此文件当前状态不允许恢复。","vaultFeedback.restored":"文件已恢复。"});
 
+  Object.assign(MESSAGES.vi, {"sharedSelect.projectFallback":"Dự án chưa đặt tên","sharedSelect.noteFallback":"Ghi chú chưa đặt tên","sharedSelect.voiceFallback":"Giọng chưa đặt tên","sharedSelect.voiceDefaultSuffix":" · Mặc định"});
+
+  Object.assign(MESSAGES.en, {"sharedSelect.projectFallback":"Untitled project","sharedSelect.noteFallback":"Untitled note","sharedSelect.voiceFallback":"Unnamed voice","sharedSelect.voiceDefaultSuffix":" · Default"});
+
+  Object.assign(MESSAGES.zh, {"sharedSelect.projectFallback":"未命名项目","sharedSelect.noteFallback":"未命名笔记","sharedSelect.voiceFallback":"未命名声音","sharedSelect.voiceDefaultSuffix":" · 默认"});
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

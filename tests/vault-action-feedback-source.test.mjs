@@ -6,6 +6,7 @@ import vm from 'node:vm';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
+import {sharedSelectLabelsHistoricalSource} from './helpers/shared-select-labels-snapshot.mjs';
 import {vaultActionFeedbackHistoricalSource as inverse,vaultActionFeedbackHistoricalSnapshot as snapshot} from './helpers/vault-action-feedback-snapshot.mjs';
 import {vaultCustomerHistoricalSource as priorInverse,vaultCustomerHistoricalSnapshot as priorSnapshot} from './helpers/vault-customer-copy-snapshot.mjs';
 
@@ -16,8 +17,8 @@ const edits=fixture.canonicalChanges,rows=fixture.rows,keys=rows.map(row=>row[0]
 const fail=/Unreviewed Vault action feedback/,hash=value=>createHash('sha256').update(value).digest('hex'),lf=value=>value.replace(/\r\n/g,'\n'),count=(source,part)=>source.split(part).length-1;
 const integration='static/portal/integration.js',i18n='static/portal/portal-i18n.js',files=[integration,i18n];
 const before=Object.fromEntries(files.map(file=>[file,lf(execFileSync('git',['show',BASE+':'+file],{cwd:ROOT,encoding:'utf8',maxBuffer:30e6}))]));
-// Current acceptance reads the entire physical sources, never the historical leaf.
-const physical=Object.fromEntries(files.map(file=>[file,lf(fs.readFileSync(path.join(ROOT,file),'utf8'))]));
+// V07 is now historical: only the newer approved shared-select leaf normalizes inputs; its newest suite reads full physical sources.
+const physical=Object.fromEntries(files.map(file=>[file,sharedSelectLabelsHistoricalSource(lf(fs.readFileSync(path.join(ROOT,file),'utf8')),file)]));
 const candidate=Object.fromEntries(files.map(file=>{
  let source=before[file];
  for(const edit of edits.filter(value=>value.file===file)){
@@ -63,7 +64,7 @@ test('151full physical application pins protect149unchanged sources and exactly2
  assert.equal(fixture.applicationBaseline.length,151);assert.equal(fixture.applicationBaseline.filter(pin=>pin.changed).length,2);
  assert.equal(fixture.applicationBaseline.filter(pin=>!pin.changed).length,149);
  for(const pin of fixture.applicationBaseline){
-  const actual=lf(fs.readFileSync(path.join(ROOT,pin.file),'utf8'));
+  const actual=sharedSelectLabelsHistoricalSource(lf(fs.readFileSync(path.join(ROOT,pin.file),'utf8')),pin.file);
   assert.equal(hash(actual),pin.candidateLfSha256,pin.file);
   assert.equal(pin.changed,pin.baselineLfSha256!==pin.candidateLfSha256);
   if(!files.includes(pin.file))assert.equal(pin.baselineLfSha256,pin.candidateLfSha256,pin.file);

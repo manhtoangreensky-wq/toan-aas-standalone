@@ -10100,6 +10100,7 @@
   function localizedPageTitle(page, context) {
     const fallback = displayPageTitle(page, context);
     const path = normalizePath(page && (page.routePath || page.path));
+    if (path === "/reminders") return uiText("shellNav.reminders", fallback);
     if (path === "/chat" || (page && page.layout === "chat-workspace-detail")) {
       return uiText("chatPageMetaUiTitle", "Trò chuyện");
     }
@@ -11426,7 +11427,7 @@
           const profiles = context && Array.isArray(context.voiceProfiles) ? context.voiceProfiles : [];
           options = profiles
             .filter((profile) => profile && profile.id && profile.tts_ready === true)
-            .map((profile) => ({ value: String(profile.id), label: `${profile.display_name || "Giọng chưa đặt tên"}${profile.is_default === true ? " · Mặc định" : ""}` }));
+            .map((profile) => ({ value: String(profile.id), label: `${profile.display_name || uiText("sharedSelect.voiceFallback", "Giọng chưa đặt tên")}${profile.is_default === true ? uiText("sharedSelect.voiceDefaultSuffix", " · Mặc định") : ""}` }));
         }
         if (field.optionsFrom === "imageTiers" || field.optionsFrom === "videoTiers") {
           const key = field.optionsFrom === "imageTiers" ? "image_tiers" : "video_tiers";
@@ -11448,13 +11449,13 @@
           const projects = context && Array.isArray(context.projects) ? context.projects : [];
           options = projects
             .filter((project) => project && validProjectId(project.id) && String(project.state || "active") === "active")
-            .map((project) => ({ value: String(project.id), label: String(project.title || "Project Web") }));
+            .map((project) => ({ value: String(project.id), label: String(project.title || uiText("sharedSelect.projectFallback", "Dự án chưa đặt tên")) }));
         }
         if (field.optionsFrom === "memoryNotes") {
           const notes = context && Array.isArray(context.memoryNotes) ? context.memoryNotes : [];
           options = notes
             .filter((note) => note && validMemoryId(note.id) && String(note.state || "active") === "active")
-            .map((note) => ({ value: String(note.id), label: String(note.title || "Ghi chú Web") }));
+            .map((note) => ({ value: String(note.id), label: String(note.title || uiText("sharedSelect.noteFallback", "Ghi chú chưa đặt tên")) }));
         }
         if (field.optionsFrom === "pdfVaultAssets") {
           options = pdfVaultItems(context)

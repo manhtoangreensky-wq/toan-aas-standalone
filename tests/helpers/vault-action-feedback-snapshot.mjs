@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
+import {sharedSelectLabelsHistoricalSource,sharedSelectLabelsHistoricalSnapshot} from './shared-select-labels-snapshot.mjs';
 
 // Finite historical leaf only. Current-source acceptance must read physical files.
 const raw=fs.readFileSync(new URL('../fixtures/vault-action-feedback-reviewed.json',import.meta.url));
@@ -75,6 +76,7 @@ function inverseExact(source,group){
 }
 export function vaultActionFeedbackHistoricalSource(source,file){
  assert.equal(typeof source,'string',fail);
+ source=sharedSelectLabelsHistoricalSource(source,file);
  if(file!==integration&&file!==i18n)return source;
  const foundCalls=calls(source),foundReferences=keyReferences(source),foundDeclarations=declarations(source);
  if(!foundCalls.length&&!foundReferences.length&&!foundDeclarations.length)return source;
@@ -106,6 +108,7 @@ export function vaultActionFeedbackHistoricalSource(source,file){
 export function vaultActionFeedbackHistoricalSnapshot(entries,locale){
  const index=['vi','en','zh'].indexOf(locale)+1;
  assert.ok(index>0,fail+' locale');assert.ok(Array.isArray(entries),fail+' entries');
+ entries=sharedSelectLabelsHistoricalSnapshot(entries,locale);
  const owned=entries.filter(([key])=>typeof key==='string'&&key.startsWith('vaultFeedback'));
  if(!owned.length)return entries;
  assert.deepEqual(owned,rows.map(row=>[row[0],row[index]]),fail+' partial/changed/duplicate/reordered/unknown catalogue rows');

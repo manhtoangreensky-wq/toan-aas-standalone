@@ -10,6 +10,7 @@ from pathlib import Path
 import hashlib
 import json
 import subprocess
+import runpy
 
 import pytest
 
@@ -17,11 +18,13 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
+shared_select_inverse = runpy.run_path(str(ROOT / "tests/helpers/shared_select_historical_static.py"))["historical_shared_select_portal"]
 
 
 def _historical_vault_source(source: str) -> str:
     """Only approved old-copy comparators; actual Vault UI has independent physical coverage."""
     assert isinstance(source, str), "Unreviewed Vault historical comparison"
+    source = shared_select_inverse(source)
     raw = (ROOT / "tests/fixtures/vault-customer-copy-reviewed.json").read_bytes()
     assert hashlib.sha256(raw).hexdigest() == "2b895f84f77c8656811c4e732506926a677dda1eb6aa824f854670e127e8228b"
     edits = [row for row in json.loads(raw)["canonicalChanges"] if row["file"] == "static/portal/portal.js"]

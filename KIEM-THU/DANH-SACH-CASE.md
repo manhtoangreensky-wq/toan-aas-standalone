@@ -1,5 +1,19 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## SHARED-SELECT-LABELS-20261120 — nhãn bộ chọn dùng chung
+
+Phiên: [SHARED-SELECT-LABELS](PHIEN-SHARED-SELECT-LABELS-20261120.md).
+Sửa case tại đây trước; giữ Issue689/comment7033958929, không tạo PR giữ chỗ.
+
+| Case | Mức | Thao tác | Điều kiện đạt |
+|---|---|---|---|
+| SSEL-COPY | vừa | VI/EN/ZH, tên chưa đặt và giọng mặc định | Bốn nhãn đúng ngôn ngữ; đổi locale không giữ nhãn cũ |
+| SSEL-DATA | nặng | Tên khách/ký tự đặc biệt, chọn mục, khóa trường | Tên và giá trị giữ nguyên, không mở lựa chọn sai điều kiện |
+| SSEL-REGRESSION | nặng | Bộ đối chiếu cũ và nguồn hiện tại | Không đổi kỳ vọng/negative cũ; nguồn mới được kiểm độc lập |
+| SSEL-NATIVE | vừa | Trang âm thanh mới và lời nhắc, ba locale/mobile-PC | GET thật, chọn được mục, không cắt/tràn; không gửi form |
+| SSEL-VOICE-LIMIT | vừa | Đối chiếu nguồn danh sách giọng | Không gọi/stub Bot; không nhận đã kiểm native khi chưa có bằng chứng |
+| SSEL-DELIVERY | nặng | CI/gộp/triển khai/đối chiếu máy chủ/biên nhận | Đúng bản qua từng cổng; không suy toàn goal hoặc đầu ra engine |
+
 ## VAULT-ACTION-FEEDBACK-20261120 — phản hồi Kho tệp
 
 Phiên: [VAULT-ACTION-FEEDBACK](PHIEN-VAULT-ACTION-FEEDBACK-20261120.md).

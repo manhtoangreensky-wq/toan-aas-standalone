@@ -1,5 +1,30 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 20/11/2026 — nhãn bộ chọn: không thay chức năng gốc
+
+Tìm trong docs/migration bằng ba neo renderFields,Giọngchưađặttên và
+sharedSelect:không có hợp đồng gốc riêng cho nhãn dùng chung. Do đó đối
+chiếu trực tiếp sourceBASE46423a6d,không tự bịa danh sách chức năng mới.
+
+| Hành vi nguồn BASE | Ứng viên nhãn | Bằng chứng và giới hạn |
+|---|---|---|
+| Project/note thiếu tên dùng chuỗi cố định | Nhãn chưa đặt tên theo VI/EN/ZH | Fullphysical62PASS; không đổi tên thật |
+| Giọng thiếu tên vàsuffixdefault viếtVI | Bốn nhãn dịch;default chỉstricttrue | SameVMlocalechange/hostiletext;khônggọiBridge |
+| UUID/state/tts_ready/selection/required/disabled/ARIA | Giữ nguyên | Inputfrozen/BASEHTML ngoàioptiontext/nameddata |
+| PDF/image bịnormalizer loại nếu thiếu tên | Giữ nguyên,không sửa deadfallback | Genuinepublicprojectionnegative soBASE |
+| Tiêu đề ZH `/reminders` nhận tên ứng dụng chung từ BASE | Một nhánh riêng dùng khóa dịch Nhắc việc đã có | 3 PASS / 4 RED → 7 PASS; native ba cấu hình bổ sung đạt |
+| /asset-vault cóselect dự án nhưng thiếuGETproject ởbootstrap | FindingBASEgiữmở,taskchức năngkếtiếp | Source14711/15572;khôngnhậnđãsửa từlocale |
+
+Kết quả local cuối: 62 ca nhãn / bảy ca tiêu đề / 32 ca nguồn đạt;
+5305 ca Node thực thi đạt và một bootstrap Bot trùng BASE; Python hợp
+126 đạt / 17 lỗi trùng BASE. Native chín cấu hình trước + ba cấu hình
+sau sửa tiêu đề, 24 PNG tổng hai đợt; không phải một lượt cùng binding.
+Chưa suy ra đã phát hành, giọng canonical, đầu ra hoặc toàn goal hoàn tất.
+
+PR779 phản hồi Kho tệp đã giao:CI44695158108/deploy44697995955/runtime
+46423a6d/receiptsIssue7019553829PR7033751040. Mọi trạng thái V07 ứng viên
+phía dưới làsnapshotlịchsử. Đợtnhãn hiện tại chưa triểnkhai.
+
 ## 20/11/2026 — Kho tệp: hợp đồng gốc và phản hồi hiện tại
 
 Nguồn gốc tiếp tục là `docs/migration/ASSET_VAULT_CONTRACT.md`: danh sách/

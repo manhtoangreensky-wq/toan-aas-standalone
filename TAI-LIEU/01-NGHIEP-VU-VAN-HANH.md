@@ -1,5 +1,34 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 20/11/2026 — PR779 đã giao; nhãn bộ chọn đang nghiệm thu
+
+Chốt ứng viên local: tên chưa đặt của dự án/ghi chú/giọng và hậu tố mặc
+định đã đủ VI/EN/ZH; tiêu đề trang Nhắc việc có nhánh dịch riêng. Đúng
+năm phép thay / hai tệp ứng dụng, không đổi hành vi lựa chọn hoặc dữ liệu.
+62 ca nhãn, bảy ca tiêu đề, 32 ca nguồn đạt; 5305 ca Node thực thi đạt
+và một bootstrap thiếu Bot giữ nguyên theo BASE; Python 126 đạt / 17 lỗi
+BASE. Native chín cấu hình trước + ba sau sửa tiêu đề, 18 + 6 PNG;
+GET thật/chọn bàn phím/console và cô lập đạt, không nhận 12 cùng binding.
+Review không finding chặn. Đợt nhãn chưa triển khai tại thời điểm ghi;
+[báo cáo hiện hành](../docs/reports/shared-select-labels-20261120.md)
+thay thế các trạng thái local chờ kiểm tra của cùng đợt bên dưới.
+
+Bản production đã đối chiếu:46423a6df9af67ac7ccabd88686d4cb42523a078,
+PR779/CI44695158108 cảhaiSUCCESS,18browser/456authhashđủ,
+deploy44697995955SUCCESS65s. VPS trackedclean,web/bot/nginxactive-running,
+5+5assets vàpublicbuildlocal-569d3855b3785b5dbcd8khớp. ReceiptIssue
+7019553829/PR7033751040 đã đọc lại đúng. Các trạng thái “ứng viên/chờ
+phát hành V07” phía dưới làsnapshotlịchsử được kết quả này thay thế.
+
+Ứng viên nhãn bộ chọn mới chỉ3biểu thức project/note/voice và4key12value
+VI/EN/ZH. Tên khách/UUID/filter/selection/escaping/quyền giữ nguyên.
+BaAGYR1Aexact,Rootghép tuần tự;RED43PASS19FAIL→GREEN62PASS;chưa triểnkhai.
+Sửa định dạng schema giao việc không thayapp,không tínhworkerfailure.
+
+Phát hiện hiện trạng riêng:/asset-vault khôngtải projectlist ở lần mở
+trực tiếp mặc dù cóselectgắndựán. Đã cósourcewitness;task chức năng kế
+tiếp sauđợtnhãn,không trộn sửa loader vào scope chữ.
+
 ## 20/11/2026 — phản hồi Kho tệp, phân biệt bản đã giao và ứng viên
 
 Bản đã đối chiếu gần nhất: PR778, CI44564519425 hai job đạt,
