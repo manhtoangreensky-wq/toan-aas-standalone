@@ -129,10 +129,25 @@ device/Safari/AX/auth lifecycle hoặc toàn goal. Motion M-FINAL01..06 cuối.
 
 ## Phát hành
 
+PR782 đã mở đúng HEAD8309070894239f16cdf26ecb0dae1af828c6bbe5. CI đầu
+44760005148 dừng2m32s ở Python historical document comparator:1FAIL45PASS
+trong lệnh đó, authenticated job chưa chạy. Không merge/deploy bản lỗi.
+
+Local tái hiện hai old golden-comparison caseRED. Chỉ bổ sung Python
+historical leaf năm whole-function regions khóa cùng rawfixture, gọi
+trước shared-select inverse; giữ toàn bộ assertion/golden/rawhash/negative.
+27ca mới cộng15ca phụ thuộc:37PASS5FAIL, năm detached negative trả
+ValueError thay AssertionError. Sửa đúng `.index`→`.find` để assertion
+owner-order hiện có bắt trường hợp đó; nhóm25negative bị ảnh hưởng đạt,
+2deselected. Tổng42distinctcases đủ bằng chứng,20negative được xác nhận
+lại; không mô tả lệnh này là “chỉ chạy năm”. Không đổi application/native.
+CI thêm một lệnh Python, tổnghai lệnh mới cho baNode/mộtPython suite.
+
 Prepush/Tester/manifest/secret, một PR, CI đúng HEAD, merge-tree,
 exclusive deploy, VPS/assets/build và receipt đọc lại đều là cổng riêng.
-Tại thời điểm bản này: local đã nghiệm thu, chưa push/PR/merge/deploy đơn
-vị âm thanh. Biên nhận cùng tracker thay thế trạng thái release khi đã giao.
+Tại thời điểm bản này: local đã nghiệm thu và PR782 đã mở, chưa
+merge/deploy đơn vị âm thanh. PR nhận QA-only amendment; CI phải chạy trên HEAD mới.
+Biên nhận cùng tracker thay thế trạng thái release khi đã giao.
 
 PROVIDER_CALLS=0.
 WALLET_MUTATIONS=0.

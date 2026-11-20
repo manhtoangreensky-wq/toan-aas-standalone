@@ -652,7 +652,7 @@
   "review": {
     "independentInitialBlockingFindings": 0,
     "independentChangedQaBlockingFindings": 0,
-    "ciCommandAdded": 1,
+    "ciCommandAdded": 2,
     "workflowOtherBehaviorUnchanged": true
   },
   "protected": {
@@ -663,8 +663,9 @@
     "botRouteEngineAuthApiBackendWalletEnvDataCssMotionUnchanged": true
   },
   "release": {
-    "pr": "PENDING",
-    "ci": "PENDING",
+    "pr": 782,
+    "firstFailedCi": 44760005148,
+    "nextCi": "PENDING_QA_ONLY_HEAD",
     "merge": "PENDING",
     "deploy": "PENDING",
     "runtime": "PENDING",
@@ -816,6 +817,77 @@
     {
       "file": "media-collection-review-supplement-nov20.md",
       "rawSha256": "af1998abcd701e1555073d86eb2fd9ea899402bded34a8e5179513935c35f7d0"
+    },
+    {
+      "file": "media-collection-ci-python-red-nov20.xml",
+      "rawSha256": "ba2d78fd9fee214e1a209a629ba65fa4329898ead4d04b3716562a2158b19ee5"
+    },
+    {
+      "file": "media-collection-ci-python-adapter-green-nov20.xml",
+      "rawSha256": "ebd9c73c1b67fd8147d4f7ea6215769da211831ef9513703bae7044c71a874b3"
+    },
+    {
+      "file": "media-collection-ci-python-detached-retest-nov20.xml",
+      "rawSha256": "8638162f093c03a2fbaf80686a5ccf270ef32e2bc9d35b97b5ff5444f43b3753"
+    },
+    {
+      "file": "media-collection-review-python-ci-nov20.md",
+      "rawSha256": "0875d477230f3257d990f6d269ef25d8cc15dbdbbdcd9f24725e574eac96856d"
+    },
+    {
+      "file": "media-collection-ci-first-failure-nov20.json",
+      "rawSha256": "7f5f60ace31db9a1851027b416c3ffa50002b0fbc3c2235e3c3fdd9a86d07b27"
     }
-  ]
+  ],
+  "ciFirstAttempt": {
+    "task": "MEDIA-COLLECTION-LOCALE-20261120",
+    "pr": 782,
+    "run": 44760005148,
+    "head": "8309070894239f16cdf26ecb0dae1af828c6bbe5",
+    "status": "completed",
+    "conclusion": "failure",
+    "failedJob": "Verify Web App",
+    "failedJobId": 136369700767,
+    "jobElapsed": "2m32s",
+    "failedStep": "Video Studio locale and navigation presentation regressions",
+    "failedTest": "tests/test_document_convert_historical_static.py::test_current_and_prior_phases_restore_same_exact_historical_portal_without_touching_outside_bytes",
+    "failedAssertion": "inverse(actual) == inverse(baseline)",
+    "commandPassed": 45,
+    "commandFailed": 1,
+    "authenticatedJob": "skipped",
+    "classification": "PYTHON_HISTORICAL_READER_LACKS_NEW_MEDIA_LEAF",
+    "applicationChangesAfterNativeAcceptance": 0,
+    "workerCodeFailures": 0,
+    "merge": "NOT_RUN",
+    "deploy": "NOT_RUN",
+    "privateLogPayloadPublished": false
+  },
+  "pythonHistoricalCiAmendment": {
+    "red": {
+      "file": "media-collection-ci-python-red-nov20.xml",
+      "tests": 2,
+      "passed": 0,
+      "failed": 2
+    },
+    "first": {
+      "file": "media-collection-ci-python-adapter-green-nov20.xml",
+      "tests": 42,
+      "passed": 37,
+      "failed": 5
+    },
+    "changedNegativeRetest": {
+      "file": "media-collection-ci-python-detached-retest-nov20.xml",
+      "tests": 25,
+      "passed": 25,
+      "failed": 0
+    },
+    "distinctCasesAccepted": 42,
+    "resolvedDetachedFailures": 5,
+    "repeatedChangedNegativeCases": 20,
+    "codeChange": "Finite Python five-region historical leaf plus shared-select input-chain hook; str.find retains explicit order AssertionError",
+    "assertionsGoldenPinsNegativeUnchanged": true,
+    "applicationSourceChanges": 0,
+    "nativeReruns": 0,
+    "independentBlockingFindings": 0
+  }
 }

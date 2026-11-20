@@ -25,6 +25,10 @@ auth/schema/quyền/Bot/provider/ví/PayOS/ENV/dữ liệu/CSS/motion.
   child-only read projection. Một lỗi sys.path của runner giữ riêng;
   lượt đó không chạy được test, không tính worker/application failure.
 - [x] Review code độc lập0finding chặn.
+- [x] CIđầu44760005148 tìm Pythonhistorical reader chưa nối mới:
+  local2RED→Pythonleaf/27new+15dependentcases42distinctaccepted.
+  Giữ37PASS, năm detached failures đổiindex→find và25changednegativePASS;
+  khôngthayassertion/golden hoặc chạy lại native/app. CI trênHEADmới cònmở.
 - [x] Nhóm Node77tệp:1380PASS giữ +417failed/unexecutedPASS +
   ba nav failed-onlyPASS =1800executablePASS/0unresolved. Không full rerun.
 - [x] Native hai route×VI/EN/ZH×320dark/1440light; một đại diện rồi

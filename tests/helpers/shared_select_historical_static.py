@@ -3,8 +3,10 @@ from pathlib import Path
 import hashlib
 import json
 import re
+import runpy
 
 ROOT = Path(__file__).resolve().parents[2]
+media_inverse = runpy.run_path(str(ROOT / "tests/helpers/media_collection_historical_static.py"))["historical_media_collection_portal"]
 RAW = (ROOT / "tests/fixtures/shared-select-labels-reviewed.json").read_bytes()
 FAIL = "Unreviewed Shared select historical source"
 assert hashlib.sha256(RAW).hexdigest() == "7cb67db3464cb45d3e0b243f388affb981fd4f5780e0ebb28105865885786817", FAIL
@@ -20,6 +22,7 @@ LOOKUP = re.compile(r"""\b(?:[A-Za-z_$][\w$]*\.)*(?:uiText|t)\(\s*["'](sharedSel
 
 def historical_shared_select_portal(source: str) -> str:
     assert isinstance(source, str), FAIL
+    source = media_inverse(source)
     title_raw = (ROOT / "tests/fixtures/shared-select-reminder-title-reviewed.json").read_bytes()
     assert hashlib.sha256(title_raw).hexdigest() == "66d8d0d6bdf45c9bb59c8c3e3095bb67f1de44933ef73c260a31094045840132", FAIL
     title_edit = json.loads(title_raw)["canonicalChanges"][0]

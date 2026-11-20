@@ -23,6 +23,9 @@
   giữ;babindingQA/cùng151rawLFappsource,khôngnhậnR6overallPASS.
 - [ ] Ops/crosswalk/Tester/prepush/manifest/secret/mộtPR/exactCI/
   merge/exclusive deploy/VPS/assets/receipt; không PR giữ chỗ.
+  PR782/CI44760005148 đầu dừng ởPythonhistorical comparator (45PASS1FAIL);
+  QA-onlyleafamendment42distinctcases accepted,sourceapp/nativekhôngđổi.
+  Chỉ updatePR782 rồi chờCI mới, khôngmergebản lỗi hoặc tạoPRkhác.
 - [ ] Tiếp theo: toast thao tác âm thanh còn VI trong integration;
   detail technicalcopy/native filechooser khác; wholelocale/AX/auth/
   device/Safari/signedUI/finaloutput. M-FINAL-01..06 luôn cuối.

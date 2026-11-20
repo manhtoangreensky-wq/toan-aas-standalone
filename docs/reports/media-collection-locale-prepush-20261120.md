@@ -18,7 +18,8 @@ bỏ đúng scope, giữ hai link/footer/form/filter/list/events/quyền. Có
 Review nhóm và review bổ sung đúng phần QA thay đổi đều0finding chặn.
 Current acceptance đọc vật lý trước inverse; historical adapters không
 đổi assertion/golden/raw pins/negative hoặc che byte ngoài scope.
-Một dòng CI chạy ba suite mới; trigger/quyền/phụ thuộc/deploy giữ nguyên.
+Hai dòng CI chạy ba Node suite và một Python suite mới;
+trigger/quyền/phụ thuộc/deploy giữ nguyên.
 
 `TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md` phân biệt PR781 đã giao và ứng viên
 âm thanh. Không đọc hoặc suy số liệu production, không sửa engine/giá/
@@ -54,6 +55,11 @@ giữ chỗ; giữ tracker hiện tại và hai mẫu issue có sẵn.
   R7/R8 giữ nguyên bbox bounds, cuộn control thật thay vì nhận edge rounding.
 - Mọi lỗi chờ/render/draft-spec/rate-pacing của QA giữ riêng; không
   tính Antigravity code failure. Không tắt giới hạn120read/60s của app.
+- CIđầu44760005148 ở PR782 dừng vì Pythonhistorical leaf chưa nối:
+  một command45PASS1FAIL, khôngmerge/deploy. Tái hiện2REDlocal, bổ sung
+  Pythonleaf và27ca mới; ba tệp42ca tổng37PASS5negativeFAIL rồi25negative
+  affectedPASS sauindex→find, giữ42distinctcase. Không app/nativechange.
+  Manifest cuối29scoped+2provenance=31tệp; CI cần đúngHEADQA-amendment.
 
 ## 4. Xuất bản và giới hạn
 
