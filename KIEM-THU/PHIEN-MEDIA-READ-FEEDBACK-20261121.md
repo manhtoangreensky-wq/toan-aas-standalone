@@ -35,3 +35,9 @@ receiptfalse giữ,ứngdụngkhôngđổi. R4source/core/schema/auth/egress/own
 đúng;48abortqua3retry/read và12heldGET. Genericbuttonfocus vềBODY
 được ghi rõ và control vẫn đến được bằngTab thật; không ép restore.
 Specpre-native giữ hash, báo cáo/audit hiện tại thay pending snapshot.
+
+CIđầu44797661237 trên50c548b5 dừng48ca47PASS1FAIL do comparatorVault
+cũ; failed-onlylocal1RED→1PASS. So đủ142NodefileCIlocale, giữ prefixPASS;
+media96trênsource mới93PASS3catalogueFAIL, sửa đúng3readerqua leaf,
+failed-only3PASS. Không đổigolden/fixture/negative hoặcapp/native;
+không lặp192runtime/6view đãđạt. CùngPR783, chờCI mới sau QAphụlục.

@@ -270,10 +270,78 @@
       "name": "media-read-feedback-native-prep-nov21-r4/run-media-read-feedback-nov21-r4-01/png-validation.json",
       "bytes": 27055,
       "rawSha256": "740b6d3eb56f02738fd557fe9dd0894c55cb5c9ff0bc8c52a4a7b3eb84a184b0"
+    },
+    {
+      "name": "media-read-feedback-first-ci-failure-nov21.log",
+      "bytes": 14104832,
+      "rawSha256": "86d4715eb9f286025a531f1a6a2f87991e763fde7015a52d9d9d9afeef7a2724"
+    },
+    {
+      "name": "media-read-feedback-ci-failed-only-red-nov21.xml",
+      "bytes": 23968,
+      "rawSha256": "c279aa9b74717a6d75bd96994cdd10bcf703be614c9aab0e4fc44dad995f7116"
+    },
+    {
+      "name": "media-read-feedback-ci-failed-only-green-nov21.xml",
+      "bytes": 479,
+      "rawSha256": "a59ba348743c92c3ff914eeaa713992e3b60beb2f197f6583909a92ec40cd4b7"
+    },
+    {
+      "name": "media-read-feedback-ci-unexecuted-selection-nov21.json",
+      "bytes": 618,
+      "rawSha256": "05d843f331e3b3829cb07f3e4836c6b0c830dc27eb7247617091b8cc174fb01c"
+    },
+    {
+      "name": "media-read-feedback-ci-unexecuted-media-nov21.xml",
+      "bytes": 38290,
+      "rawSha256": "a365494fe44af1293c69e651496d2ce02b62588a28630e444841963b44b02b48"
+    },
+    {
+      "name": "media-read-feedback-ci-catalogue-failed-only-green-nov21.xml",
+      "bytes": 1008,
+      "rawSha256": "39f24554e446ef51ac972b2057b08acba000f49440604c5afcbc4df99c075627"
+    },
+    {
+      "name": "media-read-feedback-review-ci-supplement-nov21.md",
+      "bytes": 10340,
+      "rawSha256": "6fe62128c44b2e5346b0abe9c73445d7a321e0fc417b9d384492413dc41cac10"
     }
   ],
   "signedProductionUI": "NOT_TESTED",
   "audioOutput": "NOT_TESTED",
   "wholeGoalComplete": false,
-  "motion": "LAST"
+  "motion": "LAST",
+  "ciAmendment": {
+    "firstRun": 44797661237,
+    "firstHead": "50c548b5f421ae323862d632a9cf2cd7f27935fc",
+    "firstResult": "FAILED_HISTORICAL_VAULT_FULL_SOURCE_COMPARATOR",
+    "failedCommand": {
+      "tests": 48,
+      "pass": 47,
+      "fail": 1
+    },
+    "failedOnlyRed": 1,
+    "failedOnlyGreen": 1,
+    "workflowLocaleNodeFiles": 142,
+    "previouslyUnexecutedSelectionFiles": 9,
+    "eightAlreadyPassedInCI": true,
+    "onlyNewSourceUnexecutedFile": "tests/media-collection-locale.test.mjs",
+    "unexecutedMediaFirst": {
+      "tests": 96,
+      "pass": 93,
+      "fail": 3
+    },
+    "catalogueFailedOnlyGreen": 3,
+    "heldMediaPhysicalPass": 93,
+    "combinedMediaDistinctPass": 96,
+    "changedQAOnlyFiles": [
+      "tests/vault-project-options-source.test.mjs",
+      "tests/media-collection-locale.test.mjs"
+    ],
+    "oldAssertionsGoldensFixturesPreserved": true,
+    "applicationChangesAfterNative": 0,
+    "nativeReruns": 0,
+    "workerCodeFailures": 0,
+    "supplementalReviewOpenBlockers": 0
+  }
 }

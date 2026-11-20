@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {BASE, IDS, CUSTOMER, OLD_RIGHTS, sources, runtime, context, collection, plain, freeze, hash} from "./helpers/media-collection-locale-runtime.mjs";
+import {mediaReadFeedbackHistoricalSnapshot} from "./helpers/media-read-feedback-snapshot.mjs";
 
 const reviewedRaw = fs.readFileSync(new URL("./fixtures/media-collection-locale-reviewed.json", import.meta.url));
 assert.equal(hash(reviewedRaw), "f0da75ecb63d7f0abc432053441502cd8db99fcc487aa4b192a6514c84ea0515");
@@ -93,7 +94,11 @@ for (const locale of LOCALES) {
     for (const key of ["range", "empty", "previous", "next", "aria"]) assert.equal(m["audioWorkspace.pagination." + key], PAG[locale][key]);
   });
   test(`${locale}: exact 38-row reviewed catalogue target and all unrelated BASE messages are protected`, () => {
-    const now = runtime(CURRENT, locale).messages[locale], before = runtime(ORIGINAL, locale).messages[locale];
+    // Historical PR782 catalogue comparison only; the other93 cases still
+    // execute current physical renderer/i18n without a source projection.
+    const now = Object.fromEntries(mediaReadFeedbackHistoricalSnapshot(
+      Object.entries(runtime(CURRENT, locale).messages[locale]), locale));
+    const before = runtime(ORIGINAL, locale).messages[locale];
     assert.equal(COPY.length, 38); assert.equal(new Set(COPY.map(row => row[0])).size, 38);
     const allow = new Set(COPY.map(row => "audioWorkspace." + row[0]));
     for (const row of COPY) assert.equal(now["audioWorkspace." + row[0]], row[LOCALES.indexOf(locale) + 1]);

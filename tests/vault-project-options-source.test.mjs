@@ -17,7 +17,7 @@ const base = lf(execFileSync("git", ["show", fixture.base + ":" + file], {cwd: R
 const physical = lf(fs.readFileSync(path.join(ROOT, file), "utf8"));
 const candidate = base.replace(edit.old, () => edit.new), fail = /Unreviewed Vault project options/;
 
-test("one immutable worker proposal maps complete Git BASE to current physical integration", () => {
+test("historical Vault proposal maps Git BASE to the finite projected integration", () => {
   assert.equal(hash(raw), "9faedb1fe8c1aff3d456a658f82dd107a4d4fab7690c51eb071b1d93dc53edee");
   assert.equal(fixture.task, "VAULT-PROJECT-OPTIONS-20261120");
   assert.equal(fixture.canonicalChanges.length, 1);
@@ -25,7 +25,7 @@ test("one immutable worker proposal maps complete Git BASE to current physical i
   assert.equal(fixture.worker.proposalDecodedExact, true);
   assert.equal(fixture.worker.workerCodeFailures, 0); assert.equal(fixture.worker.applicationTakeover, false);
   assert.equal(base.split(edit.old).length - 1, 1);
-  assert.equal(physical, candidate); assert.equal(inverse(physical, file), base);
+  assert.equal(mediaCollectionHistoricalSource(physical, file), candidate); assert.equal(inverse(physical, file), base);
   assert.notEqual(physical, base);
 });
 

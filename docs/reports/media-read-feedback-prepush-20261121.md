@@ -49,7 +49,8 @@ nên không giả lập UI, nativeNOT_REACHABLE; physical dispatcher riêng.
 
 ## 4. Manifest và giao hàng
 
-Manifest chỉ22tệp scoped và sau đó hai provenanceWeb chuẩn, loại mọi
+Manifest ban đầu22tệp; phụ lụcCI thêm hai comparatorQA hiện hữu,
+chốt24tệp scoped và sau đó hai provenanceWeb chuẩn, loại mọi
 tên `.agents/state/` trước đọc/stage. Không mở campaign-state. Secret/
 diff/source151 được kiểm trước sourcecommit; refreshWebprovenance
 không đọc Bot; verify đúngHEAD rồi push remote `github`.
@@ -62,3 +63,10 @@ Spec giữ snapshot pre-native để bảo toàn hash binding; báo cáo/audit
 hiện tại thay trạng thái chờ của snapshot, không viết lại receipt cũ.
 Genericbuttonfocus về BODY là finding cũ giữ riêng, Tab thật vẫn tới
 control; không nhận accessibility/motion toàn ứng dụng đã hoàn tất.
+
+CI44797661237 giữFAILED, command48ca47PASS1FAIL ở oldVaultcandidate.
+Localfailed-only1RED→1GREEN; chưa chạy media96 trên source mới thì
+đo93PASS3catalogueFAIL, sửa đúng3reader entryprojection→3failed-only
+PASS. Các candidate/golden/fixture/hash/negativecũ giữ, không app/native
+change hoặc workerfailure. Audit/manifest giữ bằng chứng failed, review
+hai QA diff bổ sung một lượt; chỉ updatePR783 rồi chờexactHEADCI mới.

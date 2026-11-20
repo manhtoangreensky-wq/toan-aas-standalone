@@ -40,6 +40,22 @@ action giữ counter chính và counter còn lại, kiểm lại sau toàn bộ 
 | Tester metadata | 1PASS,32deselected; sáu tệp metadata LF đo lại |
 | Review nhóm | Không còn Critical/Important/Minor finding mở |
 
+## Phụ lục CI đầu — chỉ sửa comparator lịch sử
+
+CI44797661237 trên HEAD50c548b5 dừng ở command48ca:47PASS1FAIL,
+oldVault source so toànintegration với candidate đợt trước. Failed-only
+local tái hiện1RED; đổi đúng assertion đó qua finiteleaf hiện có,
+candidate/golden/fixture/hash/errorassertions giữ, failed-only1PASS.
+Không sửa ứng dụng/native, không tính lỗi này là worker code failure.
+
+Đối chiếu đúng142Nodefile của bước CIlocale với các bằng chứng đã chạy:
+tám tệp chưa có trong selectionlocal đã PASS ở prefix CI; chỉ bộ96ca
+media cũ chưa chạy trên nguồn mới. Lượt này93PASS3FAIL tại ba comparator
+catalogueallkeys; chỉ chiếu tám key feedback mới bằng leaf đã nghiệm
+thu trong ba comparator đó, các kỳ vọng cũ giữ. Retest đúng3ca→3PASS,
+giữ93PASS, không fullrerun192/runtime hoặc6native/48PNG. Cả hai QA diff
+có một review supplement riêng trước push lại cùngPR783; không PR mới.
+
 Ba lỗi Python cũ: global `<audio` trong Portal và hai snapshot Prompt
 Library đã đổi chữ từ trước. Portal nguồn giữ nguyên BASE; failed-only
 trên BASE cho cùng ba tên/lý do. Không sửa ngoài đơn vị để ép toàn kho xanh.
@@ -79,8 +95,9 @@ thay trạng thái nativepending của snapshot đó, không sửa binding cũ.
 
 Ops/crosswalk/bảy case Tester/spec/master checklist cùng tracker hiện
 có đã cập nhật. Chỉ mở một PR sau native/audit/manifest/secret/prepush.
-ExactHEADCI và artefact, merge-tree, exclusive deploy, runtime/service/
-assets/build, biên nhận cùng tracker đọc lại là các cổng riêng còn mở.
+Manifest sau phụ lục:24scoped+2Webprovenance=26tệp. ExactHEADCI và
+artefact, merge-tree, exclusive deploy, runtime/service/assets/build,
+biên nhận cùng tracker đọc lại là các cổng riêng còn mở.
 
 PROVIDER_CALLS=0; WALLET_MUTATIONS=0; PRODUCTION_DATA_MUTATIONS=0.
 SIGNED_PRODUCTION_UI=NOT_TESTED; AUDIO_OUTPUT=NOT_TESTED.

@@ -26,6 +26,11 @@
   Genericbuttonfocus vềBODY đã đo;Tab thật vẫn tới,backlog riêng.
 - [ ] MRF-prepush/Tester/audit/manifest/CI/mộtPR/merge/exclusive
   deploy/VPS/assets/build/receipt cùng tracker đọc lại đúng.
+  PR783/CI44797661237 đầu dừng47PASS1oldVaultcandidateFAIL;
+  failed-onlylocal1RED→1PASS. Đủ142CIlocaleNodefile đối chiếu,
+  media96chưachạytrênsource mới93PASS3catalogueFAIL→3failed-onlyPASS.
+  QA-onlyprojectiongiữgolden/fixture, app/nativekhôngđổi; cùngPR783,
+  manifest24scoped+2provenance26file; khôngmergebảnFAILED.
 - [ ] Còn lại theo thứ tự:media-audioactions/validation/write-copy và
   detailcopy, locale toàn app/contrast/AX/auth/device/Safari/signedUI.
   Genericbuttonfocus nếu native tái hiện phải giữ finding riêng,
