@@ -1,5 +1,24 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 20/11/2026 — nguồn lựa chọn dự án tại Kho tệp
+
+Nguồn gốc: `docs/migration/ASSET_VAULT_CONTRACT.md` và reader Web riêng tài
+khoản `hydrateProjects`. Hợp đồng gắn tệp với dự án vẫn dùng; lỗi là
+dispatch không tải nguồn dự án khi mở trực tiếp Kho tệp, không phải thiếu
+chức năng backend hoặc cần lấy dữ liệu Bot.
+
+| Hiện trạng BASE4cf85908 | Ứng viên | Bằng chứng/giới hạn |
+|---|---|---|
+| Signed bootstrap reset projects[] nhưng không gọi reader tại Kho tệp | Một nhánh exact route + flag bật trong account guard | RED37đạt/1lỗi → 38đạt; native đại diện GET thật/chọn được |
+| Reader dùng query mới ngoài Project Board | Giữ `/projects?limit=50&offset=0` | Không mang filter/offset cũ của Project Board |
+| UUID/schema/counter/session/path và lỗi đọc | Giữ nguyên | Ca invalid/empty/stale/logout và 151 source pins |
+| Upload, project_id, ownership và revision | Giữ nguyên | Không submit/upload/blob trong QA; không nhận output |
+| Route cũ và dữ liệu tên khách | Giữ nguyên | 18 exact routes, literal đặc biệt và nhóm hồi quy liên quan |
+
+Nhánh nhãn/tiêu đề trước đó đã giao qua PR780/CI44709731113/
+deploy44735563146/runtimeBASE. Ứng viên project-options chưa triển khai.
+Lịch sử ứng viên bên dưới được kết quả phát hành từng đợt thay thế.
+
 ## 20/11/2026 — nhãn bộ chọn: không thay chức năng gốc
 
 Tìm trong docs/migration bằng ba neo renderFields,Giọngchưađặttên và

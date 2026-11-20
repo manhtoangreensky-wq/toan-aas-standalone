@@ -1,0 +1,192 @@
+{
+  "task": "VAULT-PROJECT-OPTIONS-20261120",
+  "base": "4cf8590826846a3f3336a4d7359d53df965c226f",
+  "date": "2026-11-20",
+  "status": "LOCAL_ACCEPTED_RELEASE_PENDING",
+  "tracker": {
+    "issue": 689,
+    "comment": 7039622716
+  },
+  "application": {
+    "fixtureRawSha256": "9faedb1fe8c1aff3d456a658f82dd107a4d4fab7690c51eb071b1d93dc53edee",
+    "records": 1,
+    "changedFiles": 1,
+    "protectedFiles": 150,
+    "sourcePins": 151,
+    "source": {
+      "file": "static/portal/integration.js",
+      "baseLfSha256": "ee5f8b4a49b37613124a66734a54b48bb5feb1d93bc94ea0645cd02ad96c014e",
+      "candidateLfSha256": "ae2814495b109821d0b770be78e253e4a5d0a7ddefc2eeeed6b05f1ac5c0c0a5",
+      "changed": true
+    },
+    "model": "gemini-3.8-flash-high",
+    "proposalRawSha256": "7dcd963350d0db1ffcedba2920dac17275938947fcfaaacfd4abf272bd91e172",
+    "proposalExact": true,
+    "workerCodeFailures": 0,
+    "applicationTakeover": false,
+    "wholeFileReplayExact": true
+  },
+  "behavior": {
+    "red": {
+      "file": "vault-project-options-red-nov20.xml",
+      "tests": 38,
+      "passed": 37,
+      "failed": 1,
+      "failedNames": [
+        "enabled signed Vault bootstrap reads its own project options without inherited board filters"
+      ]
+    },
+    "green": {
+      "file": "vault-project-options-green-nov20.xml",
+      "tests": 38,
+      "passed": 38,
+      "failed": 0,
+      "failedNames": []
+    },
+    "currentnessSchemaAndLegacyRoutes": true,
+    "limits": "Real extracted dispatch/reader/helpers; controlled API,synthetic session/page/mount,false native-route detectors; not full bootstrap/native"
+  },
+  "sourceChain": {
+    "file": "vault-project-source-chain-green-nov20.xml",
+    "tests": 42,
+    "passed": 42,
+    "failed": 0,
+    "failedNames": []
+  },
+  "affectedNode": {
+    "file": "vault-project-affected-node-nov20.xml",
+    "tests": 3421,
+    "passed": 3421,
+    "failed": 0,
+    "failedNames": [],
+    "files": 113,
+    "runCount": 1,
+    "alreadyGreenNotRerun": true
+  },
+  "python": {
+    "branch": {
+      "file": "vault-project-python-regression-nov20.xml",
+      "tests": 20,
+      "passed": 16,
+      "failed": 4,
+      "failedNames": [
+        "test_project_operations_board_has_truthful_owner_scoped_read_states",
+        "test_project_operations_board_is_private_in_pwa_and_app_first_on_mobile",
+        "test_project_operations_board_keeps_canonical_routes_without_a_duplicate_hub",
+        "test_project_package_is_a_separate_web_native_portal_surface"
+      ]
+    },
+    "exactBaseFailedOnly": {
+      "file": "vault-project-python-base-failures-nov20.xml",
+      "tests": 4,
+      "passed": 0,
+      "failed": 4,
+      "failedNames": [
+        "test_project_operations_board_has_truthful_owner_scoped_read_states",
+        "test_project_operations_board_is_private_in_pwa_and_app_first_on_mobile",
+        "test_project_operations_board_keeps_canonical_routes_without_a_duplicate_hub",
+        "test_project_package_is_a_separate_web_native_portal_surface"
+      ]
+    },
+    "sameBaseFailures": 4,
+    "newFailures": 0,
+    "wholeRepositoryGreen": false
+  },
+  "testerMetadata": {
+    "file": "vault-project-tester-metadata-nov20.xml",
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "failedNames": []
+  },
+  "native": {
+    "views": 6,
+    "representative": 1,
+    "remainingOnly": 5,
+    "baselineNative": "NOT_RUN",
+    "actualOwnerGetAndNativeKeyboard": true,
+    "rawNamesUuidPreserved": true,
+    "screenshotsHashCrcFullDecode": 12,
+    "inputsUnchanged": 16,
+    "sourceCoreSchemaAuthEgressCodeHeld": true,
+    "unexpectedConsoleNetworkErrors": 0,
+    "ownedActiveAfterCleanup": 0,
+    "bindingRawSha256": "bd482804c584c25f48624d2e42361a01310d746dd8b843b771d82f3c9a0bd200"
+  },
+  "review": {
+    "independentBlockingFindings": 0,
+    "noAssertionGoldenNegativeWeakening": true,
+    "harnessLimitsDocumented": true,
+    "addedCiCommands": 1,
+    "workflowOtherBehaviorUnchanged": true
+  },
+  "protected": {
+    "authApiBackendBotProviderWalletEnvDataCssLayoutMotionUnchanged": true,
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "productionDataMutations": 0,
+    "ownerCampaignStateOpened": false
+  },
+  "release": {
+    "pr": "PENDING",
+    "ci": "PENDING",
+    "merge": "PENDING",
+    "deploy": "PENDING",
+    "runtime": "PENDING",
+    "receipts": "PENDING"
+  },
+  "limits": {
+    "signedProductionUi": "NOT_TESTED",
+    "uploadBlobFinalOutput": "NOT_TESTED",
+    "deviceSafariGlobalAccessibility": "NOT_PROVEN",
+    "browserNativeFileInputLocale": "SEPARATE_FOLLOWUP",
+    "wholeGoalComplete": false,
+    "motion": "M-FINAL-01..06_LAST"
+  },
+  "evidence": [
+    {
+      "file": "vault-project-options-red-nov20.xml",
+      "rawSha256": "f4839f36fc5a05e6683bf00669262c6b781e5b396ba246e5d10187d0ddea178e"
+    },
+    {
+      "file": "vault-project-options-green-nov20.xml",
+      "rawSha256": "3d538805d4e46d598e54beeb7fe060320783746648073988150cacdcdfdddaa6"
+    },
+    {
+      "file": "vault-project-source-chain-green-nov20.xml",
+      "rawSha256": "34db9e60e095829a3d3a0e434f22dbf93434651e7cd0af9d963a9145dd5154fa"
+    },
+    {
+      "file": "vault-project-affected-node-nov20.xml",
+      "rawSha256": "f59589475b48dce96ee2fc1f0a96cff48847cd1a564ed4b9ca5e3fe6c6250fb5"
+    },
+    {
+      "file": "vault-project-python-regression-nov20.xml",
+      "rawSha256": "37cd0e3784d70a2ad0ed768ec5ca161764d138d612d243ab9cb0b842beeedee0"
+    },
+    {
+      "file": "vault-project-python-base-failures-nov20.xml",
+      "rawSha256": "62f63811a266defccd0a005c36085e466acfe5d9a9f205c99ac537f807f5fe12"
+    },
+    {
+      "file": "vault-project-tester-metadata-nov20.xml",
+      "rawSha256": "8a1384e5202a4c8a37280767008c785030489d841a330be6b305aba85372f229"
+    },
+    {
+      "file": "vault-project-python-base-inputs-nov20.json",
+      "rawSha256": "f70892db7f66f3ec20eb94c5859ebb018bcc9caa79e15ee109de84cd27c5c738"
+    },
+    {
+      "file": "vault-project-review-nov20.md",
+      "rawSha256": "3ab1b61db8ee59f64e1b45973e2745e2cd10ef84e565c59e8b11a49a2c599a2a"
+    },
+    {
+      "file": "vault-project-native-evidence-nov20.json",
+      "rawSha256": "94a1eaa9ad34c1057ee2ae3e8c6a1fd870b871c054c13bc3a89f4ec4b4882f6d"
+    },
+    {
+      "file": "verify-vault-project-native-nov20.py",
+      "rawSha256": "f9e1d8eb558bc9947ad948b5c9c9d92462e5fa0326d1c0d12e633068d68ff77b"
+    }
+  ]
+}

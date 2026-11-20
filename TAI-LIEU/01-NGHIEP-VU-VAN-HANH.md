@@ -1,5 +1,24 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 20/11/2026 — nhãn đã giao; ứng viên danh sách dự án trong Kho tệp
+
+Production đã đối chiếu ở runtime `4cf8590826846a3f3336a4d7359d53df965c226f`,
+PR780 / CI44709731113 cả hai job thành công, 18 bằng chứng trình duyệt và
+456 bản ghi có đăng nhập/hash đúng. Deploy44735563146 thành công62s;
+Web/Bot/nginx active-running, tracked-clean, health và 5+5 tài nguyên đúng.
+Build `local-5c93467a21f103c91fe0`; Issue7033958929/PR7039553423 đã đọc lại.
+Các trạng thái “nhãn đang nghiệm thu/chưa triển khai” bên dưới là lịch sử.
+
+Ứng viên kế tiếp chỉ thêm một nhánh dispatch ở integration.js: Kho tệp
+đã bật và có signed account dùng reader dự án hiện có. Không đổi reader,
+quyền, upload, dữ liệu, API hoặc chốt phản hồi cũ. 38 ca hành vi và 42 ca
+chuỗi nguồn đạt, 3421 ca Node liên quan đạt. Python16 đạt/bốn lỗi trùng
+BASE; không nhận toàn kho xanh. Native đủ sáu cấu hình đã nhận GET thật,
+giữ UUID/tên và chọn bàn phím đúng;12ảnh full decode/hash/CRC đạt,owned0.
+Không chạy lại cấu hình đại diện. Chưa phát hành ứng viên
+này; không suy upload/blob/output hoặc signed production UI đã đạt.
+[Báo cáo hiện hành](../docs/reports/vault-project-options-20261120.md).
+
 ## 20/11/2026 — PR779 đã giao; nhãn bộ chọn đang nghiệm thu
 
 Chốt ứng viên local: tên chưa đặt của dự án/ghi chú/giọng và hậu tố mặc

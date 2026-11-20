@@ -6,6 +6,7 @@ import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {sharedSelectReminderTitleHistoricalSource as inverse} from "./helpers/shared-select-reminder-title-snapshot.mjs";
+import {vaultProjectOptionsHistoricalSource} from "./helpers/vault-project-options-snapshot.mjs";
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const raw=fs.readFileSync(new URL("./fixtures/shared-select-reminder-title-reviewed.json",import.meta.url)),fixture=JSON.parse(raw);
 const parentRaw=fs.readFileSync(new URL("./fixtures/shared-select-labels-reviewed.json",import.meta.url)),parent=JSON.parse(parentRaw);
@@ -25,7 +26,9 @@ test("title authority and complete physical source bind the parent four edits pl
  assert.equal(physical,candidate);assert.equal(inverse(physical,file),parentSource);
  assert.equal(parentSource.replace(edit.old+"\n",()=>edit.new+"\n"),candidate,"Decoded worker newline-pair replays exact bytes");
  for(const pin of fixture.applicationBaseline){
-  const actual=lf(fs.readFileSync(path.join(ROOT,pin.file),"utf8"));
+  // This title-era pin comparator is historical; the newest Vault suite reads
+  // complete physical sources independently before applying any projection.
+  const actual=vaultProjectOptionsHistoricalSource(lf(fs.readFileSync(path.join(ROOT,pin.file),"utf8")),pin.file);
   assert.equal(hash(actual),pin.candidateLfSha256,pin.file);
   assert.equal(hash(inverse(actual,pin.file)),pin.parentCandidateLfSha256,pin.file);
  }
