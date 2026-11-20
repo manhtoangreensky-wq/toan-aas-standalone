@@ -10421,7 +10421,7 @@
         "copyfast_image_operations.py",
         "copyfast_media_factory.py"
       ],
-      "occurrences": 1235,
+      "occurrences": 1236,
       "provider": "PayOS"
     },
     {
@@ -10507,12 +10507,14 @@
         "docs/reports/document-ocr-customer-copy-20261119.md",
         "docs/reports/media-collection-locale-20261120.md",
         "docs/reports/media-collection-locale-prepush-20261120.md",
+        "docs/reports/media-read-feedback-20261121.md",
         "docs/reports/pdf-input-font16-20261116.md",
         "docs/reports/pdf-split-readability-20261116.md",
         "docs/reports/shared-select-labels-20261120.md",
         "docs/reports/vault-customer-copy-20261119.md",
         "docs/reports/video-inner-first-three-20261110.md",
         "reports/audit/MEDIA-COLLECTION-LOCALE-20261120.json",
+        "reports/audit/MEDIA-READ-FEEDBACK-20261121.json",
         "reports/audit/R218-CHECKPOINT-20261021.md",
         "reports/audit/R218-CUSTOMER-UI-REALITY-QA-20261022.json",
         "reports/audit/R218-GLOBAL-STATUS-LABELS-QA-20261021.json",
@@ -10532,11 +10534,9 @@
         "reports/audit/R218-SUBDUB-REVIEW-EDIT-QA-20261024.json",
         "reports/audit/R218-SUBDUB-VOICE-CLARITY-QA-20261024.json",
         "reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json",
-        "reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json",
-        "reports/audit/R218-VOICE-DIRECTION-CLARITY-QA-20261023.json",
-        "reports/audit/R218-VOICE-METADATA-QA-20261023.json"
+        "reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json"
       ],
-      "occurrences": 68,
+      "occurrences": 73,
       "provider": "Gemini"
     },
     {
@@ -18798,9 +18798,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 647,
-  "source_files_scanned": 647,
-  "source_fingerprint_sha256": "5721ff69c0c4f02cd3ee4ab0d781d0e287d407b620e73e9ae4aff05c56defc22",
+  "source_files_discovered": 651,
+  "source_files_scanned": 651,
+  "source_fingerprint_sha256": "3095a6e3418f6e4b31abbe08a24eef1637459f4970eabd8b494eec898489b490",
   "source_root": "repository-root",
   "ui_path_references": [
     {
