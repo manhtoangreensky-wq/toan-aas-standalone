@@ -1,5 +1,19 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## VAULT-ACTION-FEEDBACK-20261120 — phản hồi Kho tệp
+
+Phiên: [VAULT-ACTION-FEEDBACK](PHIEN-VAULT-ACTION-FEEDBACK-20261120.md).
+Sửa case tại đây trước; giữ Issue689/comment7019553829, một PR sau nghiệm thu.
+
+| Case | Mức | Thao tác | Điều kiện đạt |
+|---|---|---|---|
+| V07-READ | nặng | Refresh/filter/clear/page ready/empty/failed/stale |Đúng currentness;empty không thành lỗi;failed không success |
+| V07-SELECTION | nặng | Refresh với lifecycle đổi/đóng/lượt mới |Không lấy ready của lựa chọn/lượt khác để báo thành công |
+| V07-COPY | vừa |VI/EN/ZH và helper missing/empty/hostile |Câu cố định đủ locale;fallback/plain text;không dịch dữ liệu khách |
+| V07-WRITE | nặng |Upload/archive/restore fixed/falsy/raw/error/duplicate |Ba literal đúng;raw/error/key/revision/cleanup/busy giữ |
+| V07-NATIVE | vừa |3locale×320dark/1440light,GET/empty/fault/recovery |Real temporary app;không fake success;egress/core/owned0 |
+| V07-DELIVERY | nặng |OnePR/exactCI/merge/deploy/VPS/assets/receipt |Đúng bản qua từng gate;không suy blob/output/wholegoal |
+
 ## VAULT-20261119 — Kho tệp
 
 Phiên: [VAULT-CUSTOMER-COPY](PHIEN-VAULT-CUSTOMER-COPY-20261119.md).

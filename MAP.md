@@ -1,5 +1,5 @@
 # MAP — TOAN AAS standalone WebApp
-> Rà lại 06/11/2026 trên main `4cddcf19`. FastAPI/Python + vanilla JS/CSS. Gốc: `_webapp-r218-voice`.
+> Rà lại 20/11/2026 trên BASE `e49427e5` và thay đổi UI V07 đang nghiệm thu. FastAPI/Python + vanilla JS/CSS. Gốc: `_webapp-r218-voice`.
 > Bản đồ được đính kèm nguyên văn vào phiếu Builder; không thay việc đọc source.
 
 ## 1. Module và vai trò
@@ -24,9 +24,10 @@
 ## 3. Dùng chung từ ba nơi
 - `copyfast_auth.require_account`: import/consumer ở nhiều module `copyfast_*.py`.
 - `copyfast_auth.require_csrf`: cổng action ghi của các workspace; giữ nguyên.
-- Đo 06/11: `require_account` có trong 46 tệp Python ngoài tests; `require_csrf` trong 44 tệp.
+- Đo 20/11: `require_account` có trong 46 tệp Python ngoài tests; `require_csrf` trong 44 tệp.
 - `portal.js:safeText`, `uiText`: nhiều renderer cùng bundle; không đổi chữ ký.
 - `integration.js:api`, `merge`: nhiều hydration/action; chỉ sửa nhánh allowlist.
+- `integration.js:vaultFeedbackText`: 39 chỗ gọi trong Kho tệp; dịch câu cố định, không đổi nội dung tùy ý.
 
 ## 4. Luồng dữ liệu
 - Signed page → shell → auth/bootstrap → GET projection → normalize → renderer.
@@ -34,6 +35,7 @@
 - Manual top-up: GET options → chọn method/amount → xác nhận local → QR → POST riêng.
 - API options và history là hai nguồn khác nhau; không dùng history state làm options state.
 - Bản nháp: mã `feature_key` giữ nguyên; nhãn qua `featureCatalogText` theo locale, không đổi DTO.
+- Kho tệp: epoch/route/selection hiện có → kết quả đọc hiện tại → phản hồi đúng locale; phản hồi cũ im lặng.
 
 ## 5. Điểm nhạy cảm
 - Auth/CSRF: `copyfast_auth.py`; session epoch guards trong `integration.js`.
@@ -43,16 +45,16 @@
 - Deploy: backup/source SHA/health/live phải có bằng chứng riêng; không đổi workflow.
 
 <!-- MÁY SINH:BẮT ĐẦU -->
-## 6. Máy sinh — đừng sửa tay (cập nhật 06/11/2026 12:17)
+## 6. Máy sinh — đừng sửa tay (cập nhật 20/11/2026 13:33)
 
 ### 🔥 ĐIỂM NÓNG — top 10 theo (số dòng × số lần sửa)
 
 | File | Số dòng | Số lần sửa | fanIn |
 |---|--:|--:|--:|
-| `static/portal/portal.js` ⚠️ **>500 dòng — vi phạm điều CẤM số 1** | 42768 | 345 | 0 |
-| `static/portal/integration.js` ⚠️ **>500 dòng — vi phạm điều CẤM số 1** | 38973 | 180 | 0 |
-| `static/portal/portal-i18n.js` ⚠️ **>500 dòng — vi phạm điều CẤM số 1** | 18767 | 97 | 0 |
-| `static/portal/portal-motion.js` ⚠️ **>500 dòng — vi phạm điều CẤM số 1** | 926 | 28 | 0 |
+| `static/portal/portal.js` ⚠️ **>500 dòng — vi phạm điều CẤM số 1** | 43292 | 410 | 0 |
+| `static/portal/integration.js` ⚠️ **>500 dòng — vi phạm điều CẤM số 1** | 39488 | 197 | 0 |
+| `static/portal/portal-i18n.js` ⚠️ **>500 dòng — vi phạm điều CẤM số 1** | 22848 | 158 | 0 |
+| `static/portal/portal-motion.js` ⚠️ **>500 dòng — vi phạm điều CẤM số 1** | 935 | 30 | 0 |
 | `static/portal/service-worker.js` | 308 | 57 | 0 |
 | `static/portal/portal-auth.js` ⚠️ **>500 dòng — vi phạm điều CẤM số 1** | 673 | 6 | 0 |
 | `static/portal/portal-theme.js` | 284 | 11 | 0 |

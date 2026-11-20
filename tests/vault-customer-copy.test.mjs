@@ -7,6 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {vaultHintContrastHistoricalCss} from './helpers/vault-hint-contrast-snapshot.mjs';
+import {vaultActionFeedbackHistoricalSource} from './helpers/vault-action-feedback-snapshot.mjs';
 Error.stackTraceLimit=0;
 const R=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const BASE='5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5',rawDesign=fs.readFileSync(new URL('./fixtures/vault-customer-copy-reviewed.json',import.meta.url));
@@ -124,5 +125,5 @@ test('render-only Vault flows complete behind the existing throwing network guar
 });
 test('immutable reviewed design identity binds90rows12edits151sources with3changed148protected and no app writes',()=>{
  assert.equal(design.task,'ASSET-VAULT-CUSTOMER-COPY-20261119');assert.equal(design.base,BASE);assert.equal(design.applicationWrites,0);assert.equal(design.allRows.length,90);assert.equal(new Set(design.allRows.map(row=>row[0])).size,90);assert.equal(design.canonicalChanges.length,12);assert.ok(design.canonicalChanges.every(change=>change.count===1));assert.equal(design.applicationBaseline.length,151);assert.equal(design.applicationBaseline.filter(pin=>pin.changed).length,3);
- for(const pin of design.applicationBaseline){const actualSource=lf(fs.readFileSync(path.join(R,pin.file),'utf8'));assert.ok([pin.baselineLfSha256,pin.candidateLfSha256].includes(hash(vaultHintContrastHistoricalCss(actualSource,pin.file))),pin.file);if(!pin.changed)assert.equal(pin.baselineLfSha256,pin.candidateLfSha256);}
+ for(const pin of design.applicationBaseline){const actualSource=vaultActionFeedbackHistoricalSource(lf(fs.readFileSync(path.join(R,pin.file),'utf8')),pin.file);assert.ok([pin.baselineLfSha256,pin.candidateLfSha256].includes(hash(vaultHintContrastHistoricalCss(actualSource,pin.file))),pin.file);if(!pin.changed)assert.equal(pin.baselineLfSha256,pin.candidateLfSha256);}
 });

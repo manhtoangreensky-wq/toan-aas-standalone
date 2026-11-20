@@ -4,8 +4,16 @@ import fs from "node:fs";
 import {createHash} from "node:crypto";
 import {operationReferenceFeedbackSources,operationReferenceFeedbackRuntime as runtime,REFERENCE_CUSTOMER,REFERENCE_IDS as ids} from "./helpers/operation-reference-feedback-runtime.mjs";
 import {operationReferenceFeedbackHistoricalIntegrationSource as integrationBack,operationReferenceFeedbackHistoricalI18nSource as i18nBack,operationReferenceFeedbackHistoricalSnapshot as catalogBack} from "./helpers/operation-reference-feedback-snapshot.mjs";
+import {vaultActionFeedbackHistoricalSource} from "./helpers/vault-action-feedback-snapshot.mjs";
+import {operationReferenceStaleFeedbackHistoricalIntegrationSource} from "./helpers/operation-reference-stale-feedback-snapshot.mjs";
+import {imageResizeGuidanceHistoricalI18nSource} from "./helpers/image-resize-guidance-snapshot.mjs";
+import {pdfSplitMetaHistoricalPortalSource} from "./helpers/pdf-split-meta-snapshot.mjs";
+import {resizePolishHistoricalThemeSource} from "./helpers/image-resize-polish-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/operation-reference-feedback-reviewed.json",import.meta.url),"utf8"));
-const source=operationReferenceFeedbackSources(),baseline=operationReferenceFeedbackSources(fixture.base),locales=["vi","en","zh"];
+const source=Object.fromEntries([["integration","static/portal/integration.js"],["i18n","static/portal/portal-i18n.js"],["portal","static/portal/portal.js"],["theme","static/portal/portal-theme.css"]].map(([key,file])=>{
+  const value=vaultActionFeedbackHistoricalSource(fs.readFileSync(new URL("../"+file,import.meta.url),"utf8").replace(/\r\n/g,"\n"),file);
+  return[key,key==="integration"?operationReferenceStaleFeedbackHistoricalIntegrationSource(value):key==="i18n"?imageResizeGuidanceHistoricalI18nSource(value):key==="portal"?pdfSplitMetaHistoricalPortalSource(value):resizePolishHistoricalThemeSource(value)];
+})),baseline=operationReferenceFeedbackSources(fixture.base),locales=["vi","en","zh"];
 const routes=["/documents/split","/image/resize"],actions=["filter","clear","page"],suffixes=["failed","page","cleared","filtered"];
 const text={
   vi:{failed:"Chưa tải được tệp. Hãy thử lại.",page:"Đã tải danh sách tệp.",cleared:"Đã xóa bộ lọc.",filtered:"Đã lọc danh sách tệp."},

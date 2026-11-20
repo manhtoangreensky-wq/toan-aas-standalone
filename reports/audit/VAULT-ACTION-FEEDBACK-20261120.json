@@ -1,0 +1,198 @@
+{
+  "task": "VAULT-ACTION-FEEDBACK-20261120",
+  "date": "2026-11-20",
+  "status": "LOCAL_ACCEPTED_RELEASE_PENDING",
+  "base": "e49427e5e35378c0fc8b41d68b772af88501f556",
+  "tracker": {
+    "issue": 689,
+    "comment": 7019553829
+  },
+  "ownerCampaignStateOpened": false,
+  "reviewedApplication": {
+    "fixtureRawSha256": "488924a1ee5bcd7b49b53a4a366ba6a4e31f4df2eca0e518af8af9163e9c4801",
+    "records": 34,
+    "replacementSites": 36,
+    "translationKeys": 35,
+    "translationValues": 105,
+    "changedFiles": 2,
+    "protectedFiles": 149,
+    "sourcePins": 151,
+    "workers": 4,
+    "model": "gemini-3.8-flash-high",
+    "workerRounds": 1,
+    "workerCodeFailures": 0,
+    "applicationTakeover": false,
+    "sources": [
+      {
+        "file": "static/portal/integration.js",
+        "candidateLfSha256": "ee5f8b4a49b37613124a66734a54b48bb5feb1d93bc94ea0645cd02ad96c014e"
+      },
+      {
+        "file": "static/portal/portal-i18n.js",
+        "candidateLfSha256": "53bc4712d227bb842c2c49baa45a99f06d2ef58a337cb39e8e6ec58e0838ba4a"
+      }
+    ]
+  },
+  "targetedActions": {
+    "passed": 429,
+    "failed": 0,
+    "actualFullApplicationVm": true,
+    "realNetworkCalls": 0,
+    "portableAssertionBodiesExact": 7,
+    "repeatedAfterGreen": false,
+    "nativeOrLiveClaim": false
+  },
+  "affectedNode": {
+    "selectedFiles": 241,
+    "initialReportedCases": 4989,
+    "initialPassed": 4980,
+    "initialFailedNamed": 7,
+    "initialFailedBootstrap": 2,
+    "failedNamedRetestPassed": 7,
+    "previouslyUnexecutedReferencePassed": 13,
+    "finalExecutablePassed": 5000,
+    "remainingBootstrap": 1,
+    "remainingBootstrapReason": "External Bot authority unavailable in this standalone worktree; exact BASE inputs reproduce the same failure.",
+    "originalAssertionsGoldensFixturesAndNegativeCasesUnchanged": true,
+    "wholeGroupRerun": false,
+    "wholeRepositoryGreen": false
+  },
+  "pythonPortal": {
+    "passed": 90,
+    "failed": 17,
+    "sameBaseFailedCaseIds": 17,
+    "newFailures": 0,
+    "comparison": "Only branch-failed cases rerun with exact BASE changed-source inputs in child; all other relevant source/test inputs byte-checked BASE."
+  },
+  "pythonLocaleShell": {
+    "passed": 31,
+    "failed": 0
+  },
+  "testerMetadata": {
+    "passed": 2,
+    "failed": 0,
+    "deselected": 31,
+    "caseFileLines": 1809,
+    "caseFileLfBytes": 187204,
+    "caseFileLfSha256": "4116674e6106156d0ab0d1052943aa9a4c085bcb75500743401b0d1ce2c3a043"
+  },
+  "native": {
+    "accepted": true,
+    "views": 6,
+    "pngsVerified": 30,
+    "axes": "VI/EN/ZH paired 320x780 dark and 1440x900 light",
+    "representativeFirst": true,
+    "remainingOnlyFive": true,
+    "unexpectedConsoleErrors": 0,
+    "intentionalAborts": 24,
+    "intentionalConsoleMessages": 24,
+    "ownedProcesses": 40,
+    "ownedActiveAfterCleanup": 0,
+    "metadataRowsPerTemporaryDb": 153,
+    "coreSchemaAuthAuditEgressSourcesAndCodeHeld": true,
+    "noMediaFilesCreated": true,
+    "actualLocalFastApiAndChrome": true,
+    "readFlow": "page50to1/details/validempty/filterclear/abortlistGET/error/realGETrecovery",
+    "failedQaAttemptsRetained": [
+      "R1 run01: localhost PermissionError; zero browser cases; owned0",
+      "R1 run02: observer blocked local auth availability GET; owned0",
+      "R2 representative: overstrict offscreen vertical geometry; owned0",
+      "R3 diagnostic: 57 offscreen controls, X-contained; screenshot inspected; owned0"
+    ],
+    "applicationChangesFromQaAmendments": 0
+  },
+  "review": {
+    "independentBlockingFindings": 0,
+    "remainingFiveQaFilesRootReviewedOnce": true,
+    "ciAddedCommands": 1,
+    "workflowTriggersPermissionsDependenciesDeployUnchanged": true,
+    "oldTestExpectationsWeakened": false
+  },
+  "protected": {
+    "authApiBackendDtosCountersWalletProviderEnvCssLayoutMotionUnchanged": true,
+    "providerCalls": 0,
+    "walletMutations": 0,
+    "productionDataMutations": 0,
+    "envMutations": 0,
+    "botAccess": false
+  },
+  "release": {
+    "ci": "PENDING",
+    "pr": "PENDING",
+    "merge": "PENDING",
+    "deploy": "PENDING",
+    "runtime": "PENDING",
+    "receipt": "PENDING"
+  },
+  "limits": {
+    "signedProductionUi": "NOT_TESTED",
+    "realProductWrites": "NOT_TESTED",
+    "blobIntegrityDownload": "NOT_TESTED",
+    "engineFinalOutput": "NOT_TESTED",
+    "deviceSafariGlobalAccessibility": "NOT_PROVEN",
+    "wholeGoalComplete": false,
+    "motion": "M-FINAL-01..06_LAST"
+  },
+  "evidence": [
+    {
+      "file": "vault07-physical-green-nov20.xml",
+      "rawSha256": "cfcd27fba1284c3ba4279d79527c5e17acaf5dde5684670b14a0b80efefc41c4"
+    },
+    {
+      "file": "vault07-portability-proof-nov20.json",
+      "rawSha256": "f29d1f33576f1a0b3960dbe8f540b9e09ed41fd44c40256f7969092fa1595c37"
+    },
+    {
+      "file": "vault07-affected-node-green-nov20.xml",
+      "rawSha256": "8db062017606b2457f05883698f55784336da7c66a84fbf0ef6666bc9203b5c7"
+    },
+    {
+      "file": "vault07-seven-failed-retest-nov20.xml",
+      "rawSha256": "17f21504245b282d460edff2fe74a856b4ce7ec61b5ce47788341c0bccfd934a"
+    },
+    {
+      "file": "vault07-reference-bootstrap-retest-nov20.xml",
+      "rawSha256": "e4452eddd51c958c3e5cbfa07f1c7e616eabf9581cddfe8fbc755e0ba37d34ec"
+    },
+    {
+      "file": "vault07-v0-base-bootstrap-r2-nov20.log",
+      "rawSha256": "0620a80319c7b85382f57027e1c4f841577eb6bd138f966397d6aab01c47325e"
+    },
+    {
+      "file": "vault07-python-portal-regression-nov20.xml",
+      "rawSha256": "942665905a40cc7b6fff1dcba55b916b563802e07b430e544369e4fa2904768d"
+    },
+    {
+      "file": "vault07-python-baseline-failures-nov20.xml",
+      "rawSha256": "ea065cccef3b45ad1088c96cedf86ac6a30c8e3c4c2d788ec1baf1912c73963d"
+    },
+    {
+      "file": "vault07-python-baseline-inputs-nov20.json",
+      "rawSha256": "2236decbd0d9eee42854b6b604e06e24cad2707f9818f61a2f6f65c0e2436f62"
+    },
+    {
+      "file": "vault07-python-locale-shell-nov20.xml",
+      "rawSha256": "96560359e899ce0aca1f4961908bf52e5b6391541dfff972c3262bd58420005f"
+    },
+    {
+      "file": "vault07-tester-metadata-nov20.xml",
+      "rawSha256": "40f5cc3aded596b62c60d8ea91c947048a00f82032c6832e1b70eba1a7c6c5ea"
+    },
+    {
+      "file": "vault07-native-evidence-nov20.json",
+      "rawSha256": "5813dd44a27cc57d2ad97943c711f409843de6de266fab1266e51bb912a101b0"
+    },
+    {
+      "file": "vault07-final-review-nov20.md",
+      "rawSha256": "7cea52ab1622cbd9be592893d52de06ded9bc92695f2c57ab57017187276fcaf"
+    },
+    {
+      "file": "vault07-remaining-failure-map-nov20.json",
+      "rawSha256": "3080a9a445a1026022bc1cf40d8d7efdf0c2c10c6c1d6ed9ec997a160d36b22d"
+    },
+    {
+      "file": "vault07-replay-report-nov20.json",
+      "rawSha256": "f2eba34353be488125bb22b636ff2f4c2a17773ac239af2060550480e91b01dc"
+    }
+  ]
+}

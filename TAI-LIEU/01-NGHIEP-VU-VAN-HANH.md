@@ -1,5 +1,25 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 20/11/2026 — phản hồi Kho tệp, phân biệt bản đã giao và ứng viên
+
+Bản đã đối chiếu gần nhất: PR778, CI44564519425 hai job đạt,
+merge/runtimee49427e5e35378c0fc8b41d68b772af88501f556,
+deploy44595126642 thành công60s;3dịch vụ/health/5+5assets khớp.
+Receipt Issue689comment7011217772/PR7019399527 đã đóng. Các mục chờ
+phát hành ngày19/11 bên dưới là snapshot lịch sử, không phải hàng đợi mới.
+
+Ứng viên V07 chỉ sửa phản hồi thao tác ở hai JS: đọc hiện tại ready mới
+báo thành công, đọc rỗng vẫn hợp lệ, lỗi báo lỗi và phản hồi cũ im lặng.
+Các câu cố định có35key/105giá trị VI/EN/ZH; chỉ ba literal success máy chủ
+hoặc fallback falsy được dịch, raw message khác giữ như trước. Không đổi
+quyền/API/POST/key/revision/auth/engine/ví/ENV/dữ liệu/CSS/motion.
+429/429ca action-local đạt;affected Node5000ca thực thi đạt,1bootstrap thiếu
+external Bot authority giữ;Python90PASS17lỗiBASEgiữ/31locale-shellPASS.
+Native6view/30PNGđã decode,GET thật/fault/recovery đạt;review không finding
+chặn.153metadata rows/DB tạm,0blob;release/production chốt riêng.
+Không coi đây là bằng chứng V07 đã chạy trên production.
+[Báo cáo hiện hành](../docs/reports/vault-action-feedback-20261120.md).
+
 ## 19/11/2026 — Kho tệp, ứng viên sau OCR đã giao
 
 Bản chạy hiện tại đã gồm OCR PR777, runtime5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5;
