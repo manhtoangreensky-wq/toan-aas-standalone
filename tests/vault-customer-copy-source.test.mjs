@@ -6,6 +6,7 @@ import vm from 'node:vm';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
+import {vaultActionFeedbackHistoricalSource} from './helpers/vault-action-feedback-snapshot.mjs';
 import {vaultHintContrastHistoricalCss} from './helpers/vault-hint-contrast-snapshot.mjs';
 import {vaultCustomerHistoricalSource as inverse,vaultCustomerHistoricalSnapshot as snapshot} from './helpers/vault-customer-copy-snapshot.mjs';
 import {documentOcrCustomerHistoricalSource as priorInverse,documentOcrCustomerHistoricalSnapshot as priorSnapshot} from './helpers/document-ocr-customer-copy-snapshot.mjs';
@@ -15,7 +16,7 @@ const raw=fs.readFileSync(new URL('./fixtures/vault-customer-copy-reviewed.json'
 const fail=/Unreviewed Vault customer copy/,hash=x=>createHash('sha256').update(x).digest('hex'),lf=x=>x.replace(/\r\n/g,'\n'),count=(s,p)=>s.split(p).length-1;
 const files=['static/portal/portal.js','static/portal/portal-i18n.js','copyfast_pages.py'];
 const before=Object.fromEntries(files.map(file=>[file,lf(execFileSync('git',['show',BASE+':'+file],{cwd:ROOT,encoding:'utf8',maxBuffer:30e6}))]));
-const physical=Object.fromEntries(files.map(file=>[file,lf(fs.readFileSync(path.join(ROOT,file),'utf8'))]));
+const physical=Object.fromEntries(files.map(file=>[file,vaultActionFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT,file),'utf8')),file)]));
 const candidate=Object.fromEntries(files.map(file=>{let source=before[file];for(const edit of edits.filter(row=>row.file===file)){assert.equal(count(source,edit.old),1);source=source.replace(edit.old,()=>edit.new);}return[file,source];}));
 const prefix=edits.find(edit=>edit.old.startsWith('  function renderAssetVault(')),cards=edits.find(edit=>edit.old.startsWith('    const cards =')),suffix=edits.find(edit=>edit.old.startsWith('    const lifecyclePanel ='));
 const main={file:files[0],old:prefix.old+cards.old+suffix.old,new:prefix.new+cards.new+suffix.new};
@@ -39,7 +40,7 @@ for(const file of files)test(file+': independent actual physical source equals B
  assert.equal(inverse(first+last,file),first+last);assert.ok(inverse(physical[file]+last,file).endsWith(last));assert.notEqual(inverse(physical[file]+last,file),before[file]);assert.equal(inverse(physical[file],'customer/unrelated.txt'),physical[file]);
 });
 test('151actual current candidate pins preserve148protected files and exactly3changed sources without projection',()=>{
- assert.equal(fixture.applicationBaseline.length,151);assert.equal(fixture.applicationBaseline.filter(row=>row.changed).length,3);for(const pin of fixture.applicationBaseline){assert.equal(hash(vaultHintContrastHistoricalCss(lf(fs.readFileSync(path.join(ROOT,pin.file),'utf8')),pin.file)),pin.candidateLfSha256,pin.file);assert.equal(pin.changed,pin.baselineLfSha256!==pin.candidateLfSha256);if(!files.includes(pin.file))assert.equal(pin.baselineLfSha256,pin.candidateLfSha256);}
+ assert.equal(fixture.applicationBaseline.length,151);assert.equal(fixture.applicationBaseline.filter(row=>row.changed).length,3);for(const pin of fixture.applicationBaseline){assert.equal(hash(vaultHintContrastHistoricalCss(vaultActionFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT,pin.file),'utf8')),pin.file),pin.file)),pin.candidateLfSha256,pin.file);assert.equal(pin.changed,pin.baselineLfSha256!==pin.candidateLfSha256);if(!files.includes(pin.file))assert.equal(pin.baselineLfSha256,pin.candidateLfSha256);}
 });
 test('five complete Vault owners including contiguous main slices reject partial changed mixed duplicate detached reordered and next-owner faults',()=>{
  const file=files[0],current=candidate[file],nextOwners={assetVaultFilterFields:'  function assetVaultFilterIsActive(',renderAssetVaultPagination:'  function vaultBytes(',assetVaultLifecyclePanel:'  function assetVaultFormFields(',assetVaultFormFields:'  function operationAssetReferencePublic(',renderAssetVault:'  const SUPPORT_CASE_STATES = Object.freeze('};

@@ -94,6 +94,7 @@ jobs:
           node --test tests/document-ocr-customer-copy.test.mjs tests/document-ocr-customer-copy-source.test.mjs
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_document_ocr_locale_shell.py
           node --test tests/vault-customer-copy.test.mjs tests/vault-customer-copy-source.test.mjs tests/vault-hint-contrast.test.mjs tests/vault-hint-contrast-history.test.mjs
+          node --test tests/vault-action-*.test.mjs
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_vault_locale_shell.py
           node --test tests/pdf-input-font16.test.mjs
           node --test tests/pdf-merge-fields.test.mjs

@@ -1,5 +1,22 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 20/11/2026 — Kho tệp: hợp đồng gốc và phản hồi hiện tại
+
+Nguồn gốc tiếp tục là `docs/migration/ASSET_VAULT_CONTRACT.md`: danh sách/
+thông tin riêng tài khoản, upload và archive/restore có revision/idempotency.
+Ví dụ Railway trong tài liệu gốc vẫn chỉ là lịch sử, không đổi ENV từ đó.
+
+| Hợp đồng/hiện trạng trước V07 | Ứng viên V07 | Bằng chứng và giới hạn |
+|---|---|---|
+| Đọc list có thể trả rỗng hợp lệ, lỗi/stale cũng trả mảng rỗng | Dùng counter/session/path/readState hiện có; không đổi DTO |253read cases trong429GREEN;không suy signedLIVE |
+| Refresh có thông tin tệp đang mở | Chỉ báo chung khi hai lượt đọc và lựa chọn còn hiện tại |Empty/failed/race/selection fixtures thực thi dispatcher thật |
+| Chữ thao tác lẫn thuật ngữ hoặc VI ở locale khác |35key/105giá trị, helper scoped |52readcopy+124write cases trong429GREEN |
+| Success envelope chứa câu cố định hoặc message khác |Chỉ ba finite literals/falsy được dịch; giá trị khác giữ |Fake transport trong bộ nhớ; không ghi production |
+| Auth/API/quyền/key/revision/busy/finally |Giữ nguyên điều kiện và transport |149protected/151pins;native/regression/release riêng |
+
+Không thêm chức năng, không bỏ control hoặc giả đầu ra. Kho tệp PR778 đã
+giao; V07 đang nghiệm thu. [Phiên Tester V07](../KIEM-THU/PHIEN-VAULT-ACTION-FEEDBACK-20261120.md).
+
 ## 19/11/2026 — Kho tệp: giữ chức năng, bỏ lời triển khai
 
 Nguồn gốc: `docs/migration/ASSET_VAULT_CONTRACT.md`, năm hàm Vault và

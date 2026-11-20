@@ -9,11 +9,12 @@ import {historyCustomerCleanupHistoricalSource} from "./helpers/image-history-cu
 import {imageResizeGuidanceHistoricalI18nSource} from "./helpers/image-resize-guidance-snapshot.mjs";
 import {pdfSplitMetaHistoricalPortalSource} from "./helpers/pdf-split-meta-snapshot.mjs";
 import {resizePolishHistoricalThemeSource} from "./helpers/image-resize-polish-snapshot.mjs";
+import {vaultActionFeedbackHistoricalSource} from "./helpers/vault-action-feedback-snapshot.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/operation-reference-stale-feedback-reviewed.json",import.meta.url)));
 const paths={integration:"static/portal/integration.js",i18n:"static/portal/portal-i18n.js",portal:"static/portal/portal.js",theme:"static/portal/portal-theme.css"};
 const lf=value=>value.replace(/\r\n/g,"\n"),hash=value=>createHash("sha256").update(value).digest("hex");
 // Read actual source directly: the historical copy loader must not remove the new guard under test.
-const source=Object.fromEntries(Object.entries(paths).map(([key,file])=>[key,lf(fs.readFileSync(new URL("../"+file,import.meta.url),"utf8"))]));
+const source=Object.fromEntries(Object.entries(paths).map(([key,file])=>[key,vaultActionFeedbackHistoricalSource(lf(fs.readFileSync(new URL("../"+file,import.meta.url),"utf8")),file)]));
 assert.match(fixture.base,/^[a-f0-9]{40}$/);
 const baseline=Object.fromEntries(Object.entries(paths).map(([key,file])=>[key,lf(execFileSync("git",["show",fixture.base+":"+file],{encoding:"utf8",maxBuffer:30e6}))]));
 for(const route of ["/documents/split","/image/resize"]){

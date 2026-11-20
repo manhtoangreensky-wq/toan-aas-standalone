@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
+import {vaultActionFeedbackHistoricalSource,vaultActionFeedbackHistoricalSnapshot} from './vault-action-feedback-snapshot.mjs';
 // Finite newest historical leaf only. Current renderer/source acceptance must stay physical.
 const raw=fs.readFileSync(new URL('../fixtures/vault-customer-copy-reviewed.json',import.meta.url));
 const fail='Unreviewed Vault customer copy',count=(source,part)=>source.split(part).length-1;
@@ -31,6 +32,7 @@ function exactAddition(source,edit,start,end){const addition=edit.new.slice(0,-e
 function catalogKeys(source){return[...source.matchAll(/Object\.assign\(MESSAGES\.(?:vi|en|zh),\s*\{([\s\S]*?)\}\);/g)].flatMap(match=>[...match[1].matchAll(/(?:^|,|\n)\s*(?:"(vault[^"]*)"|'(vault[^']*)'|(vault[A-Za-z0-9_]*))\s*:/g)].map(value=>value[1]||value[2]||value[3]));}
 export function vaultCustomerHistoricalSource(source,file){
  assert.equal(typeof source,'string',fail);
+ source=vaultActionFeedbackHistoricalSource(source,file);
  if(file===portal){
   if(!/\buiText\(["']vault/.test(source))return source;
   assert.ok(functions.every(edit=>count(source,edit.new)===1&&count(source,edit.old)===0),fail+' partial/mixed/changed complete function set');let previous=-1;
@@ -53,6 +55,7 @@ export function vaultCustomerHistoricalSource(source,file){
 }
 export function vaultCustomerHistoricalSnapshot(entries,locale){
  const index=['vi','en','zh'].indexOf(locale)+1;assert.ok(index>0,fail+' locale');assert.ok(Array.isArray(entries),fail+' entries');
+ entries=vaultActionFeedbackHistoricalSnapshot(entries,locale);
  const owned=entries.filter(([key])=>typeof key==='string'&&key.startsWith('vault'));if(!owned.length)return entries;
  assert.deepEqual(owned,rows.map(row=>[row[0],row[index]]),fail+' partial/changed/unknown/duplicate/reordered catalog');return entries.filter(([key])=>!keys.includes(key));
 }

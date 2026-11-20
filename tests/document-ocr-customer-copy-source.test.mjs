@@ -6,6 +6,7 @@ import vm from "node:vm";
 import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
+import {vaultActionFeedbackHistoricalSource} from "./helpers/vault-action-feedback-snapshot.mjs";
 import {vaultCustomerHistoricalSource} from "./helpers/vault-customer-copy-snapshot.mjs";
 import {vaultHintContrastHistoricalCss} from "./helpers/vault-hint-contrast-snapshot.mjs";
 import {documentOcrCustomerHistoricalSource as inverse,documentOcrCustomerHistoricalSnapshot as snapshot} from "./helpers/document-ocr-customer-copy-snapshot.mjs";
@@ -17,7 +18,7 @@ const fixture=JSON.parse(raw),edits=fixture.canonicalChanges,rows=fixture.rows,k
 const lf=x=>x.replace(/\r\n/g,"\n"),hash=x=>createHash("sha256").update(x).digest("hex"),count=(s,p)=>s.split(p).length-1;
 const files=["static/portal/portal.js","static/portal/portal-i18n.js","copyfast_pages.py"];
 const before=Object.fromEntries(files.map(file=>[file,lf(execFileSync("git",["show",BASE+":"+file],{cwd:ROOT,encoding:"utf8",maxBuffer:30e6}))]));
-const currentPhysical=Object.fromEntries(files.map(file=>[file,lf(fs.readFileSync(path.join(ROOT,file),"utf8"))]));
+const currentPhysical=Object.fromEntries(files.map(file=>[file,vaultActionFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT,file),"utf8")),file)]));
 // Historical OCR source comparators only; current Vault acceptance independently checks full physical sources.
 const physical=Object.fromEntries(files.map(file=>[file,vaultCustomerHistoricalSource(currentPhysical[file],file)]));
 const candidate=Object.fromEntries(files.map(file=>{let source=before[file];for(const edit of edits.filter(value=>value.file===file)){assert.equal(count(source,edit.old),1);source=source.replace(edit.old,()=>edit.new);}return[file,source];}));
@@ -45,7 +46,7 @@ for(const file of files)test(file+": actual current source equals BASE+19exact a
 });
 test("151actual source pins preserve148protected files without any inverse or acceptance mask",()=>{
  assert.equal(fixture.applicationBaseline.length,151);assert.equal(fixture.applicationBaseline.filter(pin=>pin.changed).length,3);
- for(const pin of fixture.applicationBaseline){const actual=lf(fs.readFileSync(path.join(ROOT,pin.file),"utf8"));assert.equal(hash(files.includes(pin.file)?vaultCustomerHistoricalSource(actual,pin.file):pin.file==="static/portal/portal-theme.css"?vaultHintContrastHistoricalCss(actual,pin.file):actual),pin.candidateLfSha256,pin.file);assert.equal(pin.changed,pin.baselineLfSha256!==pin.candidateLfSha256);if(!files.includes(pin.file))assert.equal(pin.baselineLfSha256,pin.candidateLfSha256);}
+ for(const pin of fixture.applicationBaseline){const actual=vaultActionFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT,pin.file),"utf8")),pin.file);assert.equal(hash(files.includes(pin.file)?vaultCustomerHistoricalSource(actual,pin.file):pin.file==="static/portal/portal-theme.css"?vaultHintContrastHistoricalCss(actual,pin.file):actual),pin.candidateLfSha256,pin.file);assert.equal(pin.changed,pin.baselineLfSha256!==pin.candidateLfSha256);if(!files.includes(pin.file))assert.equal(pin.baselineLfSha256,pin.candidateLfSha256);}
 });
 test("six complete field/render functions reject missing mixed changed duplicate detached reordered and next-owner faults",()=>{
  const file=files[0],current=candidate[file],nextOwners={imageOcrFormFields:"pdfToImagesFormFields",pdfOcrFormFields:"pdfOcrWordFormFields",pdfOcrWordFormFields:"storyboardGridFormValues",renderImageOcr:"renderPdfOcr",renderPdfOcr:"renderPdfOcrToWord",renderPdfOcrToWord:"renderImageToPdf"};

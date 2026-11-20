@@ -44,8 +44,29 @@
     "note": "Earlier tracker/remote_revalidation fields are historical snapshots; no issue was reopened or created."
   },
   "partial_remote_revalidated_at": "2026-09-12",
-  "local_files_refreshed_at": "2026-11-19",
-  "local_files_refresh_scope": "Vault customer UI:sixVAULTcases;fourcopyAGY3.8FlashHighR1exact12edits90keys plusoneCSSAGYR1rule,4app147protected;physical27/source18/shell4/CSS10PASS,copyNode1921/Python78andCSS489old+3newPASSseparateoverlapgroups. NativeBASE/current48views192PNG,4representatives16PNGseparate;current0findings/BASE12,996unknownspermatrixheld,fulltrackedBASE2514blob/OID/rawhashbeforeafterexact. Issue689comment7011217772;independentreview/releasepending. Preservehistoricalremote/P0/48case/safetyfields,noengine/provider/wallet/productiondata/signedLIVE/globalAAclaim,motionLAST.",
+  "local_files_refreshed_at": "2026-11-20",
+  "local_files_refresh_scope": "V07:sixnewcases,4AGY3.8FlashHighR1exact34records36sites/2app149protected151pins/35keys105values. Physical429PASS/portable7rawbodiesexact;affectedNode5000executablePASS,oneexternalBotbootstrapBASE-equivalent. Python90PASS17sameBASEFAIL/31locale-shellPASS,metadata2PASS. Native6views30PNGhashCRCdecoded,24intentionalaborts/0unexpectedconsole,40owned0,151source/core/authheld. Independentreviewno-blockingfinding;releasepending,doNOTinferproduction/blob/output/wholeUI. SameIssue689comment7019553829;preservehistoricalremote/P0/48case/safetyfields,motionLAST.",
+  "current_verification_session": {
+    "id": "VAULT-ACTION-FEEDBACK-20261120",
+    "base_sha": "e49427e5e35378c0fc8b41d68b772af88501f556",
+    "tracker_issue": 689,
+    "tracker_comment": 7019553829,
+    "manifest": "KIEM-THU/PHIEN-VAULT-ACTION-FEEDBACK-20261120.md",
+    "case_ids": ["V07-READ", "V07-SELECTION", "V07-COPY", "V07-WRITE", "V07-NATIVE", "V07-DELIVERY"],
+    "status": "LOCAL_ACCEPTED_READY_FOR_EXACT_HEAD_CI",
+    "physical_action_tests": 429,
+    "physical_action_failures": 0,
+    "affected_node_executable_passed": 5000,
+    "external_authority_bootstrap_baseline_failures": 1,
+    "python_portal_passed": 90,
+    "python_portal_baseline_failures": 17,
+    "python_locale_shell_passed": 31,
+    "native_views": 6,
+    "native_png_verified": 30,
+    "signed_production_ui": "NOT_TESTED",
+    "real_product_write": "NOT_TESTED",
+    "final_blob_output": "NOT_TESTED"
+  },
   "remote_revalidation": {
     "tracker_issue_412": "verified_open",
     "required_tester_labels": "verified_12_of_12",
@@ -70,9 +91,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1795,
-      "bytes": 186040,
-      "sha256": "3366e666fc8443d05b7d359c7449d25b6cdd6f057af337bc82a5e17d4d3d4969"
+      "lines": 1809,
+      "bytes": 187204,
+      "sha256": "4116674e6106156d0ab0d1052943aa9a4c085bcb75500743401b0d1ce2c3a043"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",

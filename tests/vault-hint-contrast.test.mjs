@@ -7,6 +7,7 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {vaultHintContrastHistoricalCss as inverse} from './helpers/vault-hint-contrast-snapshot.mjs';
 import {vaultCustomerHistoricalSource as vaultInverse,vaultCustomerHistoricalSnapshot as vaultSnapshot} from './helpers/vault-customer-copy-snapshot.mjs';
+import {vaultActionFeedbackHistoricalSource} from './helpers/vault-action-feedback-snapshot.mjs';
 Error.stackTraceLimit=0;
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),BASE='5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5',CSS='static/portal/portal-theme.css';
 const hash=x=>createHash('sha256').update(x).digest('hex'),lf=x=>x.replace(/\r\n/g,'\n'),count=(s,p)=>s.split(p).length-1;
@@ -17,7 +18,25 @@ assert.equal(count(baseCss,edit.old),1);const candidate=baseCss.replace(edit.old
 const selector='html[data-portal-theme="dark"] .portal-page.portal-asset-vault .portal-vault-dropzone small';
 const importLine="import {vaultHintContrastHistoricalCss} from './helpers/vault-hint-contrast-snapshot.mjs';\n";
 const physicalPath='tests/vault-customer-copy.test.mjs',sourcePath='tests/vault-customer-copy-source.test.mjs';
-const read=file=>lf(fs.readFileSync(path.join(ROOT,file),'utf8'));
+const read=file=>{
+ let source=vaultActionFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT,file),'utf8')),file);
+ if(file===physicalPath||file===sourcePath){
+  const approved=[
+   ["","import {vaultActionFeedbackHistoricalSource} from './helpers/vault-action-feedback-snapshot.mjs';\n"],
+   ...(file===physicalPath?[
+    ["const actualSource=lf(fs.readFileSync(path.join(R,pin.file),'utf8'));","const actualSource=vaultActionFeedbackHistoricalSource(lf(fs.readFileSync(path.join(R,pin.file),'utf8')),pin.file);"]
+   ]:[
+    ["const physical=Object.fromEntries(files.map(file=>[file,lf(fs.readFileSync(path.join(ROOT,file),'utf8'))]));","const physical=Object.fromEntries(files.map(file=>[file,vaultActionFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT,file),'utf8')),file)]));"],
+    ["hash(vaultHintContrastHistoricalCss(lf(fs.readFileSync(path.join(ROOT,pin.file),'utf8')),pin.file))","hash(vaultHintContrastHistoricalCss(vaultActionFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT,pin.file),'utf8')),pin.file),pin.file))"]
+   ])
+  ];
+  if(source.includes('vaultActionFeedbackHistoricalSource')){
+   assert.equal(count(source,'vaultActionFeedbackHistoricalSource'),approved.length,'Only the exact approved V07 QA import/calls may normalize');
+   for(const[old,next]of [...approved].reverse()){assert.equal(count(source,next),1,'Exact V07 QA import/call count');source=source.replace(next,()=>old);}
+  }
+ }
+ return source;
+};
 test('authority binds one exact first-round worker CSS rule and preserves the prior immutable copy authority',()=>{
  assert.equal(hash(raw),'c58f59c1da9f1fdeff9582d2d05917d87d92e67cdf91a685bb65037898d44f7b');assert.equal(fixture.task,'VAULT-HINT-CONTRAST-20261119');assert.equal(fixture.base,BASE);assert.equal(fixture.revision,'ROOT_REVIEWED_R1');assert.equal(fixture.canonicalChanges.length,1);assert.equal(edit.file,CSS);assert.equal(edit.count,1);
  assert.deepEqual(fixture.sourceAuthority,{conversation:'f7770b7d-9716-4cf3-8ac4-3765d01014e6',packetSha256:'8b3bd708ab23a16c7bccd87a7bb9fddd8bccb1ac5b37a3d01059b3ec6207b96b',resultRawSha256:'9b5d244c599bc9208c9255bdbc522c785059b9a2e169f1bcf45df3d353804965',schemaValid:true,proposalExact:true,verify:'NOT_RUN',applicationWrites:0});

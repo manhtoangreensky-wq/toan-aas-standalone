@@ -3871,12 +3871,18 @@
       && Boolean(base().session && base().session.authenticated === true);
   }
 
+  function vaultFeedbackText(key, fallback) {
+    const i18n = window.TOANAASI18n;
+    const value = i18n && typeof i18n.t === "function" ? i18n.t("vaultFeedback." + key) : "";
+    return typeof value === "string" && value ? value : fallback;
+  }
+
   function assetVaultFilterPayload(value) {
     const source = value && typeof value === "object" ? value : {};
     const q = String(source.q || "").replace(/\s+/g, " ").trim();
     const state = String(source.state || "active").trim().toLowerCase();
-    if (q.length > 100 || q.includes("\u0000")) throw new Error("Từ khóa tìm Asset Vault tối đa 100 ký tự hợp lệ.");
-    if (!ASSET_VAULT_LIST_STATES.has(state)) throw new Error("Bộ lọc trạng thái Asset Vault không hợp lệ.");
+    if (q.length > 100 || q.includes("\u0000")) throw new Error(vaultFeedbackText("searchQueryInvalid", "Từ khóa tìm kiếm tối đa 100 ký tự hợp lệ."));
+    if (!ASSET_VAULT_LIST_STATES.has(state)) throw new Error(vaultFeedbackText("filterStateInvalid", "Bộ lọc trạng thái tệp không hợp lệ."));
     return { q, state };
   }
 
@@ -21757,7 +21763,7 @@
 
   async function hydrateAssetVaultLifecycle(assetId) {
     const selectedAssetId = String(assetId || "").trim();
-    if (!validVaultAssetId(selectedAssetId)) throw new Error("Tệp Asset Vault không hợp lệ để kiểm tra vòng đời.");
+    if (!validVaultAssetId(selectedAssetId)) throw new Error(vaultFeedbackText("lifecycleReadAssetInvalid", "Tệp không hợp lệ để xem thông tin."));
     const requestEpoch = ++assetVaultLifecycleHydrationEpoch;
     const sessionEpoch = assetVaultSessionEpoch;
     const expectedPath = currentPortalPath();
@@ -21769,7 +21775,7 @@
       const result = await api(`/asset-vault/${encodeURIComponent(selectedAssetId)}/lifecycle`);
       if (!assetVaultLifecycleRequestIsCurrent(selectedAssetId, requestEpoch, sessionEpoch, expectedPath)) return null;
       const lifecycle = assetVaultLifecycleProjection(result.data && result.data.lifecycle);
-      if (!lifecycle) throw new Error("Máy chủ chưa trả vòng đời Asset Vault đã redaction hợp lệ.");
+      if (!lifecycle) throw new Error(vaultFeedbackText("lifecycleResponseInvalid", "Chưa tải được thông tin tệp. Hãy thử lại."));
       if (!assetVaultLifecycleRequestIsCurrent(selectedAssetId, requestEpoch, sessionEpoch, expectedPath)) return null;
       merge({ assetVaultLifecycle: { asset_id: selectedAssetId, lifecycle, readState: "ready" } });
       return lifecycle;
@@ -35625,16 +35631,16 @@
       if (action === "asset-vault-upload") {
         const file = fields.file;
         if (!file || typeof file !== "object" || typeof file.name !== "string" || !Number.isFinite(Number(file.size)) || Number(file.size) < 1) {
-          throw new Error("Hãy chọn một tệp hợp lệ trước khi lưu vào Asset Vault.");
+          throw new Error(vaultFeedbackText("uploadFileInvalid", "Hãy chọn một tệp hợp lệ trước khi lưu vào kho tệp."));
         }
         const displayName = String(fields.display_name || "").replace(/\s+/g, " ").trim();
         const projectId = String(fields.project_id || "").trim();
-        if (displayName.length > 120) throw new Error("Tên hiển thị Asset Vault tối đa 120 ký tự.");
-        if (projectId && !validProjectId(projectId)) throw new Error("Project đính kèm không hợp lệ.");
+        if (displayName.length > 120) throw new Error(vaultFeedbackText("uploadDisplayNameTooLong", "Tên hiển thị tối đa 120 ký tự."));
+        if (projectId && !validProjectId(projectId)) throw new Error(vaultFeedbackText("uploadProjectInvalid", "Dự án đính kèm không hợp lệ."));
         const fingerprint = `${file.name}:${Number(file.size)}:${Number(file.lastModified || 0)}:${displayName}:${projectId}`;
         const submission = acquireSubmission("asset-vault:upload", fingerprint);
         if (!submission) {
-          toast("Tệp đang được lưu. Vui lòng chờ phản hồi từ Asset Vault.", "error");
+          toast(vaultFeedbackText("uploadPending", "Tệp đang được lưu. Vui lòng chờ phản hồi từ kho tệp."), "error");
           return;
         }
         setActionBusy(action, route, true);
@@ -35651,10 +35657,10 @@
             body: formData
           });
           const asset = result.data && result.data.asset && typeof result.data.asset === "object" ? result.data.asset : null;
-          if (!asset || !validVaultAssetId(asset.id)) throw new Error("Asset Vault chưa trả metadata tệp hợp lệ.");
+          if (!asset || !validVaultAssetId(asset.id)) throw new Error(vaultFeedbackText("uploadAssetResponseInvalid", "Kho tệp chưa trả thông tin tệp hợp lệ."));
           merge({ vaultItems: [asset, ...(Array.isArray(base().vaultItems) ? base().vaultItems.filter((item) => !item || String(item.id || "") !== String(asset.id)) : [])].slice(0, 100) });
           await hydrateAssetVault();
-          toast(result.message || "Đã lưu tệp vào Asset Vault.");
+          toast(!result.message || result.message === "Đã lưu tệp vào Asset Vault Web." ? vaultFeedbackText("uploaded", "Đã lưu tệp vào kho tệp.") : result.message);
         } finally {
           releaseSubmission(submission);
           setActionBusy(action, route, false);
@@ -35663,12 +35669,12 @@
       }
       if (action === "asset-vault-archive") {
         const assetId = String(detail.vaultAssetId || "").trim();
-        if (!validVaultAssetId(assetId)) throw new Error("Mã Asset Vault không hợp lệ.");
-        if (route !== "/asset-vault" || currentPortalPath() !== "/asset-vault") throw new Error("Chỉ có thể lưu trữ tệp từ Asset Vault hiện tại.");
-        if (!(base().capabilities && base().capabilities["asset-vault-archive"] === true)) throw new Error("Cần signed session, CSRF và Asset Vault đang hoạt động để lưu trữ tệp.");
+        if (!validVaultAssetId(assetId)) throw new Error(vaultFeedbackText("archiveAssetIdInvalid", "Mã tệp không hợp lệ."));
+        if (route !== "/asset-vault" || currentPortalPath() !== "/asset-vault") throw new Error(vaultFeedbackText("archiveRouteRequired", "Chỉ có thể lưu trữ tệp từ kho tệp đang mở."));
+        if (!(base().capabilities && base().capabilities["asset-vault-archive"] === true)) throw new Error(vaultFeedbackText("archiveSessionRequired", "Chưa thể lưu trữ tệp. Hãy tải lại trang và thử lại."));
         const submission = acquireSubmission(`asset-vault:${assetId}:archive`, "archive");
         if (!submission) {
-          toast("Tệp đang được lưu trữ. Vui lòng chờ phản hồi từ Asset Vault.", "error");
+          toast(vaultFeedbackText("archivePending", "Tệp đang được lưu trữ. Vui lòng chờ phản hồi từ kho tệp."), "error");
           return;
         }
         let acknowledged = false;
@@ -35679,10 +35685,10 @@
           // a revision from the list item or browser time.
           const lifecycle = await hydrateAssetVaultLifecycle(assetId);
           if (!lifecycle || lifecycle.state !== "active") {
-            throw new Error("Tệp không còn ở trạng thái có thể lưu trữ. Hãy xem lại vòng đời đã redaction.");
+            throw new Error(vaultFeedbackText("archiveStateUnavailable", "Tệp này hiện không thể lưu trữ. Hãy tải lại thông tin tệp."));
           }
           const expectedRevision = Number(lifecycle.lifecycle_revision);
-          if (!Number.isInteger(expectedRevision) || expectedRevision < 1) throw new Error("Revision vòng đời Asset Vault không hợp lệ.");
+          if (!Number.isInteger(expectedRevision) || expectedRevision < 1) throw new Error(vaultFeedbackText("lifecycleVersionInvalid", "Chưa đọc được thông tin tệp mới nhất. Hãy tải lại và thử lại."));
           const result = await api(`/asset-vault/${encodeURIComponent(assetId)}/archive`, {
             method: "POST",
             headers: { "Content-Type": "application/json", "Idempotency-Key": submission.key },
@@ -35690,7 +35696,7 @@
           });
           acknowledged = true;
           await Promise.all([hydrateAssetVault(), hydrateAssetVaultLifecycle(assetId)]);
-          toast(result.message || "Đã lưu trữ tệp Asset Vault.");
+          toast(!result.message || result.message === "Đã lưu trữ tệp khỏi Asset Vault đang hoạt động." ? vaultFeedbackText("archived", "Đã lưu trữ tệp.") : result.message);
         } catch (error) {
           // A server envelope may have moved the asset to guarded/unavailable
           // state. Re-read the same owner-scoped lifecycle rather than leave
@@ -35707,31 +35713,31 @@
       }
       if (action === "asset-vault-lifecycle-open") {
         const assetId = String(detail.vaultAssetId || "").trim();
-        if (!validVaultAssetId(assetId)) throw new Error("Tệp Asset Vault không hợp lệ.");
-        if (route !== "/asset-vault" || currentPortalPath() !== "/asset-vault") throw new Error("Chỉ có thể kiểm tra vòng đời từ Asset Vault hiện tại.");
-        if (!(base().capabilities && base().capabilities["asset-vault-lifecycle-view"] === true)) throw new Error("Cần signed session để kiểm tra vòng đời Asset Vault.");
+        if (!validVaultAssetId(assetId)) throw new Error(vaultFeedbackText("lifecycleOpenAssetInvalid", "Tệp không hợp lệ."));
+        if (route !== "/asset-vault" || currentPortalPath() !== "/asset-vault") throw new Error(vaultFeedbackText("lifecycleOpenRouteRequired", "Chỉ có thể xem thông tin tệp từ kho tệp đang mở."));
+        if (!(base().capabilities && base().capabilities["asset-vault-lifecycle-view"] === true)) throw new Error(vaultFeedbackText("lifecycleSessionRequired", "Chưa thể xem thông tin tệp. Hãy tải lại trang và thử lại."));
         setActionBusy(action, route, true);
         try {
           const lifecycle = await hydrateAssetVaultLifecycle(assetId);
-          if (lifecycle) toast("Đã tải vòng đời Asset Vault đã redaction.");
+          if (lifecycle) toast(vaultFeedbackText("lifecycleLoaded", "Đã tải thông tin tệp."));
         } finally {
           setActionBusy(action, route, false);
         }
         return;
       }
       if (action === "asset-vault-lifecycle-close") {
-        if (route !== "/asset-vault" || currentPortalPath() !== "/asset-vault") throw new Error("Chỉ có thể đóng kiểm tra vòng đời từ Asset Vault hiện tại.");
+        if (route !== "/asset-vault" || currentPortalPath() !== "/asset-vault") throw new Error(vaultFeedbackText("lifecycleCloseRouteRequired", "Chỉ có thể đóng thông tin tệp từ kho tệp đang mở."));
         clearAssetVaultLifecycle();
         return;
       }
       if (action === "asset-vault-lifecycle-restore") {
         const assetId = String(detail.vaultAssetId || "").trim();
-        if (!validVaultAssetId(assetId)) throw new Error("Tệp Asset Vault không hợp lệ.");
-        if (route !== "/asset-vault" || currentPortalPath() !== "/asset-vault") throw new Error("Chỉ có thể khôi phục tệp từ Asset Vault hiện tại.");
-        if (!(base().capabilities && base().capabilities["asset-vault-restore"] === true)) throw new Error("Cần signed session, CSRF và Asset Vault đang hoạt động để khôi phục tệp.");
+        if (!validVaultAssetId(assetId)) throw new Error(vaultFeedbackText("restoreAssetInvalid", "Tệp không hợp lệ."));
+        if (route !== "/asset-vault" || currentPortalPath() !== "/asset-vault") throw new Error(vaultFeedbackText("restoreRouteRequired", "Chỉ có thể khôi phục tệp từ kho tệp đang mở."));
+        if (!(base().capabilities && base().capabilities["asset-vault-restore"] === true)) throw new Error(vaultFeedbackText("restoreSessionRequired", "Chưa thể khôi phục tệp. Hãy tải lại trang và thử lại."));
         const submission = acquireSubmission(`asset-vault:${assetId}:restore`, "restore");
         if (!submission) {
-          toast("Tệp đang được kiểm tra để khôi phục. Vui lòng chờ phản hồi từ Asset Vault.", "error");
+          toast(vaultFeedbackText("restorePending", "Tệp đang được kiểm tra để khôi phục. Vui lòng chờ phản hồi từ kho tệp."), "error");
           return;
         }
         let acknowledged = false;
@@ -35741,10 +35747,10 @@
           // intent. This avoids replaying a revision held in a stale card.
           const lifecycle = await hydrateAssetVaultLifecycle(assetId);
           if (!lifecycle || lifecycle.state !== "archived" || lifecycle.restore_available !== true) {
-            throw new Error("Server không cho phép khôi phục tệp này ở trạng thái hiện tại.");
+            throw new Error(vaultFeedbackText("restoreStateUnavailable", "Không thể khôi phục tệp này ở trạng thái hiện tại."));
           }
           const expectedRevision = Number(lifecycle.lifecycle_revision);
-          if (!Number.isInteger(expectedRevision) || expectedRevision < 1) throw new Error("Revision vòng đời Asset Vault không hợp lệ.");
+          if (!Number.isInteger(expectedRevision) || expectedRevision < 1) throw new Error(vaultFeedbackText("lifecycleVersionInvalid", "Chưa đọc được thông tin tệp mới nhất. Hãy tải lại và thử lại."));
           const result = await api(`/asset-vault/${encodeURIComponent(assetId)}/restore`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -35752,7 +35758,7 @@
           });
           acknowledged = true;
           await Promise.all([hydrateAssetVault(), hydrateAssetVaultLifecycle(assetId)]);
-          toast(result.message || "Đã khôi phục tệp vào Asset Vault đang hoạt động.");
+          toast(!result.message || result.message === "Đã khôi phục tệp vào Asset Vault đang hoạt động." ? vaultFeedbackText("restored", "Đã khôi phục tệp.") : result.message);
         } catch (error) {
           acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
           if (acknowledged) await Promise.all([hydrateAssetVault(), hydrateAssetVaultLifecycle(assetId)]);
@@ -35766,26 +35772,51 @@
       }
       if (action === "asset-vault-refresh") {
         const selectedAssetId = assetVaultLifecycleSelectionId();
+        const feedbackSessionEpoch = assetVaultSessionEpoch;
+        const feedbackPath = currentPortalPath();
+        const feedbackEpoch = assetVaultListHydrationEpoch + 1;
+        const feedbackLifecycleEpoch = assetVaultLifecycleHydrationEpoch + (selectedAssetId ? 1 : 0);
         await Promise.all([
           hydrateAssetVault(),
           selectedAssetId ? hydrateAssetVaultLifecycle(selectedAssetId) : Promise.resolve(null)
         ]);
-        toast("Đã làm mới Asset Vault.");
+        if (!assetVaultRequestIsCurrent(feedbackEpoch, feedbackSessionEpoch, feedbackPath)) return;
+        if (selectedAssetId && !assetVaultLifecycleRequestIsCurrent(selectedAssetId, feedbackLifecycleEpoch, feedbackSessionEpoch, feedbackPath)) return;
+        if (!selectedAssetId && (assetVaultLifecycleHydrationEpoch !== feedbackLifecycleEpoch || assetVaultLifecycleSelectionId())) return;
+        if (base().assetVaultReadState === "failed") throw new Error(vaultFeedbackText("readFailed", "Chưa tải được danh sách tệp. Hãy thử lại."));
+        if (base().assetVaultReadState !== "ready") return;
+        if (selectedAssetId && base().assetVaultLifecycle.readState === "guarded") throw new Error(vaultFeedbackText("lifecycleFailed", "Chưa tải được thông tin tệp. Hãy thử lại."));
+        if (selectedAssetId && base().assetVaultLifecycle.readState !== "ready") return;
+        toast(vaultFeedbackText("refreshed", "Đã làm mới kho tệp."));
         return;
       }
       if (action === "asset-vault-filter" || action === "asset-vault-filter-clear") {
-        if (!(base().capabilities && base().capabilities["asset-vault-refresh"] === true)) throw new Error("Cần signed Web session để xem Asset Vault riêng tư.");
+        if (!(base().capabilities && base().capabilities["asset-vault-refresh"] === true)) throw new Error(vaultFeedbackText("privateReadSessionRequired", "Chưa thể xem kho tệp. Hãy tải lại trang và thử lại."));
         const filter = action === "asset-vault-filter-clear" ? { q: "", state: "active" } : assetVaultFilterPayload(fields);
         clearAssetVaultLifecycle();
+        const feedbackSessionEpoch = assetVaultSessionEpoch;
+        const feedbackPath = currentPortalPath();
+        const feedbackEpoch = assetVaultListHydrationEpoch + 1;
         await hydrateAssetVault(filter, 0);
-        toast(filter.q || filter.state !== "active" ? "Đã áp dụng bộ lọc Asset Vault." : "Đã hiển thị tệp Asset Vault đang hoạt động.");
+        if (!assetVaultRequestIsCurrent(feedbackEpoch, feedbackSessionEpoch, feedbackPath)) return;
+        if (base().assetVaultReadState === "failed") throw new Error(vaultFeedbackText("readFailed", "Chưa tải được danh sách tệp. Hãy thử lại."));
+        if (base().assetVaultReadState !== "ready") return;
+        toast(filter.q || filter.state !== "active"
+          ? vaultFeedbackText("filtered", "Đã lọc danh sách tệp.")
+          : vaultFeedbackText("active", "Đã hiển thị tệp đang dùng."));
         return;
       }
       if (action === "asset-vault-page") {
-        if (!(base().capabilities && base().capabilities["asset-vault-refresh"] === true)) throw new Error("Cần signed Web session để xem Asset Vault riêng tư.");
+        if (!(base().capabilities && base().capabilities["asset-vault-refresh"] === true)) throw new Error(vaultFeedbackText("privateReadSessionRequired", "Chưa thể xem kho tệp. Hãy tải lại trang và thử lại."));
         clearAssetVaultLifecycle();
+        const feedbackSessionEpoch = assetVaultSessionEpoch;
+        const feedbackPath = currentPortalPath();
+        const feedbackEpoch = assetVaultListHydrationEpoch + 1;
         await hydrateAssetVault(undefined, assetVaultListOffset(fields.__assetVaultOffset));
-        toast("Đã tải trang Asset Vault tiếp theo từ API owner-scoped.");
+        if (!assetVaultRequestIsCurrent(feedbackEpoch, feedbackSessionEpoch, feedbackPath)) return;
+        if (base().assetVaultReadState === "failed") throw new Error(vaultFeedbackText("readFailed", "Chưa tải được danh sách tệp. Hãy thử lại."));
+        if (base().assetVaultReadState !== "ready") return;
+        toast(vaultFeedbackText("page", "Đã tải danh sách tệp."));
         return;
       }
       if (["document-asset-reference-filter", "document-asset-reference-filter-clear", "document-asset-reference-page"].includes(action)) {

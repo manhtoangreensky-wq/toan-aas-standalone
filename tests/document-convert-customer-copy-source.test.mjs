@@ -5,6 +5,7 @@ import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
+import {vaultActionFeedbackHistoricalSource} from "./helpers/vault-action-feedback-snapshot.mjs";
 import {vaultHintContrastHistoricalCss} from "./helpers/vault-hint-contrast-snapshot.mjs";
 import {documentOcrCustomerHistoricalSource} from "./helpers/document-ocr-customer-copy-snapshot.mjs";
 import {documentConvertCustomerHistoricalSource as inverse,documentConvertCustomerHistoricalSnapshot as snapshot} from "./helpers/document-convert-customer-copy-snapshot.mjs";
@@ -17,7 +18,7 @@ const fixture=JSON.parse(raw),edits=fixture.canonicalChanges,rows=fixture.rows,k
 const lf=x=>x.replace(/\r\n/g,"\n"),hash=x=>createHash("sha256").update(x).digest("hex"),count=(s,p)=>s.split(p).length-1;
 const files=["static/portal/portal.js","static/portal/portal-i18n.js","copyfast_pages.py"];
 const before=Object.fromEntries(files.map(file=>[file,lf(execFileSync("git",["show",BASE+":"+file],{cwd:ROOT,encoding:"utf8",maxBuffer:30e6}))]));
-const currentPhysical=Object.fromEntries(files.map(file=>[file,lf(fs.readFileSync(path.join(ROOT,file),"utf8"))]));
+const currentPhysical=Object.fromEntries(files.map(file=>[file,vaultActionFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT,file),"utf8")),file)]));
 // Historical DCC source comparator only; current OCR acceptance uses separate full physical sources.
 const physical=Object.fromEntries(files.map(file=>[file,documentOcrCustomerHistoricalSource(currentPhysical[file],file)]));
 const candidate=Object.fromEntries(files.map(file=>{let source=before[file];for(const edit of edits.filter(value=>value.file===file)){assert.equal(count(source,edit.old),1);source=source.replace(edit.old,()=>edit.new);}return[file,source];}));
@@ -44,7 +45,7 @@ for(const file of files)test(file+": full physical source equals GitBASE+finite1
 test("151source pins protect148unchanged application files and exactly3changed sources",()=>{
  assert.equal(fixture.applicationBaseline.length,151);assert.equal(fixture.applicationBaseline.filter(pin=>pin.changed).length,3);
  for(const pin of fixture.applicationBaseline){
-  const actual=lf(fs.readFileSync(path.join(ROOT,pin.file),"utf8"));
+  const actual=vaultActionFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT,pin.file),"utf8")),pin.file);
   assert.equal(hash(files.includes(pin.file)?documentOcrCustomerHistoricalSource(actual,pin.file):pin.file==="static/portal/portal-theme.css"?vaultHintContrastHistoricalCss(actual,pin.file):actual),pin.candidateLfSha256,pin.file);
   assert.equal(pin.changed,pin.baselineLfSha256!==pin.candidateLfSha256);
   if(!files.includes(pin.file))assert.equal(pin.baselineLfSha256,pin.candidateLfSha256);
