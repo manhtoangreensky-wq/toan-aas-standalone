@@ -1,7 +1,8 @@
 # Âm thanh: thông báo cũ và ba thông báo chưa dịch
 
-BASE=cd9c5c14263e1397531056e318a9f46394a8562d.
-STATUS=PROPOSALS_RUNNING; chưa đổi ứng dụng.
+BASE=3c5d3ca62496126ade250ac78e0cbf3efeb6c79e.
+SOURCE_BASE_FOR_INTEGRATION_AND_I18N=cd9c5c14263e1397531056e318a9f46394a8562d.
+STATUS=LOCAL_CHECKED_RELEASE_PENDING.
 
 ## Thứ tự
 
@@ -14,6 +15,34 @@ Owner đã xác nhận làm mọi việc trong goal. Phiếu tách dòng R2 đư
 lại; hai phiếu độc lập cho phản hồi cũ và ba câu thông báo cũng đang
 chạy dạng chỉ trả đề xuất, đầy đủ MAP. Root chỉ áp dụng tuần tự sau
 khi kiểm tra; không có ứng dụng nào được worker tự ghi.
+
+Hai phiếu phản hồi cũ và locale đã trả đúng ba record theo phiếu. Root
+thử riêng hai đề xuất trong bộ nhớ với bundle thật:
+16 case hiện tại/cũ theo VI/EN/ZH và lỗi mạng đạt; không thay test trên
+nguồn vật lý hoặc CI, không suy rằng đã triển khai. Đơn vị tách dòng
+đã được gộp PR789 và triển khai run44941535803; VPS chạy đúng BASE.
+Một lượt riêng chín case ứng viên trong bộ nhớ cũng đạt: tám giá trị
+không thuộc danh sách dịch giữ nguyên và một lỗi cũ không mở khóa
+request mới, trong khi lỗi hiện tại vẫn hiện. Không cộng hai lượt thành
+một full run trên nguồn vật lý.
+
+Sau khi PR789 triển khai, Root áp dụng tuần tự đúng ba record vào hai
+tệp ứng dụng. Nguồn vật lý BASE+record và 35 kiểm tra mục tiêu PASS.
+Hồi quy historical đầu 24 PASS/36 FAIL do phép chiếu cũ chưa nhận
+record mới; sau bổ sung phép chiếu hữu hạn, 76 Node PASS và 122 Python
+historical PASS. Năm kiểm tra Python mới cũng đạt. Bộ hồi quy rộng ban
+đầu 5.015 dòng: 5.014 PASS và một kiểm tra historical của bản visual
+cần nhận diện thay đổi mới; sau điều chỉnh đầu vào historical, hai case
+liên quan PASS. Đối chiếu theo tệp+tên: 5.132 dòng trừ 74 dòng trùng/
+thay thế = 5.058 case phân biệt PASS, 0 FAIL/0 skip, đủ 163 tệp được
+chọn. Đây là kết quả ghép nhiều lượt, không phải một full run mới.
+Lượt kiểm tra server ban đầu không hoàn thành; chẩn đoán cho thấy
+trình kiểm thử bị kẹt tại socket nội bộ khi tạo event loop trong môi
+trường hạn chế. Lượt mới với quyền kết nối cục bộ, ENV tiến trình giả,
+dotenv tắt và cơ sở dữ liệu riêng đạt 1 PASS trong 4,59 giây: kiểm tra
+quyền, revision, lỗi không tìm thấy và không lưu kết quả rà soát. Hai
+cảnh báo thư viện được giữ trong log. Không gọi đây là UI production
+hoặc kết quả provider.
 
 ## 1. Phản hồi lỗi đã cũ
 
@@ -30,6 +59,10 @@ Kiểm tra bổ sung ba tình huống: lỗi request cũ về sau khi request m�
 lỗi không xác định của request hiện tại vẫn hiện và nút được mở lại.
 Kết quả 1 PASS/2 FAIL, không skip. Receipt tách riêng, không cộng thành
 một lượt với RED 5/5.
+Thêm sáu kiểm tra giữ hành vi hiện có đã PASS: bốn chuỗi không thuộc
+danh sách cố định giữ nguyên, một kết quả hiện tại vẫn merge/focus,
+và route sai bị chặn trước request. Các kiểm tra này phải giữ đạt sau
+khi áp dụng hai đề xuất.
 
 Mục tiêu: lỗi từ request cũ không hiện, không merge, không focus và
 không mở khóa request mới; lỗi của request hiện tại vẫn báo bình thường.

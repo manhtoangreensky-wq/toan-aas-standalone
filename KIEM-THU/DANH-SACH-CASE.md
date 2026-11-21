@@ -1,5 +1,19 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## AUDIO-REVIEW-CURRENT-ERRORS-20261122 — lỗi rà soát âm thanh
+
+Phiên `PHIEN-AUDIO-REVIEW-CURRENT-ERRORS-20261122.md`; dựa trên
+PR789 đã triển khai. Không dùng dữ liệu khách hoặc dịch vụ trả phí.
+
+| Mã | Mức | Phạm vi | PASS bắt buộc |
+|---|---|---|---|
+| ARE-CURRENT | nặng | Lỗi đến sau đổi trang, đăng xuất, revision, tắt chức năng, request mới | Phản hồi cũ im lặng; không merge, focus hay mở khóa sai |
+| ARE-LOCALE | nặng | Không tìm thấy, revision đổi, bảo trì × VI/EN/ZH | Thông báo dễ hiểu đúng ngôn ngữ; lỗi vẫn là lỗi |
+| ARE-PRESERVE | nặng | Lỗi hiện tại, thành công hiện tại, chuỗi khách/unknown và route sai | Giữ nguyên chữ khách, alert/focus/nút và số request |
+| ARE-SOURCE | nặng | Hai tệp ứng dụng, ba record | Toàn nguồn bằng BASE cộng đúng record, backend/API/quyền giữ |
+| ARE-REGRESSION | nặng | Locale, historical và server dữ liệu riêng | Không FAIL mới; báo riêng lỗi cũ và lượt khởi tạo bị chặn |
+| ARE-DELIVERY | nặng | CI, merge, deploy, VPS và UI | Từng gate có bằng chứng; không suy signed UI từ HTTP/asset |
+
 ## AUDIO-REVIEW-FEEDBACK-20261121 — rà soát bộ sưu tập âm thanh
 
 Phiên `PHIEN-AUDIO-REVIEW-FEEDBACK-20261121.md`; BASE `7cb8cb10`;

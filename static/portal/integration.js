@@ -5119,6 +5119,9 @@
       "Collection đã archive. Hãy khôi phục trước khi lập gói review.": ["review.archived","Hãy khôi phục bộ sưu tập đã lưu trữ trước khi rà soát."],
       "Brief cần được chỉnh theo hướng nguyên bản trước khi lập gói review. Web không xác nhận mô phỏng nghệ sĩ, tác phẩm, giai điệu hoặc giọng.": ["review.originality","Hãy điều chỉnh yêu cầu theo ý tưởng riêng, không mô phỏng nghệ sĩ, tác phẩm, giai điệu hoặc giọng cụ thể."],
       "Đã lập gói review theo collection hiện tại. Gói này chỉ là checklist Web-native, không tạo audio, approval hoặc delivery.": ["review.ready","Đã tạo bản rà soát bộ sưu tập."],
+      "Không tìm thấy collection thuộc Web account hiện tại.": ["review.notFound","Không tìm thấy bộ sưu tập trong tài khoản hiện tại."],
+      "Collection đã thay đổi ở phiên khác. Hãy làm mới trước khi tiếp tục.": ["review.conflict","Bộ sưu tập đã thay đổi. Hãy tải lại trước khi tiếp tục."],
+      "Audio Library & Briefing đang tạm dừng để bảo trì. WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED chưa được bật.": ["review.maintenance","Trung tâm âm thanh đang bảo trì. Vui lòng thử lại sau."],
       "Yêu cầu chưa được máy chủ xác nhận.": ["review.error","Chưa thể rà soát bộ sưu tập. Hãy thử lại."],
       "Yêu cầu chưa được xác nhận.": ["review.error","Chưa thể rà soát bộ sưu tập. Hãy thử lại."]
     };
@@ -29253,6 +29256,9 @@
             const status = document.querySelector(`[data-audio-hub-review-pack-status][data-media-collection-id="${collectionId}"]`);
             if (status && typeof status.focus === "function") status.focus({ preventScroll: true });
           });
+        } catch (error) {
+          if (!audioHubReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, route, collectionId, expectedRevision)) return;
+          throw error;
         } finally {
           if (audioHubReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, route, collectionId, expectedRevision)) {
             setActionBusy(action, route, false);

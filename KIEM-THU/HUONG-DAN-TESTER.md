@@ -1,5 +1,16 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phản hồi lỗi rà soát âm thanh — 22/11/2026
+
+Dùng phiên `PHIEN-AUDIO-REVIEW-CURRENT-ERRORS-20261122.md` và sáu
+case ARE. Phân biệt yêu cầu hiện tại với phản hồi về muộn sau đổi
+trang, đăng xuất hoặc gửi yêu cầu khác. Chỉ dùng dữ liệu riêng; không
+gửi thông tin khách, thực hiện thanh toán hay gọi dịch vụ tạo nội dung.
+
+Kiểm VI/EN/ZH cho ba câu cố định; nội dung khách và lỗi không thuộc
+danh sách phải giữ nguyên. Ghi riêng bằng chứng cục bộ, CI, deploy
+và giao diện production sau đăng nhập; không suy một gate từ gate khác.
+
 ## Rà soát bộ sưu tập âm thanh — 21/11/2026
 
 Dùng phiên ARF và tám case trong `DANH-SACH-CASE.md`; ghi BASE/HEAD,

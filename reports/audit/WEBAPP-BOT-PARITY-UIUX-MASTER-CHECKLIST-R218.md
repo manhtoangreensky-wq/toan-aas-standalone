@@ -1,5 +1,20 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 22/11/2026 — PR789 đã giao; thông báo rà soát âm thanh
+
+- [x] PR789 đã gộp và triển khai `3c5d3ca62496126ade250ac78e0cbf3efeb6c79e`;
+  CI44939238918 hai job thành công, deploy44941535803 thành công.
+  VPS đúng commit, Web/Bot/nginx hoạt động, health hợp lệ; 5+5 tệp
+  công khai khớp. Issue689/comment7068131168 đã đọc lại. Signed
+  production UI chưa được xác nhận.
+- [ ] Phản hồi lỗi cũ và ba câu chưa dịch: hai phiếu Antigravity R1
+  trả đúng ba record; đã áp dụng sau PR789. Nguồn vật lý/35 case mục
+  tiêu PASS, historical 76 Node/122 Python PASS; ledger 5.058 Node
+  phân biệt PASS/163 tệp và một ca server dữ liệu riêng PASS. Kiểm tra
+  phát hành, CI, deploy và signed UI còn chờ.
+- [ ] Sau đơn vị này: generic validity, locale/AX/auth/device/Safari/
+  signed UI theo checklist; motion M-FINAL01..06 cuối. Goal vẫn mở.
+
 ## 22/11/2026 — PR788 đã giao; phần âm thanh còn lại
 
 - [x] PR788 đã gộp và triển khai `cd9c5c14263e1397531056e318a9f46394a8562d`;

@@ -5,6 +5,7 @@ import path from "node:path";
 import {execFileSync} from "node:child_process";
 import {ROOT, CONTRACT, hash} from "./helpers/audio-review-feedback-runtime.mjs";
 import {audioReviewVisualHistoricalSource} from "./helpers/audio-review-visual-snapshot.mjs";
+import {audioReviewPendingHistoricalSource} from "./helpers/audio-review-pending-snapshot.mjs";
 
 const lf = value => value.replace(/\r\n/g, "\n");
 const fromBase = file => execFileSync("git", ["show", CONTRACT.base + ":" + file],
@@ -42,7 +43,7 @@ for (const file of CONTRACT.allowedFiles) {
   test(`historical ARF ${file} equals full BASE plus exact Root forward records after reviewed visual projection`, () => {
     const original = lf(fromBase(file)), row = CONTRACT.applicationBaseline.find(row => row.file === file);
     assert.equal(hash(original), row.baseLfSha256, "Immutable exact BASE source");
-    const expected = forward(file, original), current = audioReviewVisualHistoricalSource(lf(fs.readFileSync(path.join(ROOT, file), "utf8")), file);
+    const expected = forward(file, original), current = audioReviewVisualHistoricalSource(audioReviewPendingHistoricalSource(lf(fs.readFileSync(path.join(ROOT, file), "utf8")), file), file);
     assert.equal(hash(current), hash(expected), "Full current source SHA: " + file);
     assert.equal(current, expected, "Full current source content: " + file);
   });
@@ -54,7 +55,7 @@ test("historical ARF source pins retain exactly148 protected paths after reviewe
   assert.equal(protectedRows.length, 148);
   for (const row of protectedRows) {
     const physical = fs.readFileSync(path.join(ROOT, row.file));
-    const projected = audioReviewVisualHistoricalSource(lf(physical.toString("utf8")), row.file);
+    const projected = audioReviewVisualHistoricalSource(audioReviewPendingHistoricalSource(lf(physical.toString("utf8")), row.file), row.file);
     pin(projected === lf(physical.toString("utf8")) ? physical : Buffer.from(projected), row);
   }
 });
@@ -76,7 +77,7 @@ test("all21 shared validation/read/classifier/API/review guards/render factories
   assert.equal(CONTRACT.protectedFunctions.length, 21);
   assert.equal(new Set(CONTRACT.protectedFunctions.map(row => row.file + ":" + row.name)).size, 21);
   const sources = Object.fromEntries(CONTRACT.allowedFiles.map(file => [file,
-    audioReviewVisualHistoricalSource(lf(fs.readFileSync(path.join(ROOT, file), "utf8")), file)]));
+    audioReviewVisualHistoricalSource(audioReviewPendingHistoricalSource(lf(fs.readFileSync(path.join(ROOT, file), "utf8")), file), file)]));
   for (const row of CONTRACT.protectedFunctions) {
     const body = exactFunction(sources[row.file], row.name);
     assert.equal(Buffer.byteLength(body), row.bytes, row.file + ":" + row.name);

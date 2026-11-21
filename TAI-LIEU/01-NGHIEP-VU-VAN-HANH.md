@@ -1,5 +1,18 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — phản hồi rà soát âm thanh theo phiên hiện tại
+
+Ứng viên sau PR789 chặn cảnh báo từ lượt rà soát đã cũ khi khách đổi
+trang, đăng xuất, đổi phiên bản, tắt chức năng hoặc gửi yêu cầu mới.
+Lỗi của yêu cầu hiện tại vẫn được thông báo. Ba lỗi cố định về không
+tìm thấy, phiên bản đã đổi và bảo trì có chữ phù hợp VI/EN/ZH; thông
+tin khách hoặc thông báo không thuộc danh sách giữ nguyên.
+
+Không đổi API, quyền, dữ liệu, số lần gửi hoặc chức năng tạo âm thanh.
+Kiểm tra cục bộ dùng bundle thật và dữ liệu riêng: ledger 5.058 tình
+huống Node phân biệt đạt; một ca server kiểm quyền/revision đạt.
+CI, phát hành và giao diện production sau đăng nhập cần chứng cứ riêng.
+
 ## 22/11/2026 — tách nhãn và mô tả rà soát âm thanh
 
 Ứng viên sau PR788 thêm một rule CSS để bốn nhãn và mô tả trong kết

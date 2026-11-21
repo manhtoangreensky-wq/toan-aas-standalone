@@ -1,0 +1,20 @@
+{
+  "base": "cd9c5c14263e1397531056e318a9f46394a8562d",
+  "records": [
+    {
+      "file": "static/portal/integration.js",
+      "old": "        } finally {\n          if (audioHubReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, route, collectionId, expectedRevision)) {",
+      "new": "        } catch (error) {\n          if (!audioHubReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, route, collectionId, expectedRevision)) return;\n          throw error;\n        } finally {\n          if (audioHubReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, route, collectionId, expectedRevision)) {"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "      \"Yêu cầu chưa được máy chủ xác nhận.\": [\"review.error\",\"Chưa thể rà soát bộ sưu tập. Hãy thử lại.\"],",
+      "new": "      \"Không tìm thấy collection thuộc Web account hiện tại.\": [\"review.notFound\",\"Không tìm thấy bộ sưu tập trong tài khoản hiện tại.\"],\n      \"Collection đã thay đổi ở phiên khác. Hãy làm mới trước khi tiếp tục.\": [\"review.conflict\",\"Bộ sưu tập đã thay đổi. Hãy tải lại trước khi tiếp tục.\"],\n      \"Audio Library & Briefing đang tạm dừng để bảo trì. WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED chưa được bật.\": [\"review.maintenance\",\"Trung tâm âm thanh đang bảo trì. Vui lòng thử lại sau.\"],\n      \"Yêu cầu chưa được máy chủ xác nhận.\": [\"review.error\",\"Chưa thể rà soát bộ sưu tập. Hãy thử lại.\"],"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  [\n    \"audioWorkspace.feedback.review.error\",\n    \"Chưa thể rà soát bộ sưu tập. Hãy thử lại.\",\n    \"We could not review the collection. Please try again.\",\n    \"暂时无法审核合集，请重试。\"\n  ],",
+      "new": "  [\n    \"audioWorkspace.feedback.review.notFound\",\n    \"Không tìm thấy bộ sưu tập trong tài khoản hiện tại.\",\n    \"This collection was not found in your account.\",\n    \"在当前账户中未找到该合集。\"\n  ],\n  [\n    \"audioWorkspace.feedback.review.conflict\",\n    \"Bộ sưu tập đã thay đổi. Hãy tải lại trước khi tiếp tục.\",\n    \"This collection has changed. Reload it before continuing.\",\n    \"该合集已更改，请重新加载后继续。\"\n  ],\n  [\n    \"audioWorkspace.feedback.review.maintenance\",\n    \"Trung tâm âm thanh đang bảo trì. Vui lòng thử lại sau.\",\n    \"The audio workspace is under maintenance. Please try again later.\",\n    \"音频工作区正在维护，请稍后重试。\"\n  ],\n  [\n    \"audioWorkspace.feedback.review.error\",\n    \"Chưa thể rà soát bộ sưu tập. Hãy thử lại.\",\n    \"We could not review the collection. Please try again.\",\n    \"暂时无法审核合集，请重试。\"\n  ],"
+    }
+  ]
+}
