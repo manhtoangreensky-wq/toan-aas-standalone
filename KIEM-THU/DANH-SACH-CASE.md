@@ -1,5 +1,21 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## AUDIO-REVIEW-FEEDBACK-20261121 — rà soát bộ sưu tập âm thanh
+
+Phiên `PHIEN-AUDIO-REVIEW-FEEDBACK-20261121.md`; BASE `7cb8cb10`;
+Issue689/comment7062778377. Chỉ dùng tracker/nhãn/mẫu hiện hữu.
+
+| Mã | Mức | Phạm vi | PASS bắt buộc |
+|---|---|---|---|
+| ARF-FEEDBACK | nặng | VI/EN/ZH, local errors/fallback/stock server/generic errors | Đúng exact literal; truthy success được dịch; thiếu dịch dùng VI |
+| ARF-RESULT | nặng | 11 stock kết quả, 11 static override, empty/mismatch | Giữ bốn check/ba caution, raw receipt/customer/escape |
+| ARF-BOUNDARY | nặng | `ok:false`/HTTP200/outer catch và VM guarded | Lỗi vẫn error, không retry hoặc đổi action khác |
+| ARF-CURRENTNESS | nặng | Route/session/revision/overlap/busy/finally/RAF | Phản hồi cũ im lặng, không merge/focus hoặc gỡ busy sai |
+| ARF-SOURCE | nặng | 11 record 8/2/1, catalogue và151/148/21pins | Current BASE+forward độc lập, fixture/golden/negative giữ |
+| ARF-NATIVE | nặng | Sáu view/6 metadata POST/12 PNG mục tiêu | Thao tác thật, đủ kết quả/scroll/focus, dữ liệu và isolation giữ |
+| ARF-REGRESSION | nặng | Node/Python historical và exact BASE | Hợp nhất theo file+tên, không cộng setup/duplicate/replacement |
+| ARF-DELIVERY | nặng | Tester/audit/manifest/secret/PR/CI/VPS | Mỗi gate có receipt, không suy signed UI/audio từ asset/HTTP200 |
+
 ## MEDIA-FIXED-FEEDBACK-20261121 — lời nhắc âm thanh
 
 Phiên:[MEDIA-FIXED-FEEDBACK](PHIEN-MEDIA-FIXED-FEEDBACK-20261121.md).

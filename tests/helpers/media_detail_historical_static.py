@@ -2,8 +2,10 @@
 from pathlib import Path
 import hashlib
 import json
+import runpy
 
 ROOT = Path(__file__).resolve().parents[2]
+ARF_PROJECT = runpy.run_path(str(ROOT / "tests/helpers/audio_review_historical_static.py"))["historical_audio_review_source"]
 RAW = (ROOT / "tests/fixtures/media-detail-customer-copy-reviewed.json").read_bytes()
 FAIL = "Unreviewed media detail historical source"
 assert hashlib.sha256(RAW).hexdigest() == "a2209d2a371b0323480cadaa01d1726ac330c5fc6c3cc5473b13df8726fd79bd", FAIL
@@ -15,6 +17,7 @@ assert len(FIXTURE["canonicalChanges"]) == 53, FAIL
 
 def historical_media_detail_portal(source: str) -> str:
     assert isinstance(source, str), FAIL
+    source = ARF_PROJECT(source, "static/portal/portal.js")
     markers = ('audioWorkspaceText("pagination.audioFiles"', 'audioWorkspaceText("detail.tagsPlaceholder"',
                '}, "media-item-attach")')
     if not any(marker in source for marker in markers):

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
+import {audioReviewHistoricalSource, audioReviewHistoricalSnapshot} from "./audio-review-snapshot.mjs";
 
 const sha = raw => createHash("sha256").update(raw).digest("hex");
 const raw = fs.readFileSync(new URL("../fixtures/media-fixed-feedback-reviewed.json", import.meta.url));
@@ -25,6 +26,7 @@ const boundary = (source, marker) => {
 export function mediaFixedFeedbackHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail + " source type");
   assert.equal(typeof file, "string", fail + " file type");
+  source = audioReviewHistoricalSource(source, file);
   if (![I, L].includes(file) || !owned(source)) return source;
   const fragments = fixture.historicalFragments.filter(row => row.file === file);
   if (file === I) {
@@ -54,6 +56,7 @@ export function mediaFixedFeedbackHistoricalSource(source, file) {
 export function mediaFixedFeedbackHistoricalSnapshot(entries, locale) {
   assert.ok(["vi", "en", "zh"].includes(locale), fail + " locale");
   assert.ok(Array.isArray(entries) && entries.every(row => Array.isArray(row) && row.length === 2), fail + " entries");
+  entries = audioReviewHistoricalSnapshot(entries, locale);
   const rows = [...contract.errors, ...contract.toasts], keys = rows.map(row => "audioWorkspace.feedback." + row.key);
   const current = entries.filter(([key]) => typeof key === "string" && key.startsWith("audioWorkspace.feedback."));
   if (!current.length) return entries;

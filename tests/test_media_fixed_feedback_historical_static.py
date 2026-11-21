@@ -9,7 +9,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = runpy.run_path(str(ROOT / "tests/helpers/media_fixed_feedback_historical_static.py"))
 project, fail, groups = HELPER["historical_media_fixed_feedback_integration"], HELPER["FAIL"], HELPER["GROUPS"]
-actual = (ROOT / "static/portal/integration.js").read_text(encoding="utf8").replace("\r\n", "\n")
+actual = HELPER["ARF_PROJECT"]((ROOT / "static/portal/integration.js").read_text(encoding="utf8").replace("\r\n", "\n"),
+                             "static/portal/integration.js")
 baseline = subprocess.check_output(["git", "show", HELPER["FIXTURE"]["base"] + ":static/portal/integration.js"],
                                    cwd=ROOT).decode("utf8").replace("\r\n", "\n")
 

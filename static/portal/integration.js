@@ -5114,6 +5114,18 @@
   ]);
   const AUDIO_HUB_REVIEW_PACK_CHECK_KEYS = Object.freeze(["id", "state", "label", "note"]);
 
+  function audioHubReviewFeedbackText(message, key, fallback) {
+    const messages = {
+      "Collection đã archive. Hãy khôi phục trước khi lập gói review.": ["review.archived","Hãy khôi phục bộ sưu tập đã lưu trữ trước khi rà soát."],
+      "Brief cần được chỉnh theo hướng nguyên bản trước khi lập gói review. Web không xác nhận mô phỏng nghệ sĩ, tác phẩm, giai điệu hoặc giọng.": ["review.originality","Hãy điều chỉnh yêu cầu theo ý tưởng riêng, không mô phỏng nghệ sĩ, tác phẩm, giai điệu hoặc giọng cụ thể."],
+      "Đã lập gói review theo collection hiện tại. Gói này chỉ là checklist Web-native, không tạo audio, approval hoặc delivery.": ["review.ready","Đã tạo bản rà soát bộ sưu tập."],
+      "Yêu cầu chưa được máy chủ xác nhận.": ["review.error","Chưa thể rà soát bộ sưu tập. Hãy thử lại."],
+      "Yêu cầu chưa được xác nhận.": ["review.error","Chưa thể rà soát bộ sưu tập. Hãy thử lại."]
+    };
+    const entry = typeof message === "string" && Object.prototype.hasOwnProperty.call(messages, message) ? messages[message] : null;
+    return entry ? mediaWorkspaceFeedbackText(entry[0], entry[1]) : message || mediaWorkspaceFeedbackText(key, fallback);
+  }
+
   function audioHubReviewPackBoundaryIsSafe(value) {
     return musicPromptComposerExactKeys(value, AUDIO_HUB_REVIEW_PACK_BOUNDARY_KEYS)
       && value.execution === "web_native_collection_review_only"
@@ -29206,10 +29218,10 @@
         const currentCollection = currentDetail.collection && typeof currentDetail.collection === "object" ? currentDetail.collection : {};
         const policy = currentCollection.policy && typeof currentCollection.policy === "object" ? currentCollection.policy : {};
         if (!validMediaCollectionId(collectionId) || !expectedRevision || !expectedRoute || route !== expectedRoute || currentPortalPath() !== expectedRoute || mediaWorkspaceVisualRoot(route) !== "/audio-hub") {
-          throw new Error("Gói review chỉ có thể được lập tại Audio Production Hub collection đang mở.");
+          throw new Error(mediaWorkspaceFeedbackText("review.route", "Hãy mở bộ sưu tập trong Trung tâm âm thanh để kiểm tra."));
         }
         if (capabilities["audio-hub-review-pack-compose"] !== true || String(currentCollection.id || "") !== collectionId || Number(currentCollection.revision || 0) !== expectedRevision || String(currentCollection.state || "") !== "active" || String(policy.status || "clear") === "guarded") {
-          throw new Error("Collection hiện tại chưa đủ điều kiện signed session, CSRF, policy và revision để lập gói review.");
+          throw new Error(mediaWorkspaceFeedbackText("review.notReady", "Chưa thể kiểm tra bộ sưu tập này. Hãy tải lại trang rồi thử lại."));
         }
         const requestEpoch = ++mediaWorkspaceReviewPackRequestEpoch;
         const sessionEpoch = mediaWorkspaceSessionEpoch;
@@ -29227,15 +29239,15 @@
           if (!audioHubReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, route, collectionId, expectedRevision)) return;
           const output = result.data && typeof result.data === "object" ? result.data : {};
           if (result.status === "guarded") {
-            if (!audioHubReviewPackBoundaryIsSafe(output)) throw new Error("Máy chủ chưa trả ranh giới Audio Hub review an toàn.");
-            toast(result.message || "Collection cần được chỉnh trước khi lập gói review.", "warning");
+            if (!audioHubReviewPackBoundaryIsSafe(output)) throw new Error(mediaWorkspaceFeedbackText("review.invalidBoundary", "Chưa nhận được kết quả kiểm tra hợp lệ. Hãy thử lại."));
+            toast(audioHubReviewFeedbackText(result.message, "review.needsChanges", "Hãy bổ sung thông tin bộ sưu tập trước khi kiểm tra lại."), "warning");
             return;
           }
           if (result.status !== "draft" || !audioHubReviewPackResultIsSafe(output, collectionId, expectedRevision)) {
-            throw new Error("Máy chủ chưa trả gói review Audio Hub an toàn cho collection hiện tại.");
+            throw new Error(mediaWorkspaceFeedbackText("review.invalidResult", "Chưa nhận được kết quả kiểm tra cho bộ sưu tập đang mở. Hãy thử lại."));
           }
           merge({ audioHubReviewPack: output });
-          toast(result.message || "Đã lập gói review collection trong phiên hiện tại.");
+          toast(audioHubReviewFeedbackText(result.message, "review.ready", "Đã tạo bản rà soát bộ sưu tập."));
           window.requestAnimationFrame(() => {
             if (!audioHubReviewPackRequestIsCurrent(requestEpoch, sessionEpoch, route, collectionId, expectedRevision)) return;
             const status = document.querySelector(`[data-audio-hub-review-pack-status][data-media-collection-id="${collectionId}"]`);
@@ -39330,7 +39342,7 @@
       }
       const editorialError = (action === "music-direction-preset-compose" || action === "sfx-cue-sheet-compose") ? musicSfxEditorialErrorText(action, error) : null;
       const errorMessage = editorialError || (["media-workspace-filter","media-workspace-filter-clear","media-audio-filter","media-audio-filter-clear","media-collection-create","media-collection-update","media-collection-archive","media-collection-restore","media-collection-duplicate","media-collection-restore-version","media-collection-compose","media-item-attach","media-item-update","media-item-detach","media-audio-operation-handoff"].includes(action) ? mediaWorkspaceErrorText(error) : null) || (error && error.payload && error.payload.message) || (error && error.message) || "Yêu cầu chưa được xác nhận.";
-      toast(action === "publish-review-pack-compose" ? publishReviewPackFeedbackText(errorMessage, "feedback.error") : (["campaign-calendar-filter", "campaign-calendar-month", "campaign-calendar-refresh"].includes(action) ? campaignCalendarFeedbackText(errorMessage) : errorMessage), "error");
+      toast(action === "audio-hub-review-pack-compose" ? audioHubReviewFeedbackText(errorMessage, "review.error", "Chưa thể rà soát bộ sưu tập. Hãy thử lại.") : action === "publish-review-pack-compose" ? publishReviewPackFeedbackText(errorMessage, "feedback.error") : (["campaign-calendar-filter", "campaign-calendar-month", "campaign-calendar-refresh"].includes(action) ? campaignCalendarFeedbackText(errorMessage) : errorMessage), "error");
     } finally {
       if (featureSubmission) {
         releaseSubmission(featureSubmission);

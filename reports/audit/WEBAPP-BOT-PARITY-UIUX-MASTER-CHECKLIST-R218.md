@@ -1,5 +1,37 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 21/11/2026 — PR786 đã giao; rà soát âm thanh theo luồng thật
+
+- [x] PR786/CI44901135244 haiSUCCESS14m44s/5m10s,18browser/
+  456authhash exact,artifacts14706516758/14706756554. Merge/runtime
+  7cb8cb10486f5c175dca5db2c286a9f93a133c23,tree108fb6f1exact;
+  deploy44903055137SUCCESS62s,VPS3active-running/trackedclean/
+  health/5+5assets/buildlocal-b3c88aeda0bab473c85a đúng. Receipts
+  Issue7060930950/PR7062478589 đọc lại đúng. MFFpending bên dưới
+  làhistoricalsnapshot;khôngmởlại đơn vị đãgiao.
+- [x] MFFRootQAportability đãđóng trongsamePR,4807uniqueNodePASS/
+  0FAIL0SKIP/all154files;native36newalerts/36newPNG/source/core/
+  schema/auth/egress/owned0giữ,khôngapp/native rerun.
+- [x] ARF-READ/CONTRACT/RED:actualreviewaction/stockAPI/4checks/
+  3cautions/chrome,khôngchỉsáufallbacks kháchkhôngnhìnthấy.
+- [x] ARF-FEEDBACK/RENDERER/CATALOGUE:baAGYoutput-only/fullMAP,
+ 11records/3app/31rows93values,Rootreview/replayserial.
+- [x] ARF-VERIFY:183targetedcontextsaccepted,18newhistoricalpressure
+  PASS;151source148protected21functions;groupedreview0Critical/
+  Important. Ledger5002uniquePASS0FAIL0SKIP/all158files,5433rows
+  trừ46setup/385duplicate-replacement;khôngfreshfullrun.
+- [x] ARF-NATIVE:R3exit0/72.891s,6views/6realmetadataPOST/
+  12newfullDecodedPNG/Rootviewed12;source/core/schema/authstrict/
+  egress/owned0/domainwrites0. R1/R2RootQAfalsegiữ,khôngappfailure.
+- [ ] ARF-Tester/audit/metadata/manifest/secret/onePR/CI/deploy/receipts.
+- [ ] Visualqueue ngay sauARF:VI/ZHdesktopbreadcrumb“Audio Production
+  Hub”,checklabel/notedínhliềnvàEN“1 reference files”;newPNGproof,
+  khôngglobalUI/wholepagelocalePASS. Làmtrước3sharedAPImessages.
+- [ ] Ba sharedAPI NotFound/revisionrace/maintenance messages,
+  rồi genericrendererreportValiditywarninglocale→locale/AX/auth/
+  device/Safari/signedUI/genericfocus;motionM-FINAL01..06cuối.
+  WholegoalACTIVE/incomplete;khôngBot/route-engine/provider/ví/data.
+
 ## 21/11/2026 — PR785 đã giao; lời nhắc nhập/lưu/chuyển bước âm thanh
 
 - [x] PR785/CI44888152941 haiSUCCESS18m33s/4m19s;18browser/
