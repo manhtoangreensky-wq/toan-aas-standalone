@@ -8,11 +8,12 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = runpy.run_path(str(ROOT / "tests/helpers/audio_review_visual_historical_static.py"))
 project, contract, fail = HELPER["historical_audio_review_visual_source"], HELPER["CONTRACT"], HELPER["FAIL"]
+PENDING_PROJECT = runpy.run_path(str(ROOT / "tests/helpers/audio_review_pending_historical_static.py"))["historical_audio_review_pending_source"]
 
 
 @pytest.mark.parametrize("file", ["static/portal/portal.js", "static/portal/portal-i18n.js"])
 def test_visual_projection_restores_base_and_preserves_unrelated_bytes(file):
-    current = (ROOT / file).read_text(encoding="utf8").replace("\r\n", "\n")
+    current = PENDING_PROJECT((ROOT / file).read_text(encoding="utf8").replace("\r\n", "\n"), file)
     base = subprocess.check_output(["git", "show", contract["base"] + ":" + file], cwd=ROOT).decode("utf8").replace("\r\n", "\n")
     assert project(current, file) == base
     assert project(base, file) == base
