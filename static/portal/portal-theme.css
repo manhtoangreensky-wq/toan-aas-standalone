@@ -23957,3 +23957,22 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-image-enhance .portal-p
 html[data-portal-theme="dark"] .portal-page.portal-asset-vault .portal-vault-dropzone small {
   color: var(--portal-ink);
 }
+
+/* Keep saved audio item labels and rights guidance readable in the light theme. */
+html:not([data-portal-theme="dark"]) .portal-page.portal-media-workspace-detail .portal-media-item-form :is(label.portal-field > span, label.portal-field > small, .portal-media-checkbox > span) {
+  color: var(--portal-ink);
+}
+
+/* Keep audio collection field labels and search guidance readable. */
+html:not([data-portal-theme="dark"]) .portal-page:is(.portal-media-workspace-detail, .portal-audio-hub-detail) :is(form[data-portal-action="media-collection-update"], form[data-portal-action="media-audio-filter"], form[data-portal-action="media-item-attach"]) .portal-field > label {
+  color: var(--portal-ink);
+}
+html:not([data-portal-theme="dark"]) .portal-page:is(.portal-media-workspace-detail, .portal-audio-hub-detail) :is(form[data-portal-action="media-collection-update"], form[data-portal-action="media-audio-filter"], form[data-portal-action="media-item-attach"]) :is(.portal-field-help, .portal-form-note) {
+  color: var(--portal-muted);
+}
+html:not([data-portal-theme="dark"]) .portal-page:is(.portal-media-workspace-detail, .portal-audio-hub-detail) .portal-media-audio-filter {
+  background: var(--portal-surface-soft);
+}
+html[data-portal-theme="dark"] .portal-page:is(.portal-media-workspace-detail, .portal-audio-hub-detail) .portal-media-audio-filter .portal-form-note {
+  color: var(--portal-ink);
+}

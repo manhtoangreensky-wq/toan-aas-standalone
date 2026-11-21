@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
+import {mediaDetailCustomerCopyHistoricalSource, mediaDetailCustomerCopyHistoricalSnapshot} from "./media-detail-customer-copy-snapshot.mjs";
 
 const raw = fs.readFileSync(new URL("../fixtures/media-audio-read-feedback-reviewed.json", import.meta.url));
 const fail = "Unreviewed media audio read feedback";
@@ -40,6 +41,7 @@ function readerFlag(source) {
 export function mediaAudioReadFeedbackHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail + " source type");
   assert.equal(typeof file, "string", fail + " file type");
+  source = mediaDetailCustomerCopyHistoricalSource(source, file);
   if (file !== integration && file !== i18n) return source;
   if (!audioOwned(source) && !(file === integration && readerFlag(source))) return source;
   const group = edits.filter(edit => edit.file === file);
@@ -80,6 +82,7 @@ export function mediaAudioReadFeedbackHistoricalSnapshot(entries, locale) {
   assert.ok(index > 0, fail + " locale");
   assert.ok(Array.isArray(entries), fail + " entries");
   assert.ok(entries.every(entry => Array.isArray(entry) && entry.length === 2), fail + " entry shape");
+  entries = mediaDetailCustomerCopyHistoricalSnapshot(entries, locale);
   const owned = entries.filter(([key]) => typeof key === "string"
     && (key.startsWith("mediaReadFeedback.audio") || key.startsWith("mediaReadFeedbackaudio")));
   if (!owned.length) return entries;

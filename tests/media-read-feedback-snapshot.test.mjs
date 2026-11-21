@@ -6,6 +6,7 @@ import vm from "node:vm";
 import {mediaReadFeedbackHistoricalSnapshot as historical} from "./helpers/media-read-feedback-snapshot.mjs";
 import {mediaCollectionHistoricalSource, mediaCollectionHistoricalSnapshot} from "./helpers/media-collection-locale-snapshot.mjs";
 import {mediaAudioReadFeedbackHistoricalSnapshot} from "./helpers/media-audio-read-feedback-snapshot.mjs";
+import {mediaDetailCustomerCopyHistoricalSnapshot} from "./helpers/media-detail-customer-copy-snapshot.mjs";
 
 const raw = fs.readFileSync(new URL("./fixtures/media-read-feedback-reviewed.json", import.meta.url));
 const fixture = JSON.parse(raw), fail = /Unreviewed media read feedback/;
@@ -45,7 +46,8 @@ for (const [index, locale] of ["vi", "en", "zh"].entries()) {
     assert.equal(historical(result, locale), result);
     const interleaved = freeze([rows[0], first, ...rows.slice(1), last]);
     assert.deepEqual(historical(interleaved, locale), [first, last], "Arbitrary unrelated entries are not removed");
-    const base = freeze(Object.entries(messages[locale]).filter(([key]) => !key.startsWith("mediaReadFeedback")));
+    const base = freeze(mediaDetailCustomerCopyHistoricalSnapshot(Object.entries(messages[locale]), locale)
+      .filter(([key]) => !key.startsWith("mediaReadFeedback")));
     assert.equal(historical(base, locale), base);
     assert.deepEqual(historical(freeze(Object.entries(messages[locale])), locale), base);
   });

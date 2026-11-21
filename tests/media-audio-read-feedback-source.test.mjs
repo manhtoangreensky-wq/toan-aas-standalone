@@ -7,6 +7,7 @@ import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {mediaAudioReadFeedbackHistoricalSource as historical} from "./helpers/media-audio-read-feedback-snapshot.mjs";
 import {mediaReadFeedbackHistoricalSource as prior} from "./helpers/media-read-feedback-snapshot.mjs";
+import {mediaDetailCustomerCopyHistoricalSource} from "./helpers/media-detail-customer-copy-snapshot.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const raw = fs.readFileSync(new URL("./fixtures/media-audio-read-feedback-reviewed.json", import.meta.url));
@@ -15,8 +16,12 @@ const lf = value => value.replace(/\r\n/g, "\n"), fail = /Unreviewed media audio
 const files = ["static/portal/integration.js", "static/portal/portal-i18n.js"];
 const bases = Object.fromEntries(files.map(file => [file, lf(execFileSync("git",
   ["show", fixture.base + ":" + file], {cwd: ROOT, encoding: "utf8", maxBuffer: 30e6, windowsHide: true}))]));
-const physical = Object.fromEntries(files.map(file => [file, lf(fs.readFileSync(path.join(ROOT, file), "utf8"))]));
-// Current acceptance uses forward replay, never an inverse projection.
+// PR784 is historical after the narrowly reviewed detail/pager/label change.
+// Its exact old authority is unchanged. Current raw52-record/151-source
+// acceptance lives in media-detail-customer-copy-source.test.mjs.
+const physical = Object.fromEntries(files.map(file => [file,
+  mediaDetailCustomerCopyHistoricalSource(lf(fs.readFileSync(path.join(ROOT, file), "utf8")), file)]));
+// This historical candidate still uses its original four-record forward replay.
 const candidates = {...bases};
 for (const edit of fixture.canonicalChanges) {
   assert.equal(edit.count, 1);
@@ -24,7 +29,7 @@ for (const edit of fixture.canonicalChanges) {
   candidates[edit.file] = candidates[edit.file].replace(edit.old, () => edit.new);
 }
 
-test("current physical source: three actual worker results bind four exact records and reviewed LF-only transport repair", () => {
+test("historical PR784: three actual worker results bind four exact records and reviewed LF-only transport repair", () => {
   assert.equal(hash(raw), "8d54a2e60594277fd952e7323f5518bed6eb2dfc2e2e42faa81100fadb515cd8");
   assert.equal(fixture.base, "c8b14ade33ed62f2fefb34fe0d14aca198e03a8e");
   assert.equal(fixture.canonicalChanges.length, 4);
@@ -60,13 +65,15 @@ test("current physical source: three actual worker results bind four exact recor
   }
 });
 
-test("current physical sources: all151 LF pins and measured/LF/uniformCRLF raw encodings retain149 protected files", () => {
+test("historical PR784: all151 LF pins retain149 protected files after finite newest projection", () => {
   assert.equal(fixture.applicationBaseline.length, 151);
   assert.equal(new Set(fixture.applicationBaseline.map(row => row.file)).size, 151);
   assert.deepEqual(fixture.applicationBaseline.filter(row => row.changed).map(row => row.file).sort(), files.toSorted());
   assert.equal(fixture.applicationBaseline.filter(row => !row.changed).length, 149);
   for (const pin of fixture.applicationBaseline) {
-    const actual = fs.readFileSync(path.join(ROOT, pin.file)), normalized = lf(actual.toString("utf8"));
+    const physicalRaw = fs.readFileSync(path.join(ROOT, pin.file));
+    const normalized = mediaDetailCustomerCopyHistoricalSource(lf(physicalRaw.toString("utf8")), pin.file);
+    const actual = Buffer.from(normalized);
     assert.equal(hash(normalized), pin.candidateLfSha256, "Unprojected LF: " + pin.file);
     assert.ok([pin.candidateRawSha256, pin.candidateLfSha256, hash(normalized.replace(/\n/g, "\r\n"))]
       .includes(hash(actual)), "Only frozen measured/LF/uniformCRLF checkout: " + pin.file);

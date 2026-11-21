@@ -1,5 +1,24 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Chi tiết âm thanh — 21/11/2026
+
+Dùng [phiên hiện hành](PHIEN-MEDIA-DETAIL-CUSTOMER-COPY-20261121.md)
+và tám case MDCC. Kiểm cả chi tiết bộ sưu tập và Trung tâm âm thanh,
+ba ngôn ngữ, nền tối trên điện thoại và nền sáng trên máy tính.
+Chỉ chữ ứng dụng được dịch; tên/nội dung do khách nhập vẫn giữ.
+
+Cần có một tệp đã gắn trong dữ liệu QA để màn chỉnh thông tin tệp
+thực sự hiện. Kiểm đủ bốn form, nhãn “Thẻ” trỏ đúng ô, không trùng
+định danh, đủ ghi nguồn/quyền sử dụng/lịch sử/nút tải và các nút cũ.
+Gợi ý văn bản vẫn phải hiện đủ ba phần khi receipt hợp lệ.
+
+Không gửi form, tải/phát tệp hoặc gọi dịch vụ để kiểm nhãn. Dữ liệu
+QA được tạo riêng trong cơ sở dữ liệu tạm; không sửa dữ liệu khách.
+Chữ “Bắt buộc/Required/必填” dành cho hỗ trợ truy cập không phải
+thuật ngữ thừa cần xóa. Phải phân biệt chữ nhìn thấy với phần đọc
+thêm cho người dùng trình đọc màn hình. Không biến vùng bị cắt hoàn
+toàn thành một lớp che đang vẽ; giữ mọi phép đo chưa xác định là mở.
+
 ## Phản hồi đọc tệp âm thanh — 21/11/2026
 
 Dùng[phiên hiện hành](PHIEN-MEDIA-AUDIO-READ-FEEDBACK-20261121.md) và

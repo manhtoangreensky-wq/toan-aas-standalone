@@ -10,10 +10,11 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = runpy.run_path(str(ROOT / "tests/helpers/media_collection_historical_static.py"))
 inverse, fail = HELPER["historical_media_collection_portal"], HELPER["FAIL"]
+detail_inverse = runpy.run_path(str(ROOT / "tests/helpers/media_detail_historical_static.py"))["historical_media_detail_portal"]
 raw = (ROOT / "tests/fixtures/media-collection-locale-reviewed.json").read_bytes()
 fixture = json.loads(raw)
 groups = [row for row in fixture["historicalFragments"] if row["file"] == "static/portal/portal.js"]
-actual = (ROOT / "static/portal/portal.js").read_text(encoding="utf8").replace("\r\n", "\n")
+actual = detail_inverse((ROOT / "static/portal/portal.js").read_text(encoding="utf8").replace("\r\n", "\n"))
 baseline = subprocess.check_output(["git", "show", fixture["base"] + ":static/portal/portal.js"],
                                    cwd=ROOT).decode("utf8").replace("\r\n", "\n")
 

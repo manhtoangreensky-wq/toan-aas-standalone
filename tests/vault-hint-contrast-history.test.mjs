@@ -7,6 +7,7 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {resizeSubtitleWrapHistoricalThemeSource as composed} from './helpers/image-resize-subtitle-wrap-snapshot.mjs';
 import {vaultHintContrastHistoricalCss as newest} from './helpers/vault-hint-contrast-snapshot.mjs';
+import {mediaDetailCustomerCopyHistoricalSource} from './helpers/media-detail-customer-copy-snapshot.mjs';
 Error.stackTraceLimit=0;
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),file='static/portal/portal-theme.css',BASE='5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5';
 const lf=value=>value.replace(/\r\n/g,'\n'),hash=value=>createHash('sha256').update(value).digest('hex'),count=(value,part)=>value.split(part).length-1;
@@ -14,7 +15,7 @@ const authorityRaw=fs.readFileSync(new URL('./fixtures/vault-hint-contrast-revie
 assert.equal(hash(authorityRaw),'c58f59c1da9f1fdeff9582d2d05917d87d92e67cdf91a685bb65037898d44f7b');
 const wrapRaw=fs.readFileSync(new URL('./fixtures/image-resize-subtitle-wrap-reviewed.json',import.meta.url)),wrapFixture=JSON.parse(wrapRaw),wrap=wrapFixture.proposal.changes[0];
 assert.equal(hash(wrapRaw),'48d3a038e51e355b15d24026d7585c09b42477634f424985f9e2c7176e6cfd50');
-const base=lf(execFileSync('git',['show',BASE+':'+file],{cwd:ROOT,encoding:'utf8',maxBuffer:8e6})),current=lf(fs.readFileSync(path.join(ROOT,file),'utf8')),wrapAddition=wrap.new.slice(wrap.old.length);
+const base=lf(execFileSync('git',['show',BASE+':'+file],{cwd:ROOT,encoding:'utf8',maxBuffer:8e6})),current=mediaDetailCustomerCopyHistoricalSource(lf(fs.readFileSync(path.join(ROOT,file),'utf8')),file),wrapAddition=wrap.new.slice(wrap.old.length);
 assert.equal(count(base,wrap.new),1);const expected=base.replace(wrapAddition,'');
 test('strict newest CSS leaf composes OLD/NEW idempotently while preserving unknown outside bytes and rejecting owned mutations',()=>{
  assert.equal(hash(base),authority.baselineLfSha256);assert.equal(hash(current),authority.candidateLfSha256);assert.equal(newest(current,file),base);assert.equal(composed(base),expected);assert.equal(composed(current),expected);assert.equal(composed(composed(current)),expected);

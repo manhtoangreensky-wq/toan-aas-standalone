@@ -1,5 +1,22 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## MEDIA-DETAIL-CUSTOMER-COPY-20261121 — chi tiết âm thanh
+
+Phiên:[MEDIA-DETAIL-CUSTOMER-COPY](PHIEN-MEDIA-DETAIL-CUSTOMER-COPY-20261121.md).
+BASE051b936695638a5f083396194730861dc7831da1;Issue689/comment7058931880.
+Sửa case tại đây trước; dùng lại tracker/nhãn/mẫu, không tạo thẻ giữ chỗ.
+
+| Mã | Mức | Phạm vi | Kết quả cần đạt |
+|---|---|---|---|
+| MDCC-PAGER | nặng | Hai detail roots, VI/EN/ZH, range/empty/offset0/50 | Chữ đúng locale; route/action/offset và chín caller khác giữ |
+| MDCC-COPY | vừa | 46 hàng detail/board và ba note/khung dư | Chữ hữu dụng, không thuật ngữ nội bộ; chỉ bỏ node giải thích, đủ nút/form/kết quả thật |
+| MDCC-FORM | nặng | Nhãn/ID/for/help của attach, tags trùng trước sửa | Mỗi control có đúng nhãn; không duplicate ID; names/values/options/quyền giữ |
+| MDCC-DATA | nặng | Raw customer text, quyền, phiên bản, kết quả gợi ý | Dữ liệu không tự dịch/không HTML; ba receipt flags đúng mới hiện ba gợi ý |
+| MDCC-CONTRAST | nặng | Nhãn/help hiện thật trên nền sáng/tối | Các lỗi đã đo hết FAIL, tỷ lệ xác định tối thiểu4.5; UNKNOWN không tự nhận PASS |
+| MDCC-SOURCE | nặng |53record/baapp/151pins, history readers | Current forward độc lập;148 bảo vệ, fixture/golden/negative/error identity giữ |
+| MDCC-NATIVE | nặng | Bốn form thật, VI/EN/ZH, điện thoại/máy tính | GET/UUID/nhãn/copy/ảnh/dữ liệu/isolation; chỉ chạy lại failed/changed slices |
+| MDCC-DELIVERY | nặng | Một PR/exactCI/merge-tree/deploy/VPS/receipt | Đúng bản qua từng gate; không suy provider output hoặc whole goal |
+
 ## MEDIA-AUDIO-READ-FEEDBACK-20261121 — phản hồi đọc tệp âm thanh
 
 Phiên:[MEDIA-AUDIO-READ-FEEDBACK](PHIEN-MEDIA-AUDIO-READ-FEEDBACK-20261121.md).

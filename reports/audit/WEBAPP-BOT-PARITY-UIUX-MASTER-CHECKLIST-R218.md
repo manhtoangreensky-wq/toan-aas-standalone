@@ -1,5 +1,42 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 21/11/2026 — PR784 đã giao; chữ trang chi tiết âm thanh
+
+- [x] PR784/CI44873207140 haiSUCCESS14m28s/5m44s;18browser/
+  456authhash exact,artifacts14695790093/14695651360. Merge/runtime
+  051b936695638a5f083396194730861dc7831da1,tested/mergedtree
+  1e3bb10fb5c95b2584e64eeb363d943490e3ebd8exact.
+  Deploy44875068636SUCCESS57s,VPS3active-running/trackedclean/
+  health/5+5assets/buildlocal-62837b0afde36085a637đúng.
+  Tracker7049170333/PRreceipt7058572307đọclạiexact.
+  Các checkboxMARF releasepending bên dưới là snapshot lịch sử,
+  đã được receipt này thay thế; không mở lạiđơn vịđãgiao.
+- [x] MởMDCC trênbranchcodex/media-detail-customer-copy-20261121,
+  BASEđúngruntimePR784,trackedclean trướcREAD;chưaappchange.
+- [x] MDCC-READ:inventory95detail/boardcataloguekeys vàconsumerthật,
+  fixedvalidation/writefallback/sharedimpact;nativecontrastbaseline
+  phảiđoRGBA/alpha/backgroundancestry,khôngđoánratio từảnh.
+- [x] MDCC-CONTRACT/RED:chốtcopyVIENZH/OLDNEW/allowlist/sharedguards,
+  targetedphysicalRED vàmatrix/tracker trướcAGYapplicationproposals.
+- [x] MDCC-PAGINATION/DETAIL:phiếuđộc lậpoutput-only,
+  Rootserialreplay;khôngđổiAPI/query/UUID/guard/auth/data/engine.
+  Nămproposal3/43/4/2/1records,3.8FlashHigh/fullMAP;53records/
+  baappfiles. Phântrang/copy/namespaceGREEN và151pins148protected.
+- [ ] MDCC-FIXED-COPY:đơnvịkếtiếp ngay sau visible release;producer/
+  Music/SFXclassifier/integration.js giữBASEexact,tránh đổikey chung.
+- [x] MDCC-CONTRAST:chỉCSSselectorđãđothậtFAIL;22knownrecoveries
+  PASS=21R2+1R3ratio12.351554732138213;khôngđổitheme/layout/motion.
+- [x] MDCC-VERIFY/NATIVE:review0openfinding,giữ4361regressionPASS/
+  retest17slice43PASS;Python48historicalPASS/11PASS4exactBASEFAIL.
+  R1/R2/R3source/core/schema/auth/egress/owned0;384distinctcontrols,
+  12ảnhcoveragegộp;requiredannotation12checks đúng,khôngxóaAXsemantics.
+  163+4unknownkhôngnhậnPASS/globalconformance. Receiptfalse giữ.
+- [ ] MDCC-Tester/prepush/mộtPR/exactCI/merge/deploy/
+  VPS/assets/receipt. Quyềnbìnhthườngtựtiếnhành,khônghỏilại.
+- [ ] Toàngoal:locale/AX/auth/device/Safari/signedUI/genericfocus vẫn
+  mở. MotionM-FINAL01..06cuối;khôngBot/route-engine/provider/wallet/
+  PayOS/ENV/productiondatamutation.
+
 ## 21/11/2026 — PR783 đã giao; phản hồi đọc tệp âm thanh
 
 - [x] PR783/CI44800229661 haiSUCCESS;18browser/456authhash exact.
