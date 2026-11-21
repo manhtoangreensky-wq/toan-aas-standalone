@@ -10384,6 +10384,7 @@
         "KIEM-THU/HUONG-DAN-TESTER.md",
         "KIEM-THU/PHIEN-IMAGE-RESIZE-POLISH-20261117.md",
         "KIEM-THU/PHIEN-MEDIA-COLLECTION-LOCALE-20261120.md",
+        "KIEM-THU/PHIEN-MEDIA-DETAIL-CUSTOMER-COPY-20261121.md",
         "KIEM-THU/PHIEN-PDF-COMPRESS-META-20261118.md",
         "KIEM-THU/PHIEN-PDF-SPLIT-META-20261117.md",
         "KIEM-THU/PHIEN-VAULT-PROJECT-OPTIONS-20261120.md",
@@ -10418,10 +10419,9 @@
         "copyfast_finance_policy.py",
         "copyfast_governance.py",
         "copyfast_growth_review.py",
-        "copyfast_image_operations.py",
-        "copyfast_media_factory.py"
+        "copyfast_image_operations.py"
       ],
-      "occurrences": 1238,
+      "occurrences": 1242,
       "provider": "PayOS"
     },
     {
@@ -10507,6 +10507,7 @@
         "docs/reports/document-ocr-customer-copy-20261119.md",
         "docs/reports/media-collection-locale-20261120.md",
         "docs/reports/media-collection-locale-prepush-20261120.md",
+        "docs/reports/media-detail-customer-copy-20261121.md",
         "docs/reports/media-read-feedback-20261121.md",
         "docs/reports/pdf-input-font16-20261116.md",
         "docs/reports/pdf-split-readability-20261116.md",
@@ -10515,6 +10516,7 @@
         "docs/reports/video-inner-first-three-20261110.md",
         "reports/audit/MEDIA-AUDIO-READ-FEEDBACK-20261121.json",
         "reports/audit/MEDIA-COLLECTION-LOCALE-20261120.json",
+        "reports/audit/MEDIA-DETAIL-CUSTOMER-COPY-20261121.json",
         "reports/audit/MEDIA-READ-FEEDBACK-20261121.json",
         "reports/audit/R218-CHECKPOINT-20261021.md",
         "reports/audit/R218-CUSTOMER-UI-REALITY-QA-20261022.json",
@@ -10532,11 +10534,9 @@
         "reports/audit/R218-SUBDUB-MOBILE-RANGE-QA-20261024.json",
         "reports/audit/R218-SUBDUB-ORIGINAL-TOGGLE-R1-REVIEW-20261024.json",
         "reports/audit/R218-SUBDUB-ORIGINAL-TOGGLE-R2-REVIEW-20261024.json",
-        "reports/audit/R218-SUBDUB-REVIEW-EDIT-QA-20261024.json",
-        "reports/audit/R218-SUBDUB-VOICE-CLARITY-QA-20261024.json",
-        "reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json"
+        "reports/audit/R218-SUBDUB-REVIEW-EDIT-QA-20261024.json"
       ],
-      "occurrences": 76,
+      "occurrences": 82,
       "provider": "Gemini"
     },
     {
@@ -10673,7 +10673,7 @@
         "copyfast_music_media.py",
         "copyfast_music_sfx_library_bridge.py"
       ],
-      "occurrences": 2130,
+      "occurrences": 2129,
       "provider": "Telegram"
     }
   ],
@@ -18798,9 +18798,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 655,
-  "source_files_scanned": 655,
-  "source_fingerprint_sha256": "7dc448f85a96878c9564006cbff3ee16c83e59fe9784fb8a09bd9f9db4dfad4c",
+  "source_files_discovered": 660,
+  "source_files_scanned": 660,
+  "source_fingerprint_sha256": "41c0d8a5ecdf107e82934f8bf1a9f688acf497e659e105e4519cb120e15cecd2",
   "source_root": "repository-root",
   "ui_path_references": [
     {
