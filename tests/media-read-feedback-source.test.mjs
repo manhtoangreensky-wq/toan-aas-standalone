@@ -6,6 +6,7 @@ import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {mediaReadFeedbackHistoricalSource as historical} from "./helpers/media-read-feedback-snapshot.mjs";
+import {mediaAudioReadFeedbackHistoricalSource} from "./helpers/media-audio-read-feedback-snapshot.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const raw = fs.readFileSync(new URL("./fixtures/media-read-feedback-reviewed.json", import.meta.url));
@@ -14,9 +15,11 @@ const lf = value => value.replace(/\r\n/g, "\n"), fail = /Unreviewed media read 
 const files = ["static/portal/integration.js", "static/portal/portal-i18n.js"];
 const bases = Object.fromEntries(files.map(file => [file, execFileSync("git",
   ["show", fixture.base + ":" + file], {cwd: ROOT, encoding: "utf8", maxBuffer: 30e6, windowsHide: true})]).map(([file, value]) => [file, lf(value)]));
-const physical = Object.fromEntries(files.map(file => [file, lf(fs.readFileSync(path.join(ROOT, file), "utf8"))]));
-// Forward construction from immutable git BASE, not a historical inverse used
-// to bless current application source.
+// PR783's complete candidate/pins are historical. Project only the four newer
+// audio records; current unprojected acceptance lives in the dedicated MARF suite.
+const physical = Object.fromEntries(files.map(file => [file,
+  mediaAudioReadFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT, file), "utf8")), file)]));
+// Historical PR783 candidate remains the original forward replay from its BASE.
 const candidates = {...bases};
 for (const edit of fixture.canonicalChanges) {
   assert.equal(edit.count, 1);
@@ -24,7 +27,7 @@ for (const edit of fixture.canonicalChanges) {
   candidates[edit.file] = candidates[edit.file].replace(edit.old, () => edit.new);
 }
 
-test("current physical source: four reviewed worker proposals produce exactly five records on BASE files", () => {
+test("historical PR783 source: four reviewed worker proposals retain exactly five records on BASE files", () => {
   assert.equal(hash(raw), "5b924e5e0882a8ca649b64203a1d2af7360c63cd53c311a2b56f520c09feeac6");
   assert.equal(fixture.base, "fb1bbcf1fa7d36ba0745082229d9d1237d488364");
   assert.equal(fixture.canonicalChanges.length, 5);
@@ -49,13 +52,14 @@ test("current physical source: four reviewed worker proposals produce exactly fi
   }
 });
 
-test("current physical sources: all151 LF pins and exact checkout encodings retain149 protected application files", () => {
+test("historical PR783 sources: all151 LF pins and exact checkout encodings retain149 protected files after finite audio projection", () => {
   assert.equal(fixture.applicationBaseline.length, 151);
   assert.equal(new Set(fixture.applicationBaseline.map(row => row.file)).size, 151);
   assert.deepEqual(fixture.applicationBaseline.filter(row => row.changed).map(row => row.file).sort(), files.toSorted());
   assert.equal(fixture.applicationBaseline.filter(row => !row.changed).length, 149);
   for (const pin of fixture.applicationBaseline) {
-    const actual = fs.readFileSync(path.join(ROOT, pin.file));
+    const actual = Buffer.from(mediaAudioReadFeedbackHistoricalSource(
+      lf(fs.readFileSync(path.join(ROOT, pin.file), "utf8")), pin.file));
     const normalized = lf(actual.toString("utf8"));
     assert.equal(hash(normalized), pin.candidateLfSha256, "Unprojected LF: " + pin.file);
     // Preserve measured local raw pins, while accepting Git's canonical LF or

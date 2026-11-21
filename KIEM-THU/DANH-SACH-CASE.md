@@ -1,5 +1,21 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## MEDIA-AUDIO-READ-FEEDBACK-20261121 — phản hồi đọc tệp âm thanh
+
+Phiên:[MEDIA-AUDIO-READ-FEEDBACK](PHIEN-MEDIA-AUDIO-READ-FEEDBACK-20261121.md).
+BASEc8b14ade33ed62f2fefb34fe0d14aca198e03a8e;Issue689/comment7049170333.
+Sửa case tại đây trước; không tạo issue/PR giữ chỗ.
+
+| Mã | Mức | Phạm vi | Kết quả cần đạt |
+|---|---|---|---|
+| MARF-OUTCOME | nặng | Rawreaderready/empty/failed/stale | Chỉcurrentfailed cófailedtrue, merge/returnkhác giữ |
+| MARF-FEEDBACK | nặng | Filter/clear/page tại hai detailroots | Currentfailedwarning,validemptysuccess,stalesilent |
+| MARF-CURRENTNESS | nặng | Counter/audio/list/detail/route/session/logout/overlap | Không thông báo từ lượt khác, không mượn collectionstate |
+| MARF-COPY-GUARD | nặng | SáucâuVI/EN/ZH/fallback/plaintext/strictcapabilities | Đúnglocale,khôngHTML/nới quyền hoặc đổi dữ liệu khách |
+| MARF-SOURCE | nặng | Bốnrecord/haiapp/151pins149protected | Forwardcurrentđộc lập, historicalgiữoldguards/goldens |
+| MARF-NATIVE | nặng | 6view×2roots/form+nút thật | SignedGET/fault/recovery/empty/paging,48PNG/isolation/owned0 |
+| MARF-DELIVERY | nặng | MộtPR/exactCI/artifacts/merge/deploy/VPS/receipt | Đúng bản từnggate,khôngsuywholegoal/output/signedLIVE |
+
 ## MEDIA-READ-FEEDBACK-20261121 — phản hồi đọc âm thanh
 
 Phiên: [MEDIA-READ-FEEDBACK](PHIEN-MEDIA-READ-FEEDBACK-20261121.md).

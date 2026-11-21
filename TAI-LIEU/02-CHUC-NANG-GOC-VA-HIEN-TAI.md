@@ -1,5 +1,24 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 21/11/2026 — phản hồi đọc tệp âm thanh, không đổi chức năng gốc
+
+Nguồn gốc:docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md và audio
+reader/hai consumer ở BASEc8b14ade. PR783 đã giao runtimeBASE,
+CI44800229661/deploy44804290178 và hai receipt đọc lại đúng.
+
+| BASE đã đo | Ứng viên | Bằng chứng/ranh giới |
+|---|---|---|
+| Audio reader trả cùngshape cho readyempty/currentfailed | Catch thêm failed:true | Success/stale/merge/filters/API và mọi phần khác giữ |
+| Hai action luôn success sauawait | Chỉ success đúng lượt đã tải được; lỗi cảnh báo, cũ im lặng | Physical147ca7PASS140RED→147GREEN |
+| Collectionreadstate không thuộc audioresult | Dùng kết quả từ reader và counter hiện có | Không thêm globalstate hoặc mượn ready/failed của collection |
+| Sáu câu cố định lẫn thuật ngữ nội bộ/VI | Sáu key18literalVI/EN/ZH | Dữ liệu khách và rawservermessage không bị dịch tự động |
+| Filter/page dùng strictcapabilities | Giữ đúng biểu thức | Giá trị truthy khác true không mở quyền |
+
+Forward151pins/149protected và historical106uniquePASS;Python15PASS/
+3sameBASEFAIL,review0blocker. Hồi quy4283NodePASS;native6view/48PNG
+hashCRCdecode/source/core/schema/auth/egress/owned0 đạt;release còn kiểm, không
+thêm engine/player/download hoặc suy whole-app locale/AX/motion đạt.
+
 ## 21/11/2026 — phản hồi sau đọc bộ sưu tập âm thanh
 
 Nguồn gốc vẫn là `docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md`,

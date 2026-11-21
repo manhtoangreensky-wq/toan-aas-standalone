@@ -1,5 +1,18 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Phản hồi đọc tệp âm thanh — 21/11/2026
+
+Dùng[phiên hiện hành](PHIEN-MEDIA-AUDIO-READ-FEEDBACK-20261121.md) và
+bảy caseMARF. Mở chi tiết bộ sưu tập/AudioHub, dùng bộ lọc tệp âm thanh
+và nút phân trang có thật. Tải lỗi phải cảnh báo, không báo thành công;
+không tìm thấy tệp vẫn là kết quả hợp lệ. Xóa lọc, chuyển trang và quay
+lại phải giữ đúng tên/UUID. Kiểm riêngVI/EN/ZH, điện thoại và máy tính.
+
+Không gửi biểu mẫu liên kết/tạo/chỉnh sửa, tải tệp hoặc phát âm thanh.
+Dữ liệu QA chỉ là metadata giả; việc đọc danh sách không chứng minh
+tệp phát được. Không dựng control/response/state giả. Ghi rõ actual
+focus trước dùngTab; không tự khôi phục rồi báo focus đã đúng.
+
 ## Phản hồi đọc âm thanh — 21/11/2026
 
 Dùng [phiên hiện hành](PHIEN-MEDIA-READ-FEEDBACK-20261121.md) và các case

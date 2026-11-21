@@ -5,6 +5,7 @@ import {createHash} from "node:crypto";
 import vm from "node:vm";
 import {mediaReadFeedbackHistoricalSnapshot as historical} from "./helpers/media-read-feedback-snapshot.mjs";
 import {mediaCollectionHistoricalSource, mediaCollectionHistoricalSnapshot} from "./helpers/media-collection-locale-snapshot.mjs";
+import {mediaAudioReadFeedbackHistoricalSnapshot} from "./helpers/media-audio-read-feedback-snapshot.mjs";
 
 const raw = fs.readFileSync(new URL("./fixtures/media-read-feedback-reviewed.json", import.meta.url));
 const fixture = JSON.parse(raw), fail = /Unreviewed media read feedback/;
@@ -19,13 +20,14 @@ const freeze = value => {
   }
   return value;
 };
-test("snapshot authority is pinned and physical frozen catalogue supplies eight exact ordered keys perlocale", () => {
+test("historical PR783 snapshot authority is pinned and frozen catalogue retains eight exact ordered keys perlocale", () => {
   assert.equal(createHash("sha256").update(raw).digest("hex"),
     "5b924e5e0882a8ca649b64203a1d2af7360c63cd53c311a2b56f520c09feeac6");
   assert.ok(Object.isFrozen(messages));
   for (const [index, locale] of ["vi", "en", "zh"].entries()) {
     assert.ok(Object.isFrozen(messages[locale]));
-    const actual = Object.entries(messages[locale]).filter(([key]) => key.startsWith("mediaReadFeedback"));
+    const actual = mediaAudioReadFeedbackHistoricalSnapshot(Object.entries(messages[locale]), locale)
+      .filter(([key]) => key.startsWith("mediaReadFeedback"));
     assert.deepEqual(actual, fixture.copyRows.map(row => ["mediaReadFeedback." + row[0], row[index + 1]]));
   }
 });
