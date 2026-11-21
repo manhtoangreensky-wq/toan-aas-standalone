@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
+import {requiredWarningHistoricalSource, requiredWarningHistoricalSnapshot} from "./portal-required-warning-historical.mjs";
 
 const raw = fs.readFileSync(new URL("../fixtures/audio-review-pending-contract.json", import.meta.url));
 const fail = "Unreviewed audio review pending feedback";
@@ -25,6 +26,7 @@ const markers = {
 export function audioReviewPendingHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail);
   assert.equal(typeof file, "string", fail);
+  source = requiredWarningHistoricalSource(source, file);
   if (!Object.hasOwn(markers, file) || !markers[file].some(marker => source.includes(marker))) return source;
   const records = contract.records.filter(row => row.file === file);
   for (const row of records) assert.equal(count(source, row.new), 1, fail + " exact current record");
@@ -53,6 +55,7 @@ const rows = [
 ];
 export function audioReviewPendingHistoricalSnapshot(entries, locale) {
   assert.ok(["vi", "en", "zh"].includes(locale) && Array.isArray(entries), fail);
+  entries = requiredWarningHistoricalSnapshot(entries, locale);
   const keys = rows.map(row => row[0]), found = entries.filter(([key]) => keys.includes(key));
   if (!found.length) return entries;
   assert.deepEqual(found.map(([key]) => key), keys, fail + " exact ordered keys");

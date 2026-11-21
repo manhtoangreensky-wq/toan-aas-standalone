@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {audioReviewPendingHistoricalSource as historical} from "./helpers/audio-review-pending-snapshot.mjs";
+import {requiredWarningHistoricalSource} from "./helpers/portal-required-warning-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("./fixtures/audio-review-pending-contract.json", import.meta.url), "utf8"));
 const lf = value => value.replace(/\r\n/g, "\n");
@@ -10,7 +11,7 @@ const lf = value => value.replace(/\r\n/g, "\n");
 for (const file of ["static/portal/integration.js", "static/portal/portal-i18n.js"]) {
   test(`${file}: full physical source is BASE plus the exact reviewed feedback records`, () => {
     const base = lf(execFileSync("git", ["show", contract.base + ":" + file], {encoding: "utf8", maxBuffer: 20e6}));
-    const actual = lf(fs.readFileSync(file, "utf8"));
+    const actual = requiredWarningHistoricalSource(lf(fs.readFileSync(file, "utf8")), file);
     let expected = base;
     for (const row of contract.records.filter(item => item.file === file)) {
       assert.equal(expected.split(row.old).length - 1, 1, "Unique forward anchor");

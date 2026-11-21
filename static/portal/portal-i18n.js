@@ -22842,6 +22842,10 @@
     MESSAGES.zh[key] = zh;
   });
 
+  MESSAGES.vi["portal.form.requiredWarning"] = "Hãy hoàn tất các trường bắt buộc trước khi tiếp tục.";
+  MESSAGES.en["portal.form.requiredWarning"] = "Complete the required fields before continuing.";
+  MESSAGES.zh["portal.form.requiredWarning"] = "请先填写必填项，然后继续。";
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

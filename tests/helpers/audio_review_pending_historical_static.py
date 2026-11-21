@@ -2,8 +2,10 @@
 from pathlib import Path
 import hashlib
 import json
+import runpy
 
 ROOT = Path(__file__).resolve().parents[2]
+WARNING_PROJECT = runpy.run_path(str(ROOT / "tests/helpers/portal_required_warning_historical.py"))["required_warning_historical_source"]
 RAW = (ROOT / "tests/fixtures/audio-review-pending-contract.json").read_bytes()
 FAIL = "Unreviewed audio review pending feedback"
 NORMALIZED = RAW.replace(b"\r\n", b"\n")
@@ -29,6 +31,7 @@ def _boundary(source: str, part: str) -> int:
 def historical_audio_review_pending_source(source: str, file: str) -> str:
     """Restore exact records; current candidate acceptance remains forward-only."""
     assert isinstance(source, str) and isinstance(file, str), FAIL
+    source = WARNING_PROJECT(source, file)
     if file not in MARKERS or not any(marker in source for marker in MARKERS[file]):
         return source
     records = [row for row in CONTRACT["records"] if row["file"] == file]

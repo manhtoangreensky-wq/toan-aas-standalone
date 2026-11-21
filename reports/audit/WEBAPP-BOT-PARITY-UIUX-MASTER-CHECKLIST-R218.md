@@ -1,5 +1,20 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 22/11/2026 — PR790 đã giao; cảnh báo trường bắt buộc
+
+- [x] PR790 đã gộp `a09c7cc94a82537f77ab4e016d3dfa9ae7f23fcc`;
+  CI44945000088 hai job thành công, deploy44947279301 thành công.
+  VPS đúng commit, ba dịch vụ hoạt động, health hợp lệ; 5+5 asset khớp.
+  Issue689/comment7068915906 đã đọc lại. Signed production UI chưa xác nhận.
+- [x] Cảnh báo ứng dụng: Antigravity R1 hai thay đổi được đối chiếu;
+  mã mục tiêu 4/4, trình duyệt cô lập 6/6, vùng chung 93 Node,
+  âm thanh 257 Node, historical 129+2 Python, bộ dịch 16 Python và
+  hồi quy riêng 4.796 trường hợp/152 tệp đạt. Không cộng trùng.
+- [ ] Kiểm tra phát hành, CI, deploy và signed UI cho cảnh báo còn chờ.
+- [ ] Thông báo do trình duyệt tự tạo và nhãn/placeholder trang ảnh
+  còn lẫn ngôn ngữ là đơn vị riêng; không nhận toàn trang đã sạch.
+  Locale/AX/auth/device/Safari/output còn mở; motion M-FINAL01..06 cuối.
+
 ## 22/11/2026 — PR789 đã giao; thông báo rà soát âm thanh
 
 - [x] PR789 đã gộp và triển khai `3c5d3ca62496126ade250ac78e0cbf3efeb6c79e`;
