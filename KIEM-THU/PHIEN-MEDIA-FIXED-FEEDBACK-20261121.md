@@ -41,6 +41,13 @@ Reviewedfixture:tests/fixtures/media-fixed-feedback-reviewed.json.
   được phân loại riêng,khôngchekhóa thật hoặcbỏscanfile.
 - [ ] Một PR/exact CI/artifacts/merge-tree/deploy/VPS/assets/receipt.
 
+CI44899682604/PR786 giữ FAILED:đúng một newQArawpinCRLF/LF,
+khôngappfailure. Ba pressurecases3rows1FAIL2PASS xác nhận; sau sửa
+validatorđúng mộtfile,originalfailedsource+3pressure=4PASS.
+Ledger4807=4804giữ+3mới,154workflowfileskhôngđổi. Native36 và
+hai sourcegates khácgiữ;khôngapp/fixture/goldenchange hoặc rerun.
+Chờsupplement/manifestdelta/newexactHEADCItrongcùngPR,khôngPRthừa.
+
 Không product POST,blob/download/player/provider/ví/PayOS/ENV hoặc
 productiondata. Native chỉ bao phủ ba lỗi nhập, không gọi tám thao
 tác ghi trên hệ thống thật. API/DTO/thứ tự/guard của tám thao tác

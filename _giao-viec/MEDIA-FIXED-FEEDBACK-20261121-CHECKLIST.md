@@ -3,7 +3,7 @@
 TASK=MEDIA-FIXED-FEEDBACK-20261121.
 BASE=6f04b8449d7354ca44397c199ccdda77107f577e.
 BRANCH=codex/media-fixed-feedback-20261121.
-STATUS=LOCAL_NATIVE_TESTER_ACCEPTED_RELEASE_PENDING.
+STATUS=CI_PORTABILITY_QA_AMENDMENT_GREEN_SAME_PR786_RELEASE_PENDING.
 TRACKER=Issue689/comment7060930950; đọc lại body đúng trước gửi.
 
 Đang đọc và áp dụng skill owner-governed-codex cho task này.
@@ -126,6 +126,12 @@ chưa JSON/chưa worker/chưa áp dụng; không tái chạy để sửa produce
   30scoped+2provenance/9stateexcluded/source151/149protected/
   10sharedfunction/diffcheck/zeroactualsecrethits.
 - [ ] MộtPR/exactCI/artifacts/merge-tree/exclusivedeploy/VPS/receipts.
+  FirstCI44899682604/HEADc3184906FAILED4m20s mộtWindowsRAW/LinuxLF
+  comparator,mọiappcode/nativegiữ. Thêm3pressureRED1FAIL2PASS,
+  failed-onlysource+3pressure4PASS;onlymeasured/LF/uniformCRLFvà
+  mandatoryLFhash,content/mixednewlinebịchặn. Ledger4807unique
+  =4804giữ+3new;khôngfresh4807run. Supplement/manifestdelta/
+  Webprovenance/newexactHEADCI trongcùngPR786,chưađượcmerge.
 
 Không paidprovider/realjob/productionwrites/ENV hoặc ví/PayOS. Toàn
 goalACTIVE/incomplete;6review-packmessages/locale/AX/auth/device/

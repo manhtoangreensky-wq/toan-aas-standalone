@@ -3,7 +3,7 @@
 TASK=MEDIA-FIXED-FEEDBACK-20261121.
 BASE=6f04b8449d7354ca44397c199ccdda77107f577e.
 BRANCH=codex/media-fixed-feedback-20261121.
-STATUS=LOCAL_NATIVE_ACCEPTED_FINAL_TESTER_RELEASE_PENDING.
+STATUS=LOCAL_NATIVE_ACCEPTED_CI_QA_PORTABILITY_AMENDED_RELEASE_PENDING.
 TRACKER=Issue689; comment riêng trước gửi worker.
 
 Đang đọc và áp dụng skill owner-governed-codex cho task này.
@@ -238,6 +238,20 @@ Spec/checklistcậpnhật sau run làreporting;frozenruninputs vẫn giữ
 trongbindingreceipt,app151khôngđổi saunative.
 
 ## Thứ tự và cổng chuyển
+
+CIamendment trong cùngPR786:run44899682604/HEADc3184906 thấtbại
+4m20s tại đúng một RAWpin trong MFFsourcegate. admin_ops.py có
+WindowsmeasuredRAW58ad7a2c.../77CRLF,nhưngGit/LinuxRAW91a9e9b1...
+đúng bằng immutablebaseLFpin. RootQAportabilityfault,khôngworker
+hoặcappcodefault. Không sửa151appsource/fixture/golden/native.
+Chỉ mộtsource-testfile:validatorbắtbuộcLFhashBASEexactvàrawbytes
+chỉ được measuredRAW/LF/uniformCRLF. Ba pressurecases mới chứng
+minh LF/CRLFđạt,contentmutation vàunmeasuredmixednewlinebịchặn.
+RED3cases1FAIL2PASS→failed-onlysource+3pressure4PASS/0FAIL/0SKIP;
+hai sourcegates khác và4804priorcontextsgiữ;ledger4807uniquePASS
+là4804giữ+3mới,khôngfresh4807run. Source/core/native36proof giữ.
+SamePR,report/audit/metadata/provenance cậpnhật;newexactHEADCI
+vàartifacts phảiđạt trướcmerge/deploy,khôngbỏfailurehoặcrerunapp.
 
 READ→contract/RED/tracker→ba independent output-onlyproposals
 (2/8/1records/fullMAP)→Rootreviewgộp/serialreplay→targetedGREEN/

@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-21",
-  "local_files_refresh_scope": "MEDIA-FIXED-FEEDBACK-20261121;11records/2app/3AGY;222targeted/54historical;4804uniqueNode/154workflowfiles;36nativealerts/36newPNG;release pending.",
+  "local_files_refresh_scope": "MEDIA-FIXED-FEEDBACK-20261121;11records/2app/3AGY;222targeted/54historical;4804uniqueNode/154workflowfiles;36nativealerts/36newPNG;release pending. SamePR786 CI44899682604 QA newline correction;4807unique cases with three new pressure identities;app/native unchanged.",
   "current_verification_session": {
     "id": "MEDIA-FIXED-FEEDBACK-20261121",
     "base_sha": "6f04b8449d7354ca44397c199ccdda77107f577e",
@@ -72,7 +72,7 @@
     "protected_shared_functions": 10,
     "source_fixture_raw_sha256": "b1a1293fd200c49ac4348c7e2f9965df6b9d5b0ae83562fff240a1ae013eddbc",
     "regression_workflow_files": 154,
-    "node_unique_passed": 4804,
+    "node_unique_passed": 4807,
     "node_unique_failed": 0,
     "node_unique_skipped": 0,
     "python_retained_current_passed": 10,
@@ -92,7 +92,42 @@
     "motion": "NOT_TESTED",
     "signed_production_ui": "NOT_TESTED",
     "real_product_write": "NOT_TESTED",
-    "audio_output": "NOT_TESTED"
+    "audio_output": "NOT_TESTED",
+    "ci_amendment": {
+      "firstRun": 44899682604,
+      "firstHead": "c3184906a4cf3f2c55e5508d4b7971b924dc0ba8",
+      "firstResult": "FAILED_ROOT_QA_RAW_NEWLINE_PORTABILITY",
+      "failedCase": "all149 other physical sources remain exact RAW/LF BASE and all151 source paths are unique",
+      "firstMismatch": "admin_ops.py",
+      "rootCause": "Measured Windows CRLF RAW versus canonical Git/Linux LF, with exact BASE LF content.",
+      "changedTestFiles": [
+        "tests/media-fixed-feedback-source.test.mjs"
+      ],
+      "oldExpectedFixtureAndGoldensPreserved": true,
+      "newPressureCases": 3,
+      "pressureRed": {
+        "cases": 3,
+        "pass": 2,
+        "fail": 1,
+        "skipped": 0
+      },
+      "failedAndChangedGreen": {
+        "cases": 4,
+        "pass": 4,
+        "fail": 0,
+        "skipped": 0
+      },
+      "retainedUniqueCases": 4804,
+      "finalUniqueCases": 4807,
+      "mandatoryBaseLfHash": true,
+      "onlyMeasuredLfUniformCrLfRawAllowed": true,
+      "contentMutationAndUnmeasuredMixedNewlineRejected": true,
+      "applicationChangesAfterNative": 0,
+      "nativeReruns": 0,
+      "workerCodeFailures": 0,
+      "supplementalReviewOpenCritical": 0,
+      "supplementalReviewOpenImportant": 0
+    }
   },
   "vault_project_verification_session": {
     "id": "VAULT-PROJECT-OPTIONS-20261120",

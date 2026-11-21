@@ -63,6 +63,15 @@ globalAX/motion/Safari/device/signedproductionUI hoặc output âm thanh.
 
 ## Phát hành và việc kế tiếp
 
+PR786 CI đầu44899682604 dừng sau4m20s ở một comparator mới: raw
+xuống dòng WindowsCRLF khác LinuxLF, nội dung cùngbaseLFpin.
+Không sửaapp/fixture/golden. ChỉvalidatorQA nhận measuredRAW/LF/
+uniformCRLF, vẫn bắt buộc LFhash đúng và chặn byte nội dung khác/
+mixednewline chưa đo. Ba pressurecases RED3=1FAIL2PASS; sửa tối
+thiểu rồi originalfailedcase+3pressure=4PASS. Ledger sau bổ sung
+là4807uniquePASS=4804giữ+3mới;khôngchạylạiapp/native/hồiquy.
+Runfalse ban đầu giữ; cùngPR phải có newexactHEADCI/artifacts.
+
 Ops/crosswalk/spec/checklist/támcase/Tester/audit/manifest chốt trước
 một PR. CI exactHEAD/artifacts,merge-tree/exclusivedeploy/VPS/
 assets/build/receipt là các gate riêng, không suy từ localPASS.

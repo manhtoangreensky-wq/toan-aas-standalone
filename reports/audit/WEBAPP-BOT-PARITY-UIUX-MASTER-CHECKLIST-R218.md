@@ -28,6 +28,10 @@
   30scoped+2Webprovenance/9stateexcluded/zeroactualsecrethits.
 - [ ] MFF-onePR/exactCI/artifacts/
   merge/exclusivedeploy/VPS/assets/receipts.
+  PR786/CI44899682604 đầuFAILEDmộtQAWindowsCRLF/LinuxLFrawpin,
+  khôngappfailure. One-fileQAcorrection+3newpressure:RED1FAIL2PASS
+  →failed-only+new4PASS;ledger4807=4804giữ+3mới. Native/source/
+  fixture/golden giữ,khôngrerunbatch;newexactHEADCIchưachốt.
 - [ ] Review-packcopy/locale/AX/auth/device/Safari/signedUI/genericfocus
   tiếp checklist;motionM-FINAL01..06cuối. WholegoalACTIVE/incomplete.
   GenericrenderervalidationwarningVIcònởportal.js làlocalequeue

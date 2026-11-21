@@ -4,7 +4,7 @@ TASK=MEDIA-FIXED-FEEDBACK-20261121.
 BASE=6f04b8449d7354ca44397c199ccdda77107f577e.
 BRANCH=codex/media-fixed-feedback-20261121.
 TRACKER=Issue689/comment7060930950.
-PUSH_GATE=READY.
+PUSH_GATE=READY_AFTER_CI_PORTABILITY_SUPPLEMENT.
 
 ## 1. Review và nghiệp vụ hiện tại
 
@@ -45,6 +45,17 @@ zero-casefalse giữ. KhôngproductPOST/provider/ví/customerdata.
 Không nhận globalAX/contrast/motion/Safari hoặc signedLIVE.
 
 ## 4. Công bố
+
+SamePR786 bổ sung QA sauCI44899682604: mộtrawpin WindowsCRLF/
+LinuxLF thấtbại dùcanonicalcontentBASEexact. Chỉsource-test
+validator nhận measured/LF/uniformCRLF,khôngsửaapp/fixture/golden.
+3newpressurecases RED1FAIL2PASS→failed-only+pressure4PASS,giữ
+4804contexts vànative36,ledger4807uniquePASS. SupplementTester/
+audit/metadata/manifestdelta/Web-onlyprovenance chốt trướcpushlại.
+Supplement0Critical/Important,42auditpins,4807uniquePASS;
+application151/nativegiữ vàkhôngrerun. Đúngmộttestfile+reporting
+được sửa,khôngmởapp/fixture/golden/CIpermissions hoặcstate.
+KhôngđổiCItimeout,trigger,permissionshoặcskipcase.
 
 Manifest allowlist source/test/docs/audit/QAworkflow cùng đúng hai
 Webprovenance chuẩn; chín statefilenameexcluded trước đọc/stage.

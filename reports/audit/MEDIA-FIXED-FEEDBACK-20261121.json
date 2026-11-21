@@ -58,6 +58,47 @@
     "remainingLocaleFiles": 147,
     "remainingReceiptCases": 4600,
     "finalUniqueReconciliation": {
+      "unique_final": {
+        "PASS": 4807,
+        "FAIL": 0,
+        "SKIP": 0
+      },
+      "method": "4804 retained unique cases plus three new pressure identities; one same-identity source retest replaces prior evidence.",
+      "originalLedgerRawSha256": "f6f58aa544fa7e115f8fa24a18c74829e327c146a660104308aaaab99bae0445",
+      "supplement": {
+        "file": "media-fixed-feedback-ci-tester-supplement-nov21.json",
+        "rawSha256": "403761cf820d0311fa14810d070db4aeb115082e74022b83c22b7caa0136f344"
+      }
+    },
+    "workflowCoverage": {
+      "start_step": "Video Studio locale and navigation presentation regressions",
+      "end_boundary": "Executable Chrome Extension Unit Tests",
+      "algorithm": "Parse only this named current block's node --test arguments; expand vault-action-*.test.mjs from actual tests filenames; unique-sort.",
+      "current_expanded_files": 154,
+      "selection_files": 154,
+      "exact_ordered_list_match": true,
+      "covered_selected_files": 154,
+      "missing_files": [],
+      "preserved_complete_files": 7,
+      "remaining_files": 147,
+      "partition_exact": true,
+      "node_list_sha256": "8d6385d4317fb2c1526d9ad0edd54f1787de447ff359e6f82a7f6db3a6282bcd",
+      "selection_workflow_raw_sha256": "e7b016d495e61a3713645eb2e785e4ad8dd3e76f3189e61fcfaea09bcbc67e18",
+      "current_workflow_raw_sha256": "3c442c84b07d02950724847a36fd9f119a541ef049836bfc8aef4d6acfd6692d",
+      "selection_locale_block_sha256": "c5c1364242ab85c762184e81f6a898a0bf89a6900fa14b3a859a8b056a8f3085",
+      "current_locale_block_sha256": "1ab5b2fa9df52a5e875db33799a45a5ada4bd024bfc832548f711fa38d10fa5b",
+      "difference_boundary": "Raw workflow and complete block hashes changed with Python pressure-command metadata; exact expanded154-file Node list is unchanged. No whole-workflow byte-identity or all-CI-step coverage claim.",
+      "scope": "154/154 in this named locale block only; eight imported case-owner modules are not eight additional selected workflow files."
+    },
+    "python": {
+      "retainedCurrentPass": 10,
+      "newHistoryPressurePass": 26,
+      "changedHandoffRetestPass": 1,
+      "sameExactBaseFailures": 4,
+      "newApplicationFailures": 0,
+      "fullPytestGreen": false
+    },
+    "priorFinalUniqueReconciliation": {
       "identity": "Case-sensitive ordinal pair(relative testcase.file with slash normalization, XML-decoded testcase.name). Read seven XMLs once in the supplied order; later same-identity receipt replaces earlier status.",
       "raw_testcase_rows": 4886,
       "receipts": [
@@ -182,34 +223,6 @@
       },
       "preserved_seven_case_total": 270,
       "note": "Do not sum222+54+4600 without removing72 repeated case identities. No new tests were executed by this lane; this is a retained-receipt ledger, not one fresh4804-case run."
-    },
-    "workflowCoverage": {
-      "start_step": "Video Studio locale and navigation presentation regressions",
-      "end_boundary": "Executable Chrome Extension Unit Tests",
-      "algorithm": "Parse only this named current block's node --test arguments; expand vault-action-*.test.mjs from actual tests filenames; unique-sort.",
-      "current_expanded_files": 154,
-      "selection_files": 154,
-      "exact_ordered_list_match": true,
-      "covered_selected_files": 154,
-      "missing_files": [],
-      "preserved_complete_files": 7,
-      "remaining_files": 147,
-      "partition_exact": true,
-      "node_list_sha256": "8d6385d4317fb2c1526d9ad0edd54f1787de447ff359e6f82a7f6db3a6282bcd",
-      "selection_workflow_raw_sha256": "e7b016d495e61a3713645eb2e785e4ad8dd3e76f3189e61fcfaea09bcbc67e18",
-      "current_workflow_raw_sha256": "3c442c84b07d02950724847a36fd9f119a541ef049836bfc8aef4d6acfd6692d",
-      "selection_locale_block_sha256": "c5c1364242ab85c762184e81f6a898a0bf89a6900fa14b3a859a8b056a8f3085",
-      "current_locale_block_sha256": "1ab5b2fa9df52a5e875db33799a45a5ada4bd024bfc832548f711fa38d10fa5b",
-      "difference_boundary": "Raw workflow and complete block hashes changed with Python pressure-command metadata; exact expanded154-file Node list is unchanged. No whole-workflow byte-identity or all-CI-step coverage claim.",
-      "scope": "154/154 in this named locale block only; eight imported case-owner modules are not eight additional selected workflow files."
-    },
-    "python": {
-      "retainedCurrentPass": 10,
-      "newHistoryPressurePass": 26,
-      "changedHandoffRetestPass": 1,
-      "sameExactBaseFailures": 4,
-      "newApplicationFailures": 0,
-      "fullPytestGreen": false
     }
   },
   "review": {
@@ -435,6 +448,76 @@
       "file": "media-fixed-feedback-native-prep-nov21-r1/run-media-fixed-feedback-native-nov21-01/acceptance-summary.json",
       "rawBytes": 320,
       "rawSha256": "f5d47c60a3f8e278c91b4cfde99812df3ade7c2813ab7637ba35c93911fda4d6"
+    },
+    {
+      "file": "media-fixed-feedback-ci-44899682604-failed.log",
+      "rawBytes": 1304599,
+      "rawSha256": "9cb988b7bbb51b32105d6aea8a8747634bc6f4320750a8637757c671b3355ef2"
+    },
+    {
+      "file": "media-fixed-feedback-ci-failure-summary-nov21.json",
+      "rawBytes": 5212,
+      "rawSha256": "d0b4a3589177b65354f78947648e5a240e58690dfbd23026ff607a0d0fe23971"
+    },
+    {
+      "file": "media-fixed-feedback-ci-portability-amendment-nov21.md",
+      "rawBytes": 1160,
+      "rawSha256": "3f5a03841573819de31c4ce60bd04b6c3dad00b580d15af8a70a91c1ba5a8811"
+    },
+    {
+      "file": "media-fixed-feedback-ci-portability-red-nov21.xml",
+      "rawBytes": 2815,
+      "rawSha256": "6bdc892106fb51ed006c209eda23c7f68f8213c268c2195aa74cee2794341496"
+    },
+    {
+      "file": "media-fixed-feedback-ci-portability-green-nov21.xml",
+      "rawBytes": 1268,
+      "rawSha256": "3914b0b310057f8586eb7f827169b7aa8b5e72c6b0790c346ec533dbfbd4c949"
+    },
+    {
+      "file": "media-fixed-feedback-ci-tester-supplement-nov21.json",
+      "rawBytes": 6366,
+      "rawSha256": "403761cf820d0311fa14810d070db4aeb115082e74022b83c22b7caa0136f344"
+    },
+    {
+      "file": "media-fixed-feedback-ci-tester-supplement-nov21.md",
+      "rawBytes": 1901,
+      "rawSha256": "8da714f1d3cc62cb33d50bce8577c9d3b2afc24a84414296ffa4d8eba526b60f"
     }
-  ]
+  ],
+  "ciAmendment": {
+    "firstRun": 44899682604,
+    "firstHead": "c3184906a4cf3f2c55e5508d4b7971b924dc0ba8",
+    "firstResult": "FAILED_ROOT_QA_RAW_NEWLINE_PORTABILITY",
+    "failedCase": "all149 other physical sources remain exact RAW/LF BASE and all151 source paths are unique",
+    "firstMismatch": "admin_ops.py",
+    "rootCause": "Measured Windows CRLF RAW versus canonical Git/Linux LF, with exact BASE LF content.",
+    "changedTestFiles": [
+      "tests/media-fixed-feedback-source.test.mjs"
+    ],
+    "oldExpectedFixtureAndGoldensPreserved": true,
+    "newPressureCases": 3,
+    "pressureRed": {
+      "cases": 3,
+      "pass": 2,
+      "fail": 1,
+      "skipped": 0
+    },
+    "failedAndChangedGreen": {
+      "cases": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0
+    },
+    "retainedUniqueCases": 4804,
+    "finalUniqueCases": 4807,
+    "mandatoryBaseLfHash": true,
+    "onlyMeasuredLfUniformCrLfRawAllowed": true,
+    "contentMutationAndUnmeasuredMixedNewlineRejected": true,
+    "applicationChangesAfterNative": 0,
+    "nativeReruns": 0,
+    "workerCodeFailures": 0,
+    "supplementalReviewOpenCritical": 0,
+    "supplementalReviewOpenImportant": 0
+  }
 }

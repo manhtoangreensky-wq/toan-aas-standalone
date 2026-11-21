@@ -24,6 +24,12 @@ function exactFunction(source, name) {
   const end = source.indexOf("\n  }", start);
   assert.ok(end > start); return source.slice(start, end + 4);
 }
+function assertProtectedSourceBytes(raw, row) {
+  const canonical = lf(raw.toString("utf8"));
+  assert.equal(hash(canonical), row.baseLfSha256, row.file);
+  assert.ok([row.baseRawSha256, row.baseLfSha256, hash(canonical.replace(/\n/g, "\r\n"))].includes(hash(raw)),
+    "Only measured/LF/uniformCRLF checkout:" + row.file);
+}
 test("current two physical sources equal BASE plus the exact11 Root-owned forward records, without inverse acceptance", () => {
   assert.equal(fixture.canonicalChanges.length, 11);
   for (const file of fixture.allowedFiles) {
@@ -41,9 +47,26 @@ test("all149 other physical sources remain exact RAW/LF BASE and all151 source p
   assert.equal(protectedRows.length, 149);
   for (const row of protectedRows) {
     const raw = fs.readFileSync(path.join(ROOT, row.file));
-    assert.equal(hash(raw), row.baseRawSha256, row.file);
-    assert.equal(hash(lf(raw.toString("utf8"))), row.baseLfSha256, row.file);
+    assertProtectedSourceBytes(raw, row);
   }
+});
+test("source pin portability accepts exact LF and uniform CRLF checkout bytes", () => {
+  const row = fixture.applicationBaseline.find(row => row.file === "admin_ops.py");
+  const text = lf(fromBase(row.file));
+  assertProtectedSourceBytes(Buffer.from(text), row);
+  assertProtectedSourceBytes(Buffer.from(text.replace(/\n/g, "\r\n")), row);
+});
+test("source pin portability rejects changed content even with a valid checkout newline style", () => {
+  const row = fixture.applicationBaseline.find(row => row.file === "admin_ops.py");
+  const text = lf(fromBase(row.file));
+  assert.throws(() => assertProtectedSourceBytes(Buffer.from(text + " "), row), assert.AssertionError);
+});
+test("source pin portability rejects an unmeasured mixed-newline encoding with unchanged content", () => {
+  const row = fixture.applicationBaseline.find(row => row.file === "admin_ops.py");
+  const text = lf(fromBase(row.file)), mixed = text.replace("\n", "\r\n");
+  assert.notEqual(hash(mixed), row.baseRawSha256);
+  assert.notEqual(hash(mixed), row.baseLfSha256);
+  assert.throws(() => assertProtectedSourceBytes(Buffer.from(mixed), row), assert.AssertionError);
 });
 test("all shared validation producers, Music/SFX classifier and existing read-feedback helper retain exact function bytes", () => {
   const source = lf(fs.readFileSync(path.join(ROOT, "static/portal/integration.js"), "utf8"));

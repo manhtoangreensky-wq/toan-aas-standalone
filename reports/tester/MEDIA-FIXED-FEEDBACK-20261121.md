@@ -51,3 +51,26 @@ Native chỉ chứng minh ba loại lỗi local này. 32 lỗi còn lại và t�
 Reviewer không chạy tests/native/mạng, không ghi repository/Git, không đọc state/DB/credentials, không gọi provider/ví. JSON kèm đầy đủ input hashes và 36 PNG hashes. Không có lỗi ứng dụng mới được chứng minh trong supplement này.
 
 JSON_PARSE=EXIT_0; đọc đủ JSON và đối chiếu 22 artifact input hashes, không sai lệch. DEPLOY=NO. LIVE_PASS=NOT_CLAIMED.
+
+
+---
+
+# Tester bổ sung CI — Tương thích xuống dòng
+
+Đang đọc và áp dụng skill owner-governed-codex cho task này.
+
+Review giới hạn đúng diff `tests/media-fixed-feedback-source.test.mjs` so với `c3184906` và bốn artifact mới. **Không còn Critical/Important mở** trong phạm vi bổ sung này.
+
+CI44899682604 thất bại ở raw pin `admin_ops.py`: raw Windows đã đo khác raw Git/Linux, nhưng Git/Linux khớp đúng hash LF bất biến. Đây là lỗi QA tương thích checkout, không phải thay nội dung ứng dụng.
+
+Sửa nhỏ giữ bắt buộc hash LF đúng BASE, sau đó chỉ nhận ba dạng raw: bản đã đo, LF hoặc CRLF đồng nhất. Không nhận content-byte edit hoặc mixed-newline chưa đo. Fixture/golden/app và hai source gates còn lại không đổi.
+
+RED có ba ca: một assertion fail khi LF hợp lệ bị từ chối, hai rejection pressure PASS. GREEN có bốn PASS/0 FAIL/0 SKIP: đúng ca source gate cũ chạy lại và ba pressure mới. Giữ nguyên receipt RED.
+
+Sổ ca được bổ sung chính xác: **4.804 PASS giữ lại + ba ca pressure mới = 4.807 ca duy nhất PASS, 0 FAIL, 0 SKIP**. Ca source gate cũ giữ nguyên identity nên retest không được tính thành ca thứ tư mới.
+
+Khối locale vẫn đủ **154 tệp**, danh sách mở rộng khớp selection cũ; không thêm test file. Giữ native 36 toast/36 PNG và bốn assertion BASE đã báo từ final Tester; không đọc lại, giải mã hoặc chạy lại native/full ledger. Không chứng nhận global AX, contrast, motion, Safari, production UI hay audio/provider output.
+
+Không sửa repository/app/tests/Git/state/DB; không chạy kiểm thử hoặc gọi mạng/provider/ví. Worker codefail0, takeoverfalse. Root vẫn cần CI/artifacts mới đúng amended HEAD trước merge/deploy.
+
+JSON_PARSE=EXIT_0.
