@@ -1,5 +1,39 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 21/11/2026 — lời nhắc nhập, lưu và chuyển bước âm thanh
+
+Mốc đã giao gần nhất là PR785, runtime
+`6f04b8449d7354ca44397c199ccdda77107f577e`. CI44888152941 và
+deploy44890203239 thành công; nguồn, tài nguyên và ba dịch vụ trên
+VPS đã được đối chiếu riêng. Các mục “chi tiết âm thanh trước phát
+hành” bên dưới là ảnh chụp lịch sử, không phải bản còn chờ đưa lên web.
+
+Ứng viên hiện tại chỉ dịch lời nhắc cố định khi nhập sai, lưu hoặc
+mở bước xử lý âm thanh. Có 35 thông báo kiểm tra dữ liệu và tám lời
+nhắc thao tác, đủ tiếng Việt/Anh/Trung. Chỉ 15 hành động âm thanh
+được dùng phần dịch này. Tên, nội dung khách và thông báo từ máy chủ
+không bị tự dịch; thông báo máy chủ có sẵn vẫn được ưu tiên.
+
+Các quy tắc độ dài, thẻ, nội dung an toàn, quyền, yêu cầu gửi lên
+máy chủ, thứ tự lưu/tải lại/điều hướng và các điều kiện mở công cụ
+không đổi. Hai tệp giao diện có đúng 11 đoạn thay đổi từ ba phiếu
+Antigravity; 149 tệp ứng dụng khác và mười hàm chung giữ nguyên.
+Không đổi biểu mẫu, bố cục, chuyển động hoặc tạo đầu ra âm thanh.
+
+Kiểm tra trực tiếp dùng dữ liệu riêng trong cơ sở dữ liệu tạm:
+VI/EN/ZH, điện thoại 320×780 nền tối và máy tính 1440×900 nền sáng,
+hai trang chi tiết. Ba lỗi nhập mỗi trang cho 36 thông báo mới đúng
+ngôn ngữ và 36 ảnh đã kiểm tra đầy đủ. Không có yêu cầu mạng trong
+lúc kiểm tra lỗi nhập; giá trị gốc được trả lại. Nguồn, dữ liệu lõi,
+cấu trúc dữ liệu và nhật ký đăng nhập đúng phạm vi, tiến trình tạm
+còn chạy bằng không. Không dùng tài khoản hoặc dữ liệu khách thật.
+
+Chưa dùng kiểm tra cục bộ để nhận ứng viên đã triển khai. Việc
+phát hành được chốt riêng bằng đúng phiên bản kiểm tra, CI, gộp,
+triển khai và đối chiếu VPS. Các câu ở gói duyệt nội dung, lời nhắc
+kiểm tra biểu mẫu dùng chung, accessibility/auth/thiết bị và motion
+vẫn thuộc checklist toàn goal; motion giữ cuối.
+
 ## 21/11/2026 — chữ và nhãn chi tiết âm thanh, trước phát hành
 
 Mốc production đã xác minh gần nhất là PR784, runtime

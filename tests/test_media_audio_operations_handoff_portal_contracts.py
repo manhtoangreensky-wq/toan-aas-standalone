@@ -6,6 +6,7 @@ an explicit navigation into a hidden media operation.
 """
 
 from pathlib import Path
+import runpy
 
 
 ROOT = Path(__file__).parents[1]
@@ -51,8 +52,13 @@ def test_handoff_freshly_rechecks_signed_detail_then_only_navigates_and_rehydrat
     ):
         assert required in source_guard
 
+    # Only the legacy copy-bearing action input is historical. The actual
+    # source_guard above and current dispatcher/151 forward gates stay separate.
+    historical_input = runpy.run_path(str(ROOT / "tests/helpers/media_fixed_feedback_historical_static.py"))[
+        "historical_media_fixed_feedback_integration"
+    ](INTEGRATION)
     action = _between(
-        INTEGRATION,
+        historical_input,
         'if (action === "media-audio-operation-handoff")',
         'if (action === "media-collection-create")',
     )

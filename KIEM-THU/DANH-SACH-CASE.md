@@ -1,5 +1,22 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## MEDIA-FIXED-FEEDBACK-20261121 — lời nhắc âm thanh
+
+Phiên:[MEDIA-FIXED-FEEDBACK](PHIEN-MEDIA-FIXED-FEEDBACK-20261121.md).
+BASE6f04b8449d7354ca44397c199ccdda77107f577e;Issue689/comment7060930950.
+Sửa case tại đây trước; giữ tracker/nhãn/mẫu, không tạo thẻ giữ chỗ.
+
+| Mã | Mức | Phạm vi | Kết quả cần đạt |
+|---|---|---|---|
+| MFF-ERROR | nặng | 35 lỗi cố định, 15 hành động, VI/EN/ZH và thiếu bản dịch | Đúng câu/đúng locale; fallback VI; không dịch nội dung khách hoặc lỗi máy chủ |
+| MFF-ACTION | nặng | Tám lời nhắc nhập/lưu/chuyển bước, hai roots | Đúng câu, giữ API/DTO/thứ tự tải lại/điều hướng/focus và ưu tiên thông báo máy chủ |
+| MFF-BOUNDARY | nặng | Lỗi có payload/status và hành động ngoài danh sách | Giữ raw error/identity/precedence, không thêm getter reads cho consumer khác |
+| MFF-RULES | nặng | Producer, normalization, bounds, tags, safety và Music/SFX | Mười hàm chung giữ nguyên byte; không đổi luật để làm test đạt |
+| MFF-SOURCE | nặng | 11 records/hai appfiles,151 nguồn, historical readers | Current forward độc lập;149 nguồn khác và golden/negative lịch sử giữ |
+| MFF-NATIVE | nặng | VI/EN/ZH×320 tối/1440 sáng×hai roots×ba lỗi nhập | 36 toast mới/36 ảnh, không yêu cầu mạng; khôi phục giá trị gốc, isolation và owned0 |
+| MFF-REGRESSION | nặng | 154 tệp locale trong đúng workflow block, Python liên quan | Giữ kết quả đạt; đối chiếu bốn lỗi cũ trên exact BASE, không cộng trùng ca |
+| MFF-DELIVERY | nặng | Một PR/exact CI/artifacts/gộp/deploy/VPS/receipt | Đúng bản từng gate; không nhận output âm thanh, signed production UI hoặc whole goal |
+
 ## MEDIA-DETAIL-CUSTOMER-COPY-20261121 — chi tiết âm thanh
 
 Phiên:[MEDIA-DETAIL-CUSTOMER-COPY](PHIEN-MEDIA-DETAIL-CUSTOMER-COPY-20261121.md).

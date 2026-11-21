@@ -1,5 +1,23 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Lời nhắc âm thanh — 21/11/2026
+
+Dùng [phiên hiện hành](PHIEN-MEDIA-FIXED-FEEDBACK-20261121.md) và
+tám case MFF. Kiểm đúng ba ngôn ngữ; câu do ứng dụng tạo phải theo
+ngôn ngữ đã chọn. Tên/nội dung khách và thông báo máy chủ giữ nguyên.
+
+Trong dữ liệu QA riêng, thử tên bộ sưu tập đúng ba dấu cách, thêm
+17 thẻ khác nhau vào biểu mẫu gắn tệp và nhập marker an toàn giả
+vào ô tìm âm thanh. Bấm nút thật, phải có thông báo mới, không nhận
+thông báo cũ còn đang hiện. Khôi phục từng giá trị gốc bằng thao tác
+bình thường. Không vô hiệu hóa điều kiện nhập hoặc sửa DOM để qua cửa.
+
+Không thử lưu dữ liệu hợp lệ, phát/tải tệp hoặc gọi công cụ dịch vụ
+trong kiểm tra chữ. Không dùng dữ liệu khách. Lượt kiểm tra ban đầu
+bị chặn kết nối cục bộ và không chạy ca nào vẫn được giữ là false;
+lượt có quyền kết nối riêng phải có bằng chứng mới. Không biến
+ảnh/HTTP 200 thành chứng nhận đầu ra âm thanh hoặc toàn app đã xong.
+
 ## Chi tiết âm thanh — 21/11/2026
 
 Dùng [phiên hiện hành](PHIEN-MEDIA-DETAIL-CUSTOMER-COPY-20261121.md)

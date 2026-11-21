@@ -1,5 +1,38 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 21/11/2026 — PR785 đã giao; lời nhắc nhập/lưu/chuyển bước âm thanh
+
+- [x] PR785/CI44888152941 haiSUCCESS18m33s/4m19s;18browser/
+  456authhash exact,artifacts14701721427/14701092959. TestedHEAD
+  c474f698481c65ca4be0a911263b381f7733bfdd;merge/runtime
+  6f04b8449d7354ca44397c199ccdda77107f577e,treef24dfb9a exact.
+  Deploy44890203239SUCCESS56s,VPS3active-running/trackedclean/
+  health/5+5assets/buildlocal-88468f90c8fb203a50ac. Tracker7058931880/
+  PR7060694584đọclạiexact. MDCC releasepending bên dưới là lịch sử.
+- [x] MFF-READ/CONTRACT:đúngBASE/branchcodex/media-fixed-feedback-20261121,
+  15actions/8blocks/35exactlocalerrors/8toast,151pins149protected.
+  Sharedproducers/classifier giữ nguyên;mapperpresentation-only.
+  Physical207unique37PASS170assertionRED/0skip/setupfault.
+- [x] MFF-LOCAL-ERROR/ACTION-COPY/CATALOGUE:baAGYCLIoutput-only
+  proposals2/8/1records/fullMAP/publicsources;Rootreviewgộp/replayserial.
+  11records/haiappfiles/149protected/mười hàmchunggiữ;workerfail0.
+- [x] MFF-VERIFY:222targetedcontexts/54historicalcontexts;147file
+  còn lại4600receiptcases0FAIL0SKIP,all154localefilescovered.
+  Python27pressure/failed-onlyPASS+10priorPASS,bốnstaticFAILcùng
+  exactBASE6f04b844. Khôngsumtrùngreceipt/retest.
+- [x] MFF-NATIVE:run02exit0/133.487s,6view/12roots/36newtoasts/
+  36newdecodedPNG;zerolocalHTTPattempt/source/core/schema/auth/
+  egress/owned0. Run01PermissionErrorzero-casefalsegiữ.
+- [x] MFF-Tester/prepush:4804uniqueNodePASS/0FAIL/0SKIP/all154files,
+  0Critical/Important;audit35pins/metadata1PASS32deselected,
+  30scoped+2Webprovenance/9stateexcluded/zeroactualsecrethits.
+- [ ] MFF-onePR/exactCI/artifacts/
+  merge/exclusivedeploy/VPS/assets/receipts.
+- [ ] Review-packcopy/locale/AX/auth/device/Safari/signedUI/genericfocus
+  tiếp checklist;motionM-FINAL01..06cuối. WholegoalACTIVE/incomplete.
+  GenericrenderervalidationwarningVIcònởportal.js làlocalequeue
+  riêng,không mởscopeMFFhoặcnhậntoànappđãsạchlocale.
+
 ## 21/11/2026 — PR784 đã giao; chữ trang chi tiết âm thanh
 
 - [x] PR784/CI44873207140 haiSUCCESS14m28s/5m44s;18browser/

@@ -4751,6 +4751,58 @@
     return typeof translated === "string" && translated ? translated : fallback;
   }
 
+  function mediaWorkspaceFeedbackText(key, fallback) {
+    const i18n = window.TOANAASI18n;
+    if (!i18n || typeof i18n.t !== "function") return fallback;
+    const fullKey = `audioWorkspace.feedback.${key}`;
+    const translated = i18n.t(fullKey);
+    return typeof translated === "string" && translated && translated !== fullKey ? translated : fallback;
+  }
+
+  function mediaWorkspaceErrorText(error) {
+    if (!error || typeof error !== "object" || "payload" in error || "status" in error || typeof error.message !== "string") return null;
+    const messages = {
+      "Audio Library không nhận ký tự điều khiển không an toàn.": ["safety.control", "Nội dung có ký tự không hợp lệ. Hãy kiểm tra và nhập lại."],
+      "Audio Library không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.": ["safety.payment", "Không nhập thông tin tài khoản ngân hàng hoặc chứng từ thanh toán vào đây."],
+      "Audio Library không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.": ["safety.secret", "Không nhập mật khẩu, mã xác thực, thông tin thẻ hoặc khóa truy cập vào đây."],
+      "Tối đa 16 tags cho mỗi collection hoặc audio reference.": ["validation.tagCount", "Mỗi bộ sưu tập hoặc tệp âm thanh có tối đa 16 thẻ."],
+      "Loại brief không hợp lệ.": ["validation.mode", "Hãy chọn loại yêu cầu trong danh sách."],
+      "Project liên kết không hợp lệ.": ["validation.project", "Hãy chọn dự án trong danh sách."],
+      "Vai trò audio không hợp lệ.": ["validation.role", "Hãy chọn vai trò âm thanh trong danh sách."],
+      "Thời lượng tự khai báo phải là số nguyên từ 1 đến 7.200 giây.": ["validation.duration", "Thời lượng phải là số nguyên từ 1 đến 7200 giây."],
+      "Hãy chọn một audio Asset Vault hợp lệ.": ["validation.asset", "Hãy chọn tệp âm thanh trong kho tệp."],
+      "Bộ lọc loại brief không hợp lệ.": ["validation.filterMode", "Hãy chọn loại yêu cầu trong bộ lọc."],
+      "Bộ lọc trạng thái collection không hợp lệ.": ["validation.filterState", "Hãy chọn trạng thái bộ sưu tập trong bộ lọc."],
+      "Từ khóa tìm kiếm cần từ 0 đến 100 ký tự hợp lệ.": ["validation.searchLength", "Từ khóa tìm kiếm tối đa 100 ký tự và không chứa ký tự không hợp lệ."],
+      "Tag cần từ 0 đến 48 ký tự hợp lệ.": ["validation.filterTagLength", "Thẻ tìm kiếm tối đa 48 ký tự và không chứa ký tự không hợp lệ."],
+      "Loại brief cần từ 0 đến 24 ký tự hợp lệ.": ["validation.filterModeLength", "Loại yêu cầu tối đa 24 ký tự và không chứa ký tự không hợp lệ."],
+      "Tag cần từ 1 đến 48 ký tự hợp lệ.": ["validation.tagLength", "Thẻ cần từ 1 đến 48 ký tự hợp lệ."],
+      "Từ khóa audio cần từ 0 đến 100 ký tự hợp lệ.": ["validation.audioQueryLength", "Từ khóa âm thanh tối đa 100 ký tự và không chứa ký tự không hợp lệ."],
+      "Tên collection cần từ 3 đến 180 ký tự hợp lệ.": ["validation.collectionTitleLength", "Tên bộ sưu tập cần từ 3 đến 180 ký tự hợp lệ."],
+      "Loại brief cần từ 3 đến 24 ký tự hợp lệ.": ["validation.modeLength", "Loại yêu cầu cần từ 3 đến 24 ký tự hợp lệ."],
+      "Ngữ cảnh sử dụng cần từ 0 đến 160 ký tự hợp lệ.": ["validation.contextLength", "Ngữ cảnh sử dụng tối đa 160 ký tự và không chứa ký tự không hợp lệ."],
+      "Quyền sử dụng cần từ 2 đến 800 ký tự hợp lệ.": ["validation.rightsLength", "Quyền sử dụng cần từ 2 đến 800 ký tự hợp lệ."],
+      "Vai trò audio cần từ 3 đến 24 ký tự hợp lệ.": ["validation.roleLength", "Vai trò âm thanh cần từ 3 đến 24 ký tự hợp lệ."],
+      "Tên hiển thị cần từ 0 đến 180 ký tự hợp lệ.": ["validation.displayNameLength", "Tên hiển thị tối đa 180 ký tự và không chứa ký tự không hợp lệ."],
+      "Attribution cần từ 0 đến 500 ký tự hợp lệ.": ["validation.attributionLength", "Ghi nguồn tối đa 500 ký tự và không chứa ký tự không hợp lệ."],
+      "Ghi chú license cần từ 2 đến 800 ký tự hợp lệ.": ["validation.licenseLength", "Ghi chú quyền sử dụng cần từ 2 đến 800 ký tự hợp lệ."],
+      "Tag audio cần từ 1 đến 48 ký tự hợp lệ.": ["validation.audioTagLength", "Thẻ âm thanh cần từ 1 đến 48 ký tự hợp lệ."],
+      "Mô tả tối đa 6.000 ký tự hợp lệ.": ["validation.descriptionLength", "Mô tả tối đa 6000 ký tự hợp lệ."],
+      "Music brief tối đa 6.000 ký tự hợp lệ.": ["validation.briefLength", "Yêu cầu âm nhạc tối đa 6000 ký tự hợp lệ."],
+      "Audio Asset Operations chưa sẵn sàng cho signed Web session này.": ["handoff.unavailable", "Chưa thể mở công cụ âm thanh. Hãy kiểm tra quyền truy cập và thử lại."],
+      "Audio reference không còn active trong collection hiện tại. Hãy làm mới rồi chọn lại.": ["handoff.inactive", "Tệp âm thanh không còn dùng được trong bộ sưu tập này. Hãy tải lại và chọn tệp khác."],
+      "Audio reference vừa thay đổi, bị gỡ hoặc không còn active. Hãy làm mới collection rồi chọn lại.": ["handoff.changed", "Tệp âm thanh đã thay đổi hoặc bị gỡ. Hãy tải lại bộ sưu tập và chọn lại."],
+      "Không thể tải Audio Asset Operations owner-scoped an toàn. Hãy thử lại.": ["handoff.loadFailed", "Chưa thể tải công cụ âm thanh. Hãy thử lại."],
+      "Mã hoặc revision Audio Collection không hợp lệ.": ["collection.invalidRevision", "Thông tin bộ sưu tập không còn hợp lệ. Hãy tải lại trang và thử lại."],
+      "Revision cần khôi phục không hợp lệ.": ["collection.invalidRestoreVersion", "Phiên bản cần khôi phục không hợp lệ. Hãy tải lại lịch sử và chọn lại."],
+      "Máy chủ chưa trả local brief directions Audio Library hợp lệ.": ["collection.invalidDirections", "Chưa nhận được gợi ý phù hợp. Hãy kiểm tra yêu cầu và thử lại."],
+      "Mã audio reference không hợp lệ.": ["item.invalid", "Tệp âm thanh đã chọn không hợp lệ. Hãy chọn lại."]
+    };
+    if (!Object.prototype.hasOwnProperty.call(messages, error.message)) return null;
+    const selected = messages[error.message];
+    return mediaWorkspaceFeedbackText(selected[0], selected[1]);
+  }
+
   function mediaWorkspaceSafetyError(...values) {
     const text = values.map((value) => String(value || "")).join("\n");
     if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Audio Library không nhận ký tự điều khiển không an toàn.";
@@ -29031,9 +29083,9 @@
             sourceControl.focus({ preventScroll: true });
           }
           if (selected && selected.id === source.asset_id) {
-            toast("Đã mở Audio Operations với audio private đã được xác minh lại. Chọn thao tác và xác nhận riêng để tiếp tục.");
+            toast(mediaWorkspaceFeedbackText("handoff.opened", "Đã mở tệp trong công cụ âm thanh. Chọn thao tác và xác nhận để tiếp tục."));
           } else {
-            toast("Audio nguồn không có trên trang nguồn owner-scoped vừa xác minh. Hãy chọn lại hoặc chuyển trang trước khi thao tác; Web không tự dùng nguồn cũ.", "warning");
+            toast(mediaWorkspaceFeedbackText("handoff.sourceMissing", "Không tìm thấy tệp âm thanh trong danh sách hiện tại. Hãy chọn lại hoặc chuyển trang để tìm tệp."), "warning");
           }
         } finally {
           setActionBusy(action, route, false);
@@ -29045,7 +29097,7 @@
         const scope = "media-workspace:collection:create";
         const submission = acquireSubmission(scope, JSON.stringify(payload));
         if (!submission) {
-          toast("Collection đang được lưu. Vui lòng chờ máy chủ xác nhận.", "error");
+          toast(mediaWorkspaceFeedbackText("collection.busy", "Đang lưu bộ sưu tập. Vui lòng chờ."), "error");
           return;
         }
         let acknowledged = false;
@@ -29059,7 +29111,7 @@
           const collection = result.data && result.data.collection && typeof result.data.collection === "object" ? result.data.collection : null;
           const collectionId = collection && validMediaCollectionId(collection.id) ? String(collection.id) : "";
           await hydrateMediaWorkspace();
-          toast(result.message || "Đã tạo Audio Library collection riêng tư.");
+          toast(result.message || mediaWorkspaceFeedbackText("collection.created", "Đã tạo bộ sưu tập âm thanh."));
           if (collectionId) {
             window.location.assign(mediaWorkspaceCollectionRoute(collectionId, route));
             return;
@@ -29092,7 +29144,7 @@
           acknowledged = true;
           await hydrateMediaWorkspace();
           await hydrateMediaCollection(collectionId, route);
-          toast(result.message || "Đã lưu revision Audio Collection mới.");
+          toast(result.message || mediaWorkspaceFeedbackText("collection.saved", "Đã lưu thông tin bộ sưu tập."));
         } catch (error) {
           acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
           throw error;
@@ -29129,7 +29181,7 @@
           const created = result.data && result.data.collection && typeof result.data.collection === "object" ? result.data.collection : null;
           const createdId = action === "media-collection-duplicate" && created && validMediaCollectionId(created.id) ? String(created.id) : "";
           await hydrateMediaWorkspace();
-          toast(result.message || "Đã cập nhật Audio Collection.");
+          toast(result.message || mediaWorkspaceFeedbackText("collection.updated", "Đã cập nhật bộ sưu tập âm thanh."));
           if (createdId) {
             window.location.assign(mediaWorkspaceCollectionRoute(createdId, route));
             return;
@@ -29211,7 +29263,7 @@
             throw new Error("Máy chủ chưa trả local brief directions Audio Library hợp lệ.");
           }
           merge({ mediaComposer: { ...output, directions, collection_id: collectionId } });
-          toast(result.message || "Đã tạo 3 hướng brief cục bộ.");
+          toast(result.message || mediaWorkspaceFeedbackText("collection.composed", "Đã tạo 3 gợi ý yêu cầu âm nhạc."));
         } finally {
           setActionBusy(action, route, false);
         }
@@ -29247,7 +29299,7 @@
           acknowledged = true;
           await hydrateMediaWorkspace();
           await hydrateMediaCollection(collectionId, route);
-          toast(result.message || "Đã cập nhật audio reference riêng tư.");
+          toast(result.message || mediaWorkspaceFeedbackText("item.updated", "Đã cập nhật thông tin tệp âm thanh."));
         } catch (error) {
           acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
           throw error;
@@ -39277,7 +39329,7 @@
         });
       }
       const editorialError = (action === "music-direction-preset-compose" || action === "sfx-cue-sheet-compose") ? musicSfxEditorialErrorText(action, error) : null;
-      const errorMessage = editorialError || (error && error.payload && error.payload.message) || (error && error.message) || "Yêu cầu chưa được xác nhận.";
+      const errorMessage = editorialError || (["media-workspace-filter","media-workspace-filter-clear","media-audio-filter","media-audio-filter-clear","media-collection-create","media-collection-update","media-collection-archive","media-collection-restore","media-collection-duplicate","media-collection-restore-version","media-collection-compose","media-item-attach","media-item-update","media-item-detach","media-audio-operation-handoff"].includes(action) ? mediaWorkspaceErrorText(error) : null) || (error && error.payload && error.payload.message) || (error && error.message) || "Yêu cầu chưa được xác nhận.";
       toast(action === "publish-review-pack-compose" ? publishReviewPackFeedbackText(errorMessage, "feedback.error") : (["campaign-calendar-filter", "campaign-calendar-month", "campaign-calendar-refresh"].includes(action) ? campaignCalendarFeedbackText(errorMessage) : errorMessage), "error");
     } finally {
       if (featureSubmission) {
