@@ -8,7 +8,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = runpy.run_path(str(ROOT / "tests/helpers/media_detail_historical_static.py"))
 inverse, fail, groups = HELPER["historical_media_detail_portal"], HELPER["FAIL"], HELPER["GROUPS"]
-actual = (ROOT / "static/portal/portal.js").read_text(encoding="utf8").replace("\r\n", "\n")
+actual = HELPER["ARF_PROJECT"]((ROOT / "static/portal/portal.js").read_text(encoding="utf8").replace("\r\n", "\n"),
+                             "static/portal/portal.js")
 baseline = subprocess.check_output(["git", "show", HELPER["FIXTURE"]["base"] + ":static/portal/portal.js"],
                                    cwd=ROOT).decode("utf8").replace("\r\n", "\n")
 

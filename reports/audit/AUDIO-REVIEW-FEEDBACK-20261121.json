@@ -1,0 +1,18 @@
+{
+  "task": "AUDIO-REVIEW-FEEDBACK-20261121",
+  "base": "7cb8cb10486f5c175dca5db2c286a9f93a133c23",
+  "status": "LOCAL_SCOPED_ACCEPTED_RELEASE_PENDING",
+  "application": {"files": 3, "records": 11, "recordSplit": [8, 2, 1], "sources": 151, "protectedSources": 148, "protectedFunctions": 21, "workerCodeFailures": 0, "applicationTakeover": false},
+  "copy": {"rows": 31, "values": 93, "newKeys": 20, "overrides": 11, "locales": ["vi", "en", "zh"]},
+  "node": {"rawRows": 5433, "setupExcluded": 46, "duplicateOrReplacement": 385, "uniquePass": 5002, "fail": 0, "skip": 0, "workflowFiles": 158, "caseOwnerFiles": 165, "freshFullRun": false, "ledgerSha256": "45006b50a4e8428d7562b2826a7bc95b37ac9bb921ffa63d6b8886cbf364116d"},
+  "python": {"historicalPass": 95, "newPressure": 53, "changedOldContexts": 42, "portalContractBaseAndBranch": {"pass": 3, "sameOldCopyFail": 1}, "fullPytestGreenClaimed": false},
+  "native": {"scopedAccepted": true, "views": 6, "reviewMetadataPosts": 6, "domainWrites": 0, "newDecodedPng": 12, "elapsedSeconds": 72.891, "sourceCoreSchemaStrictAuthEgressHeld": true, "ownedActiveAfterCleanup": 0, "acceptanceSha256": "17a2fa237937e05416dfd5d0a828347d18e2ae4f134feb9557ffa70b1d8740d3"},
+  "safety": {"providerCalls": 0, "walletMutations": 0, "productionDataMutations": 0, "envMutations": 0},
+  "nextVisualIssues": ["VI/ZH breadcrumb Audio Production Hub", "Review label and note lack separation", "English singular 1 reference files"],
+  "globalAccessibility": "NOT_CLAIMED",
+  "contrast": "NOT_MEASURED",
+  "motion": "NOT_TESTED",
+  "signedProductionUi": "NOT_TESTED",
+  "audioOutput": "NOT_TESTED",
+  "wholeGoalComplete": false
+}

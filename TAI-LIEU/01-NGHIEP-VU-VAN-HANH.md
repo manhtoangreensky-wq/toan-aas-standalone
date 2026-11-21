@@ -1,5 +1,41 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 21/11/2026 — chữ trong bước rà soát bộ sưu tập âm thanh
+
+Ứng viên `AUDIO-REVIEW-FEEDBACK-20261121` dựa trên runtime PR786
+`7cb8cb10486f5c175dca5db2c286a9f93a133c23`; chưa coi ứng viên là
+đã phát hành. Chỉ sửa trình bày của bước rà soát trên Trung tâm âm thanh:
+31 dòng/93 giá trị VI/EN/ZH, gồm 20 khóa mới và 11 khóa thay chữ.
+Ba phiếu Antigravity trả đúng 11 record (8/2/1) trên ba tệp ứng dụng;
+worker không ghi ứng dụng, lỗi mã worker 0, takeover false.
+
+Không chỉ dịch fallback: success stock có giá trị thật cũng được dịch;
+`api()` vẫn ném `ok:false`, kể cả HTTP 200, nên lỗi stock archive/policy
+được dịch ở outer catch của riêng action. Nhánh acknowledged guarded
+chỉ có bằng chứng VM, không thay thế đường lỗi backend.
+Chỉ năm stock/generic message và 11 label/note/caution exact được ánh
+xạ. Receipt gốc, nội dung khách, unknown/near-match/prototype/typed
+values giữ String/falsy/escaping cũ, không dịch substring hoặc theo ID.
+
+151 tệp được đối chiếu, 148 tệp và 21 hàm chung giữ nguyên. Không đổi
+backend/API/DTO/quyền/session/CSRF/revision/policy/currentness/busy/
+finally/merge/RAF focus, control/ARIA/CSS/motion hoặc dữ liệu đã lưu.
+Không tạo âm thanh, xác nhận quyền sử dụng hay phát hành đầu ra.
+
+Node: 5.002 ca phân biệt PASS, 0 FAIL/0 SKIP, đủ 158 tệp của khối
+locale; là hợp nhất receipt, không phải một full run mới. Python
+historical: 95 PASS; bốn ca portal-contract vẫn 3 PASS/1 lỗi câu chữ
+cũ trùng BASE, không nhận toàn bộ pytest xanh.
+Native R3: sáu view/sáu review POST/12 PNG mới giải mã đầy đủ,
+exit0/72.891s; dữ liệu/core/schema/auth/nguồn/egress/owned0 giữ.
+Tester/CI/deploy còn chốt riêng, không suy từ local PASS.
+Ảnh cũng chỉ ra breadcrumb VI/ZH còn tiếng Anh, label/note dính
+liền và EN số ít chưa đúng; xếp ngay sau ARF, chưa nhận toàn trang sạch.
+
+Ba shared-backend message not-found/revision-conflict/maintenance
+được xếp kế tiếp trước generic validity; không nhận mọi failure state
+đã sạch locale. Motion M-FINAL01..06 cuối; whole goal ACTIVE.
+
 ## 21/11/2026 — lời nhắc nhập, lưu và chuyển bước âm thanh
 
 Mốc đã giao gần nhất là PR785, runtime

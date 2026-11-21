@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {execFileSync} from "node:child_process";
 import {ROOT, hash} from "./helpers/media-fixed-feedback-runtime.mjs";
+import {audioReviewHistoricalSource} from "./helpers/audio-review-snapshot.mjs";
 
 const fixture = JSON.parse(fs.readFileSync(path.join(ROOT, "tests/fixtures/media-fixed-feedback-contract.json"), "utf8"));
 const lf = text => text.replace(/\r\n/g, "\n");
@@ -30,23 +31,25 @@ function assertProtectedSourceBytes(raw, row) {
   assert.ok([row.baseRawSha256, row.baseLfSha256, hash(canonical.replace(/\n/g, "\r\n"))].includes(hash(raw)),
     "Only measured/LF/uniformCRLF checkout:" + row.file);
 }
-test("current two physical sources equal BASE plus the exact11 Root-owned forward records, without inverse acceptance", () => {
+test("historical PR786 two source inputs equal its BASE plus exact11 Root-owned forward records after reviewed ARF input projection", () => {
   assert.equal(fixture.canonicalChanges.length, 11);
   for (const file of fixture.allowedFiles) {
     const original = lf(fromBase(file)), row = fixture.applicationBaseline.find(row => row.file === file);
     assert.equal(hash(original), row.baseLfSha256);
-    const current = lf(fs.readFileSync(path.join(ROOT, file), "utf8")), expected = forward(file, original);
+    const current = audioReviewHistoricalSource(lf(fs.readFileSync(path.join(ROOT, file), "utf8")), file), expected = forward(file, original);
     assert.equal(hash(current), hash(expected), file);
     assert.equal(current, expected, file);
   }
 });
-test("all149 other physical sources remain exact RAW/LF BASE and all151 source paths are unique", () => {
+test("historical PR786 all149 other source inputs retain exact RAW/LF BASE and151 unique paths after reviewed ARF projection", () => {
   assert.equal(fixture.applicationBaseline.length, 151);
   assert.equal(new Set(fixture.applicationBaseline.map(row => row.file)).size, 151);
   const protectedRows = fixture.applicationBaseline.filter(row => !fixture.allowedFiles.includes(row.file));
   assert.equal(protectedRows.length, 149);
   for (const row of protectedRows) {
-    const raw = fs.readFileSync(path.join(ROOT, row.file));
+    const physical = fs.readFileSync(path.join(ROOT, row.file));
+    const projected = audioReviewHistoricalSource(lf(physical.toString("utf8")), row.file);
+    const raw = projected === lf(physical.toString("utf8")) ? physical : Buffer.from(projected);
     assertProtectedSourceBytes(raw, row);
   }
 });
@@ -69,7 +72,8 @@ test("source pin portability rejects an unmeasured mixed-newline encoding with u
   assert.throws(() => assertProtectedSourceBytes(Buffer.from(mixed), row), assert.AssertionError);
 });
 test("all shared validation producers, Music/SFX classifier and existing read-feedback helper retain exact function bytes", () => {
-  const source = lf(fs.readFileSync(path.join(ROOT, "static/portal/integration.js"), "utf8"));
+  const source = audioReviewHistoricalSource(lf(fs.readFileSync(path.join(ROOT, "static/portal/integration.js"), "utf8")),
+    "static/portal/integration.js");
   assert.equal(fixture.protectedFunctions.length, 10);
   for (const row of fixture.protectedFunctions) {
     const body = exactFunction(source, row.name);

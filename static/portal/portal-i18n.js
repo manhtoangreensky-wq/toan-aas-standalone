@@ -22623,6 +22623,201 @@
 
   Object.assign(MESSAGES.zh, {"audioWorkspace.feedback.safety.control":"内容包含无效字符，请检查后重新输入。","audioWorkspace.feedback.safety.payment":"请勿在此输入银行账户信息或付款凭证。","audioWorkspace.feedback.safety.secret":"请勿在此输入密码、验证码、银行卡信息或访问密钥。","audioWorkspace.feedback.validation.tagCount":"每个合集或音频文件最多可添加16个标签。","audioWorkspace.feedback.validation.mode":"请从列表中选择需求类型。","audioWorkspace.feedback.validation.project":"请从列表中选择项目。","audioWorkspace.feedback.validation.role":"请从列表中选择音频角色。","audioWorkspace.feedback.validation.duration":"时长必须是1至7200秒之间的整数。","audioWorkspace.feedback.validation.asset":"请从文件库中选择音频文件。","audioWorkspace.feedback.validation.filterMode":"请从筛选项中选择需求类型。","audioWorkspace.feedback.validation.filterState":"请从筛选项中选择合集状态。","audioWorkspace.feedback.validation.searchLength":"搜索词最多可包含100个字符，且不得包含无效字符。","audioWorkspace.feedback.validation.filterTagLength":"搜索标签最多可包含48个字符，且不得包含无效字符。","audioWorkspace.feedback.validation.filterModeLength":"需求类型最多可包含24个字符，且不得包含无效字符。","audioWorkspace.feedback.validation.tagLength":"标签必须包含1至48个有效字符。","audioWorkspace.feedback.validation.audioQueryLength":"音频搜索词最多可包含100个字符，且不得包含无效字符。","audioWorkspace.feedback.validation.collectionTitleLength":"合集名称必须包含3至180个有效字符。","audioWorkspace.feedback.validation.modeLength":"需求类型必须包含3至24个有效字符。","audioWorkspace.feedback.validation.contextLength":"使用场景最多可包含160个字符，且不得包含无效字符。","audioWorkspace.feedback.validation.rightsLength":"使用权必须包含2至800个有效字符。","audioWorkspace.feedback.validation.roleLength":"音频角色必须包含3至24个有效字符。","audioWorkspace.feedback.validation.displayNameLength":"显示名称最多可包含180个字符，且不得包含无效字符。","audioWorkspace.feedback.validation.attributionLength":"署名最多可包含500个字符，且不得包含无效字符。","audioWorkspace.feedback.validation.licenseLength":"使用权说明必须包含2至800个有效字符。","audioWorkspace.feedback.validation.audioTagLength":"音频标签必须包含1至48个有效字符。","audioWorkspace.feedback.validation.descriptionLength":"描述最多可包含6000个有效字符。","audioWorkspace.feedback.validation.briefLength":"音乐需求最多可包含6000个有效字符。","audioWorkspace.feedback.handoff.unavailable":"暂时无法打开音频工具，请检查访问权限后重试。","audioWorkspace.feedback.handoff.inactive":"此音频文件已无法在该合集中使用，请重新加载并选择其他文件。","audioWorkspace.feedback.handoff.changed":"音频文件已更改或被移除，请重新加载合集后再选择。","audioWorkspace.feedback.handoff.loadFailed":"暂时无法加载音频工具，请重试。","audioWorkspace.feedback.collection.invalidRevision":"合集信息已失效，请重新加载页面后重试。","audioWorkspace.feedback.collection.invalidRestoreVersion":"要恢复的版本无效，请重新加载历史记录后再选择。","audioWorkspace.feedback.collection.invalidDirections":"尚未收到合适的建议，请检查需求后重试。","audioWorkspace.feedback.item.invalid":"所选音频文件无效，请重新选择。","audioWorkspace.feedback.handoff.opened":"已在音频工具中打开文件，请选择操作并确认以继续。","audioWorkspace.feedback.handoff.sourceMissing":"当前列表中未找到该音频文件，请重新选择或切换页面查找。","audioWorkspace.feedback.collection.busy":"正在保存合集，请稍候。","audioWorkspace.feedback.collection.created":"已创建音频合集。","audioWorkspace.feedback.collection.saved":"已保存合集信息。","audioWorkspace.feedback.collection.updated":"已更新音频合集。","audioWorkspace.feedback.collection.composed":"已生成3条音乐需求建议。","audioWorkspace.feedback.item.updated":"已更新音频文件信息。"});
 
+  // Audio review customer-facing copy; server protocol and saved values stay unchanged.
+  const AUDIO_REVIEW_CUSTOMER_COPY = [
+  [
+    "audioWorkspace.feedback.review.route",
+    "Hãy mở bộ sưu tập trong Trung tâm âm thanh để kiểm tra.",
+    "Open the collection in the Audio Center to review it.",
+    "请在音频中心打开合集后再进行审核。"
+  ],
+  [
+    "audioWorkspace.feedback.review.notReady",
+    "Chưa thể kiểm tra bộ sưu tập này. Hãy tải lại trang rồi thử lại.",
+    "This collection is not ready for review. Reload the page and try again.",
+    "暂时无法审核此合集，请刷新页面后重试。"
+  ],
+  [
+    "audioWorkspace.feedback.review.invalidBoundary",
+    "Chưa nhận được kết quả kiểm tra hợp lệ. Hãy thử lại.",
+    "We could not verify the review response. Please try again.",
+    "未收到有效的审核结果，请重试。"
+  ],
+  [
+    "audioWorkspace.feedback.review.needsChanges",
+    "Hãy bổ sung thông tin bộ sưu tập trước khi kiểm tra lại.",
+    "Update the collection details before requesting another review.",
+    "请补充合集信息后再重新审核。"
+  ],
+  [
+    "audioWorkspace.feedback.review.invalidResult",
+    "Chưa nhận được kết quả kiểm tra cho bộ sưu tập đang mở. Hãy thử lại.",
+    "We could not load the review for the current collection. Please try again.",
+    "未能获取当前合集的审核结果，请重试。"
+  ],
+  [
+    "audioWorkspace.feedback.review.ready",
+    "Đã tạo bản rà soát bộ sưu tập.",
+    "Created a review for this collection.",
+    "已生成此合集的审核清单。"
+  ],
+  [
+    "audioWorkspace.feedback.review.archived",
+    "Hãy khôi phục bộ sưu tập đã lưu trữ trước khi rà soát.",
+    "Restore the archived collection before reviewing it.",
+    "请先恢复已归档的合集，再进行审核。"
+  ],
+  [
+    "audioWorkspace.feedback.review.originality",
+    "Hãy điều chỉnh yêu cầu theo ý tưởng riêng, không mô phỏng nghệ sĩ, tác phẩm, giai điệu hoặc giọng cụ thể.",
+    "Revise the brief with an original idea, without imitating a specific artist, work, melody or voice.",
+    "请将需求调整为原创构思，不要模仿特定艺术家、作品、旋律或声音。"
+  ],
+  [
+    "audioWorkspace.feedback.review.error",
+    "Chưa thể rà soát bộ sưu tập. Hãy thử lại.",
+    "We could not review the collection. Please try again.",
+    "暂时无法审核合集，请重试。"
+  ],
+  [
+    "audioWorkspace.review.result.originalityLabel",
+    "Yêu cầu và tính nguyên bản",
+    "Brief and originality",
+    "需求与原创性"
+  ],
+  [
+    "audioWorkspace.review.result.originalityNote",
+    "Kiểm tra yêu cầu có ý tưởng riêng, không bắt chước nghệ sĩ, tác phẩm, giai điệu hoặc giọng cụ thể.",
+    "Check that the brief uses an original idea without imitating a specific artist, work, melody or voice.",
+    "检查需求是否为原创构思，不模仿特定艺术家、作品、旋律或声音。"
+  ],
+  [
+    "audioWorkspace.review.result.referenceLabel",
+    "Tệp tham khảo và thông tin",
+    "Reference files and details",
+    "参考文件与信息"
+  ],
+  [
+    "audioWorkspace.review.result.referenceNote",
+    "Kiểm tra ghi nguồn, quyền sử dụng, trạng thái tệp và mục đích sử dụng trước khi chọn tệp âm thanh.",
+    "Check attribution, usage rights, file availability and intended use before choosing an audio file.",
+    "选择音频文件前，请检查来源署名、使用权、文件状态和用途。"
+  ],
+  [
+    "audioWorkspace.review.result.accessibilityLabel",
+    "Âm thanh và khả năng tiếp cận",
+    "Audio and accessibility",
+    "音频与无障碍使用"
+  ],
+  [
+    "audioWorkspace.review.result.accessibilityNote",
+    "Kiểm tra nhạc không lấn lời đọc, lời kêu gọi hành động, phụ đề, cảnh báo hoặc thông tin pháp lý trên nội dung thực tế.",
+    "Check that music does not mask narration, calls to action, subtitles, warnings or legal information in the actual content.",
+    "请检查实际内容中的音乐是否盖过旁白、行动提示、字幕、警告或法律信息。"
+  ],
+  [
+    "audioWorkspace.review.result.releaseLabel",
+    "Chuẩn bị phát hành",
+    "Release preparation",
+    "发布准备"
+  ],
+  [
+    "audioWorkspace.review.result.releaseNote",
+    "Kiểm tra quyền sử dụng, thương hiệu, sự đồng ý và yêu cầu phát hành. Bản rà soát này không thay thế việc phê duyệt phát hành.",
+    "Check usage rights, brands, consent and release requirements. This review does not replace release approval.",
+    "请检查使用权、品牌、同意授权和发布要求。本清单不能替代发布审批。"
+  ],
+  [
+    "audioWorkspace.review.result.scopeCaution",
+    "Bản rà soát chỉ tổng hợp thông tin bộ sưu tập; không phát, phân tích hay xác minh tệp âm thanh.",
+    "This review summarizes collection details; it does not play, analyze or verify audio files.",
+    "本清单仅汇总合集信息，不会播放、分析或验证音频文件。"
+  ],
+  [
+    "audioWorkspace.review.result.rightsCaution",
+    "Thông tin ghi nguồn và quyền sử dụng do bạn cung cấp. Bạn cần tự xác nhận quyền thương mại trước khi sử dụng.",
+    "You provide attribution and usage-rights details. Confirm commercial rights yourself before using the content.",
+    "来源署名和使用权信息由您提供，使用前请自行确认商业使用权。"
+  ],
+  [
+    "audioWorkspace.review.result.actionCaution",
+    "Thao tác này chỉ lập bản rà soát, không tạo âm thanh, thực hiện thanh toán hoặc phát hành nội dung.",
+    "This action only creates a review; it does not create audio, make payments or publish content.",
+    "此操作仅生成审核清单，不会生成音频、付款或发布内容。"
+  ],
+  [
+    "audioWorkspace.review.state.needsMetadata",
+    "Cần bổ sung thông tin tệp",
+    "File details needed",
+    "需要补充文件信息"
+  ],
+  [
+    "audioWorkspace.review.state.humanReview",
+    "Cần bạn kiểm tra",
+    "Your review is needed",
+    "需要您检查"
+  ],
+  [
+    "audioWorkspace.review.state.empty",
+    "Chưa có bản rà soát",
+    "No review yet",
+    "暂无审核清单"
+  ],
+  [
+    "audioWorkspace.review.references",
+    "tệp tham khảo",
+    "reference files",
+    "个参考文件"
+  ],
+  [
+    "audioWorkspace.review.cautionsTitle",
+    "Lưu ý trước khi sử dụng",
+    "Before using this content",
+    "使用前请注意"
+  ],
+  [
+    "audioWorkspace.review.empty",
+    "Bấm nút bên dưới để tổng hợp nội dung cần kiểm tra cho bộ sưu tập đang mở.",
+    "Use the button below to prepare a review of the current collection.",
+    "点击下方按钮，为当前合集生成审核清单。"
+  ],
+  [
+    "audioWorkspace.review.kicker",
+    "Rà soát bộ sưu tập",
+    "Collection review",
+    "合集审核"
+  ],
+  [
+    "audioWorkspace.review.title",
+    "Kiểm tra trước khi sử dụng",
+    "Check before use",
+    "使用前检查"
+  ],
+  [
+    "audioWorkspace.review.body",
+    "Tổng hợp yêu cầu và thông tin tệp âm thanh để bạn kiểm tra trước khi sử dụng.",
+    "Review the brief and audio-file details before using the content.",
+    "使用内容前，请检查需求和音频文件信息。"
+  ],
+  [
+    "audioWorkspace.review.footer",
+    "Bạn cần tự kiểm tra quyền sử dụng và nội dung trước khi phát hành.",
+    "Check usage rights and content yourself before release.",
+    "发布前，请自行检查使用权和内容。"
+  ],
+  [
+    "audioWorkspace.review.action",
+    "Rà soát bộ sưu tập",
+    "Review collection",
+    "审核合集"
+  ]
+];
+  AUDIO_REVIEW_CUSTOMER_COPY.forEach(([key, vi, en, zh]) => {
+    MESSAGES.vi[key] = vi;
+    MESSAGES.en[key] = en;
+    MESSAGES.zh[key] = zh;
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

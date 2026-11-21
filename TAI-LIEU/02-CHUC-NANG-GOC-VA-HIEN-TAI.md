@@ -1,5 +1,31 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 21/11/2026 — rà soát âm thanh: chữ dễ hiểu, hợp đồng chức năng giữ
+
+Nguồn gốc: `docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md`;
+đối chiếu mới theo spec ARF AC01–07 và Root contract bất biến.
+
+| Chức năng gốc/hành vi | Hiện tại trong ứng viên ARF |
+|---|---|
+| Music/SFX organisation | Giữ tổ chức/tệp/form/control; chỉ thay chữ bước rà soát |
+| Music/SFX prompt direction | Giữ gợi ý bằng thông tin; không tự tạo audio/approval/delivery |
+| Upload/select personal audio; Play/download state | Không thêm thao tác hoặc gọi blob/provider để kiểm chữ |
+| Metadata revisions are immutable and bounded to 100 per collection. | Giữ backend, expected revision, API/DTO và guard |
+| `ok:false` là lỗi | Giữ `api()`/outer catch; chỉ dịch đúng stock của action review |
+| Raw customer/unknown server text | Không dịch tùy ý hoặc viết lại receipt |
+
+Literal kỹ thuật trong tài liệu/kiểm tra cũ không phải chữ bắt buộc
+hiện cho khách. MFF giữ server message vẫn đúng trong phạm vi MFF;
+ARF chỉ bổ sung ngoại lệ hữu hạn năm stock/generic message, không
+thành bộ dịch server toàn cục. Ba tệp/11 record/31 dòng/93 giá trị;
+151 nguồn, 148 tệp bảo vệ, 21 hàm chung. Worker lỗi 0/takeover false.
+Node 5.002 unique PASS/158 tệp, Python historical 95 PASS; không
+nhận full pytest, signed production UI hoặc audio output đã đạt.
+Native R3 có six-view/6reviewPOST/12newPNG/full-decode/owned0,
+không ghi dữ liệu sản phẩm. Tester/CI/deploy còn receipt riêng.
+Visualqueue breadcrumb VI/ZH, label/note và EN singular mở ngay
+sau ARF; rồi ba shared-backend message, generic validity và motion cuối.
+
 ## 21/11/2026 — lời nhắc âm thanh: chỉ đổi cách trình bày
 
 Nguồn gốc vẫn là `docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md`,

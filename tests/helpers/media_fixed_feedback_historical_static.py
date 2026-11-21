@@ -2,8 +2,10 @@
 from pathlib import Path
 import hashlib
 import json
+import runpy
 
 ROOT = Path(__file__).resolve().parents[2]
+ARF_PROJECT = runpy.run_path(str(ROOT / "tests/helpers/audio_review_historical_static.py"))["historical_audio_review_source"]
 RAW = (ROOT / "tests/fixtures/media-fixed-feedback-reviewed.json").read_bytes()
 FAIL = "Unreviewed media fixed feedback historical source"
 assert hashlib.sha256(RAW).hexdigest() == "808d89af0587a53a13bb78e83be5e8fab6f6e7e98240183b9966766ae5febfa6", FAIL
@@ -14,6 +16,7 @@ assert len(GROUPS) == 8 and FIXTURE["base"] == "6f04b8449d7354ca44397c199ccdda77
 
 def historical_media_fixed_feedback_integration(source: str) -> str:
     assert isinstance(source, str), FAIL
+    source = ARF_PROJECT(source, "static/portal/integration.js")
     markers = ("mediaWorkspaceFeedbackText", "mediaWorkspaceErrorText", "audioWorkspace.feedback.")
     if not any(marker in source for marker in markers):
         return source

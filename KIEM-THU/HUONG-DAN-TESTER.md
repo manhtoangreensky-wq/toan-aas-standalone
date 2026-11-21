@@ -1,5 +1,25 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Rà soát bộ sưu tập âm thanh — 21/11/2026
+
+Dùng phiên ARF và tám case trong `DANH-SACH-CASE.md`; ghi BASE/HEAD,
+locale/route/viewport/theme và expected/actual. Không lấy receipt MFF
+làm bằng chứng mới. Native chỉ dùng QA cô lập, collection đủ điều
+kiện có thật, click/scroll bình thường; không sửa DOM/state/response.
+
+Mục tiêu sáu view VI/EN/ZH×320 tối/1440 sáng, hai ảnh mỗi view:
+toast/phần đầu và các check/caution phía dưới. Không bắt toast sống
+xuyên mọi scroll hoặc ép bảy đoạn dài vào một ảnh. Chỉ setup login/
+register và sáu review POST metadata; không tạo/sửa sản phẩm, phát/
+tải blob, provider hay tiền. Giữ CSRF/revision thật và phân loại riêng
+login/last_seen hợp lệ. Không thay policy để mở nút.
+
+Phân biệt lỗi backend qua `api()`/outer catch với guarded VM; không
+giả trạng thái native. Chỉ exact stock được dịch, tên/nội dung khách
+giữ nguyên. Bằng chứng Node/Python, native, CI, deploy và signed
+production UI là các cổng riêng. Ba shared-backend message còn xếp
+kế tiếp; motion cuối. Số đo native hiện tại xem receipt phiên ARF.
+
 ## Lời nhắc âm thanh — 21/11/2026
 
 Dùng [phiên hiện hành](PHIEN-MEDIA-FIXED-FEEDBACK-20261121.md) và
