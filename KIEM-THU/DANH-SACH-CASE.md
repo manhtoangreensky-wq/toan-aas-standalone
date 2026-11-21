@@ -1,5 +1,17 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## PORTAL-REQUIRED-WARNING-20261122 — cảnh báo trường bắt buộc
+
+Phiên `PHIEN-PORTAL-REQUIRED-WARNING-20261122.md`; chỉ dùng dữ liệu giả.
+
+| Mã | Mức | Phạm vi | PASS bắt buộc |
+|---|---|---|---|
+| PRW-LOCALE | nặng | VI/EN/ZH, form không hợp lệ | Cảnh báo ứng dụng đúng ngôn ngữ; thiếu bộ dịch dùng câu Việt |
+| PRW-FOCUS | nặng | Form thiết kế ảnh, điện thoại/máy tính | Chọn trường sai đầu tiên, không gửi thao tác, cảnh báo nhìn thấy |
+| PRW-PRESERVE | nặng | Dữ liệu hợp lệ và nút lọc ngoại lệ | Thao tác hợp lệ và ngoại lệ vẫn được phát |
+| PRW-SOURCE | nặng | Hai tệp giao diện và bộ kiểm tra lịch sử | Toàn nguồn bằng BASE cộng đúng hai thay đổi; các kiểm tra cũ giữ nguyên ranh giới |
+| PRW-DELIVERY | nặng | CI, merge, VPS và UI | Bằng chứng riêng cho từng cổng; không suy giao diện sau đăng nhập từ asset |
+
 ## AUDIO-REVIEW-CURRENT-ERRORS-20261122 — lỗi rà soát âm thanh
 
 Phiên `PHIEN-AUDIO-REVIEW-CURRENT-ERRORS-20261122.md`; dựa trên

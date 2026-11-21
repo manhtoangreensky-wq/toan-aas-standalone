@@ -103,7 +103,9 @@ jobs:
           node --test tests/media-audio-pagination-locale.test.mjs tests/media-detail-customer-copy.test.mjs tests/media-detail-form-labels.test.mjs tests/media-detail-customer-copy-source.test.mjs
           node --test tests/media-fixed-feedback.test.mjs tests/media-fixed-feedback-actions.test.mjs tests/media-fixed-feedback-error-boundaries.test.mjs tests/media-fixed-feedback-source.test.mjs tests/media-fixed-feedback-snapshot.test.mjs
           node --test tests/audio-review-feedback.test.mjs tests/audio-review-result-copy.test.mjs tests/audio-review-feedback-source.test.mjs tests/audio-review-snapshot.test.mjs tests/audio-review-visual-locale.test.mjs tests/audio-review-readability.test.mjs tests/audio-review-pending-feedback.test.mjs tests/audio-review-pending-source.test.mjs tests/audio-review-pending-snapshot.test.mjs
+          node --test tests/portal-required-warning.test.mjs tests/portal-required-warning-source.test.mjs
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_audio_review_pending_historical_static.py tests/test_audio_review_visual_historical_static.py tests/test_audio_review_historical_static.py tests/test_media_fixed_feedback_historical_static.py tests/test_media_detail_historical_static.py tests/test_media_collection_historical_static.py
+          python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_portal_required_warning_historical.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_shared_select_historical_static.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_vault_locale_shell.py
           node --test tests/pdf-input-font16.test.mjs

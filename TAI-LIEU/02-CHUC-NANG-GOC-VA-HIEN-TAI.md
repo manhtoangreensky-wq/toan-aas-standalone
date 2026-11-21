@@ -1,5 +1,14 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — đối chiếu cảnh báo trường bắt buộc
+
+Nguồn đối chiếu là bộ xử lý biểu mẫu chung và bộ chữ giao diện ở
+BASE `a09c7cc94a82537f77ab4e016d3dfa9ae7f23fcc`. Chức năng cũ đã có
+kiểm tra và chọn trường chưa hợp lệ nhưng dùng một câu tiếng Việt.
+Ứng viên chỉ bản địa hóa câu của ứng dụng; không thay chức năng, dữ
+liệu, điều kiện kiểm tra hay ngoại lệ. Thông báo do trình duyệt tự
+tạo và tính đúng ngôn ngữ toàn trang chưa được chứng nhận.
+
 ## 22/11/2026 — lỗi rà soát âm thanh theo trạng thái hiện tại
 
 Ứng viên giữ hợp đồng bộ sưu tập âm thanh: yêu cầu hiện tại vẫn nhận

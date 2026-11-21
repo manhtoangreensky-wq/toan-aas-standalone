@@ -1,5 +1,16 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — cảnh báo trường bắt buộc theo ngôn ngữ
+
+Ứng viên sau PR790 giữ kiểm tra biểu mẫu, vị trí con trỏ và việc chặn
+thao tác khi dữ liệu chưa hợp lệ. Câu cảnh báo do ứng dụng tạo được
+dịch theo VI/EN/ZH; nếu bộ dịch không sẵn sàng vẫn dùng câu Việt.
+Không đổi ngoại lệ của nút lọc, quyền, dữ liệu hoặc phần xử lý máy chủ.
+
+Kiểm tra mã và trình duyệt cô lập đã xác nhận hành vi trong phạm vi
+này. Một số thông báo do trình duyệt tự tạo là phạm vi riêng. Ứng viên
+chưa được coi là đã triển khai hoặc đã kiểm tra production sau đăng nhập.
+
 ## 22/11/2026 — phản hồi rà soát âm thanh theo phiên hiện tại
 
 Ứng viên sau PR789 chặn cảnh báo từ lượt rà soát đã cũ khi khách đổi
