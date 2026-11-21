@@ -8,12 +8,15 @@ import {createHash} from 'node:crypto';
 import {vaultHintContrastHistoricalCss as inverse} from './helpers/vault-hint-contrast-snapshot.mjs';
 import {vaultCustomerHistoricalSource as vaultInverse,vaultCustomerHistoricalSnapshot as vaultSnapshot} from './helpers/vault-customer-copy-snapshot.mjs';
 import {vaultActionFeedbackHistoricalSource} from './helpers/vault-action-feedback-snapshot.mjs';
+import {mediaDetailCustomerCopyHistoricalSource} from './helpers/media-detail-customer-copy-snapshot.mjs';
 Error.stackTraceLimit=0;
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),BASE='5b11e63f178b4ff81c4546462a8cb3ddcdc99fb5',CSS='static/portal/portal-theme.css';
 const hash=x=>createHash('sha256').update(x).digest('hex'),lf=x=>x.replace(/\r\n/g,'\n'),count=(s,p)=>s.split(p).length-1;
 const raw=fs.readFileSync(new URL('./fixtures/vault-hint-contrast-reviewed.json',import.meta.url)),fixture=JSON.parse(raw),edit=fixture.canonicalChanges[0];
 const originalRaw=fs.readFileSync(new URL('./fixtures/vault-customer-copy-reviewed.json',import.meta.url)),original=JSON.parse(originalRaw);
-const baseCss=lf(execFileSync('git',['show',BASE+':'+CSS],{cwd:ROOT,encoding:'utf8',maxBuffer:8e6})),actualCss=lf(fs.readFileSync(path.join(ROOT,CSS),'utf8'));
+// This authority is historical after the exact reviewed media-detail CSS.
+// Newest raw CSS/151-source acceptance is independent in the detail source suite.
+const baseCss=lf(execFileSync('git',['show',BASE+':'+CSS],{cwd:ROOT,encoding:'utf8',maxBuffer:8e6})),actualCss=mediaDetailCustomerCopyHistoricalSource(lf(fs.readFileSync(path.join(ROOT,CSS),'utf8')),CSS);
 assert.equal(count(baseCss,edit.old),1);const candidate=baseCss.replace(edit.old,()=>edit.new),addition=edit.new.slice(edit.old.length);
 const selector='html[data-portal-theme="dark"] .portal-page.portal-asset-vault .portal-vault-dropzone small';
 const importLine="import {vaultHintContrastHistoricalCss} from './helpers/vault-hint-contrast-snapshot.mjs';\n";

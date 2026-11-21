@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {BASE, IDS, CUSTOMER, OLD_RIGHTS, sources, runtime, context, collection, plain, freeze, hash} from "./helpers/media-collection-locale-runtime.mjs";
 import {mediaReadFeedbackHistoricalSnapshot} from "./helpers/media-read-feedback-snapshot.mjs";
+import {mediaDetailCustomerCopyHistoricalSource} from "./helpers/media-detail-customer-copy-snapshot.mjs";
 
 const reviewedRaw = fs.readFileSync(new URL("./fixtures/media-collection-locale-reviewed.json", import.meta.url));
 assert.equal(hash(reviewedRaw), "f0da75ecb63d7f0abc432053441502cd8db99fcc487aa4b192a6514c84ea0515");
@@ -173,8 +174,15 @@ for (const locale of LOCALES) {
         "data-media-collection-offset", "portal-media-pagination"), "");
     }
   });
-  test(`${locale}: every other class/action including media-audio-page retains complete BASE pagination HTML`, () => {
-    const now = runtime(CURRENT, locale), before = runtime(ORIGINAL, locale);
+  test(`${locale}: historical PR782 every other class/action including the then-protected audio pager retains its exact BASE output`, () => {
+    // The audio tuple is intentionally localized by the newer reviewed unit.
+    // Retain this old comparator against its exact historical input; the
+    // newest physical test independently verifies the actual localized pager.
+    const projected = {...CURRENT, raw: Object.fromEntries(Object.entries(CURRENT.raw).map(([key, value]) =>
+      [key, mediaDetailCustomerCopyHistoricalSource(value.replace(/\r\n/g, "\n"),
+        key === "portal" ? "static/portal/portal.js" : "static/portal/portal-i18n.js")]))};
+    projected.hashes = Object.fromEntries(Object.entries(projected.raw).map(([key, value]) => [key, hash(value)]));
+    const now = runtime(projected, locale), before = runtime(ORIGINAL, locale);
     const consumers = [["portal-media-pagination", "media-audio-page"], ["portal-media-pagination", "other-action"],
       ["portal-memory-pagination", "media-workspace-page"], ["portal-music-library-pagination", "music-library-page"],
       ["portal-prompt-library-pagination", "prompt-library-page"], ["custom-pagination", "media-workspace-page"],

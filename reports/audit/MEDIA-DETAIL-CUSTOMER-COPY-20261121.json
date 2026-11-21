@@ -1,0 +1,530 @@
+{
+  "schema": "MEDIA_DETAIL_CUSTOMER_COPY_AUDIT_V1",
+  "task": "MEDIA-DETAIL-CUSTOMER-COPY-20261121",
+  "base": "051b936695638a5f083396194730861dc7831da1",
+  "status": "LOCAL_ACCEPTED_RELEASE_PENDING",
+  "applicationFiles": [
+    "static/portal/portal.js",
+    "static/portal/portal-i18n.js",
+    "static/portal/portal-theme.css"
+  ],
+  "proposalRecords": 53,
+  "workers": [
+    {
+      "model": "gemini-3.8-flash-high",
+      "fullMapExact": true,
+      "records": 3,
+      "proposalRawSha256": "3fc0a55766e0146dffc9f53b283d02c998ae0110f48a4aab918cafa886d4f843",
+      "proposalExact": true,
+      "workerCodeFailures": 0,
+      "applicationTakeover": false,
+      "schemaAmendment": "NONE"
+    },
+    {
+      "model": "gemini-3.8-flash-high",
+      "fullMapExact": true,
+      "records": 43,
+      "proposalRawSha256": "1888cf4df57ca19327e5a1d1326f98fa47a10c004a5a7932d9facde0e1759d58",
+      "proposalExact": true,
+      "workerCodeFailures": 0,
+      "applicationTakeover": false,
+      "schemaAmendment": "ROOT_INTEGER_ENUM_HTTP400_TO_MINIMUM1_NO_APPLICATION_RECORD_CHANGE"
+    },
+    {
+      "model": "gemini-3.8-flash-high",
+      "fullMapExact": true,
+      "records": 4,
+      "proposalRawSha256": "df388b54d37b6803db39f586e80271ff770995e2e1ffe8d82e9f5810da1c2281",
+      "proposalExact": true,
+      "workerCodeFailures": 0,
+      "applicationTakeover": false,
+      "schemaAmendment": "ROOT_INTEGER_ENUM_HTTP400_TO_MINIMUM1_NO_APPLICATION_RECORD_CHANGE"
+    },
+    {
+      "model": "gemini-3.8-flash-high",
+      "fullMapExact": true,
+      "records": 2,
+      "proposalRawSha256": "27a147d438c4b1735730bd578e03146eb332d133a5638cfd30cb534aaf1c6bdc",
+      "proposalExact": true,
+      "workerCodeFailures": 0,
+      "applicationTakeover": false,
+      "schemaAmendment": "ROOT_INTEGER_ENUM_HTTP400_TO_MINIMUM1_NO_APPLICATION_RECORD_CHANGE"
+    },
+    {
+      "model": "gemini-3.8-flash-high",
+      "fullMapExact": true,
+      "records": 1,
+      "proposalRawSha256": "8d0024abe765b6d7d238c91145c9bf2e1330c6bc00bf3d022adef1b675a8c243",
+      "proposalExact": true,
+      "workerCodeFailures": 0,
+      "applicationTakeover": false,
+      "schemaAmendment": "NONE"
+    }
+  ],
+  "fixture": {
+    "file": "tests/fixtures/media-detail-customer-copy-reviewed.json",
+    "rawSha256": "a2209d2a371b0323480cadaa01d1726ac330c5fc6c3cc5473b13df8726fd79bd"
+  },
+  "source151Exact": true,
+  "protectedSources": 148,
+  "tests": {
+    "paginationPass": 19,
+    "originalDetailAndNamespacePass": 33,
+    "changedSuggestionAndNegativePass": 7,
+    "finalSourceGatePass": 13,
+    "regressionWorkflowFiles": 149,
+    "regressionInitialPassed": 4361,
+    "failedChangedUnexecutedSlices": 17,
+    "failedChangedUnexecutedPass": 43,
+    "finalUniqueReconciliation": {
+      "identity": "Case-sensitive ordinal pair(normalized repository-relative testcase.file, decoded testcase.name). XML parsed through System.Xml; normalize backslashes only in file paths. Do not merge merely by title or by receipt.",
+      "input_node_xml_receipts": 24,
+      "input_testcase_rows": 4689,
+      "initial_remaining141_receipt": {
+        "raw_rows": 4388,
+        "raw_pass_rows": 4361,
+        "raw_fail_rows": 27,
+        "raw_skip_rows": 0,
+        "setup_failure_placeholder_rows": 4,
+        "actual_failed_case_rows": 23,
+        "duplicate_actual_pass_rows": 72,
+        "unique_initial_pass_cases": 4289
+      },
+      "bulk_duplicate_owner": "tests/chat-doc-root-access-locale.test.mjs",
+      "setup_placeholders_not_executable_cases": [
+        {
+          "file": "tests/chat-boundary-grid.test.mjs",
+          "raw_name": "tests\\chat-boundary-grid.test.mjs",
+          "later_actual_pass_cases": 2
+        },
+        {
+          "file": "tests/chat-context-label-contrast.test.mjs",
+          "raw_name": "tests\\chat-context-label-contrast.test.mjs",
+          "later_actual_pass_cases": 2
+        },
+        {
+          "file": "tests/chat-light-label-contrast.test.mjs",
+          "raw_name": "tests\\chat-light-label-contrast.test.mjs",
+          "later_actual_pass_cases": 1
+        },
+        {
+          "file": "tests/pdf-split-readability.test.mjs",
+          "raw_name": "tests\\pdf-split-readability.test.mjs",
+          "later_actual_pass_cases": 2
+        }
+      ],
+      "failed_only_17_receipts": {
+        "raw_pass_rows": 43,
+        "existing_failed_executable_cases_retested": 23,
+        "previously_unexecuted_actual_cases": 7,
+        "updated_newest_source_authority_cases": 13,
+        "fail": 0,
+        "skip": 0,
+        "rule": "43 is not43 new tests. Four setup placeholder rows become seven genuine named cases;13 source authority cases replace the prior13, not add13."
+      },
+      "explicit_historical_identity_renames": {
+        "file": "tests/media-collection-locale.test.mjs",
+        "locales": [
+          "vi",
+          "en",
+          "zh"
+        ],
+        "old_suffix": ": every other class/action including media-audio-page retains complete BASE pagination HTML",
+        "new_suffix": ": historical PR782 every other class/action including the then-protected audio pager retains its exact BASE output",
+        "rows_mapped": 3,
+        "reason": "The same historical comparator was relabelled after the reviewed audio tuple change; the three newer receipts replace all three old names, including the oldVI pass."
+      },
+      "source_authority_generation_replacement": {
+        "file": "tests/media-detail-customer-copy-source.test.mjs",
+        "old52_record_cases_removed": 13,
+        "final53_record_cases_added": 13,
+        "final_receipt": "media-detail-failed-only-17-media-detail-customer-copy-source-nov21.xml"
+      },
+      "same_identity_replacement_counts": {
+        "bulk_internal_duplicates": 72,
+        "six_changed_suggestion_cases": 6,
+        "historical_pager_cases": 3,
+        "complete_consumer_retests": 3,
+        "failed_only_existing_case_retests": 23,
+        "total": 107
+      },
+      "preserved_eight_files_final_unique_cases": {
+        "tests/media-audio-pagination-locale.test.mjs": 19,
+        "tests/media-detail-customer-copy.test.mjs": 28,
+        "tests/media-detail-form-labels.test.mjs": 6,
+        "tests/media-detail-customer-copy-source.test.mjs": 13,
+        "tests/media-audio-read-feedback-source.test.mjs": 24,
+        "tests/media-collection-locale-source.test.mjs": 34,
+        "tests/media-collection-locale-snapshot.test.mjs": 26,
+        "tests/media-collection-locale.test.mjs": 96
+      },
+      "preserved_eight_unique_total": 246,
+      "remaining141_plus_imports_unique_total": 4319,
+      "arithmetic": [
+        "4361 -72 duplicate passes +23 recovered actual failures +7 genuinely unexecuted cases +246 preserved-eight unique cases =4565",
+        "4689 raw XML rows -4 setup placeholders -107 same-identity replacements -13 superseded authority-generation cases =4565"
+      ],
+      "unique_final": {
+        "PASS": 4565,
+        "FAIL": 0,
+        "SKIP": 0
+      },
+      "unique_case_owner_files": 156,
+      "selected149_owner_cases": 4303,
+      "additional_imported_owner_cases": 262,
+      "additional_imported_owner_files": {
+        "tests/landing-workflow-plain-language.test.mjs": 3,
+        "tests/legacy-decorative-workbench.test.mjs": 138,
+        "tests/membership-fallback-origin.test.mjs": 60,
+        "tests/membership-plain-language.test.mjs": 12,
+        "tests/membership-static-clutter.test.mjs": 12,
+        "tests/nav-ai-studio-locale.test.mjs": 27,
+        "tests/reference-feedback-layout-lifecycle.test.mjs": 10
+      },
+      "final_identity_status_sha256": "7feab67add228a7ab33af816fca6502fdf20f8d0254122f3988d889534bdedeb",
+      "digest_definition": "SHA256 UTF8(JSON.stringify(sorted tuples [relativeFile,name,status])); ordinal sort by file then name; all statuses finalPASS.",
+      "not_claimed": "No new test execution by this reviewer; this is a deduplicated existing-receipt ledger, not one monolithic fresh4565-case run."
+    },
+    "python": {
+      "pass": 11,
+      "sameExactBaseFailures": 4,
+      "newFailures": 0,
+      "historicalPass": 48
+    }
+  },
+  "review": {
+    "groupedOpenFindings": 0,
+    "resolvedImportantQaFinding": "SUGGESTION_FIXTURE_ACTUAL_RENDER_7_PASS",
+    "supplement": {
+      "file": "media-detail-final-tester-nov21.json",
+      "rawSha256": "ab87b1ac47193394b45e940336754d415a7414b346b592168776f81de46c5cb8"
+    }
+  },
+  "native": {
+    "finiteNativeAccepted": true,
+    "views": 6,
+    "routeObservations": 12,
+    "distinctControls": 384,
+    "finalFreshControls": 1,
+    "retainedControls": 383,
+    "finalNewPngFullDecode": 1,
+    "retainedPreviouslyDecodedPng": 11,
+    "totalScreenshotCoverage": 12,
+    "knownContrastRecoveries": 22,
+    "finalFavoriteLabelContrastRatio": 12.351554732138213,
+    "exactOfflineRequiredAnnotationChecks": 12,
+    "retainedHubTitleChecks": 6,
+    "unknownPriorNotPromoted": 163,
+    "unknownOtherR2NotPromoted": 4,
+    "sourceCoreSchemaAuthEgressHeld": true,
+    "ownedActiveAfterCleanup": 0,
+    "previousFalseReceiptsPreserved": true,
+    "finalElapsedSeconds": 11.668,
+    "contrastConformance": "NOT_CLAIMED",
+    "axConformance": "NOT_CLAIMED",
+    "keyboard": "NOT_TESTED",
+    "signedProductionUI": "NOT_TESTED",
+    "audioOutput": "NOT_TESTED"
+  },
+  "workerCodeFailures": 0,
+  "applicationTakeover": false,
+  "providerCalls": 0,
+  "walletMutations": 0,
+  "productionDataMutations": 0,
+  "campaignStateOpened": false,
+  "wholeGoalComplete": false,
+  "nextLockedUnit": "MDCC_FIXED_COPY_VALIDATION_WRITE_HANDOFF",
+  "motion": "M_FINAL01_06_LAST",
+  "evidence": [
+    {
+      "file": "media-detail-audio-pagination-complete-consumers-nov21.xml",
+      "rawBytes": 1023,
+      "rawSha256": "441ce65223d7606d6c03e837a3e77dd031f100df1726d7c2b34d5f0de3395e40"
+    },
+    {
+      "file": "media-detail-audio-pagination-green-nov21.xml",
+      "rawBytes": 5433,
+      "rawSha256": "cc9a8e475048380a51df8f6ec860e4bdee83ca7baeee90bff9e9ba8deef22c2a"
+    },
+    {
+      "file": "media-detail-audio-pagination-red-nov21.xml",
+      "rawBytes": 47770,
+      "rawSha256": "d1f80200ace7108b9b6aeec462b9443c768ce2eb71b53d2b337af372e2e860a1"
+    },
+    {
+      "file": "media-detail-copy-labels-green-nov21.xml",
+      "rawBytes": 9149,
+      "rawSha256": "5b148672a50f79c03faaed90e42fa6ea1bd34f672df260c059c130b5ca8297b7"
+    },
+    {
+      "file": "media-detail-customer-copy-notes-red-nov21.xml",
+      "rawBytes": 7861,
+      "rawSha256": "eaf76baea861d9037873a9e14c52c0addb59afe9fb456dcedd47ededfbb5f708"
+    },
+    {
+      "file": "media-detail-customer-copy-red-nov21.xml",
+      "rawBytes": 23765,
+      "rawSha256": "98cdff120f1b69a9e03b3758aa1bbc492466ae641737b8c7fd893932ce79b5f3"
+    },
+    {
+      "file": "media-detail-failed-only-01-chat-boundary-grid-nov21.xml",
+      "rawBytes": 739,
+      "rawSha256": "dd89de0d4205e0fd1c1b92b6118d287316129187f02ed7a5541bb11fe266ba6d"
+    },
+    {
+      "file": "media-detail-failed-only-02-chat-context-label-contrast-nov21.xml",
+      "rawBytes": 757,
+      "rawSha256": "c6504370b3923d97cece0677fba5a7e005cd4f6b2c8d7fc11dfc16f1ab7fee71"
+    },
+    {
+      "file": "media-detail-failed-only-03-chat-light-label-contrast-nov21.xml",
+      "rawBytes": 494,
+      "rawSha256": "7674d00ab9d7bdc3f81447cb748eaa9e82dba35d6da621f9e199035ae6ff4012"
+    },
+    {
+      "file": "media-detail-failed-only-04-pdf-split-readability-nov21.xml",
+      "rawBytes": 754,
+      "rawSha256": "a83178fe6e396a3dda78b5eefa9a09de8070e668dec4ddbb0e2213a23c6a2c51"
+    },
+    {
+      "file": "media-detail-failed-only-05-image-enhance-step-color-source-nov21.xml",
+      "rawBytes": 511,
+      "rawSha256": "f450ccc6e125ee189220037769ba8d08e11b65e110a0b4eea28131f988785385"
+    },
+    {
+      "file": "media-detail-failed-only-06-image-resize-control-height-source-nov21.xml",
+      "rawBytes": 774,
+      "rawSha256": "0e73bb58d543e028de475ee7f96eb0da0f7c1452885fb70cb6df9e2a25cbbea4"
+    },
+    {
+      "file": "media-detail-failed-only-07-image-resize-subtitle-wrap-source-nov21.xml",
+      "rawBytes": 502,
+      "rawSha256": "2aea7f78e77ae10a243c8de4db72139a5c331ba3025fa967ad6e7903c6834630"
+    },
+    {
+      "file": "media-detail-failed-only-08-media-audio-read-feedback-snapshot-nov21.xml",
+      "rawBytes": 1078,
+      "rawSha256": "dacd5a7f40fd27796028405ded7f78821f2cb24bb7e0299564aabce4203020f9"
+    },
+    {
+      "file": "media-detail-failed-only-09-media-read-feedback-snapshot-nov21.xml",
+      "rawBytes": 1082,
+      "rawSha256": "10e34e78a3ac1cd7477288a12dd63c14647fd095134d1771453e0f483fac4acb"
+    },
+    {
+      "file": "media-detail-failed-only-10-pdf-customer-cleanup-nov21.xml",
+      "rawBytes": 520,
+      "rawSha256": "4f002f7463419bd678643c5836176cb00707fdd9c3055141c5a5eee2555c33f4"
+    },
+    {
+      "file": "media-detail-failed-only-11-pdf-input-font16-nov21.xml",
+      "rawBytes": 1012,
+      "rawSha256": "6117c40a039af2099de356d74b0ae189cb2c310084246d70f0b38ffc0bf59c72"
+    },
+    {
+      "file": "media-detail-failed-only-12-pdf-merge-contrast-nov21.xml",
+      "rawBytes": 997,
+      "rawSha256": "700022f407080d1b9d87310db03bc71f4dacd4f55f213993c71ff03b3f0de371"
+    },
+    {
+      "file": "media-detail-failed-only-13-pdf-merge-fields-nov21.xml",
+      "rawBytes": 486,
+      "rawSha256": "772427d3f014b0840bed5c2dc8c41f634676f5cc6e4950d37335cfcb79d33ed9"
+    },
+    {
+      "file": "media-detail-failed-only-14-pdf-usability-nov21.xml",
+      "rawBytes": 747,
+      "rawSha256": "4b6093d53a28c09c131748414ba9406ff91aeea5a18a85ac572c7a3888b65dfc"
+    },
+    {
+      "file": "media-detail-failed-only-15-vault-hint-contrast-history-nov21.xml",
+      "rawBytes": 807,
+      "rawSha256": "01b49331994099aae58c5fc9bc0a6c96a31b9e890d31f4aa61e0959213de286e"
+    },
+    {
+      "file": "media-detail-failed-only-16-vault-hint-contrast-nov21.xml",
+      "rawBytes": 497,
+      "rawSha256": "efb9dce7cd554c289f737443e7946ad908e21d07312073f64b51f55ed36a56b6"
+    },
+    {
+      "file": "media-detail-failed-only-17-media-detail-customer-copy-source-nov21.xml",
+      "rawBytes": 3644,
+      "rawSha256": "4c6665d4621837d26047913eb1c79fd9765363fcffd47d8936802d1bf0695a6e"
+    },
+    {
+      "file": "media-detail-form-labels-red-nov21.xml",
+      "rawBytes": 8512,
+      "rawSha256": "df6687c75720803e2c9b9b98f7fb68a2f065ba1799da5bb42092a467d92b3f70"
+    },
+    {
+      "file": "media-detail-protected-pager-history-green-nov21.xml",
+      "rawBytes": 1091,
+      "rawSha256": "67d078a38243ab0b14dcabf69970e8d8c54c3437b65ed26818dda326d4136b02"
+    },
+    {
+      "file": "media-detail-python-exact-base-failures-nov21.xml",
+      "rawBytes": 4679,
+      "rawSha256": "a65c7172ab2129a72149a1f198b5acbc3e24770b9b57bfb52fa5175647efb7ac"
+    },
+    {
+      "file": "media-detail-python-history-green-nov21.xml",
+      "rawBytes": 8519,
+      "rawSha256": "613f0763db96a61595caef17581cf1f7770f4ef654078f44af9dce12ce462138"
+    },
+    {
+      "file": "media-detail-python-nov21.xml",
+      "rawBytes": 6521,
+      "rawSha256": "2cb7c83e2dffb148ab10a78289efcfb1d912c9958f714c0a0f9330bbd068db15"
+    },
+    {
+      "file": "media-detail-regression-remaining141-nov21.xml",
+      "rawBytes": 1794867,
+      "rawSha256": "27b65a6063603e211369e9c40f7d27e5c17b1f487e4613428a609e3ef74f3cd4"
+    },
+    {
+      "file": "media-detail-source-history-first-nov21.xml",
+      "rawBytes": 64433,
+      "rawSha256": "99bdb8181e90dd07f9f2e339516f48605330869bf7337ffdaa71f0b45ca65fd9"
+    },
+    {
+      "file": "media-detail-suggestion-coverage-green-nov21.xml",
+      "rawBytes": 2169,
+      "rawSha256": "1c0ed8e1d0adba98847100409b859259030338646e91183c772ee0b6f2b48aa9"
+    },
+    {
+      "file": "media-detail-regression-exit-nov21.json",
+      "rawBytes": 15316,
+      "rawSha256": "b0b03f77bed6c8feca2725a90215b94af8a291ba931954384667eb26ff4d8b2e"
+    },
+    {
+      "file": "media-detail-regression-selection-nov21.json",
+      "rawBytes": 15065,
+      "rawSha256": "d9604166d2b87d9e6d633a4f0edde32d72110cf37a9c04d36fa5af2fa271b2d0"
+    },
+    {
+      "file": "media-detail-failed-only-summary-nov21.json",
+      "rawBytes": 9315,
+      "rawSha256": "9e87e8ba19c3004bb26ab7767ff7400671130b7f32f5b6355c246ee5b7c4d77b"
+    },
+    {
+      "file": "media-detail-grouped-review-nov21.json",
+      "rawBytes": 12830,
+      "rawSha256": "dd1ccd14221c7217dabb092bc27dcf8ace2a7793e89b7933f2f71c4ec2498ee7"
+    },
+    {
+      "file": "media-detail-grouped-review-nov21.md",
+      "rawBytes": 5632,
+      "rawSha256": "17f6f00ddf8cd1d8ac8afa35cbe0bacfd78ec3b41ce7e926dc8660fa9369806e"
+    },
+    {
+      "file": "media-detail-final-tester-nov21.json",
+      "rawBytes": 21004,
+      "rawSha256": "ab87b1ac47193394b45e940336754d415a7414b346b592168776f81de46c5cb8"
+    },
+    {
+      "file": "media-detail-final-tester-nov21.md",
+      "rawBytes": 6370,
+      "rawSha256": "48f0cda6c28e97dfb1fcc63f6b9fa967f6e61d93128f2b35be96160b4472f625"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r3/bindings.json",
+      "rawBytes": 57668,
+      "rawSha256": "e1ecf0a77fec665510c06b8d940f37fa39291ec15bc911bdde63a71b4c0aef9b"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r3/contract.cjs",
+      "rawBytes": 27007,
+      "rawSha256": "3445e5dcef9573f82cf20849bb95246a7c1e5858fda5a904524b9a50556c04d0"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r3/bind-native.cjs",
+      "rawBytes": 1236,
+      "rawSha256": "b07a8018a6d26fceab13bf1e5e12fef20ed5e36c504414143e659c1d8390015b"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r3/observer-platform.py",
+      "rawBytes": 19724,
+      "rawSha256": "81c30c5c13a815048980761373fc91c5485328b8fb26cc3fa7c1ab535ae71239"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r3/observer-browser.cjs",
+      "rawBytes": 34213,
+      "rawSha256": "3d85f7305d9c8a8a6bec653da85d069f29cf5d97e64541c8de0abbe2743634f5"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r3/contrast.cjs",
+      "rawBytes": 24308,
+      "rawSha256": "94cd61452d71e11517a818d78410f8e7c577e7a286bf7f2d8b491920ae3c6ad8"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r3/preparation.md",
+      "rawBytes": 9642,
+      "rawSha256": "288752961fc34955760cb36bdb751708d40f72baa91953a509291fe665497a5b"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r3/run-media-detail-candidate-final-one-nov21-03/native-summary.json",
+      "rawBytes": 204764,
+      "rawSha256": "e638a8661a9e035557971f4049c1ee57e17245a1951f5f96021115059d6d788b"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r3/run-media-detail-candidate-final-one-nov21-03/isolation-summary.json",
+      "rawBytes": 99002,
+      "rawSha256": "4de66bc02642e2f8f76f9a41669d142bb55f4dd5adb021538e90890f32df3e1e"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r3/run-media-detail-candidate-final-one-nov21-03/acceptance-summary.json",
+      "rawBytes": 785,
+      "rawSha256": "b5aa0aeef9aea11739b74f83457e7701b4ffc3b694d286bc2b7d5330bc0c2121"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r3/run-media-detail-candidate-final-one-nov21-03/png-validation.json",
+      "rawBytes": 1024,
+      "rawSha256": "c57817fd42d5ce59d1d91aa2f7a6436507695536d181f5112ebc321a4c54f274"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r3/run-media-detail-candidate-final-one-nov21-03/control-observations.jsonl",
+      "rawBytes": 34170,
+      "rawSha256": "05de6b404a458b7ffb5d780503a734b60e94c3d70343af1a6ef41535a322fb41"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r1/run-media-detail-candidate-nov21-01/native-summary.json",
+      "rawBytes": 38520062,
+      "rawSha256": "6e04852dde18cd38aba442d91a4f3f07adfa5ffec9a41decd821f4e2a3dcbcdd"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r1/run-media-detail-candidate-nov21-01/isolation-summary.json",
+      "rawBytes": 99232,
+      "rawSha256": "2234713b4d488c2b161a59b78f06f57c4b0201a1931a60059e585363fddd026d"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r1/run-media-detail-candidate-nov21-01/acceptance-summary.json",
+      "rawBytes": 653,
+      "rawSha256": "4b86fca7657c68d835976b80048ff81765749bc8ba226bea01379853516f4355"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r1/run-media-detail-candidate-nov21-01/png-validation.json",
+      "rawBytes": 7011,
+      "rawSha256": "21a0198ddc69e8f34262f792d8d6737689fb67b75ac4aed643bc74228795528a"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r2/run-media-detail-candidate-failed-only-nov21-02/native-summary.json",
+      "rawBytes": 3218608,
+      "rawSha256": "a783ea9d1fbb9eab857a23f9536060abda34e437bf35fa9621ad2c092e532779"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r2/run-media-detail-candidate-failed-only-nov21-02/isolation-summary.json",
+      "rawBytes": 99248,
+      "rawSha256": "ff8426ba3512475924f8db7553293e06aeb009f7c47a514378663916ef7dd783"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r2/run-media-detail-candidate-failed-only-nov21-02/acceptance-summary.json",
+      "rawBytes": 731,
+      "rawSha256": "75c20e5befb321ca041f3e329872a70c1653c9ed5a07aad503972417d0ed8ce6"
+    },
+    {
+      "file": "media-detail-candidate-prep-nov21-r2/run-media-detail-candidate-failed-only-nov21-02/png-validation.json",
+      "rawBytes": 2133,
+      "rawSha256": "a96c96b4460271fc7e5a70f74ab8f8114d26594914ceaf7d272ca90db44c6e8c"
+    }
+  ]
+}

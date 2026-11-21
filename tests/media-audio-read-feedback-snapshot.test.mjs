@@ -5,6 +5,7 @@ import {createHash} from "node:crypto";
 import vm from "node:vm";
 import {mediaAudioReadFeedbackHistoricalSnapshot as historical} from "./helpers/media-audio-read-feedback-snapshot.mjs";
 import {mediaReadFeedbackHistoricalSnapshot as prior} from "./helpers/media-read-feedback-snapshot.mjs";
+import {mediaDetailCustomerCopyHistoricalSnapshot} from "./helpers/media-detail-customer-copy-snapshot.mjs";
 
 const raw = fs.readFileSync(new URL("./fixtures/media-audio-read-feedback-reviewed.json", import.meta.url));
 const fixture = JSON.parse(raw), fail = /Unreviewed media audio read feedback/;
@@ -46,7 +47,8 @@ for (const [index, locale] of ["vi", "en", "zh"].entries()) {
     assert.equal(JSON.stringify(input), saved);
     assert.equal(historical(actual, locale), actual);
     assert.deepEqual(historical(freeze([rows[0], first, ...rows.slice(1), last]), locale), [first, last]);
-    const base = freeze(Object.entries(messages[locale]).filter(([key]) => !key.startsWith("mediaReadFeedback.audio")));
+    const base = freeze(mediaDetailCustomerCopyHistoricalSnapshot(Object.entries(messages[locale]), locale)
+      .filter(([key]) => !key.startsWith("mediaReadFeedback.audio")));
     assert.equal(historical(base, locale), base);
     assert.deepEqual(historical(freeze(Object.entries(messages[locale])), locale), base);
   });

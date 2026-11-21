@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
+import {mediaDetailCustomerCopyHistoricalSource} from './media-detail-customer-copy-snapshot.mjs';
 // Exact CSS-only historical boundary. Never a current CSS/source acceptance mask.
 const raw=fs.readFileSync(new URL('../fixtures/vault-hint-contrast-reviewed.json',import.meta.url));
 const fail='Unreviewed Vault hint contrast',count=(source,part)=>source.split(part).length-1;
@@ -13,6 +14,7 @@ const selector='html[data-portal-theme="dark"] .portal-page.portal-asset-vault .
 assert.equal(addition,'\n'+marker+'\n'+selector+' {\n  color: var(--portal-ink);\n}\n');
 export function vaultHintContrastHistoricalCss(source,targetFile){
  assert.equal(typeof source,'string',fail);if(targetFile!==file)return source;
+ source=mediaDetailCustomerCopyHistoricalSource(source,targetFile);
  // Comment removal is observation only; the returned source uses solely the exact immutable OLD/NEW substitution.
  const selectors=[...source.replace(/\/\*[\s\S]*?\*\//g,'').matchAll(/([^{}]+)\{/g)].map(match=>match[1].trim());
  const owned=selectors.filter(value=>value.includes('data-portal-theme')&&value.includes('.portal-asset-vault')&&value.includes('.portal-vault-dropzone')&&/\bsmall\b/.test(value));

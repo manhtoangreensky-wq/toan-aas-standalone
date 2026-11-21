@@ -1,5 +1,34 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 21/11/2026 — chi tiết âm thanh: trình bày lại, không đổi chức năng
+
+Nguồn gốc giữ nguyên:
+`docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md`, mục Parity map
+và Lifecycle/API. Mốc đã giao PR784/runtime051b9366. Ứng viên hiện
+tại được đối chiếu với đúng nguồn BASE này, không suy từ tên nhánh.
+
+| Chức năng gốc nguyên văn | Hiện trạng của đơn vị giao diện | Bằng chứng/ranh giới |
+|---|---|---|
+| Music/SFX prompt direction | Vẫn tạo ba gợi ý văn bản; tên và hướng dẫn dễ hiểu hơn | Ba receipt flags và ba kết quả được kiểm trong renderer thật; không hứa tạo âm thanh |
+| Upload/select personal audio | Vẫn chọn tệp đã có và thêm vào bộ sưu tập | Namespace chỉ đổi ID/for/help, không đổi field name/UUID/options/payload |
+| Play/download state | Giữ liên kết tải riêng đã có | Không thêm player, tải lên hoặc tạo đầu ra; không gọi link tải trong QA |
+| Music/SFX organisation | Giữ vai trò, thẻ, yêu cầu, dự án, quyền và lịch sử | So hợp đồng controls trước/sau, dữ liệu khách được giữ và escape |
+| Metadata revisions are immutable and bounded to 100 per collection. | Quy tắc không đổi; lời giải thích viết ngắn | Backend/integration và 148 nguồn bảo vệ giữ nguyên |
+| Audio references do not roll back with metadata versions. | Giữ ý nghĩa trong câu khôi phục ngắn gọn | Chỉ thay copy, không thay revision hoặc hành vi khôi phục |
+
+Điểm tài liệu cũ không còn dùng làm kỳ vọng giao diện: các tên
+“metadata”, “Asset Vault”, “local brief directions” hoặc các hộp mô
+tả cơ chế nội bộ không còn là chữ bắt buộc phải hiện cho khách.
+Chúng vẫn có thể là tên kỹ thuật trong tài liệu hợp đồng. Không xóa
+cơ chế hoặc mở quyền vì đã bỏ câu giải thích khỏi giao diện.
+
+53record/ba tệp ứng dụng,47 hàng locale gồm45 override và hai khóa
+mới,151 source pins/148 bảo vệ; các fixture và golden cũ giữ nguyên.
+Reader hữu hạn chỉ phục vụ kiểm tra lịch sử; kiểm tra nguồn mới dựng
+tiến từ BASE, không dùng reader lịch sử để che sai khác.
+Thao tác ghi/validation còn trong hàng đợi riêng; không suy toàn bộ
+locale, accessibility, motion hoặc signed production UI đã đạt.
+
 ## 21/11/2026 — phản hồi đọc tệp âm thanh, không đổi chức năng gốc
 
 Nguồn gốc:docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md và audio

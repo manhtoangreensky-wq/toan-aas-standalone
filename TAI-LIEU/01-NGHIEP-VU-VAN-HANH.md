@@ -1,5 +1,40 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 21/11/2026 — chữ và nhãn chi tiết âm thanh, trước phát hành
+
+Mốc production đã xác minh gần nhất là PR784, runtime
+`051b936695638a5f083396194730861dc7831da1`, CI44873207140 hai job
+thành công và deploy44875068636 thành công57s. VPS ba dịch vụ hoạt
+động, nguồn/tài nguyên đúng; hai receipt7049170333/7058572307 đọc
+lại đúng. Trạng thái MARF chưa phát hành bên dưới là lịch sử.
+
+Đơn vị hiện tại chỉ thay phần khách nhìn thấy tại chi tiết bộ sưu
+tập âm thanh và Trung tâm âm thanh. Phân trang tệp theo VI/EN/ZH;
+46 hàng chữ được viết gọn, ba lời giải thích lặp và một khung giải
+thích riêng được bỏ. Các biểu mẫu, nút thật, yêu cầu sử dụng, ghi
+nguồn, ghi chú quyền, lịch sử, liên kết tải và bước mở công cụ vẫn
+được giữ. Gợi ý được mô tả đúng là văn bản, không phải tạo âm thanh.
+Tên và nội dung khách đã lưu không được tự dịch.
+
+Ô “Thẻ” của biểu mẫu thêm tệp có định danh riêng để nhãn không trỏ
+nhầm sang biểu mẫu bộ sưu tập. Năm quy tắc màu chỉ nhắm đúng các
+biểu mẫu chi tiết đã đo; không thay bố cục, chuyển động hoặc màu
+chung. Tổng53record/ba tệp ứng dụng được ghim,148 tệp khác giữ
+nguyên; phần đọc/ghi API, quyền, phiên đăng nhập và dữ liệu không đổi.
+
+Kiểm tra vật lý và so nguồn đã đạt. Native dùng dữ liệu tạm có đủ
+bốn biểu mẫu, không gửi form hoặc tạo tệp. R1/R2/R3 giữ bằng chứng
+riêng; 22 lỗi tương phản đã ghi nhận đều có phép đo khắc phục.
+384 control có bằng chứng gộp, không chạy lại phần đã đạt. 12 nhãn
+bắt buộc được đối chiếu đúng phần đọc hỗ trợ, không xóa annotation
+trong ứng dụng. 163 association nền chưa xác định trước đó và bốn
+association mới khác vẫn chưa được nhận đạt. Chưa công bố bản này
+đã có trên production hoặc đạt toàn bộ accessibility.
+
+Các lời nhắc xác thực dữ liệu/thông báo ghi trong integration.js là
+đơn vị tiếp theo, chưa đánh dấu hoàn tất. Không thay engine, Bot,
+provider, ví, PayOS hoặc dữ liệu thật trong đợt giao diện này.
+
 ## 21/11/2026 — PR783 đã giao; phản hồi đọc tệp âm thanh đang kiểm tra
 
 PR783 đã gộp và triển khai tại runtime

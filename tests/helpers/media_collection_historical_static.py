@@ -2,8 +2,10 @@
 from pathlib import Path
 import hashlib
 import json
+import runpy
 
 ROOT = Path(__file__).resolve().parents[2]
+detail_inverse = runpy.run_path(str(ROOT / "tests/helpers/media_detail_historical_static.py"))["historical_media_detail_portal"]
 RAW = (ROOT / "tests/fixtures/media-collection-locale-reviewed.json").read_bytes()
 FAIL = "Unreviewed media collection historical source"
 assert hashlib.sha256(RAW).hexdigest() == "f0da75ecb63d7f0abc432053441502cd8db99fcc487aa4b192a6514c84ea0515", FAIL
@@ -15,6 +17,7 @@ assert len(GROUPS) == 5 and FIXTURE["task"] == "MEDIA-COLLECTION-LOCALE-20261120
 
 def historical_media_collection_portal(source: str) -> str:
     assert isinstance(source, str), FAIL
+    source = detail_inverse(source)
     for group in GROUPS:
         owner, following = group["owner"], group["next"]
         if owner not in source and following not in source:
