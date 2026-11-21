@@ -7976,6 +7976,11 @@ body {
   color: var(--portal-muted);
 }
 
+.portal-page.portal-audio-hub-detail .portal-audio-hub-review-pack > .portal-project-steps > li > span > b,
+.portal-page.portal-audio-hub-detail .portal-audio-hub-review-pack > .portal-project-steps > li > span > small {
+  display: block;
+}
+
 .portal-page.portal-audio-hub-detail .portal-audio-hub-review-pack .portal-media-policy {
   border-color: color-mix(in srgb, var(--portal-warning) 32%, var(--portal-border));
   background: color-mix(in srgb, var(--portal-warning) 6%, var(--portal-surface-light));
