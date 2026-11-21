@@ -1,5 +1,30 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 21/11/2026 — lời nhắc âm thanh: chỉ đổi cách trình bày
+
+Nguồn gốc vẫn là `docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md`,
+mục Parity map và Lifecycle/API, cùng dispatcher ở BASE
+`6f04b8449d7354ca44397c199ccdda77107f577e` đã giao qua PR785.
+
+| Chức năng gốc nguyên văn | Hiện trạng ứng viên | Bằng chứng và phần giữ nguyên |
+|---|---|---|
+| Music/SFX organisation | 35 lời nhắc nhập sai theo VI/EN/ZH ở đúng hành động âm thanh | Mười hàm validation/classifier/read giữ nguyên byte; giới hạn, chuẩn hóa và dữ liệu không đổi |
+| Upload/select personal audio | Tám lời nhắc lưu/chuyển bước dùng đúng ngôn ngữ | Yêu cầu API, DTO, thứ tự tải lại và điều hướng được kiểm qua dispatcher thật |
+| Music/SFX prompt direction | Vẫn chỉ tạo gợi ý văn bản | Lời nhắc không tuyên bố có âm thanh hoặc đầu ra provider |
+| Play/download state | Giữ liên kết tải và công cụ đã có | Không thêm trình phát, tải lên, công việc hoặc gọi dịch vụ |
+| Metadata revisions are immutable and bounded to 100 per collection. | Quy tắc không đổi | Producer/backend/149 nguồn ngoài hai tệp giao diện giữ BASE |
+
+Những câu kỹ thuật trong tài liệu gốc hoặc câu VI cũ trong comparator
+không còn là lời bắt buộc phải hiện trên giao diện. Comparator lịch
+sử chỉ dùng reader hữu hạn cho đúng vùng đã đổi chữ; fixture, golden
+và các kiểm tra âm giữ nguyên. Nguồn hiện tại được kiểm dựng tiến từ
+BASE với đúng 11 thay đổi, không lấy reader lịch sử làm bằng chứng.
+
+Lỗi có thuộc tính phản hồi máy chủ hoặc trạng thái, kể cả thuộc tính
+kế thừa/rỗng, không bị mapper dịch. Các hành động khác không đọc thêm
+getter của lỗi. Không xóa chức năng, nới quyền hoặc đổi dữ liệu để
+làm chữ gọn hơn. Phần locale và motion toàn app vẫn mở.
+
 ## 21/11/2026 — chi tiết âm thanh: trình bày lại, không đổi chức năng
 
 Nguồn gốc giữ nguyên:

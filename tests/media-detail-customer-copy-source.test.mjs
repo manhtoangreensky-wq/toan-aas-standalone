@@ -5,6 +5,7 @@ import path from "node:path";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
+import {mediaFixedFeedbackHistoricalSource} from "./helpers/media-fixed-feedback-snapshot.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const raw = fs.readFileSync(new URL("./fixtures/media-detail-customer-copy-reviewed.json", import.meta.url));
@@ -13,27 +14,29 @@ const lf = value => value.replace(/\r\n/g, "\n");
 const original = Object.fromEntries(f.allowedFiles.map(file => [file,
   lf(execFileSync("git", ["show", f.base + ":" + file], {cwd: ROOT, encoding: "utf8", maxBuffer: 30e6, windowsHide: true}))]));
 const expected = {...original}, physical = Object.fromEntries(f.allowedFiles.map(file =>
-  [file, lf(fs.readFileSync(path.join(ROOT, file), "utf8"))]));
+  [file, mediaFixedFeedbackHistoricalSource(lf(fs.readFileSync(path.join(ROOT, file), "utf8")), file)]));
 for (const edit of f.canonicalChanges) {
   assert.equal(edit.count, 1); assert.equal(expected[edit.file].split(edit.old).length - 1, 1);
   expected[edit.file] = expected[edit.file].replace(edit.old, () => edit.new);
 }
-test("current physical complete files equal BASE plus exactly53 independently reviewed records", () => {
+test("historical PR785 complete inputs equal BASE plus exactly53 independently reviewed records", () => {
   assert.equal(hash(raw), "a2209d2a371b0323480cadaa01d1726ac330c5fc6c3cc5473b13df8726fd79bd");
   assert.equal(f.base, "051b936695638a5f083396194730861dc7831da1");
   assert.equal(f.canonicalChanges.length, 53); assert.equal(f.copyRows.length, 47);
   assert.equal(f.copyRows.filter(row => row.old === null).length, 2);
   for (const file of f.allowedFiles) {
-    assert.equal(physical[file], expected[file], "Raw current acceptance never uses an inverse adapter:" + file);
+    assert.equal(physical[file], expected[file], "Historical PR785 input; current MFF acceptance is separate:" + file);
     assert.notEqual(physical[file], original[file]);
   }
 });
-test("current physical151 sources retain148 protected files and the exact measured/LF/CRLF checkout", () => {
+test("historical PR785 inputs retain151 pins148 protected and the exact measured/LF/CRLF checkout", () => {
   assert.equal(f.applicationBaseline.length, 151);
   assert.equal(new Set(f.applicationBaseline.map(row => row.file)).size, 151);
   assert.equal(f.applicationBaseline.filter(row => !row.changed).length, 148);
   for (const pin of f.applicationBaseline) {
-    const bytes = fs.readFileSync(path.join(ROOT, pin.file)), text = lf(bytes.toString("utf8"));
+    const raw = fs.readFileSync(path.join(ROOT, pin.file));
+    const projected = mediaFixedFeedbackHistoricalSource(lf(raw.toString("utf8")), pin.file);
+    const bytes = Buffer.from(projected), text = projected;
     assert.equal(hash(text), pin.candidateLfSha256, "Complete current source:" + pin.file);
     assert.ok([pin.candidateRawSha256, pin.candidateLfSha256, hash(text.replace(/\n/g, "\r\n"))].includes(hash(bytes)),
       "Only measured/LF/uniformCRLF checkout:" + pin.file);

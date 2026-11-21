@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
+import {mediaFixedFeedbackHistoricalSource, mediaFixedFeedbackHistoricalSnapshot} from "./media-fixed-feedback-snapshot.mjs";
 
 const raw = fs.readFileSync(new URL("../fixtures/media-detail-customer-copy-reviewed.json", import.meta.url));
 const fail = "Unreviewed media detail customer copy", count = (value, part) => value.split(part).length - 1;
@@ -24,6 +25,7 @@ const boundary = (source, value) => {
 export function mediaDetailCustomerCopyHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail + " source type");
   assert.equal(typeof file, "string", fail + " file type");
+  source = mediaFixedFeedbackHistoricalSource(source, file);
   if (![portal, catalogue, css].includes(file)) return source;
   if (file === css) {
     const fragment = fixture.historicalFragments.find(row => row.file === css);
@@ -62,6 +64,7 @@ export function mediaDetailCustomerCopyHistoricalSource(source, file) {
 }
 
 export function mediaDetailCustomerCopyHistoricalSnapshot(entries, locale) {
+  entries = mediaFixedFeedbackHistoricalSnapshot(entries, locale);
   const index = ["vi", "en", "zh"].indexOf(locale);
   assert.ok(index >= 0, fail + " locale");
   assert.ok(Array.isArray(entries) && entries.every(row => Array.isArray(row) && row.length === 2), fail + " entry shape");

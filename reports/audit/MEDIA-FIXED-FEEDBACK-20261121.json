@@ -1,0 +1,523 @@
+{
+  "schema": "MEDIA_FIXED_FEEDBACK_AUDIT_V1",
+  "task": "MEDIA-FIXED-FEEDBACK-20261121",
+  "base": "6f04b8449d7354ca44397c199ccdda77107f577e",
+  "status": "LOCAL_NATIVE_TESTER_ACCEPTED_RELEASE_PENDING",
+  "applicationFiles": [
+    "static/portal/integration.js",
+    "static/portal/portal-i18n.js"
+  ],
+  "applicationRecords": 11,
+  "workers": [
+    {
+      "part": "errors",
+      "records": 2,
+      "proposalRawSha256": "dcc07f9d1f62b8ed3d00f1248a5ffd240fd5b7c78ad832dfa2cabe754e871298",
+      "packetRawSha256": "5d435d19011db8188e45e2baa8827dd05f3443882aa566b57ec8e837468bffce",
+      "fullMapExact": true,
+      "publicSourcesExact": 3,
+      "codeFailures": 0
+    },
+    {
+      "part": "actions",
+      "records": 8,
+      "proposalRawSha256": "cdd7fa0c344f6125ec80db21ba96af48d9d90bd31b6d14b1c3e5ed7af56ff6d3",
+      "packetRawSha256": "f29f8883920216d55578a6d48d4ea1bda3beb105ec9f77e5c50296e2cf564f45",
+      "fullMapExact": true,
+      "publicSourcesExact": 3,
+      "codeFailures": 0
+    },
+    {
+      "part": "catalogue",
+      "records": 1,
+      "proposalRawSha256": "56ad317381ac9623fc8e0c6dec42925b5c3f74afbf8799435c527a45a35b4c86",
+      "packetRawSha256": "59e09c551ec987d56f904e6e09c97ce7b10e1280015abd43fc924ec6df6a13b3",
+      "fullMapExact": true,
+      "publicSourcesExact": 3,
+      "codeFailures": 0
+    }
+  ],
+  "fixture": {
+    "expected": {
+      "file": "tests/fixtures/media-fixed-feedback-contract.json",
+      "rawSha256": "b1a1293fd200c49ac4348c7e2f9965df6b9d5b0ae83562fff240a1ae013eddbc"
+    },
+    "reviewed": {
+      "file": "tests/fixtures/media-fixed-feedback-reviewed.json",
+      "rawSha256": "808d89af0587a53a13bb78e83be5e8fab6f6e7e98240183b9966766ae5febfa6"
+    }
+  },
+  "source151Exact": true,
+  "protectedSources": 149,
+  "protectedFunctionsExact": 10,
+  "tests": {
+    "initialTargetedGreen": 213,
+    "addedBoundaryContexts": 9,
+    "targetedUniqueContexts": 222,
+    "historicalContexts": 54,
+    "remainingLocaleFiles": 147,
+    "remainingReceiptCases": 4600,
+    "finalUniqueReconciliation": {
+      "unique_final": {
+        "PASS": 4807,
+        "FAIL": 0,
+        "SKIP": 0
+      },
+      "method": "4804 retained unique cases plus three new pressure identities; one same-identity source retest replaces prior evidence.",
+      "originalLedgerRawSha256": "f6f58aa544fa7e115f8fa24a18c74829e327c146a660104308aaaab99bae0445",
+      "supplement": {
+        "file": "media-fixed-feedback-ci-tester-supplement-nov21.json",
+        "rawSha256": "403761cf820d0311fa14810d070db4aeb115082e74022b83c22b7caa0136f344"
+      }
+    },
+    "workflowCoverage": {
+      "start_step": "Video Studio locale and navigation presentation regressions",
+      "end_boundary": "Executable Chrome Extension Unit Tests",
+      "algorithm": "Parse only this named current block's node --test arguments; expand vault-action-*.test.mjs from actual tests filenames; unique-sort.",
+      "current_expanded_files": 154,
+      "selection_files": 154,
+      "exact_ordered_list_match": true,
+      "covered_selected_files": 154,
+      "missing_files": [],
+      "preserved_complete_files": 7,
+      "remaining_files": 147,
+      "partition_exact": true,
+      "node_list_sha256": "8d6385d4317fb2c1526d9ad0edd54f1787de447ff359e6f82a7f6db3a6282bcd",
+      "selection_workflow_raw_sha256": "e7b016d495e61a3713645eb2e785e4ad8dd3e76f3189e61fcfaea09bcbc67e18",
+      "current_workflow_raw_sha256": "3c442c84b07d02950724847a36fd9f119a541ef049836bfc8aef4d6acfd6692d",
+      "selection_locale_block_sha256": "c5c1364242ab85c762184e81f6a898a0bf89a6900fa14b3a859a8b056a8f3085",
+      "current_locale_block_sha256": "1ab5b2fa9df52a5e875db33799a45a5ada4bd024bfc832548f711fa38d10fa5b",
+      "difference_boundary": "Raw workflow and complete block hashes changed with Python pressure-command metadata; exact expanded154-file Node list is unchanged. No whole-workflow byte-identity or all-CI-step coverage claim.",
+      "scope": "154/154 in this named locale block only; eight imported case-owner modules are not eight additional selected workflow files."
+    },
+    "python": {
+      "retainedCurrentPass": 10,
+      "newHistoryPressurePass": 26,
+      "changedHandoffRetestPass": 1,
+      "sameExactBaseFailures": 4,
+      "newApplicationFailures": 0,
+      "fullPytestGreen": false
+    },
+    "priorFinalUniqueReconciliation": {
+      "identity": "Case-sensitive ordinal pair(relative testcase.file with slash normalization, XML-decoded testcase.name). Read seven XMLs once in the supplied order; later same-identity receipt replaces earlier status.",
+      "raw_testcase_rows": 4886,
+      "receipts": [
+        {
+          "file": "media-fixed-feedback-green-nov21.xml",
+          "rows": 213,
+          "pass": 213,
+          "fail": 0,
+          "skip": 0,
+          "same_identity_replacements": 0
+        },
+        {
+          "file": "media-fixed-feedback-error-boundaries-green-nov21.xml",
+          "rows": 9,
+          "pass": 3,
+          "fail": 6,
+          "skip": 0,
+          "same_identity_replacements": 0,
+          "false_original_preserved": true
+        },
+        {
+          "file": "media-fixed-feedback-error-boundaries-failed-only-green-nov21.xml",
+          "rows": 6,
+          "pass": 6,
+          "fail": 0,
+          "skip": 0,
+          "same_identity_replacements": 6
+        },
+        {
+          "file": "media-fixed-feedback-predecessor-history-red-nov21.xml",
+          "rows": 14,
+          "pass": 10,
+          "fail": 4,
+          "skip": 0,
+          "setup_placeholders": 1,
+          "actual_failed_cases": 3,
+          "false_original_preserved": true
+        },
+        {
+          "file": "media-fixed-feedback-new-history-green-nov21.xml",
+          "rows": 41,
+          "pass": 41,
+          "fail": 0,
+          "skip": 0,
+          "new_pressure_cases": 17,
+          "previously_unexecuted_actual_cases": 24
+        },
+        {
+          "file": "media-fixed-feedback-predecessor-failed-only-green-nov21.xml",
+          "rows": 3,
+          "pass": 3,
+          "fail": 0,
+          "skip": 0,
+          "same_identity_replacements": 3
+        },
+        {
+          "file": "media-fixed-feedback-regression-remaining147-nov21.xml",
+          "rows": 4600,
+          "pass": 4600,
+          "fail": 0,
+          "skip": 0,
+          "same_identity_replacements": 72
+        }
+      ],
+      "setup_placeholder": {
+        "file": "tests/media-audio-read-feedback-source.test.mjs",
+        "name": "tests\\media-audio-read-feedback-source.test.mjs",
+        "count": 1,
+        "excluded_from_executable_case_count": true,
+        "later_actual_cases": 24
+      },
+      "historical_name_maps": [
+        {
+          "file": "tests/media-detail-customer-copy-source.test.mjs",
+          "old": "current physical complete files equal BASE plus exactly53 independently reviewed records",
+          "new": "historical PR785 complete inputs equal BASE plus exactly53 independently reviewed records"
+        },
+        {
+          "file": "tests/media-detail-customer-copy-source.test.mjs",
+          "old": "current physical151 sources retain148 protected files and the exact measured/LF/CRLF checkout",
+          "new": "historical PR785 inputs retain151 pins148 protected and the exact measured/LF/CRLF checkout"
+        }
+      ],
+      "historical_maps_evidence": "Exact two test-name changes inspected in git diff for this test file; no broad name normalization.",
+      "same_identity_replacements": {
+        "boundary_failed_only": 6,
+        "predecessor_failed_only": 3,
+        "bulk_duplicate_pass_rows": 72,
+        "bulk_duplicate_owner": "tests/chat-doc-root-access-locale.test.mjs",
+        "total": 81
+      },
+      "formula": "4886 raw rows -1 setup placeholder -81 duplicate/overridden same-identity rows =4804 unique executable cases",
+      "secondary_formula": "222 unique targeted contexts +54 unique historical contexts +(4600-72) unique remaining/imported cases =4804",
+      "unique_final": {
+        "PASS": 4804,
+        "FAIL": 0,
+        "SKIP": 0
+      },
+      "ledger_sha256": "3c60896fadd79824043293afdbf2db9f0aada12ef1f0e9f4011d2c507b47aaef",
+      "ledger_digest_definition": "SHA256 UTF8(JSON.stringify(sorted [file,name,status] tuples)); ordinal sort by relative file then decoded name; final status PASS for all4804.",
+      "case_owner_files": 162,
+      "selected_workflow_owner_cases": 4536,
+      "additional_imported_owner_cases": 268,
+      "additional_imported_owner_files": {
+        "tests/landing-workflow-plain-language.test.mjs": 3,
+        "tests/legacy-decorative-workbench.test.mjs": 138,
+        "tests/membership-fallback-origin.test.mjs": 60,
+        "tests/membership-plain-language.test.mjs": 12,
+        "tests/membership-static-clutter.test.mjs": 12,
+        "tests/music-sfx-error-feedback.test.mjs": 6,
+        "tests/nav-ai-studio-locale.test.mjs": 27,
+        "tests/reference-feedback-layout-lifecycle.test.mjs": 10
+      },
+      "preserved_seven_file_cases": {
+        "tests/media-fixed-feedback.test.mjs": 126,
+        "tests/media-fixed-feedback-actions.test.mjs": 78,
+        "tests/media-fixed-feedback-error-boundaries.test.mjs": 9,
+        "tests/media-fixed-feedback-source.test.mjs": 3,
+        "tests/media-fixed-feedback-snapshot.test.mjs": 17,
+        "tests/media-detail-customer-copy-source.test.mjs": 13,
+        "tests/media-audio-read-feedback-source.test.mjs": 24
+      },
+      "preserved_seven_case_total": 270,
+      "note": "Do not sum222+54+4600 without removing72 repeated case identities. No new tests were executed by this lane; this is a retained-receipt ledger, not one fresh4804-case run."
+    }
+  },
+  "review": {
+    "openCritical": 0,
+    "openImportant": 0,
+    "resolvedQaGap": "REAL_DISPATCHER_API422_RAW_ERRORS_AND_NONALLOWED_GETTERS",
+    "finalTester": {
+      "file": "media-fixed-feedback-final-tester-nov21.json",
+      "rawSha256": "f6f58aa544fa7e115f8fa24a18c74829e327c146a660104308aaaab99bae0445"
+    }
+  },
+  "native": {
+    "finiteNativeAccepted": true,
+    "views": 6,
+    "routeObservations": 12,
+    "newFeedbackChecks": 36,
+    "newFullyDecodedPNG": 36,
+    "oldPNGUsed": 0,
+    "localHTTPAttempts": 0,
+    "apiReadAttempts": 120,
+    "peakRollingReadAttempts": 50,
+    "elapsedSeconds": 133.487,
+    "sourceCoreSchemaAuthEgressHeld": true,
+    "ownedActiveAfterCleanup": 0,
+    "failedZeroCasePermissionReceiptPreserved": true,
+    "authLoginRows": 3,
+    "otherAuthAuditRows": 0,
+    "applicationChangesAfterNative": 0,
+    "nativeWriteActions": "NOT_TESTED",
+    "other32LocalErrors": "PHYSICAL_DISPATCHER_ONLY",
+    "globalAX": "NOT_CLAIMED",
+    "contrast": "NOT_MEASURED",
+    "motion": "NOT_TESTED",
+    "signedProductionUI": "NOT_TESTED",
+    "audioOutput": "NOT_TESTED"
+  },
+  "workerCodeFailures": 0,
+  "applicationTakeover": false,
+  "providerCalls": 0,
+  "walletMutations": 0,
+  "productionDataMutations": 0,
+  "stateContentsPublished": 0,
+  "campaignStateOpened": false,
+  "wholeGoalComplete": false,
+  "remaining": [
+    "review-pack-copy",
+    "generic-renderer-validity-warning-locale",
+    "locale-AX-auth-device-Safari-signedUI-genericfocus"
+  ],
+  "motion": "M_FINAL01_06_LAST",
+  "evidence": [
+    {
+      "file": "media-fixed-feedback-read-inventory-nov21.json",
+      "rawBytes": 34041,
+      "rawSha256": "94f6ef4377f0ee7c3dadf498763b5fff00c8471787ac26da84a2f47201b1dd55"
+    },
+    {
+      "file": "media-fixed-feedback-replay-receipt-nov21.json",
+      "rawBytes": 65905,
+      "rawSha256": "6a4d416dfb826cc4e4f505bc5e13ab16d9091cffaff0648c026675be5a8cf093"
+    },
+    {
+      "file": "media-fixed-feedback-grouped-review-nov21.json",
+      "rawBytes": 13971,
+      "rawSha256": "b9e394125ade3087dbf009a41048632903ce27430db8847d06ffbdafc95b46e4"
+    },
+    {
+      "file": "media-fixed-feedback-grouped-review-nov21.md",
+      "rawBytes": 4747,
+      "rawSha256": "76c25fd4ed89486b3b37ad61526f2c7e98122aca0924832ca9e15197e09db9bd"
+    },
+    {
+      "file": "media-fixed-feedback-local-errors-red-nov21.xml",
+      "rawBytes": 224758,
+      "rawSha256": "d4c56333e84de598ff2951386a7226179cc7870fe54590d246b6d5e1ab9fd7bf"
+    },
+    {
+      "file": "media-fixed-feedback-actions-red-nov21.xml",
+      "rawBytes": 99419,
+      "rawSha256": "f837c80518c90b45582c5bcdd8d72c0dc209986306a6a3d2c7860164f87b22e7"
+    },
+    {
+      "file": "media-fixed-feedback-source-red-nov21.xml",
+      "rawBytes": 2780,
+      "rawSha256": "9d560567a08ef855b0fecc34357d8eca171b1c8f7aa27a3a6d06870f230d8c98"
+    },
+    {
+      "file": "media-fixed-feedback-green-nov21.xml",
+      "rawBytes": 59375,
+      "rawSha256": "6a7ee5212d04b04b5c8df9b54503425e92f305360127e6bdb8581b81f28d7ff2"
+    },
+    {
+      "file": "media-fixed-feedback-error-boundaries-green-nov21.xml",
+      "rawBytes": 8587,
+      "rawSha256": "b905d77135a05080effcaceb95dcc41d6826dc493431172e7af6d134cebb6564"
+    },
+    {
+      "file": "media-fixed-feedback-error-boundaries-failed-only-green-nov21.xml",
+      "rawBytes": 1920,
+      "rawSha256": "0c1bb11f077206ee33880ed28dcc0172c72b5be22aebea8424c7f66bc8abc173"
+    },
+    {
+      "file": "media-fixed-feedback-predecessor-history-red-nov21.xml",
+      "rawBytes": 32928,
+      "rawSha256": "04b1e879afff1af403bb03e2ad9e8972096082fcab687330e2936fc34df58549"
+    },
+    {
+      "file": "media-fixed-feedback-new-history-green-nov21.xml",
+      "rawBytes": 10625,
+      "rawSha256": "a30d1c8d59f8c13f0e118cc7ec79234be51db6dbad384cbd806d91c7ee560970"
+    },
+    {
+      "file": "media-fixed-feedback-predecessor-failed-only-green-nov21.xml",
+      "rawBytes": 1059,
+      "rawSha256": "6057adc2e4d789e5ef9f0506de90eaaf3e453249c3ef23f99b81d66d22bb45ea"
+    },
+    {
+      "file": "media-fixed-feedback-regression-selection-nov21.json",
+      "rawBytes": 15896,
+      "rawSha256": "c9ac8f9ada070a7c23fe29c72759ec40d4b70c8e29db79352e0f777db3412c8e"
+    },
+    {
+      "file": "media-fixed-feedback-regression-exit-nov21.json",
+      "rawBytes": 16146,
+      "rawSha256": "c46b6b48a298ec72e8184a2f9242a32c0c40c211b0d7eaac750095eecda933a1"
+    },
+    {
+      "file": "media-fixed-feedback-regression-remaining147-nov21.xml",
+      "rawBytes": 1199355,
+      "rawSha256": "d63efeed712bfede476bd34e199e527b48095c93b17f188ec99ee9ebdcae5913"
+    },
+    {
+      "file": "media-fixed-feedback-python-nov21.xml",
+      "rawBytes": 10974,
+      "rawSha256": "e91bd8649b5d2c4e91066214e29fa28639c15fc7e15a5e8cc09937bd958788a5"
+    },
+    {
+      "file": "media-fixed-feedback-python-history-green-nov21.xml",
+      "rawBytes": 5085,
+      "rawSha256": "73e40bc8b7cb956d3ce5c26b17af56ce34faf4f6f980e7676ee1fa8b22326798"
+    },
+    {
+      "file": "media-fixed-feedback-python-exact-base-failures-nov21.xml",
+      "rawBytes": 4679,
+      "rawSha256": "c480f325c872c89fb97c8226f680e548df91c589cb3d28262f08e46076229a40"
+    },
+    {
+      "file": "media-fixed-feedback-python-baseline-comparison-nov21.json",
+      "rawBytes": 10597,
+      "rawSha256": "1a7e65e4fbdae66ba7777ec5616d7f2b2384c97aacb054aa5b7e06716085c4d8"
+    },
+    {
+      "file": "media-fixed-feedback-final-tester-nov21.json",
+      "rawBytes": 19758,
+      "rawSha256": "f6f58aa544fa7e115f8fa24a18c74829e327c146a660104308aaaab99bae0445"
+    },
+    {
+      "file": "media-fixed-feedback-final-tester-nov21.md",
+      "rawBytes": 5005,
+      "rawSha256": "9161dda563d08735c2266b93e68392a4d29011f13a6864ffb7249db146c400fb"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/contract.cjs",
+      "rawBytes": 11279,
+      "rawSha256": "9ff4e31eeae41940ccb725e715a9c7cc146f2460a14c3c4a5c2b87b1194c7554"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/bind-native.cjs",
+      "rawBytes": 821,
+      "rawSha256": "ad631a19c55753106bc6575de43809639be5992e5a4fa3c9a40088549c85d885"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/observer-platform.py",
+      "rawBytes": 15727,
+      "rawSha256": "02cfa01b1a412e3c76e0eb8048df554b2a133069162d1523935e2ced6c9a5fd3"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/observer-browser.cjs",
+      "rawBytes": 19490,
+      "rawSha256": "d62d7c2cebce2cedd1044c1751357b5009f94c8afa5d131c2ebaafeb0a85d7b4"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/native-helpers.cjs",
+      "rawBytes": 8274,
+      "rawSha256": "6405fb6487143b2960041db4b5adf5f2ad02d8f00df32f314a6173e5a245855d"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/preparation.md",
+      "rawBytes": 11978,
+      "rawSha256": "ab2977399153f78ad246c7a0c664d37024cb45394b431d8470cf5dc7b5c2774a"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/bindings.json",
+      "rawBytes": 38571,
+      "rawSha256": "78ab8ba679a37d0107bbc57f76aea43debf6067e9826d65859ac34e952a8ee41"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/run-media-fixed-feedback-native-nov21-02/native-summary.json",
+      "rawBytes": 724149,
+      "rawSha256": "ba907d1487c71a247748c3e62309041c0c335a4c62bb23317e4be6a083cafa87"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/run-media-fixed-feedback-native-nov21-02/isolation-summary.json",
+      "rawBytes": 99012,
+      "rawSha256": "368493e669bcc298bc4c4b8986268f8558d98fdd748bc892468ca64d5b9ee87d"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/run-media-fixed-feedback-native-nov21-02/acceptance-summary.json",
+      "rawBytes": 319,
+      "rawSha256": "d01b86c99a276805904d67fe8f3e089317570208563aa45e385624c7f511821b"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/run-media-fixed-feedback-native-nov21-02/png-validation.json",
+      "rawBytes": 20462,
+      "rawSha256": "4e256b2340788ac0d4747aa12274ce2d3bc746ae30ab64ca5f820b6059c87b64"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/run-media-fixed-feedback-native-nov21-01/isolation-summary.json",
+      "rawBytes": 56752,
+      "rawSha256": "2393c4207d2771f506ed182397be198e51dc9f86a6eb350df3d4c6ae1be1a5b6"
+    },
+    {
+      "file": "media-fixed-feedback-native-prep-nov21-r1/run-media-fixed-feedback-native-nov21-01/acceptance-summary.json",
+      "rawBytes": 320,
+      "rawSha256": "f5d47c60a3f8e278c91b4cfde99812df3ade7c2813ab7637ba35c93911fda4d6"
+    },
+    {
+      "file": "media-fixed-feedback-ci-44899682604-failed.log",
+      "rawBytes": 1304599,
+      "rawSha256": "9cb988b7bbb51b32105d6aea8a8747634bc6f4320750a8637757c671b3355ef2"
+    },
+    {
+      "file": "media-fixed-feedback-ci-failure-summary-nov21.json",
+      "rawBytes": 5212,
+      "rawSha256": "d0b4a3589177b65354f78947648e5a240e58690dfbd23026ff607a0d0fe23971"
+    },
+    {
+      "file": "media-fixed-feedback-ci-portability-amendment-nov21.md",
+      "rawBytes": 1160,
+      "rawSha256": "3f5a03841573819de31c4ce60bd04b6c3dad00b580d15af8a70a91c1ba5a8811"
+    },
+    {
+      "file": "media-fixed-feedback-ci-portability-red-nov21.xml",
+      "rawBytes": 2815,
+      "rawSha256": "6bdc892106fb51ed006c209eda23c7f68f8213c268c2195aa74cee2794341496"
+    },
+    {
+      "file": "media-fixed-feedback-ci-portability-green-nov21.xml",
+      "rawBytes": 1268,
+      "rawSha256": "3914b0b310057f8586eb7f827169b7aa8b5e72c6b0790c346ec533dbfbd4c949"
+    },
+    {
+      "file": "media-fixed-feedback-ci-tester-supplement-nov21.json",
+      "rawBytes": 6366,
+      "rawSha256": "403761cf820d0311fa14810d070db4aeb115082e74022b83c22b7caa0136f344"
+    },
+    {
+      "file": "media-fixed-feedback-ci-tester-supplement-nov21.md",
+      "rawBytes": 1901,
+      "rawSha256": "8da714f1d3cc62cb33d50bce8577c9d3b2afc24a84414296ffa4d8eba526b60f"
+    }
+  ],
+  "ciAmendment": {
+    "firstRun": 44899682604,
+    "firstHead": "c3184906a4cf3f2c55e5508d4b7971b924dc0ba8",
+    "firstResult": "FAILED_ROOT_QA_RAW_NEWLINE_PORTABILITY",
+    "failedCase": "all149 other physical sources remain exact RAW/LF BASE and all151 source paths are unique",
+    "firstMismatch": "admin_ops.py",
+    "rootCause": "Measured Windows CRLF RAW versus canonical Git/Linux LF, with exact BASE LF content.",
+    "changedTestFiles": [
+      "tests/media-fixed-feedback-source.test.mjs"
+    ],
+    "oldExpectedFixtureAndGoldensPreserved": true,
+    "newPressureCases": 3,
+    "pressureRed": {
+      "cases": 3,
+      "pass": 2,
+      "fail": 1,
+      "skipped": 0
+    },
+    "failedAndChangedGreen": {
+      "cases": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0
+    },
+    "retainedUniqueCases": 4804,
+    "finalUniqueCases": 4807,
+    "mandatoryBaseLfHash": true,
+    "onlyMeasuredLfUniformCrLfRawAllowed": true,
+    "contentMutationAndUnmeasuredMixedNewlineRejected": true,
+    "applicationChangesAfterNative": 0,
+    "nativeReruns": 0,
+    "workerCodeFailures": 0,
+    "supplementalReviewOpenCritical": 0,
+    "supplementalReviewOpenImportant": 0
+  }
+}
