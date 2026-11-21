@@ -10385,6 +10385,7 @@
         "KIEM-THU/PHIEN-IMAGE-RESIZE-POLISH-20261117.md",
         "KIEM-THU/PHIEN-MEDIA-COLLECTION-LOCALE-20261120.md",
         "KIEM-THU/PHIEN-MEDIA-DETAIL-CUSTOMER-COPY-20261121.md",
+        "KIEM-THU/PHIEN-MEDIA-FIXED-FEEDBACK-20261121.md",
         "KIEM-THU/PHIEN-PDF-COMPRESS-META-20261118.md",
         "KIEM-THU/PHIEN-PDF-SPLIT-META-20261117.md",
         "KIEM-THU/PHIEN-VAULT-PROJECT-OPTIONS-20261120.md",
@@ -10418,10 +10419,9 @@
         "copyfast_finance_planning.py",
         "copyfast_finance_policy.py",
         "copyfast_governance.py",
-        "copyfast_growth_review.py",
-        "copyfast_image_operations.py"
+        "copyfast_growth_review.py"
       ],
-      "occurrences": 1242,
+      "occurrences": 1243,
       "provider": "PayOS"
     },
     {
@@ -10508,6 +10508,7 @@
         "docs/reports/media-collection-locale-20261120.md",
         "docs/reports/media-collection-locale-prepush-20261120.md",
         "docs/reports/media-detail-customer-copy-20261121.md",
+        "docs/reports/media-fixed-feedback-20261121.md",
         "docs/reports/media-read-feedback-20261121.md",
         "docs/reports/pdf-input-font16-20261116.md",
         "docs/reports/pdf-split-readability-20261116.md",
@@ -10533,10 +10534,9 @@
         "reports/audit/R218-SUBDUB-LABEL-CONTRAST-QA-20261024.json",
         "reports/audit/R218-SUBDUB-MOBILE-RANGE-QA-20261024.json",
         "reports/audit/R218-SUBDUB-ORIGINAL-TOGGLE-R1-REVIEW-20261024.json",
-        "reports/audit/R218-SUBDUB-ORIGINAL-TOGGLE-R2-REVIEW-20261024.json",
-        "reports/audit/R218-SUBDUB-REVIEW-EDIT-QA-20261024.json"
+        "reports/audit/R218-SUBDUB-ORIGINAL-TOGGLE-R2-REVIEW-20261024.json"
       ],
-      "occurrences": 82,
+      "occurrences": 83,
       "provider": "Gemini"
     },
     {
@@ -18798,9 +18798,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 660,
-  "source_files_scanned": 660,
-  "source_fingerprint_sha256": "41c0d8a5ecdf107e82934f8bf1a9f688acf497e659e105e4519cb120e15cecd2",
+  "source_files_discovered": 665,
+  "source_files_scanned": 665,
+  "source_fingerprint_sha256": "d6c9ac820d266584feb041729d92ab1342c5b206aa4b2c6958e692d6b29a5828",
   "source_root": "repository-root",
   "ui_path_references": [
     {
