@@ -1,5 +1,11 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — trình bày kết quả rà soát âm thanh
+
+Ứng viên chỉ tách dòng nhãn và mô tả trong kết quả rà soát; giữ bốn
+mục, cảnh báo, dữ liệu, nút và quyền của hợp đồng âm thanh hiện có.
+Sáu bố cục cục bộ đã được kiểm; CI và triển khai cần chứng cứ riêng.
+
 ## 21/11/2026 — tên đường dẫn và số lượng trong rà soát âm thanh
 
 Ứng viên dựa trên PR787 chỉ đổi chữ breadcrumb của chi tiết âm thanh

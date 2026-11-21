@@ -47,12 +47,16 @@ for (const file of CONTRACT.allowedFiles) {
     assert.equal(current, expected, "Full current source content: " + file);
   });
 }
-test("151 unique physical source pins include exactly148 untouched protected paths with mandatory BASE LF equality", () => {
+test("historical ARF source pins retain exactly148 protected paths after reviewed readability projection", () => {
   assert.equal(CONTRACT.applicationBaseline.length, 151);
   assert.equal(new Set(CONTRACT.applicationBaseline.map(row => row.file)).size, 151);
   const protectedRows = CONTRACT.applicationBaseline.filter(row => !CONTRACT.allowedFiles.includes(row.file));
   assert.equal(protectedRows.length, 148);
-  for (const row of protectedRows) pin(fs.readFileSync(path.join(ROOT, row.file)), row);
+  for (const row of protectedRows) {
+    const physical = fs.readFileSync(path.join(ROOT, row.file));
+    const projected = audioReviewVisualHistoricalSource(lf(physical.toString("utf8")), row.file);
+    pin(projected === lf(physical.toString("utf8")) ? physical : Buffer.from(projected), row);
+  }
 });
 test("portable source pins accept exact LF and uniform CRLF, not Windows-raw-only acceptance", () => {
   const row = CONTRACT.applicationBaseline.find(row => row.file === "admin_ops.py");

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {audioReviewReadabilityHistoricalSource} from "./audio-review-readability-snapshot.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/audio-review-visual-contract.json", import.meta.url), "utf8"));
 const fail = "Unreviewed audio review visual";
@@ -10,6 +11,7 @@ assert.equal(contract.records.length, 3, fail);
 export function audioReviewVisualHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail);
   assert.equal(typeof file, "string", fail);
+  source = audioReviewReadabilityHistoricalSource(source, file);
   const records = contract.records.filter(row => row.file === file);
   if (!records.length) return source;
   const markers = file.endsWith("portal.js")

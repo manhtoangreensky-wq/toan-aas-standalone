@@ -1,5 +1,12 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — tách nhãn và mô tả rà soát âm thanh
+
+Ứng viên sau PR788 thêm một rule CSS để bốn nhãn và mô tả trong kết
+quả rà soát nằm trên hai dòng. Đã kiểm tra cục bộ sáu bố cục VI/EN/ZH
+mobile/desktop và 24 cặp; phần ngoài vùng không đổi. Chưa coi ứng viên
+là đã phát hành cho đến khi CI, triển khai và runtime được xác nhận.
+
 ## 21/11/2026 — đường dẫn và số lượng tham khảo âm thanh
 
 Ứng viên dựa trên PR787 đã triển khai: đường dẫn trên trang chi tiết

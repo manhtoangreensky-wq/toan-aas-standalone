@@ -1,5 +1,30 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 22/11/2026 — PR788 đã giao; phần âm thanh còn lại
+
+- [x] PR788 đã gộp và triển khai `cd9c5c14263e1397531056e318a9f46394a8562d`;
+  CI44925509468 hai job thành công, deploy44927932161 thành công.
+  VPS đúng commit, Web/Bot/nginx hoạt động, health hợp lệ; năm tệp
+  công khai và năm lượt theo phiên bản khớp. Issue689/comment7066209243
+  đã đọc lại. Chưa kết luận signed production UI đã đạt.
+- [ ] Tách nhãn/mô tả của kết quả rà soát: đã tái hiện tại 320/1440px.
+  Antigravity R1 chọn sai vùng; R2 trả đúng một rule CSS. Kiểm tra cục
+  bộ 6 bố cục VI/EN/ZH, 24 cặp nhãn/mô tả và 6 ảnh đạt; 47 kiểm tra
+  nguồn/hồi quy và 350 kiểm tra CSS ở lượt riêng đạt. Chưa gộp/deploy.
+  Lượt hệ thống từ chối trước đó
+  không tính là lỗi worker.
+- [ ] Chặn thông báo lỗi review cũ sau đổi trang/đăng xuất/revision/
+  tắt chức năng hoặc request mới: kiểm tra cục bộ RED 5/5. Test cũ chỉ
+  xác nhận phản hồi thành công cũ im lặng; không suy lỗi cũ cũng bị chặn.
+  Kiểm tra bổ sung: 2 FAIL (lỗi cũ sau thành công mới và lỗi mạng sau
+  đổi trang), 1 PASS (lỗi hiện tại vẫn hiển thị và mở lại nút).
+- [ ] Dịch ba thông báo review not-found/revision-conflict/maintenance:
+  kiểm tra cục bộ RED 9/9 trên VI/EN/ZH. Giữ nguyên API/backend/quyền.
+- [ ] Hai phiếu Antigravity xử lý phản hồi cũ và ba thông báo đã giao
+  song song dạng đề xuất; chỉ áp dụng sau mục tách dòng và sau kiểm tra.
+- [ ] Sau các mục trên: generic validity, locale/AX/auth/device/Safari/
+  signed UI theo checklist; motion M-FINAL01..06 cuối. Goal vẫn mở.
+
 ## 21/11/2026 — PR787 đã giao; hai lỗi chữ trên trang âm thanh
 
 - [x] PR787 đã gộp `ea4da7c446059f911f3b59d61f9f92f63ea95c94`;
