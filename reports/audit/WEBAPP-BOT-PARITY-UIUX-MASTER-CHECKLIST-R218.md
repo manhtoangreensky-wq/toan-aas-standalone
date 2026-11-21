@@ -1,5 +1,20 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 21/11/2026 — PR787 đã giao; hai lỗi chữ trên trang âm thanh
+
+- [x] PR787 đã gộp `ea4da7c446059f911f3b59d61f9f92f63ea95c94`;
+  CI44911084385 hai job thành công, deploy44923837267 thành công,
+  VPS đúng commit/Web-Bot-nginx active/health hợp lệ, 5+5 tệp công
+  khai khớp; Issue689/comment7065598396 đọc lại đúng.
+- [ ] Breadcrumb VI/ZH và số ít EN: RED 3/12; ứng viên local GREEN
+  17 ca, Node historical70 PASS, Python historical95+2 PASS.
+  Chưa gộp/deploy; theo dõi spec `2026-11-21-audio-review-visual-locale.md`.
+- [ ] Nhãn và mô tả dính liền: R1 chọn sai vùng; R2 đã chuẩn bị,
+  hệ thống duyệt tự động chặn gửi packet chứa MAP nội bộ. Chưa sửa app.
+- [ ] CI/merge/deploy và xác minh giao diện cho hai lỗi chữ; sau đó
+  hoàn tất lỗi tách dòng, ba shared API messages, generic validity,
+  locale/AX/auth/device/Safari/signed UI; motion cuối.
+
 ## 21/11/2026 — PR786 đã giao; rà soát âm thanh theo luồng thật
 
 - [x] PR786/CI44901135244 haiSUCCESS14m44s/5m10s,18browser/

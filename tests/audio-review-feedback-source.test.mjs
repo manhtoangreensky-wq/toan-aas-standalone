@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {execFileSync} from "node:child_process";
 import {ROOT, CONTRACT, hash} from "./helpers/audio-review-feedback-runtime.mjs";
+import {audioReviewVisualHistoricalSource} from "./helpers/audio-review-visual-snapshot.mjs";
 
 const lf = value => value.replace(/\r\n/g, "\n");
 const fromBase = file => execFileSync("git", ["show", CONTRACT.base + ":" + file],
@@ -38,10 +39,10 @@ test("immutable Root contract has exact BASE,11 forward records split8/2/1 and31
   assert.equal(new Set(CONTRACT.copyRows.map(row => row.key)).size, 31);
 });
 for (const file of CONTRACT.allowedFiles) {
-  test(`current physical ${file} equals full BASE plus exact Root forward records, never a historical inverse`, () => {
+  test(`historical ARF ${file} equals full BASE plus exact Root forward records after reviewed visual projection`, () => {
     const original = lf(fromBase(file)), row = CONTRACT.applicationBaseline.find(row => row.file === file);
     assert.equal(hash(original), row.baseLfSha256, "Immutable exact BASE source");
-    const expected = forward(file, original), current = lf(fs.readFileSync(path.join(ROOT, file), "utf8"));
+    const expected = forward(file, original), current = audioReviewVisualHistoricalSource(lf(fs.readFileSync(path.join(ROOT, file), "utf8")), file);
     assert.equal(hash(current), hash(expected), "Full current source SHA: " + file);
     assert.equal(current, expected, "Full current source content: " + file);
   });
@@ -71,7 +72,7 @@ test("all21 shared validation/read/classifier/API/review guards/render factories
   assert.equal(CONTRACT.protectedFunctions.length, 21);
   assert.equal(new Set(CONTRACT.protectedFunctions.map(row => row.file + ":" + row.name)).size, 21);
   const sources = Object.fromEntries(CONTRACT.allowedFiles.map(file => [file,
-    lf(fs.readFileSync(path.join(ROOT, file), "utf8"))]));
+    audioReviewVisualHistoricalSource(lf(fs.readFileSync(path.join(ROOT, file), "utf8")), file)]));
   for (const row of CONTRACT.protectedFunctions) {
     const body = exactFunction(sources[row.file], row.name);
     assert.equal(Buffer.byteLength(body), row.bytes, row.file + ":" + row.name);

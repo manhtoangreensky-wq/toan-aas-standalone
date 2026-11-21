@@ -9,11 +9,13 @@ import {audioReviewHistoricalSource as project, audioReviewHistoricalSnapshot as
   from "./helpers/audio-review-snapshot.mjs";
 import {mediaFixedFeedbackHistoricalSource as olderProject}
   from "./helpers/media-fixed-feedback-snapshot.mjs";
+import {audioReviewVisualHistoricalSource} from "./helpers/audio-review-visual-snapshot.mjs";
 
 const fixture = JSON.parse(fs.readFileSync(path.join(ROOT, "tests/fixtures/audio-review-reviewed.json"), "utf8"));
 const contract = JSON.parse(fs.readFileSync(path.join(ROOT, fixture.rootContractFile), "utf8"));
 const lf = value => value.replace(/\r\n/g, "\n");
-const current = Object.fromEntries(fixture.allowedFiles.map(file => [file, lf(fs.readFileSync(path.join(ROOT, file), "utf8"))]));
+const current = Object.fromEntries(fixture.allowedFiles.map(file => [file,
+  audioReviewVisualHistoricalSource(lf(fs.readFileSync(path.join(ROOT, file), "utf8")), file)]));
 const base = Object.fromEntries(fixture.allowedFiles.map(file => [file, lf(execFileSync("git", ["show", fixture.base + ":" + file],
   {cwd: ROOT, encoding: "utf8", maxBuffer: 30e6, windowsHide: true}))]));
 const fail = /Unreviewed audio review/;
@@ -127,6 +129,6 @@ test("ARF reviewed provenance pins11 records,5 regions,31 copy rows,3 groups and
   assert.equal(hash(fs.readFileSync(path.join(ROOT, fixture.rootContractFile))), fixture.rootContractRawSha256);
   assert.equal(fixture.applicationBaseline.length, 151);
   for (const row of fixture.applicationBaseline) {
-    assert.equal(hash(lf(fs.readFileSync(path.join(ROOT, row.file), "utf8"))), row.candidateLfSha256, row.file);
+    assert.equal(hash(audioReviewVisualHistoricalSource(lf(fs.readFileSync(path.join(ROOT, row.file), "utf8")), row.file)), row.candidateLfSha256, row.file);
   }
 });

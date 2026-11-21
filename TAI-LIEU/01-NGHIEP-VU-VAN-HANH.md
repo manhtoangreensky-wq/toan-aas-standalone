@@ -1,5 +1,16 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 21/11/2026 — đường dẫn và số lượng tham khảo âm thanh
+
+Ứng viên dựa trên PR787 đã triển khai: đường dẫn trên trang chi tiết
+hiển thị tên trung tâm theo VI/EN/ZH; số lượng tham khảo tiếng Anh dùng
+“1 reference file” và dạng số nhiều cho 0 hoặc nhiều hơn 1. VI/ZH giữ
+cách ghi cũ. Không thay dữ liệu, route, quyền hay thao tác rà soát.
+Đã kiểm renderer thật và đối chiếu toàn nguồn với BASE cùng ba record
+đã chốt; CI/merge/deploy/signed UI của ứng viên còn phải xác nhận.
+
+Nhãn/mô tả dính liền vẫn là việc kế tiếp và chưa được tính là đã sửa.
+
 ## 21/11/2026 — chữ trong bước rà soát bộ sưu tập âm thanh
 
 Ứng viên `AUDIO-REVIEW-FEEDBACK-20261121` dựa trên runtime PR786
