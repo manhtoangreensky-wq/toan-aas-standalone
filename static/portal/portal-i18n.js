@@ -22599,6 +22599,12 @@
 
   Object.assign(MESSAGES.zh, {"mediaReadFeedback.filtered":"音频合集已筛选。","mediaReadFeedback.all":"已显示全部音频合集。","mediaReadFeedback.page":"音频合集列表已加载。","mediaReadFeedback.refreshed":"音频合集列表已刷新。","mediaReadFeedback.readFailed":"未能加载音频合集列表，请重试。","mediaReadFeedback.detailRefreshed":"音频合集详情已刷新。","mediaReadFeedback.detailFailed":"未能加载音频合集详情，请重试。","mediaReadFeedback.pageUnavailable":"暂时无法切换音频合集页面。"});
 
+  Object.assign(MESSAGES.vi, {"mediaReadFeedback.audioFiltered":"Đã lọc danh sách tệp âm thanh.","mediaReadFeedback.audioAll":"Đã hiển thị tất cả tệp âm thanh.","mediaReadFeedback.audioPage":"Đã tải danh sách tệp âm thanh.","mediaReadFeedback.audioReadFailed":"Chưa tải được danh sách tệp âm thanh. Hãy thử lại.","mediaReadFeedback.audioFilterUnavailable":"Chưa thể tìm tệp âm thanh lúc này.","mediaReadFeedback.audioPageUnavailable":"Chưa thể chuyển trang tệp âm thanh lúc này."});
+
+  Object.assign(MESSAGES.en, {"mediaReadFeedback.audioFiltered":"Audio files filtered.","mediaReadFeedback.audioAll":"All audio files shown.","mediaReadFeedback.audioPage":"Audio file list loaded.","mediaReadFeedback.audioReadFailed":"Could not load the audio file list. Try again.","mediaReadFeedback.audioFilterUnavailable":"Audio file search is not available right now.","mediaReadFeedback.audioPageUnavailable":"Audio file pages are not available right now."});
+
+  Object.assign(MESSAGES.zh, {"mediaReadFeedback.audioFiltered":"音频文件已筛选。","mediaReadFeedback.audioAll":"已显示全部音频文件。","mediaReadFeedback.audioPage":"音频文件列表已加载。","mediaReadFeedback.audioReadFailed":"未能加载音频文件列表，请重试。","mediaReadFeedback.audioFilterUnavailable":"暂时无法搜索音频文件。","mediaReadFeedback.audioPageUnavailable":"暂时无法切换音频文件页面。"});
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

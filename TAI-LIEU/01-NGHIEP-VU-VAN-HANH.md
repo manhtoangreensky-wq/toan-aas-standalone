@@ -1,5 +1,25 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 21/11/2026 — PR783 đã giao; phản hồi đọc tệp âm thanh đang kiểm tra
+
+PR783 đã gộp và triển khai tại runtime
+`c8b14ade33ed62f2fefb34fe0d14aca198e03a8e`. CI44800229661 cảhai
+job thành công,18browser/456authhash exact; deploy44804290178 thành
+công69s. VPS3dịchvụactive-running/health,5+5assets/build
+local-2dc390c6d1108adf5b36 đúng. Issue7047062064/PR7048974790 đã đọc
+lại đúng. Các trạng thái MRF chưa phát hành bên dưới là lịch sử.
+
+Ứng viên mới chỉ sửa phản hồi khi tìm/xóa lọc/chuyển trang tệp âm
+thanh ở chi tiết bộ sưu tập và AudioHub. Tải lỗi cảnh báo thử lại,
+validempty thành công, phản hồi cũ im lặng; sáu câuVI/EN/ZH. Reader
+chỉ thêm failedflag trong catchreturn; API/quyền/query/limit50/offset/
+retry và dữ liệu khách giữ. Physical147PASS,historical106uniquePASS,
+Python15PASS3sameBASEFAIL,review0blocker; hồi quy4283NodePASS.
+Native6view/12routeobservations/48PNGhashCRCdecode/source/core/schema/
+auth/egress/owned0 đạt. Phát hành còn chốt riêng; không nhận ứng viên
+đã có trên web hoặc âm thanh đầu ra.
+[Báo cáo hiện hành](../docs/reports/media-audio-read-feedback-20261121.md).
+
 ## 21/11/2026 — PR782 đã giao; phản hồi đọc âm thanh đang nghiệm thu
 
 PR782 đã gộp và triển khai; runtime

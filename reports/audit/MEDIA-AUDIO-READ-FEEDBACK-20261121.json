@@ -1,0 +1,305 @@
+{
+  "schema": "MEDIA_AUDIO_READ_FEEDBACK_AUDIT_V1",
+  "task": "MEDIA-AUDIO-READ-FEEDBACK-20261121",
+  "base": "c8b14ade33ed62f2fefb34fe0d14aca198e03a8e",
+  "status": "LOCAL_ACCEPTED_RELEASE_PENDING",
+  "applicationFiles": [
+    "static/portal/integration.js",
+    "static/portal/portal-i18n.js"
+  ],
+  "proposalRecords": 4,
+  "workers": [
+    {
+      "lane": "outcome",
+      "model": "gemini-3.8-flash-high",
+      "records": 1,
+      "packetSha256": "847ec313fe5d5265455d846c49e31b71e46aee190781896da19223c5c87e392a",
+      "proposalRawSha256": "2aaa90d614f9d70e722ef95420917e96994b05b733442f47d27bcf9f3537b8fd",
+      "proposalExact": true,
+      "transportBoundary": "R1A_EXISTING_SINGLE_BASE_FINAL_LF_RESTORED_BOTH_FIELDS_NO_CODE_CHANGE",
+      "fullMapExact": true,
+      "publicSourcesExact": 3,
+      "workerCodeFailures": 0,
+      "applicationTakeover": false
+    },
+    {
+      "lane": "actions",
+      "model": "gemini-3.8-flash-high",
+      "records": 2,
+      "packetSha256": "327f7505a3a2871449af796eab79a82a854fd74990a986c3842728df78ead311",
+      "proposalRawSha256": "10e2849deac4505326d3061fa55971051fb762f13b387e2b2a62da34546e5958",
+      "proposalExact": true,
+      "transportBoundary": "NONE",
+      "fullMapExact": true,
+      "publicSourcesExact": 3,
+      "workerCodeFailures": 0,
+      "applicationTakeover": false
+    },
+    {
+      "lane": "catalogue",
+      "model": "gemini-3.8-flash-high",
+      "records": 1,
+      "packetSha256": "a19754542615251e6cc8ae889ffe07456a59029a40697cce53efe1ece30033b0",
+      "proposalRawSha256": "d0670e72d98a367e6a5bc0fa3bb8533f14b7548f908cbd787c7d231141da3c70",
+      "proposalExact": true,
+      "transportBoundary": "NONE",
+      "fullMapExact": true,
+      "publicSourcesExact": 3,
+      "workerCodeFailures": 0,
+      "applicationTakeover": false
+    }
+  ],
+  "source151Exact": true,
+  "protectedSources": 149,
+  "fixture": {
+    "file": "tests/fixtures/media-audio-read-feedback-reviewed.json",
+    "rawSha256": "8d54a2e60594277fd952e7323f5518bed6eb2dfc2e2e42faa81100fadb515cd8"
+  },
+  "tests": {
+    "physical": {
+      "cases": 147,
+      "pass": 147,
+      "fail": 0,
+      "skipped": 0
+    },
+    "baseline": {
+      "cases": 147,
+      "pass": 7,
+      "fail": 140,
+      "skipped": 0
+    },
+    "historicalUniquePass": 106,
+    "previousHistorical": {
+      "cases": 59,
+      "pass": 52,
+      "fail": 7,
+      "skipped": 0
+    },
+    "regression": {
+      "workflowFiles": 145,
+      "groupedFiles": 136,
+      "additionalRemainingSlices": 3,
+      "pass": 4283,
+      "fail": 0,
+      "skipped": 0,
+      "qualifiedPhysicalAndHistoricalNotRerun": true
+    },
+    "python": {
+      "pass": 15,
+      "sameExactBaseFailures": 3,
+      "newFailures": 0
+    },
+    "qaFaults": {
+      "initialWorkflowCRLFParsing": "BEFORE_TESTS_FIXED",
+      "regressionR1": "300S_BOUND_TIMEOUT_NO_COMPLETE_CASE_RECEIPT"
+    }
+  },
+  "review": {
+    "critical": 0,
+    "important": 0,
+    "applicationAndInitialNativePreparedReview": true,
+    "nativeR2ActionAccounting": "ROOT_REVIEWED_QA_ONLY_NO_APPLICATION_CHANGE"
+  },
+  "native": {
+    "qaDir": "media-audio-read-feedback-native-prep-nov21-r2",
+    "runLabel": "media-audio-read-feedback-nov21-03",
+    "finiteNativeAccepted": true,
+    "views": 6,
+    "routeObservations": 12,
+    "pngHashCrcFullDecode": 48,
+    "fixedFeedbackChecks": 72,
+    "syntheticRegistrations": 3,
+    "syntheticLogins": 3,
+    "metadataRows": 165,
+    "mediaBytesCreated": 0,
+    "source151RawUnchanged": true,
+    "productCoreUnchanged": true,
+    "schemaUnchanged": true,
+    "authAuditExact": true,
+    "egress0": true,
+    "ownedActiveAfterCleanup": 0,
+    "intentionalAbortAttempts": 48,
+    "heldReads": 12,
+    "previousFalseReceiptsPreserved": true,
+    "acceptedViewsBeforeR2": 0,
+    "sameDocumentCurrentness": "PHYSICAL_DISPATCHER_TESTS_ONLY",
+    "genericBodyFocus": "OBSERVED_NOT_FIXED_REAL_KEYBOARD_REACHABILITY_ONLY"
+  },
+  "workerCodeFailures": 0,
+  "applicationTakeover": false,
+  "providerCalls": 0,
+  "walletMutations": 0,
+  "productionDataMutations": 0,
+  "campaignStateOpened": false,
+  "evidence": [
+    {
+      "file": "media-audio-read-feedback-green-nov21.xml",
+      "rawBytes": 37087,
+      "rawSha256": "495eff8625b4c5a3e1531c2b048631d5db00b57c9e0ba82028d39ab3fadb5598"
+    },
+    {
+      "file": "media-audio-read-feedback-qa-nov21/red-final.junit.xml",
+      "rawBytes": 301675,
+      "rawSha256": "6430b01e3016a78706d7b1d0ebdf023dc5e63839c73c57060b9674742e86d20b"
+    },
+    {
+      "file": "media-audio-read-feedback-qa-nov21/new-historical-source-snapshot-initial.junit.xml",
+      "rawBytes": 13982,
+      "rawSha256": "473ff2feb9f4398c69125aefeeeebac56946032ffb06a9408d7660caa057e44b"
+    },
+    {
+      "file": "media-audio-read-feedback-qa-nov21/old-seven-initial.junit.xml",
+      "rawBytes": 2220,
+      "rawSha256": "c83cfbb7bd56a739011f6741484a012d8efceae1426f65fdfabbbaffdd1c8de6"
+    },
+    {
+      "file": "media-audio-read-feedback-qa-nov21/downstream-catalogue-contracts.junit.xml",
+      "rawBytes": 10766,
+      "rawSha256": "19faee726669af66a36447eee77b897bc542fa260bd4e4493081a1498fd4dbd1"
+    },
+    {
+      "file": "media-audio-read-feedback-historical-red-nov21.xml",
+      "rawBytes": 61211,
+      "rawSha256": "a5f6410271692a1ff6490169fee1f71d61a994a04676928b02e8d7ebacf2d311"
+    },
+    {
+      "file": "media-audio-read-feedback-regression-exit-nov21-r2.json",
+      "rawBytes": 18426,
+      "rawSha256": "4dc40a6bf2948973bd7bfbc9b4489dc6bd8514c520926b589a75229864ad1c71"
+    },
+    {
+      "file": "media-audio-read-feedback-grouped-unexecuted136-nov21-r2.xml",
+      "rawBytes": 1091444,
+      "rawSha256": "6facc4053da2f3fa729034d016cb24f8abea8d85d0fd02decb829164e0657ac2"
+    },
+    {
+      "file": "media-audio-read-feedback-remaining-slice1-nov21-r2.xml",
+      "rawBytes": 7898,
+      "rawSha256": "cac9bf0c403ad6b0599d2356f6dcf837c7da09e1dbdfdad9b6c143244c1dfb22"
+    },
+    {
+      "file": "media-audio-read-feedback-remaining-slice2-nov21-r2.xml",
+      "rawBytes": 4366,
+      "rawSha256": "f4930406c5fb27528a305812c2aa71a1e89a7a53747d8c7dd239272ce8efc926"
+    },
+    {
+      "file": "media-audio-read-feedback-remaining-slice3-nov21-r2.xml",
+      "rawBytes": 16908,
+      "rawSha256": "62e7dee4108b2c6f62cdd21110a1ddc96bbb9d383a7981233e5898e090fbfbba"
+    },
+    {
+      "file": "media-audio-read-feedback-regression-selection-nov21-r2.json",
+      "rawBytes": 17014,
+      "rawSha256": "8230e179af90b196f7d55c825cc08aea610bcf614926a00664dc38b533552b65"
+    },
+    {
+      "file": "media-audio-read-feedback-regression-exit-nov21.json",
+      "rawBytes": 17273,
+      "rawSha256": "1ef2811f27cf0078f3232b2eb476f8c4cb7f3960e809bd0c3135e590956b7c9a"
+    },
+    {
+      "file": "media-audio-read-feedback-python-nov21.xml",
+      "rawBytes": 5810,
+      "rawSha256": "14e4c4d57e338ada6eca75a88e50a5b834a29d9d6ad225d178ca9de114b56365"
+    },
+    {
+      "file": "media-audio-read-feedback-python-unexecuted-nov21.xml",
+      "rawBytes": 1410,
+      "rawSha256": "9cb6573fd9896a2803e47e405e5b9a1efe5f628a8e63b7f7ca404b62a47c1c1b"
+    },
+    {
+      "file": "media-audio-read-feedback-python-base-nov21.xml",
+      "rawBytes": 4537,
+      "rawSha256": "d38e2a38638d85b5a00276035b2c2c1ed64a1f96fbfdd73122cfd1037003dbba"
+    },
+    {
+      "file": "media-audio-read-feedback-python-base-inputs-nov21.json",
+      "rawBytes": 705,
+      "rawSha256": "5c92adeb248447d086442f5512799d8ce9da73b7a2edd0161e687eb364350e91"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21-r2/run-media-audio-read-feedback-nov21-03/acceptance-summary.json",
+      "rawBytes": 339,
+      "rawSha256": "c5230516059701da0777b69f1943308cf485015f4cc2dc69892df90a823d5ab3"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21-r2/run-media-audio-read-feedback-nov21-03/native-summary.json",
+      "rawBytes": 421138,
+      "rawSha256": "513fffafe0965f2792b8543203c26cd9515d7d65ce7322419c388fb91ea7f721"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21-r2/run-media-audio-read-feedback-nov21-03/isolation-summary.json",
+      "rawBytes": 99252,
+      "rawSha256": "d96266d905531988adfcc41df0748a4a10620d6c9e85e5d36a4386799b3df104"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21-r2/run-media-audio-read-feedback-nov21-03/png-validation.json",
+      "rawBytes": 26903,
+      "rawSha256": "88727c0e4bead7ea5fd716f5b2fc89c0f08f0b973555bef0a64c1c9e24953dce"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21-r2/bindings.json",
+      "rawBytes": 37800,
+      "rawSha256": "91e98e06789d0fed2e8f7d2163775607e8f05befe53e4647b59452173a81f43f"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21-r2/contract.cjs",
+      "rawBytes": 10987,
+      "rawSha256": "11f236951393dfeb90c02e0b333c90f710073962da320a663ebd35e38741b8b8"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21-r2/bind-native.cjs",
+      "rawBytes": 1152,
+      "rawSha256": "dc19476dbb048b18cebb1a88df899fca2510e897951f1cfd9fed34f26ce91513"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21-r2/observer-platform.py",
+      "rawBytes": 13105,
+      "rawSha256": "51c9e6f2ed5aa9ab89f5d84429209ffbdb535973a0bc7b96ad7b62735d43dda3"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21-r2/observer-browser.cjs",
+      "rawBytes": 19716,
+      "rawSha256": "59c7887ec8ada335b0e5e858659a9c5112ce5607ea4064fa1411acb0001e6bc3"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21-r2/interactions.cjs",
+      "rawBytes": 6399,
+      "rawSha256": "48378a04e5a71ab8a7b70f12d2b7b9ad2b810cc091d855c40a14645f8de2c0b4"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21-r2/preparation.md",
+      "rawBytes": 11377,
+      "rawSha256": "9c86a0f6daa5d37230546872ea3ff64ef503cad4f6dc88374a37ccfcc3d660c7"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21/run-media-audio-read-feedback-nov21-01/acceptance-summary.json",
+      "rawBytes": 339,
+      "rawSha256": "008608f6ea1027724faad2d76a95797515909ab76149e2249f642d13747047ae"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21/run-media-audio-read-feedback-nov21-01/isolation-summary.json",
+      "rawBytes": 56998,
+      "rawSha256": "423e649bb4d8178259051169aa0d52bb9dc0e744fbe21cfb5c94fc14c17d0bc4"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21/run-media-audio-read-feedback-nov21-02/acceptance-summary.json",
+      "rawBytes": 339,
+      "rawSha256": "915dadaadd5507c08f7191dfc0530863f22be6c561c31f06fe709e090f36ab20"
+    },
+    {
+      "file": "media-audio-read-feedback-native-prep-nov21/run-media-audio-read-feedback-nov21-02/isolation-summary.json",
+      "rawBytes": 104735,
+      "rawSha256": "afea5ba06c1e73a27ea2053c9f6571a66f87c62a13e5cd62362e1c4f811428e0"
+    },
+    {
+      "file": "media-audio-read-feedback-grouped-review-nov21.md",
+      "rawBytes": 16420,
+      "rawSha256": "af112dba523258be364c05d2b24ffd548ff6e95d940c2a18daa62b3beef90436"
+    }
+  ],
+  "signedProductionUI": "NOT_TESTED",
+  "audioOutput": "NOT_TESTED",
+  "wholeGoalComplete": false,
+  "motion": "M_FINAL01_06_LAST"
+}

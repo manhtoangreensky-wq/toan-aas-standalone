@@ -10421,7 +10421,7 @@
         "copyfast_image_operations.py",
         "copyfast_media_factory.py"
       ],
-      "occurrences": 1236,
+      "occurrences": 1238,
       "provider": "PayOS"
     },
     {
@@ -10513,6 +10513,7 @@
         "docs/reports/shared-select-labels-20261120.md",
         "docs/reports/vault-customer-copy-20261119.md",
         "docs/reports/video-inner-first-three-20261110.md",
+        "reports/audit/MEDIA-AUDIO-READ-FEEDBACK-20261121.json",
         "reports/audit/MEDIA-COLLECTION-LOCALE-20261120.json",
         "reports/audit/MEDIA-READ-FEEDBACK-20261121.json",
         "reports/audit/R218-CHECKPOINT-20261021.md",
@@ -10533,10 +10534,9 @@
         "reports/audit/R218-SUBDUB-ORIGINAL-TOGGLE-R2-REVIEW-20261024.json",
         "reports/audit/R218-SUBDUB-REVIEW-EDIT-QA-20261024.json",
         "reports/audit/R218-SUBDUB-VOICE-CLARITY-QA-20261024.json",
-        "reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json",
-        "reports/audit/R218-VOICE-CANONICAL-FLAG-TRUTH-QA-20261023.json"
+        "reports/audit/R218-SUBDUB-VOICE-GROUPS-QA-20261024.json"
       ],
-      "occurrences": 73,
+      "occurrences": 76,
       "provider": "Gemini"
     },
     {
@@ -18798,9 +18798,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 651,
-  "source_files_scanned": 651,
-  "source_fingerprint_sha256": "129334b141ac89fe545ab63923cf12c72e421bc28271db034bc4ac1011129c79",
+  "source_files_discovered": 655,
+  "source_files_scanned": 655,
+  "source_fingerprint_sha256": "7dc448f85a96878c9564006cbff3ee16c83e59fe9784fb8a09bd9f9db4dfad4c",
   "source_root": "repository-root",
   "ui_path_references": [
     {

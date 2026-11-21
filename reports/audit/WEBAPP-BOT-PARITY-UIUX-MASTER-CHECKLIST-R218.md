@@ -1,5 +1,40 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 21/11/2026 — PR783 đã giao; phản hồi đọc tệp âm thanh
+
+- [x] PR783/CI44800229661 haiSUCCESS;18browser/456authhash exact.
+  Merge/runtimec8b14ade33ed62f2fefb34fe0d14aca198e03a8e,
+  deploy44804290178SUCCESS69s,VPS3active-running/health/5+5assets/
+  buildlocal-2dc390c6d1108adf5b36,Issue7047062064/PR7048974790
+  đọc lại đúng. Các checkboxMRF cũ bên dưới là snapshot lịch sử.
+- [x] MARFcontractIssue689/comment7049170333. BaAGYCLI hiện có,
+  model3.8FlashHigh/output-only/fullMAP, bốnrecord/haiappfile.
+  R1A chỉ phục hồi finalLFBASE ở cảOLD/NEW readerrecord; workerfail0/
+  takeoverfalse, khônglogicchange hoặc extra modelcall.
+- [x] PhysicalBASE147:7PASS140assertionRED→147GREEN0FAIL0skip.
+  Currentfailedwarning/validemptysuccess/stalesilent; giữ query/DTO/
+  counterlifecycle/strictcapabilities và collectionstateđộc lập.
+- [x] Forwardcurrent151LFpins/149protected; historical106uniquePASS
+  (56mới+7failed-only+43downstream), giữoldguards/fixture/golden/errors.
+  Python15PASS3sameexactBASEFAIL; reviewđộc lập0Critical/Important.
+- [x] Hồi quy145CIlocaleNodefile: đối chiếu từ workflow hiện tại;
+  giữ các sliceđãđạt, nhómchưachạy vàpartialremaining riêng.
+  R1QA300stimeoutkhôngcompletecase receipt được giữ; R2bound900s.
+  Nhóm136file4172PASS + remaining34/15/62PASS =4283PASS0FAIL0skip.
+- [x] NativeR2/lượt03:6view×2roots/48PNG/72feedback/48abort12heldGET;source/
+  core/schema/auth/egress/owned0 vàPNGhashCRCfulldecode.
+  R1/run01localhostPermissionError/0case/owned0; run02firstview
+  lỗi ngưỡngQA4500ms sau6feedback/4PNG, overallfalse/owned0 giữ.
+  R2 chỉ đổiaccounting sangactionbound10000ms đãchốt và ghi sốđo,
+  khôngappchange;finalacceptance/PNGhashCRCfull-decodeđạt48ảnhmới,
+  source/core/schema/auth/egress giữ,owned0,khôngunexpectedconsole/network.
+- [ ] Tester/prepush/audit/manifest/secret/mộtPR/exactCI/artifacts/
+  merge-tree/exclusive deploy/VPS/assets/build/receiptđọclạiđúng.
+- [ ] Tiếp theo:audio validation/paginator/detail/writecopy,
+  localetoànapp/contrast/AX/auth/device/Safari/signedUI vàgenericfocus;
+  không trộn các mục này vào phản hồi đọc. MotionM-FINAL01..06cuối.
+  WholegoalACTIVE;khôngBot/engine/provider/ví/PayOS/ENV/data mutation.
+
 ## 21/11/2026 — PR782 đã giao; phản hồi đọc âm thanh
 
 - [x] PR782/CI44783966598 haiSUCCESS; deploy44787944401SUCCESS70s;

@@ -17630,7 +17630,7 @@
       if (!mediaWorkspaceRequestIsCurrent(requestEpoch, mediaWorkspaceAudioHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };
       const emptyListing = mediaAudioAssetListingProjection(filter, offset, {}, 0);
       merge({ mediaAudioAssets: [], mediaAudioAssetFilter: filter, mediaAudioAssetListing: emptyListing });
-      return { audioAssets: [], listing: emptyListing };
+      return { audioAssets: [], listing: emptyListing, failed: true };
     }
   }
 
@@ -28944,16 +28944,34 @@
         return;
       }
       if (action === "media-audio-filter" || action === "media-audio-filter-clear") {
-        if (!(base().capabilities && base().capabilities["media-workspace-view"] === true)) throw new Error("Cần signed Web session để tìm audio trong Asset Vault.");
+        if (!(base().capabilities && base().capabilities["media-workspace-view"] === true)) throw new Error(mediaReadFeedbackText("audioFilterUnavailable", "Chưa thể tìm tệp âm thanh lúc này."));
         const filter = action === "media-audio-filter-clear" ? { q: "" } : mediaAudioAssetFilterPayload(fields);
-        await hydrateMediaAudioAssets(filter, 0);
-        toast(filter.q ? "Đã lọc audio Asset Vault riêng tư." : "Đã hiển thị audio Asset Vault của Web account hiện tại.");
+        const feedbackSessionEpoch = mediaWorkspaceSessionEpoch;
+        const feedbackPath = currentPortalPath();
+        const feedbackEpoch = mediaWorkspaceAudioHydrationEpoch + 1;
+        const feedbackListEpoch = mediaWorkspaceListHydrationEpoch;
+        const feedbackDetailEpoch = mediaWorkspaceDetailHydrationEpoch;
+        const result = await hydrateMediaAudioAssets(filter, 0);
+        if (!mediaWorkspaceRequestIsCurrent(feedbackEpoch, mediaWorkspaceAudioHydrationEpoch, feedbackSessionEpoch, feedbackPath)) return;
+        if (feedbackListEpoch !== mediaWorkspaceListHydrationEpoch || feedbackDetailEpoch !== mediaWorkspaceDetailHydrationEpoch) return;
+        if (!result || result.stale === true) return;
+        if (result.failed === true) throw new Error(mediaReadFeedbackText("audioReadFailed", "Chưa tải được danh sách tệp âm thanh. Hãy thử lại."));
+        toast(filter.q ? mediaReadFeedbackText("audioFiltered", "Đã lọc danh sách tệp âm thanh.") : mediaReadFeedbackText("audioAll", "Đã hiển thị tất cả tệp âm thanh."));
         return;
       }
       if (action === "media-audio-page") {
-        if (!(base().capabilities && base().capabilities["media-audio-page"] === true)) throw new Error("Cần signed Web session để xem audio Asset Vault.");
-        await hydrateMediaAudioAssets(undefined, mediaWorkspaceListOffset(fields.__mediaAudioOffset));
-        toast("Đã tải trang audio Asset Vault từ API owner-scoped.");
+        if (!(base().capabilities && base().capabilities["media-audio-page"] === true)) throw new Error(mediaReadFeedbackText("audioPageUnavailable", "Chưa thể chuyển trang tệp âm thanh lúc này."));
+        const feedbackSessionEpoch = mediaWorkspaceSessionEpoch;
+        const feedbackPath = currentPortalPath();
+        const feedbackEpoch = mediaWorkspaceAudioHydrationEpoch + 1;
+        const feedbackListEpoch = mediaWorkspaceListHydrationEpoch;
+        const feedbackDetailEpoch = mediaWorkspaceDetailHydrationEpoch;
+        const result = await hydrateMediaAudioAssets(undefined, mediaWorkspaceListOffset(fields.__mediaAudioOffset));
+        if (!mediaWorkspaceRequestIsCurrent(feedbackEpoch, mediaWorkspaceAudioHydrationEpoch, feedbackSessionEpoch, feedbackPath)) return;
+        if (feedbackListEpoch !== mediaWorkspaceListHydrationEpoch || feedbackDetailEpoch !== mediaWorkspaceDetailHydrationEpoch) return;
+        if (!result || result.stale === true) return;
+        if (result.failed === true) throw new Error(mediaReadFeedbackText("audioReadFailed", "Chưa tải được danh sách tệp âm thanh. Hãy thử lại."));
+        toast(mediaReadFeedbackText("audioPage", "Đã tải danh sách tệp âm thanh."));
         return;
       }
       if (action === "media-workspace-refresh") {

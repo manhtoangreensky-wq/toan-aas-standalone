@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
+import {mediaAudioReadFeedbackHistoricalSource, mediaAudioReadFeedbackHistoricalSnapshot} from "./media-audio-read-feedback-snapshot.mjs";
 
 const raw = fs.readFileSync(new URL("../fixtures/media-read-feedback-reviewed.json", import.meta.url));
 const fail = "Unreviewed media read feedback";
@@ -28,11 +29,12 @@ function boundary(source, marker) {
   return source.indexOf(marker);
 }
 
-// Finite historical input projection only. New-release acceptance checks raw
-// physical files against the forward-built candidate and all151 raw/LF pins.
+// Finite historical input projection only. PR783 pins are historical; newest
+// acceptance separately checks complete physical files without inverse adapters.
 export function mediaReadFeedbackHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail + " source type");
   assert.equal(typeof file, "string", fail + " file type");
+  source = mediaAudioReadFeedbackHistoricalSource(source, file);
   if (file !== integration && file !== i18n) return source;
   if (!owned(source)) return source;
   const group = edits.filter(edit => edit.file === file);
@@ -78,6 +80,7 @@ export function mediaReadFeedbackHistoricalSnapshot(entries, locale) {
   assert.ok(index > 0, fail + " locale");
   assert.ok(Array.isArray(entries), fail + " entries");
   assert.ok(entries.every(entry => Array.isArray(entry) && entry.length === 2), fail + " entry shape");
+  entries = mediaAudioReadFeedbackHistoricalSnapshot(entries, locale);
   const namespace = entries.filter(([key]) => typeof key === "string" && key.startsWith("mediaReadFeedback"));
   if (!namespace.length) return entries;
   assert.deepEqual(namespace, fixture.copyRows.map(row => ["mediaReadFeedback." + row[0], row[index]]),
