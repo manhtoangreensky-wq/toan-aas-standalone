@@ -1,0 +1,20 @@
+{
+  "base": "ea4da7c446059f911f3b59d61f9f92f63ea95c94",
+  "records": [
+    {
+      "file": "static/portal/portal.js",
+      "old": ": [\"TOAN AAS\", page && page.layout === \"chat-workspace-detail\" ? uiText(\"chatPageMetaUiTitle\", \"Trò chuyện\") : page.section, localizedPageTitle(page, context)])",
+      "new": ": [\"TOAN AAS\", page && page.layout === \"chat-workspace-detail\" ? uiText(\"chatPageMetaUiTitle\", \"Trò chuyện\") : page && page.layout === \"audio-hub-detail\" ? audioWorkspaceText('workspace.hubLabel', 'Trung tâm sản xuất âm thanh') : page.section, localizedPageTitle(page, context)])"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "<span>${safeText(String(Number(summary.total || 0)))} ${safeText(audioWorkspaceText(\"review.references\", \"tệp tham khảo\"))}</span>",
+      "new": "<span>${((count) => `${safeText(String(count))} ${safeText(audioWorkspaceText(count === 1 ? \"review.reference\" : \"review.references\", \"tệp tham khảo\"))}`)(Number(summary.total || 0))}</span>"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  [\n    \"audioWorkspace.review.references\",\n    \"tệp tham khảo\",\n    \"reference files\",\n    \"个参考文件\"\n  ],",
+      "new": "  [\n    \"audioWorkspace.review.reference\",\n    \"tệp tham khảo\",\n    \"reference file\",\n    \"个参考文件\"\n  ],\n  [\n    \"audioWorkspace.review.references\",\n    \"tệp tham khảo\",\n    \"reference files\",\n    \"个参考文件\"\n  ],"
+    }
+  ]
+}

@@ -22764,6 +22764,12 @@
     "暂无审核清单"
   ],
   [
+    "audioWorkspace.review.reference",
+    "tệp tham khảo",
+    "reference file",
+    "个参考文件"
+  ],
+  [
     "audioWorkspace.review.references",
     "tệp tham khảo",
     "reference files",

@@ -1,5 +1,14 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 21/11/2026 — tên đường dẫn và số lượng trong rà soát âm thanh
+
+Ứng viên dựa trên PR787 chỉ đổi chữ breadcrumb của chi tiết âm thanh
+và số ít/nhiều tiếng Anh của số tệp tham khảo. Tên dữ liệu khách,
+receipt, revision, API và thao tác rà soát giữ như hợp đồng âm thanh
+được ghi trong `docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md`.
+Node và Python historical được kiểm lại; bản ứng viên chưa được coi
+là đã triển khai cho đến khi có CI và runtime riêng.
+
 ## 21/11/2026 — rà soát âm thanh: chữ dễ hiểu, hợp đồng chức năng giữ
 
 Nguồn gốc: `docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md`;
