@@ -25,3 +25,10 @@ trùng.
 Không gọi nhà cung cấp hay thay đổi ví. Không chứng nhận ngôn ngữ của
 thông báo do trình duyệt tự tạo, toàn bộ trang hoặc kết quả sau đăng
 nhập production.
+
+Lượt CI đầu `44953204294` đã qua nhóm giao diện nhưng dừng ở đối chiếu
+metadata danh sách case: danh sách tăng 12 dòng mà metadata chưa cập
+nhật. Đã cập nhật đúng số dòng/byte/SHA của tệp và chạy lại case đó đạt
+1/1. Khi chạy toàn bộ tệp kiểm tra trên Windows có 32 đạt, một case
+kiểm quyền tệp POSIX không đạt do mode quan sát `0666`; chưa xác nhận
+đây là lỗi nền, và không sửa hoặc bỏ kiểm tra đó. CI Linux phải chạy lại.
