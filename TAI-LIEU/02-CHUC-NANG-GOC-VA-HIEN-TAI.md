@@ -1,5 +1,14 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — lỗi rà soát âm thanh theo trạng thái hiện tại
+
+Ứng viên giữ hợp đồng bộ sưu tập âm thanh: yêu cầu hiện tại vẫn nhận
+thông báo lỗi, dữ liệu và quyền không đổi. Chỉ ngăn cảnh báo của yêu
+cầu đã cũ và dịch đúng ba câu cố định tại giao diện; không thay đổi
+backend hoặc coi phản hồi lỗi là thành công. Nguồn chức năng gốc:
+`docs/migration/MUSIC_MEDIA_WORKSPACE_CONTRACT.md`. CI và phát hành
+vẫn cần xác nhận riêng.
+
 ## 22/11/2026 — trình bày kết quả rà soát âm thanh
 
 Ứng viên chỉ tách dòng nhãn và mô tả trong kết quả rà soát; giữ bốn

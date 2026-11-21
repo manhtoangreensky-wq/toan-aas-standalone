@@ -7,6 +7,7 @@ import runpy
 
 ROOT = Path(__file__).resolve().parents[2]
 VISUAL_PROJECT = runpy.run_path(str(ROOT / "tests/helpers/audio_review_visual_historical_static.py"))["historical_audio_review_visual_source"]
+PENDING_PROJECT = runpy.run_path(str(ROOT / "tests/helpers/audio_review_pending_historical_static.py"))["historical_audio_review_pending_source"]
 FAIL = "Unreviewed audio review historical source"
 RAW = (ROOT / "tests/fixtures/audio-review-reviewed.json").read_bytes()
 ROOT_RAW = (ROOT / "tests/fixtures/audio-review-contract.json").read_bytes()
@@ -69,7 +70,7 @@ def historical_audio_review_source(source: str, file: str) -> str:
     """Restore only five exact reviewed regions, preserving all outside bytes."""
     assert isinstance(source, str), FAIL + " source type"
     assert isinstance(file, str), FAIL + " file type"
-    source = VISUAL_PROJECT(source, file)
+    source = VISUAL_PROJECT(PENDING_PROJECT(source, file), file)
     if file not in FILES or not _owned(source, file):
         return source
     groups = [row for row in GROUPS if row["file"] == file]

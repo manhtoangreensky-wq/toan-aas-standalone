@@ -45,8 +45,34 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-21",
-  "local_files_refresh_scope": "AUDIO-REVIEW-FEEDBACK-20261121;11records/3app/3AGY;31rows93values;5002uniqueNode/158workflowfiles;95PythonhistoryPASS;6actualReviewMetadataPOST/12newDecodedPNG;finite local accepted, Tester/release pending;global locale/UX followups remain open.",
+  "local_files_refresh_scope": "AUDIO-REVIEW-CURRENT-ERRORS-20261122;3records/2app/2AGY;5058uniqueNode/163workflowfiles;122Pythonhistory+5pressurePASS;1isolatedServerPASS;local checked, release pending.",
   "current_verification_session": {
+    "id": "AUDIO-REVIEW-CURRENT-ERRORS-20261122",
+    "base_sha": "3c5d3ca62496126ade250ac78e0cbf3efeb6c79e",
+    "tracker_issue": 689,
+    "manifest": "KIEM-THU/PHIEN-AUDIO-REVIEW-CURRENT-ERRORS-20261122.md",
+    "case_ids": ["ARE-CURRENT", "ARE-LOCALE", "ARE-PRESERVE", "ARE-SOURCE", "ARE-REGRESSION", "ARE-DELIVERY"],
+    "status": "LOCAL_CHECKED_RELEASE_PENDING",
+    "worker_sessions": 2,
+    "exact_proposal_records": 3,
+    "worker_code_failures": 0,
+    "application_takeover": false,
+    "regression_workflow_files": 163,
+    "node_unique_passed": 5058,
+    "node_unique_failed": 0,
+    "node_unique_skipped": 0,
+    "node_raw_rows": 5132,
+    "node_duplicate_or_replacement_rows": 74,
+    "fresh_full_node_run": false,
+    "python_historical_passed": 122,
+    "python_new_pressure_passed": 5,
+    "isolated_server_passed": 1,
+    "signed_production_ui": "NOT_TESTED",
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "whole_goal_complete": false
+  },
+  "audio_review_feedback_verification_session": {
     "id": "AUDIO-REVIEW-FEEDBACK-20261121",
     "base_sha": "7cb8cb10486f5c175dca5db2c286a9f93a133c23",
     "tracker_issue": 689,
@@ -302,15 +328,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 1935,
-      "bytes": 198928,
-      "sha256": "d202e5c270cdaa2fd7fe2990e76ec486bc07d8af5e3fc16bf59129101946c970"
+      "lines": 1949,
+      "bytes": 200163,
+      "sha256": "208bfa7ae2251970f71366d46fea9048281f7902cbb2a225f203d0cf022195fc"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 648,
-      "bytes": 51269,
-      "sha256": "029b2b1f015dbc8bc1b273eddf8e5a3c5fffabf81223d7caf97a26b160a8a58a"
+      "lines": 659,
+      "bytes": 51922,
+      "sha256": "ad732b33f0bac1b37597a652a9a0caa656971699a3f63a108828bf4d99f3ba1c"
     },
     {
       "path": "scripts/tester_case_sync.py",

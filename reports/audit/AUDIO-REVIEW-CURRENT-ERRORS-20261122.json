@@ -1,0 +1,14 @@
+{
+  "task": "AUDIO-REVIEW-CURRENT-ERRORS-20261122",
+  "base": "3c5d3ca62496126ade250ac78e0cbf3efeb6c79e",
+  "sourceBase": "cd9c5c14263e1397531056e318a9f46394a8562d",
+  "status": "LOCAL_CHECKED_RELEASE_PENDING",
+  "application": {"files": 2, "records": 3, "workerSessions": 2, "workerCodeFailures": 0, "applicationTakeover": false, "fullSourceForwardExact": true},
+  "node": {"rawRows": 5132, "setupExcluded": 0, "duplicateOrReplacementRows": 74, "uniquePass": 5058, "fail": 0, "skip": 0, "selectedFiles": 163, "ownerFilesIncludingImported": 170, "freshFullRun": false, "ledgerSha256": "33b53b8cef4af4be8852ba3bf0a1fbad6df959de8a3d52b263383b3fa3775869"},
+  "python": {"historicalPass": 122, "newProjectionPass": 5, "isolatedServerPass": 1, "serverReceiptSha256": "8d831d6c697e98971e290cffd14f3cac486b346f10b2b05413b0ccaff3cf993b", "firstServerAttempt": "LOCAL_SOCKET_SANDBOX_TIMEOUT", "fullPytestGreenClaimed": false},
+  "workers": {"staleProposalSha256": "91f9401688c5f45809ecbc8004bd97333c6f824265ef3821814c1340e30b7665", "localeProposalSha256": "5801d5c5f7e9fe595d64b8dd7c8ab0721218c0457a010f8afec426ed549d7ffb", "fullMapRawExact": true},
+  "safety": {"providerCalls": 0, "walletMutations": 0, "productionDataMutations": 0, "envMutations": 0},
+  "signedProductionUi": "NOT_TESTED",
+  "audioOutput": "NOT_TESTED",
+  "wholeGoalComplete": false
+}

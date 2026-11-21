@@ -5,6 +5,7 @@ import {sources, runtime, collection, context} from "./helpers/media-collection-
 import {receipt, ACTION, ROUTE} from "./helpers/audio-review-feedback-runtime.mjs";
 import {audioReviewVisualHistoricalSource as historical, audioReviewVisualHistoricalSnapshot as historicalEntries}
   from "./helpers/audio-review-visual-snapshot.mjs";
+import {audioReviewPendingHistoricalSource} from "./helpers/audio-review-pending-snapshot.mjs";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 
@@ -17,9 +18,9 @@ const renderHeader = await pageMetaRenderer(), source = sources();
 const contract = JSON.parse(fs.readFileSync(new URL("./fixtures/audio-review-visual-contract.json", import.meta.url), "utf8"));
 const lf = text => text.replace(/\r\n/g, "\n");
 for (const [file, key] of [["static/portal/portal.js", "portal"], ["static/portal/portal-i18n.js", "i18n"]]) {
-  test(`${file}: complete source equals the delivered base plus only reviewed changes`, () => {
+  test(`${file}: historical visual source equals its base plus reviewed changes after pending projection`, () => {
     const base = lf(execFileSync("git", ["show", contract.base + ":" + file], {encoding: "utf8", maxBuffer: 20e6}));
-    const current = lf(source.raw[key]);
+    const current = audioReviewPendingHistoricalSource(lf(source.raw[key]), file);
     let expected = base;
     for (const row of contract.records.filter(row => row.file === file)) {
       assert.equal(expected.split(row.old).length - 1, 1);

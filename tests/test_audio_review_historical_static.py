@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HELPER = runpy.run_path(str(ROOT / "tests/helpers/audio_review_historical_static.py"))
 project, fail, groups = HELPER["historical_audio_review_source"], HELPER["FAIL"], HELPER["GROUPS"]
 files = HELPER["FILES"]
-actual = {file: HELPER["VISUAL_PROJECT"]((ROOT / file).read_text(encoding="utf8").replace("\r\n", "\n"), file)
+actual = {file: HELPER["VISUAL_PROJECT"](HELPER["PENDING_PROJECT"]((ROOT / file).read_text(encoding="utf8").replace("\r\n", "\n"), file), file)
           for file in files}
 baseline = {
     file: subprocess.check_output(["git", "show", HELPER["FIXTURE"]["base"] + ":" + file],

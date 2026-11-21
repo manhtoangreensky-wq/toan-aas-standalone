@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
 import {audioReviewVisualHistoricalSource, audioReviewVisualHistoricalSnapshot} from "./audio-review-visual-snapshot.mjs";
+import {audioReviewPendingHistoricalSource, audioReviewPendingHistoricalSnapshot} from "./audio-review-pending-snapshot.mjs";
 
 const sha = value => createHash("sha256").update(value).digest("hex");
 const raw = fs.readFileSync(new URL("../fixtures/audio-review-reviewed.json", import.meta.url));
@@ -63,7 +64,7 @@ function order(...positions) {
 export function audioReviewHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail + " source type");
   assert.equal(typeof file, "string", fail + " file type");
-  source = audioReviewVisualHistoricalSource(source, file);
+  source = audioReviewVisualHistoricalSource(audioReviewPendingHistoricalSource(source, file), file);
   if (!files.includes(file) || !owned(source, file)) return source;
   const group = fragments.filter(row => row.file === file), points = [];
   for (const row of group) {
@@ -100,7 +101,7 @@ export function audioReviewHistoricalSource(source, file) {
 export function audioReviewHistoricalSnapshot(entries, locale) {
   assert.ok(["vi", "en", "zh"].includes(locale), fail + " locale");
   assert.ok(Array.isArray(entries) && entries.every(row => Array.isArray(row) && row.length === 2), fail + " entries");
-  entries = audioReviewVisualHistoricalSnapshot(entries, locale);
+  entries = audioReviewVisualHistoricalSnapshot(audioReviewPendingHistoricalSnapshot(entries, locale), locale);
   const current = entries.filter(([key]) => newNamespace(key));
   if (!current.length) {
     for (const [key, value] of entries) {
