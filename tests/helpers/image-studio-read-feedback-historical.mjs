@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {imageStudioDetailLoadingHistoricalSource} from "./image-studio-detail-loading-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/image-studio-read-feedback-contract.json", import.meta.url)));
 const fail = "Unreviewed Image Studio read feedback";
@@ -13,6 +14,7 @@ const labels = {
 const keys = ["refreshed", "filtered", "listed", "paged", "failed"].map(key => "imageStudioReadFeedback." + key);
 
 export function imageStudioReadFeedbackHistoricalSource(source, file) {
+  source = imageStudioDetailLoadingHistoricalSource(source, file);
   const records = contract.records.filter(row => row.file === file);
   if (!records.length || !source.includes(records[0].new)) return source;
   for (const row of records) assert.equal(source.split(row.new).length - 1, 1, fail);

@@ -4,6 +4,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 import {execFileSync} from "node:child_process";
 import {imageStudioReadFeedbackHistoricalSource, imageStudioReadFeedbackHistoricalSnapshot} from "./helpers/image-studio-read-feedback-historical.mjs";
+import {imageStudioDetailLoadingHistoricalSource} from "./helpers/image-studio-detail-loading-historical.mjs";
 
 const root = new URL("../", import.meta.url);
 const contract = JSON.parse(fs.readFileSync(new URL("fixtures/image-studio-read-feedback-contract.json", import.meta.url)));
@@ -68,7 +69,7 @@ test("physical source is exactly the six reviewed records and historical inverse
       assert.equal(expected.split(row.old).length - 1, 1);
       expected = expected.replace(row.old, () => row.new);
     }
-    assert.equal(read(file), expected);
+    assert.equal(imageStudioDetailLoadingHistoricalSource(read(file), file), expected);
     assert.equal(imageStudioReadFeedbackHistoricalSource(expected, file), prior(file));
     assert.equal(imageStudioReadFeedbackHistoricalSource(expected + "\n/* unrelated */", file), prior(file) + "\n/* unrelated */");
   }

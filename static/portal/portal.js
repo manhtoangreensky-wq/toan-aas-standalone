@@ -19290,13 +19290,21 @@ function renderAutoPostHub(page, context) {
     const detail = context.imageArtboardDetail && typeof context.imageArtboardDetail === "object" ? context.imageArtboardDetail : {};
     const artboard = detail.artboard && typeof detail.artboard === "object" && validImageStudioArtboardId(detail.artboard.id) && String(detail.artboard.id) === String(page.recordId || "") ? detail.artboard : null;
     const canView = Boolean(context.capabilities && context.capabilities["image-studio-view"] === true);
-    if (!canView || !artboard) {
-      const title = !canView
-        ? imageStudioDetailText(imageHub ? "detail.guardHubTitle" : "detail.guardStudioTitle", imageHub ? "Trung tâm thao tác hình ảnh đang được bảo vệ" : "Xưởng sáng tạo hình ảnh đang được bảo vệ")
-        : imageStudioDetailText("detail.notFoundTitle", "Không tìm thấy bảng thiết kế");
-      const copy = !canView
-        ? imageStudioDetailText("detail.guardCopy", "Đăng nhập bằng phiên Web đã ký và chờ cờ tính năng trên máy chủ để mở bảng thiết kế thuộc tài khoản hiện tại.")
-        : imageStudioDetailText("detail.notFoundBody", "Máy chủ không trả về bảng thiết kế thuộc tài khoản hiện tại.");
+    if (!canView) {
+      const title = imageStudioDetailText(imageHub ? "detail.guardHubTitle" : "detail.guardStudioTitle", imageHub ? "Trung tâm thao tác hình ảnh đang được bảo vệ" : "Xưởng sáng tạo hình ảnh đang được bảo vệ");
+      const copy = imageStudioDetailText("detail.guardCopy", "Đăng nhập bằng phiên Web đã ký và chờ cờ tính năng trên máy chủ để mở bảng thiết kế thuộc tài khoản hiện tại.");
+      const backLabel = imageHub
+        ? imageStudioDetailText("detail.backHub", "Về trung tâm thao tác hình ảnh")
+        : imageStudioDetailText("detail.backStudio", "Về Xưởng sáng tạo hình ảnh");
+      return `<article class="portal-page ${detailClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(title, copy, ICONS.image)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="${collectionHome}">${safeText(backLabel)}</a></div></section></article>`;
+    }
+    if (!artboard) {
+      const isPending = context.imageStudioReadState === "loading";
+      if (isPending) {
+        return `<article class="portal-page ${detailClass}">${renderHero(page, context)}<section class="portal-card portal-card-pad" role="status" aria-live="polite" aria-busy="true"><h2 class="portal-card-title">${safeText(imageUiText("workflow.loadingTitle", ""))}</h2><p class="portal-card-subtitle">${safeText(imageUiText("workflow.loadingBody", ""))}</p></section></article>`;
+      }
+      const title = imageStudioDetailText("detail.notFoundTitle", "Không tìm thấy bảng thiết kế");
+      const copy = imageStudioDetailText("detail.notFoundBody", "Máy chủ không trả về bảng thiết kế thuộc tài khoản hiện tại.");
       const backLabel = imageHub
         ? imageStudioDetailText("detail.backHub", "Về trung tâm thao tác hình ảnh")
         : imageStudioDetailText("detail.backStudio", "Về Xưởng sáng tạo hình ảnh");
@@ -42470,8 +42478,74 @@ function renderAutoPostHub(page, context) {
       setSidebarAccessibilityState(keepCustomerSidebar);
       if (!keepCustomerHeader) header.innerHTML = headerMarkup;
       lastCustomerHeaderMarkup = headerMarkup;
+      const previousHeaderSessionToken = lastCustomerHeaderSessionToken;
       lastCustomerHeaderSessionToken = headerSessionToken;
-      main.innerHTML = renderPage(page, context);
+      if (isHydration && ["image-studio-detail", "image-hub-detail"].includes(page.layout)) {
+        const fieldsByAction = {
+          "image-artboard-update": ["title", "image_intent", "language", "aspect_ratio", "output_format", "creative_brief", "style_direction", "negative_direction", "tags", "project_id"],
+          "image-direction-create": ["title", "operation", "asset_id", "reference_asset_id", "prompt_text", "edit_instructions", "composition_notes", "negative_direction", "tags"],
+          "image-direction-update": ["title", "operation", "asset_id", "reference_asset_id", "prompt_text", "edit_instructions", "composition_notes", "negative_direction", "tags"]
+        };
+        const currentImageRender = () => {
+          if (mountGeneration !== mountId || !headerSessionToken || headerSessionToken !== previousHeaderSessionToken) return false;
+          const current = getBootstrap();
+          return current.session.authenticated === true && current.session.csrfToken === headerSessionToken
+            && normalizePath(current.path) === actualPath && lastNormalizedRoute === actualPath;
+        };
+        const formsByIdentity = () => {
+          const result = new Map();
+          main.querySelectorAll("form[data-portal-form]").forEach((form) => {
+            const action = form.getAttribute("data-portal-action");
+            if (!Object.hasOwn(fieldsByAction, action) || normalizePath(form.getAttribute("data-portal-route") || "") !== actualPath) return;
+            const names = ["data-image-artboard-id", "data-image-artboard-revision"];
+            if (action === "image-direction-update") names.push("data-image-direction-id", "data-image-direction-revision");
+            const parts = names.map((name) => form.getAttribute(name) || "");
+            if (parts.some((value) => !value)) return;
+            const key = JSON.stringify([action, actualPath, ...parts]);
+            result.set(key, result.has(key) ? null : form);
+          });
+          return result;
+        };
+        const formControls = (form) => {
+          const allowed = fieldsByAction[form.getAttribute("data-portal-action")];
+          return Array.from(form.querySelectorAll("input, select, textarea")).filter((control) =>
+            allowed.includes(control.name) && !control.matches(":disabled") && !["file", "password", "hidden"].includes(control.type));
+        };
+        const optionEnabled = (option) => option && !option.disabled && !option.closest("optgroup:disabled");
+        let snapshots = [];
+        if (currentImageRender()) {
+          formsByIdentity().forEach((form, key) => {
+            if (!form) return;
+            const values = new Map();
+            formControls(form).forEach((control) => {
+              if (control.tagName === "SELECT" && !optionEnabled(control.options[control.selectedIndex])) return;
+              const entry = { tag: control.tagName, type: control.type, value: control.value, checked: control.checked };
+              values.set(control.name, values.has(control.name) ? null : entry);
+            });
+            snapshots.push([key, values]);
+          });
+        }
+        main.innerHTML = renderPage(page, context);
+        if (snapshots.length && currentImageRender()) {
+          const forms = formsByIdentity();
+          snapshots.forEach(([key, values]) => {
+            const form = forms.get(key);
+            if (!form) return;
+            const controls = formControls(form);
+            controls.forEach((control) => {
+              const entry = values.get(control.name);
+              if (!entry || entry.tag !== control.tagName || entry.type !== control.type
+                || controls.filter((item) => item.name === control.name).length !== 1) return;
+              if (control.tagName === "SELECT" && !Array.from(control.options).some((option) => option.value === entry.value && optionEnabled(option))) return;
+              if (control.type === "checkbox") control.checked = entry.checked;
+              else control.value = entry.value;
+            });
+          });
+        }
+        snapshots = [];
+      } else {
+        main.innerHTML = renderPage(page, context);
+      }
       if (!isHydration) {
         const workspace = document.querySelector(".portal-workspace") || main;
         if (workspace && "scrollTop" in workspace) workspace.scrollTop = 0;

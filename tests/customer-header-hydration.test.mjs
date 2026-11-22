@@ -9,7 +9,8 @@ const prepareStart = source.indexOf('    const headerMarkup = renderHeader(page,
 const prepareEnd = source.indexOf('    const sidebarMarkup = renderSidebar(page, context);', prepareStart);
 const renderStart = source.indexOf('    function renderShell() {');
 const headerStart = source.indexOf('      if (!keepCustomerHeader) header.innerHTML = headerMarkup;', renderStart);
-const headerEnd = source.indexOf('      main.innerHTML = renderPage(page, context);', headerStart);
+const headerSessionUpdate = '      lastCustomerHeaderSessionToken = headerSessionToken;';
+const headerEnd = source.indexOf(headerSessionUpdate, headerStart) + headerSessionUpdate.length;
 assert.ok(prepareStart > mountStart && prepareEnd > prepareStart && headerStart > renderStart && headerEnd > headerStart);
 const headerCode = source.slice(prepareStart, prepareEnd) + source.slice(headerStart, headerEnd);
 

@@ -39591,10 +39591,20 @@
           pageStates: { ...(base().pageStates || {}), [projectRoute]: "processing" }
         }
       : {};
+    const imageDetailRoute = imageArtboardIdFromPath(route) ? route : "";
+    const imageDetailState = imageDetailRoute
+      ? {
+          imageArtboardDetail: {},
+          imageArtboardEstimate: {},
+          imageStudioReadState: "loading",
+          pageStates: { ...(base().pageStates || {}), [imageDetailRoute]: "loading" }
+        }
+      : {};
     merge({
       path: route,
       title: "TOAN AAS",
-      ...projectState
+      ...projectState,
+      ...imageDetailState
     });
     void hydrate();
   }
