@@ -2019,3 +2019,17 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | ISRF-VALIDATION | nặng | Bộ lọc đã lưu không hợp lệ khi lượt cũ đang chờ | Giữ lỗi cụ thể, lượt cũ không ghi đè hoặc báo thành công | Kiểm thử chồng lượt |
 | ISRF-LOCALE | vừa | Chạy các hành động bằng Việt, Anh, Trung | Thông báo đúng ngôn ngữ | Kiểm thử từ điển và mã giao diện |
 | ISRF-DELIVERY | nặng | Kiểm tra CI, bản merge, triển khai và giao diện sau đăng nhập | Từng cổng phải có bằng chứng riêng | CHƯA HOÀN TẤT |
+
+## IMAGE-STUDIO-DETAIL-LOADING-20261122 — Issue #689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| ISDL-PENDING | nặng | Mở chi tiết từ danh sách hoặc bảng khác | Có trạng thái chờ đúng ngôn ngữ, không lộ nội dung bảng trước | [Phiên kiểm tra](PHIEN-IMAGE-STUDIO-DETAIL-LOADING-20261122.md) |
+| ISDL-ACCESS | nặng | Mất quyền hoặc phiên thay đổi trong lượt vẽ | Giữ kiểm tra quyền, không đưa nội dung gõ từ phiên cũ sang phiên mới | 12 tình huống trình duyệt và kiểm tra nguồn |
+| ISDL-FORMS | nặng | Gõ riêng trong sửa bảng, tạo và sửa hai phương án rồi cập nhật dữ liệu cùng phiên bản | Cả bốn biểu mẫu giữ đúng nội dung riêng | Trình duyệt thực với dữ liệu giả |
+| ISDL-AMBIGUOUS | nặng | Hai phương án có cùng mã | Không khôi phục nội dung sang nhầm biểu mẫu | Hai ca trình duyệt và ca hồi quy |
+| ISDL-OPTIONS | nặng | Lựa chọn bị xóa hoặc vô hiệu | Không thêm lại lựa chọn, không khôi phục lựa chọn vô hiệu | Sáu ca trình duyệt |
+| ISDL-CONTRAST | vừa | Xem màn chờ ở sáng/tối, 375/1440 | Chữ chờ đọc rõ và không tràn | 36 màn, đo bốn mẫu màu |
+| ISDL-SCOPE | nặng | Kiểm trang khác và nguồn ứng dụng | Không thêm xử lý bản nháp ở trang khác; đúng bốn thay đổi đã xét | Đối chiếu 20 lượt vẽ trang tổng quan |
+| ISDL-DELIVERY | nặng | CI, merge, triển khai, bản thực tế và giao diện production | Có bằng chứng riêng cho từng cổng | ĐANG THỰC HIỆN |
+| ISDL-OPEN | nặng | Lỗi đọc làm mất biểu mẫu, đổi phiên bản, rời trang | Giữ mở đến khi có thiết kế và kiểm chứng riêng | Chưa giải quyết trong đợt này |

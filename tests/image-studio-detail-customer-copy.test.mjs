@@ -67,7 +67,7 @@ for (const [index, locale] of ["vi", "en", "zh"].entries()) {
     const render = await pageMetaRenderer(pageMetaSources());
     const title = ["Chưa thể mở bảng thiết kế", "Design board could not be opened", "暂时无法打开画板"][index];
     const body = ["Vui lòng thử lại hoặc chọn bảng thiết kế khác.", "Please try again or choose another design board.", "请重试或选择其他画板。"][index];
-    for (const family of ["/image-studio", "/image-hub"]) for (const state of ["loading", "failed", "ready"]) {
+    for (const family of ["/image-studio", "/image-hub"]) for (const state of ["failed", "ready"]) {
       const route = family + "/11111111-1111-4111-8111-111111111111";
       const raw = {capabilities: {"image-studio-view": true}, imageStudioEnabled: true, imageStudioReadState: state, imageArtboardDetail: {}};
       const result = render(locale, route, raw), html = result.qa.renderPage(result.page, {...result.context, ...raw});

@@ -3852,5 +3852,26 @@ thành công chỉ được thông báo khi lượt đọc hiện tại đã s�
 hiện thông báo lỗi; phản hồi cũ sau đổi trang, đăng xuất hoặc lượt mới không
 báo thành công. Danh sách rỗng vẫn là kết quả tải thành công. Nội dung có
 Việt, Anh và Trung; không đổi API, quyền, ví hay nhà cung cấp.
-Chưa coi ứng viên này là đã triển khai. Trạng thái chờ của màn chi tiết và
-hai tình huống tranh chấp lượt đọc còn mở riêng trong Issue #689.
+Đợt phản hồi đọc đã triển khai qua PR #796, bản
+`e177ce5f5791fd22e517d95706331051223e0ccb`; CI `45020605349`, triển khai
+`45022495547`, biên nhận Issue #689 `7079165752`. VPS đúng bản, ba dịch vụ
+hoạt động và năm tệp công khai cùng năm bản có phiên bản khớp nguồn.
+Giao diện production sau đăng nhập chưa được quan sát.
+
+## Thiết kế ảnh — trạng thái chờ và nội dung đang sửa, 22/11/2026
+
+Ứng viên hiện tại hiển thị trạng thái chờ có thông báo hỗ trợ trình đọc màn
+hình khi mở chi tiết; không hiển thị thông tin bảng trước trong lúc mở bảng
+khác. Tiêu đề chờ ở giao diện sáng đã đo tăng từ 1,046:1 lên 12,352:1;
+giao diện tối giữ 13,903:1.
+
+Khi dữ liệu cùng trang được cập nhật mà phiên, mã biểu mẫu và phiên bản
+không đổi, nội dung đang gõ được giữ riêng cho sửa bảng, tạo phương án và
+từng phương án đang sửa. Lựa chọn bị xóa hoặc vô hiệu không được khôi phục.
+Nội dung chỉ nằm trong lần vẽ lại hiện tại; không đưa vào bộ nhớ bền vững.
+Khi phiên hoặc phiên bản thay đổi, dữ liệu máy chủ có hiệu lực; ứng viên
+không tự gán phiên bản mới cho nội dung cũ.
+
+Mất nội dung sau lỗi đọc làm biến mất biểu mẫu, khi rời trang hoặc đổi phiên
+bản vẫn cần giải pháp riêng. Các trường hợp này còn mở trên Issue #689;
+không coi toàn bộ cơ chế bản nháp đã hoàn tất.

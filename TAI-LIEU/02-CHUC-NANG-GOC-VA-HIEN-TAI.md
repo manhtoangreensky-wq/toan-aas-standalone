@@ -2951,3 +2951,16 @@ Các chữ ready/empty và khung thừa là đơn vị tiếp theo,không nhận
 
 PR #795 đã triển khai; ứng viên phản hồi đọc đang chờ các cổng phát hành.
 Màn chờ chi tiết và kiểm tra giao diện production sau đăng nhập vẫn mở.
+
+## Chi tiết ảnh — đối chiếu chờ và bản đang sửa, 22/11/2026
+
+Nguồn đối chiếu là bản đang triển khai `e177ce5f5791fd22e517d95706331051223e0ccb`.
+
+| Hành vi gốc | Ứng viên | Bằng chứng và giới hạn |
+|---|---|---|
+| Mở chi tiết có thể hiện thông báo chưa mở được khi đang tải | Hiện thông báo chờ riêng trước khi tải xong | 12 tình huống điều hướng trước sửa; 36 màn sau sửa |
+| Chữ tiêu đề chờ nhạt trên nền sáng | Dùng màu chữ hiện có trong phạm vi màn chờ chi tiết | 1,046→12,352:1; tối giữ 13,903:1 |
+| Vẽ lại cùng trang lấy các trường đã lưu, mất nội dung đang gõ | Giữ độc lập các trường được phép khi phiên, biểu mẫu và phiên bản khớp | Trước sửa 8/8 mất nội dung; sau sửa 20 tình huống trình duyệt đạt |
+| Biểu mẫu có mã trùng có thể bị gán nhầm bản đang sửa | Bỏ khôi phục mọi biểu mẫu có nhận dạng mơ hồ | Hai tình huống mã trùng trên hai nhóm đường dẫn |
+| Giá trị chọn không còn khả dụng | Chỉ khôi phục lựa chọn còn có và còn bật | Sáu tình huống xóa/vô hiệu lựa chọn |
+| Lỗi đọc, rời trang hoặc dữ liệu đổi phiên bản | Còn mở, cần xử lý riêng | Không dùng kết quả cùng phiên bản để đóng các trường hợp này |

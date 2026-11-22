@@ -3323,9 +3323,33 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   huống trên toàn bộ bundle với GET giả; không gọi mạng thật.
 - [x] Hồi quy 168 tệp/5.161 ca đạt, bốn tệp còn lại 16/16; Node mục tiêu
   24/24, Python 237/237. Đã lập phiên kiểm tra và tài liệu trước push.
-- [ ] CI, merge, deploy, runtime và kiểm tra giao diện đã đăng nhập:
-  từng mục cần bằng chứng riêng.
+- [x] PR #796 đã gộp; CI `45020605349` hai job thành công; deploy
+  `45022495547`; VPS `e177ce5f5791fd22e517d95706331051223e0ccb` đúng,
+  nguồn sạch, ba dịch vụ active, health và 5+5 tệp khớp; receipt `7079165752`.
+- [ ] Giao diện production sau đăng nhập chưa được quan sát.
 - [ ] Màn chờ chi tiết; đầu vào lọc không hợp lệ trước helper; tranh chấp
   giữa lượt tải danh sách và tham chiếu: tái hiện và xử lý riêng theo thứ tự.
 - [ ] Toàn goal, locale toàn trang, accessibility, auth, responsive và motion
   chưa hoàn tất; motion vẫn ở cuối.
+
+### Chi tiết ảnh — chờ và giữ nội dung cùng phiên bản, 22/11/2026
+
+- [x] BASE: 12 tình huống điều hướng thiếu trạng thái chờ; 8/8 trường nhập
+  mất nội dung chưa lưu khi vẽ lại, tái hiện trên BASE và ứng viên.
+- [x] Antigravity sửa màn chờ và quy tắc màu. Phiếu bản nháp sai hai vòng:
+  R1 trộn biểu mẫu trùng mã; R2 thêm xử lý dư trên trang khác. Bản sửa trực
+  tiếp sau hai vòng giới hạn vào chi tiết ảnh, cùng phiên và cùng phiên bản.
+- [x] 20 tình huống Chrome với bốn biểu mẫu đạt; 36 màn trạng thái tĩnh;
+  tương phản sáng 12,352:1, tối 13,903:1; không mạng thật.
+- [x] Node mục tiêu 40/40, nhóm tách riêng 16/16, Python màu 90/90;
+  rà soát độc lập một lượt không có lỗi chặn mới.
+- [x] Hồi quy cuối 170 tệp/5.186 ca đạt, 0 lỗi/0 bỏ qua; Python bổ sung
+  136/136 và shell 4/4; hai ca trình duyệt giữ toàn bộ trường dài/lựa chọn đạt.
+  Tài liệu vận hành, đối chiếu, spec và phiên Tester đã cập nhật.
+- [ ] Đối chiếu nguồn, push, CI, merge, deploy và receipt.
+- [ ] Giữ nội dung khi lỗi đọc làm mất biểu mẫu, đổi phiên bản hoặc rời trang.
+- [ ] Tiêu đề/mô tả/đường dẫn chi tiết còn chữ kỹ thuật: worker đã trả
+  năm record, 18 ca nội dung và 12 đối chiếu trang khác đạt trong bộ nhớ;
+  chỉ mở áp dụng sau đợt hiện tại.
+- [ ] Giao diện production sau đăng nhập, locale toàn app, auth, AX,
+  responsive và motion cuối vẫn cần bằng chứng theo checklist.
