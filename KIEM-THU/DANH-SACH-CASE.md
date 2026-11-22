@@ -1,5 +1,17 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## IMAGE-STUDIO-OPTION-LABELS-20261122 — tỷ lệ và định dạng
+
+Phiên `PHIEN-IMAGE-STUDIO-OPTION-LABELS-20261122.md`; dùng dữ liệu giả.
+
+| Mã | Mức | Phạm vi | PASS bắt buộc |
+|---|---|---|---|
+| ISO-RATIO | nặng | Tám tỷ lệ, VI/EN/ZH | Đúng nhãn, giữ keys/order/default |
+| ISO-FORMAT | nặng | PNG/JPG/WebP | Bỏ hậu tố kỹ thuật, giữ giá trị |
+| ISO-FALLBACK | nặng | Thiếu bộ dịch và giá trị lạ | Nhãn Việt rõ ràng, mặc định cũ giữ |
+| ISO-PRESERVE | nặng | Hai form tạo/chỉnh sửa | Nhãn trường/data/limits và phần ngoài form giữ |
+| ISO-DELIVERY | nặng | CI, merge, VPS, asset | Mỗi cổng có chứng cứ riêng |
+
 ## IMAGE-STUDIO-CREATE-FIELDS-20261122 — nhãn biểu mẫu ảnh
 
 Phiên `PHIEN-IMAGE-STUDIO-CREATE-FIELDS-20261122.md`; dùng dữ liệu giả.

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {imageStudioOptionsHistoricalSource, imageStudioOptionsHistoricalSnapshot} from "./image-studio-options-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/image-studio-create-fields-contract.json", import.meta.url)));
 const fail = "Unreviewed Image Studio field copy";
@@ -9,6 +10,7 @@ assert.equal(contract.rows.length, 18, fail);
 
 export function imageStudioFieldsHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail);
+  source = imageStudioOptionsHistoricalSource(source, file);
   const record = contract.records.find(row => row.file === file);
   if (!record || !source.includes(file.endsWith("portal.js") ? 'imageStudioText("form.' : "IMAGE_STUDIO_FORM_COPY_ROWS")) return source;
   assert.equal(source.split(record.new).length - 1, 1, fail);
@@ -22,6 +24,7 @@ export function imageStudioFieldsHistoricalSource(source, file) {
 export function imageStudioFieldsHistoricalSnapshot(entries, locale) {
   const index = ["vi", "en", "zh"].indexOf(locale) + 1;
   assert.ok(Array.isArray(entries) && index > 0, fail);
+  entries = imageStudioOptionsHistoricalSnapshot(entries, locale);
   const keys = contract.rows.map(row => row[0]);
   const found = entries.filter(([key]) => typeof key === "string" && key.startsWith("imageStudioUi.form."));
   if (!found.length) return entries;

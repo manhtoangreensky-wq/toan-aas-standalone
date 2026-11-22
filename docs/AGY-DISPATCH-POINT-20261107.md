@@ -102,3 +102,20 @@ hoặc gom các task đã xong để kiểm tra chung một lần, tránh dùng 
 Đây là quy tắc điều phối trong dự án theo lệnh Owner, không tự sửa skill hay
 thăng cấp thành luật toàn cục. Các chốt ENV/secret, dữ liệu, provider, ví và
 production vẫn giữ nguyên.
+
+## Xác minh nguồn công khai trước khi giao — 22/11/2026
+
+Đã đối chiếu GitHub API: repo standalone có `private=false`,
+`visibility=public`. Tại commit `f4c5b6a9821cf957ce107778fd9abd884075fd50`,
+MAP.md, portal.js, portal-i18n.js và portal-theme.css tải được từ địa chỉ
+raw công khai mà không gửi thông tin xác thực; cả bốn hash trùng Git.
+Đây là bằng chứng của phiên bản nêu trên, không tự chứng minh mọi tệp
+hoặc mọi thay đổi chưa công bố đều công khai.
+
+Trước khi mô tả một gói là mã riêng hoặc hỏi lại quyền gửi: kiểm visibility
+và đối chiếu đúng nội dung allowlist với commit công khai. Gói worker chỉ
+chứa các đoạn đã đối chiếu, bản đồ công khai và đặc tả; không thêm ENV,
+credential, log phiên, phản hồi API hoặc dữ liệu khách. Đưa chứng cứ commit/
+hash vào yêu cầu thực thi để bộ duyệt có đủ dữ kiện. Nếu bộ duyệt vẫn từ
+chối, lưu nguyên lý do và xử lý theo quyết định đó; không đổi đường gửi
+để vượt chặn.

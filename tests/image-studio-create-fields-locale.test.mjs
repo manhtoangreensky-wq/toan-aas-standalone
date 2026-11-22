@@ -63,7 +63,12 @@ for (const locale of ["vi", "en", "zh"]) {
   });
   test(`${locale}: option values, limits, required flags and customer project text remain unchanged`, () => {
     const now = fields(current, locale), old = fields(baseline, locale);
-    const stripCopy = rows => rows.map(({label, placeholder, help, emptyLabel, ...other}) => other);
+    // The later ratio/format copy unit intentionally changes only their option
+    // text; its own physical-bundle tests validate that text independently.
+    const stripCopy = rows => rows.map(({label, placeholder, help, emptyLabel, ...other}) => {
+      if (["aspect_ratio", "output_format"].includes(other.name)) other.options = other.options.map(([value]) => [value]);
+      return other;
+    });
     assert.deepEqual(stripCopy(now), stripCopy(old));
     assert.deepEqual(now[9].options, [{value: id, label: "Facebook & 客户 <Original>"}]);
     assert.equal(now[2].placeholder, "vi");
