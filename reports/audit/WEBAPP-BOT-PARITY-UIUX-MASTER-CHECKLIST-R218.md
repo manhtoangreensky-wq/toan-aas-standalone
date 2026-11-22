@@ -1,5 +1,19 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 22/11/2026 — PR791 đã giao; nhãn biểu mẫu thiết kế ảnh
+
+- [x] PR791/CI44955199251 hai job thành công; runtime
+  `05b7ba761bd35cf4da498443db9046ed59429d90`, deploy44957179891 thành công.
+  VPS ba dịch vụ hoạt động, health và 5+5 asset khớp;
+  Issue689/comment7070268051 đã đọc lại. Signed production UI chưa xác nhận.
+- [x] Nhãn biểu mẫu: Antigravity R1 hai record/18 khóa/54 giá trị;
+  11 kiểm tra mục tiêu, 12 màn cô lập và sáu đối chiếu renderer đạt.
+- [x] 147 Python đạt; hồi quy 165 tệp/5.139 dòng có sáu lỗi helper,
+  sửa guard và chạy lại đúng hai tệp 47/47 đạt, đủ sáu lỗi được đối chiếu.
+- [ ] CI, merge, deploy và signed UI cho nhãn ảnh còn chờ.
+- [ ] Tỷ lệ, chữ định dạng, các phần khác của Image Studio, locale/AX/auth/
+  thiết bị/Safari/output còn mở; motion M-FINAL01..06 giữ cuối.
+
 ## 22/11/2026 — PR790 đã giao; cảnh báo trường bắt buộc
 
 - [x] PR790 đã gộp `a09c7cc94a82537f77ab4e016d3dfa9ae7f23fcc`;

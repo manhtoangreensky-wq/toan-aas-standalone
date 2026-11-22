@@ -1,4 +1,9 @@
 """Remove only the exact reviewed warning change for older historical checks."""
+from pathlib import Path
+import runpy
+
+_ROOT = Path(__file__).resolve().parents[2]
+_FIELDS_PROJECT = runpy.run_path(str(_ROOT / "tests/helpers/image_studio_fields_historical.py"))["image_studio_fields_historical_source"]
 
 FAIL = "Unreviewed required-field warning"
 PORTAL, CATALOGUE = "static/portal/portal.js", "static/portal/portal-i18n.js"
@@ -14,6 +19,7 @@ ADDITIONS = (
 
 def required_warning_historical_source(source: str, file: str) -> str:
     assert isinstance(source, str) and isinstance(file, str), FAIL
+    source = _FIELDS_PROJECT(source, file)
     if file not in (PORTAL, CATALOGUE) or KEY not in source:
         return source
     if file == PORTAL:

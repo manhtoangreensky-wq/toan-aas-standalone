@@ -18131,8 +18131,29 @@
     ["state.archived", "Đã lưu trữ", "Archived", "已归档"],
     ["state.guarded", "Được bảo vệ", "Protected", "受保护"]
   ];
+  const IMAGE_STUDIO_FORM_COPY_ROWS = [
+    ["form.title", "Tên bảng thiết kế", "Design board name", "画板名称"],
+    ["form.titleHint", "Ví dụ: Hình ảnh bộ sưu tập mùa hè", "Example: Summer collection visuals", "例如：夏季系列视觉设计"],
+    ["form.intent", "Mục đích thiết kế", "Design intent", "设计意图"],
+    ["form.intentHelp", "Chỉ dùng để sắp xếp ý tưởng, không tự tạo ảnh.", "Organizes ideas only; it does not create an image.", "仅用于整理想法，不会自动生成图像。"],
+    ["form.language", "Ngôn ngữ mô tả", "Description language", "描述语言"],
+    ["form.ratio", "Tỷ lệ khung hình", "Aspect ratio", "画面比例"],
+    ["form.format", "Định dạng mong muốn", "Preferred format", "期望格式"],
+    ["form.formatHelp", "Chỉ ghi nhận lựa chọn; chưa tạo tệp.", "Records your choice only; no file is created.", "仅记录选择，尚未创建文件。"],
+    ["form.brief", "Mô tả ý tưởng", "Creative brief", "创意说明"],
+    ["form.briefHint", "Thông điệp, bối cảnh, giới hạn thương hiệu và điểm cần rà soát…", "Message, context, brand limits and points to review…", "信息、背景、品牌限制和需要检查的要点……"],
+    ["form.style", "Định hướng phong cách", "Style direction", "风格方向"],
+    ["form.styleHint", "Bố cục, ánh sáng, màu sắc, chất liệu và cảm xúc mong muốn…", "Desired layout, lighting, colors, materials and mood…", "期望的构图、光线、颜色、材质与氛围……"],
+    ["form.avoid", "Điều cần tránh", "What to avoid", "需要避免的内容"],
+    ["form.avoidHint", "Những yếu tố không phù hợp với thương hiệu hoặc mục tiêu…", "Elements that do not fit your brand or goal…", "不符合品牌或目标的元素……"],
+    ["form.tags", "Thẻ", "Tags", "标签"],
+    ["form.tagsHint", "ra mắt, sản phẩm, đánh giá", "launch, product, review", "上新，产品，评审"],
+    ["form.project", "Dự án (không bắt buộc)", "Project (optional)", "项目（可选）"],
+    ["form.noProject", "Không liên kết dự án", "No project", "不关联项目"]
+  ];
   ["vi", "en", "zh"].forEach((locale, index) => {
     IMAGE_STUDIO_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioUi.${row[0]}`] = row[index + 1]; });
+    IMAGE_STUDIO_FORM_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioUi.${row[0]}`] = row[index + 1]; });
   });
 
   const IMAGE_STUDIO_LIBRARY_COPY_ROWS = [

@@ -1,5 +1,12 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — đối chiếu biểu mẫu thiết kế ảnh
+
+Nguồn gốc tại BASE `05b7ba761bd35cf4da498443db9046ed59429d90` đã có
+mười trường và các thao tác tạo/chỉnh sửa. Nhãn trước sửa dùng chữ cứng
+Việt/Anh lẫn lộn; ứng viên chỉ dịch nhãn và gợi ý qua bộ chữ hiện có.
+Không thêm khả năng tạo ảnh hoặc đổi giá trị, giới hạn, quyền và dữ liệu.
+
 ## 22/11/2026 — đối chiếu cảnh báo trường bắt buộc
 
 Nguồn đối chiếu là bộ xử lý biểu mẫu chung và bộ chữ giao diện ở

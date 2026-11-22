@@ -1,5 +1,15 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — nhãn tạo và chỉnh sửa bảng thiết kế ảnh
+
+Ứng viên sau PR791 dịch mười nhãn trường, năm gợi ý nhập, hai câu hướng
+dẫn và lựa chọn không liên kết dự án theo VI/EN/ZH. Hai màn dùng chung
+bộ trường này. Các tên thương hiệu và nội dung khách được giữ nguyên.
+Chữ của lựa chọn tỷ lệ là mục tiếp theo, chưa được nhận đã sửa.
+
+Kiểm tra cục bộ dùng dữ liệu giả; chưa coi ứng viên đã phát hành hoặc
+đã kiểm tra production sau đăng nhập cho đến khi có bằng chứng riêng.
+
 ## 22/11/2026 — cảnh báo trường bắt buộc theo ngôn ngữ
 
 Ứng viên sau PR790 giữ kiểm tra biểu mẫu, vị trí con trỏ và việc chặn

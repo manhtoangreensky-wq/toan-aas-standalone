@@ -1,0 +1,135 @@
+{
+  "task": "IMAGE-STUDIO-CREATE-FIELDS-20261122",
+  "base": "05b7ba761bd35cf4da498443db9046ed59429d90",
+  "sourceAuthority": {
+    "model": "gemini-3.8-flash-high",
+    "resultSha256": "c6ea22cec6e14b9d5413cf87867764ef78a04c18beb9dd072465e0bb0066b8ea",
+    "packetSha256": "7fbac43d2c6cbf55105528a4fa655ad24c0d15ae8bb413d9c399b17670b24102",
+    "workerVerify": "NOT_RUN",
+    "applicationWrites": 0
+  },
+  "records": [
+    {
+      "count": 1,
+      "file": "static/portal/portal.js",
+      "new": "  function imageStudioArtboardFields(context) {\n    return [\n      { name: \"title\", label: imageStudioText(\"form.title\", \"Tên bảng thiết kế\"), placeholder: imageStudioText(\"form.titleHint\", \"Ví dụ: Hình ảnh bộ sưu tập mùa hè\"), required: true, minLength: 2, maxLength: 180 },\n      { name: \"image_intent\", label: imageStudioText(\"form.intent\", \"Mục đích thiết kế\"), control: \"select\", required: true, options: imageStudioIntentOptions(), help: imageStudioText(\"form.intentHelp\", \"Chỉ dùng để sắp xếp ý tưởng, không tự tạo ảnh.\") },\n      { name: \"language\", label: imageStudioText(\"form.language\", \"Ngôn ngữ mô tả\"), placeholder: \"vi\", required: true, minLength: 1, maxLength: 100 },\n      { name: \"aspect_ratio\", label: imageStudioText(\"form.ratio\", \"Tỷ lệ khung hình\"), control: \"select\", required: true, options: IMAGE_STUDIO_ASPECT_RATIOS },\n      { name: \"output_format\", label: imageStudioText(\"form.format\", \"Định dạng mong muốn\"), control: \"select\", required: true, options: imageStudioFormatOptions(), help: imageStudioText(\"form.formatHelp\", \"Chỉ ghi nhận lựa chọn; chưa tạo tệp.\") },\n      { name: \"creative_brief\", label: imageStudioText(\"form.brief\", \"Mô tả ý tưởng\"), control: \"textarea\", placeholder: imageStudioText(\"form.briefHint\", \"Thông điệp, bối cảnh, giới hạn thương hiệu và điểm cần rà soát…\"), required: true, minLength: 3, maxLength: 12000, wide: true },\n      { name: \"style_direction\", label: imageStudioText(\"form.style\", \"Định hướng phong cách\"), control: \"textarea\", placeholder: imageStudioText(\"form.styleHint\", \"Bố cục, ánh sáng, màu sắc, chất liệu và cảm xúc mong muốn…\"), maxLength: 6000, wide: true },\n      { name: \"negative_direction\", label: imageStudioText(\"form.avoid\", \"Điều cần tránh\"), control: \"textarea\", placeholder: imageStudioText(\"form.avoidHint\", \"Những yếu tố không phù hợp với thương hiệu hoặc mục tiêu…\"), maxLength: 4000, wide: true },\n      { name: \"tags\", label: imageStudioText(\"form.tags\", \"Thẻ\"), placeholder: imageStudioText(\"form.tagsHint\", \"ra mắt, sản phẩm, đánh giá\"), maxLength: 1000 },\n      { name: \"project_id\", label: imageStudioText(\"form.project\", \"Dự án (không bắt buộc)\"), control: \"select\", options: imageStudioProjectOptions(context), emptyLabel: imageStudioText(\"form.noProject\", \"Không liên kết dự án\") }\n    ];\n  }",
+      "old": "  function imageStudioArtboardFields(context) {\n    return [\n      { name: \"title\", label: \"Tên artboard\", placeholder: \"Ví dụ: Key visual bộ sưu tập mùa hè\", required: true, minLength: 2, maxLength: 180 },\n      { name: \"image_intent\", label: \"Ý định định hướng\", control: \"select\", required: true, options: imageStudioIntentOptions(), help: \"Nhãn để tổ chức mô tả; không gọi cơ chế xử lý, nhà cung cấp hoặc tạo ảnh.\" },\n      { name: \"language\", label: \"Ngôn ngữ direction\", placeholder: \"vi\", required: true, minLength: 1, maxLength: 100 },\n      { name: \"aspect_ratio\", label: \"Tỷ lệ khung hình\", control: \"select\", required: true, options: IMAGE_STUDIO_ASPECT_RATIOS },\n      { name: \"output_format\", label: \"Định dạng đích\", control: \"select\", required: true, options: imageStudioFormatOptions(), help: \"Chỉ là siêu dữ liệu cho bước tự rà soát, không tạo tệp đích.\" },\n      { name: \"creative_brief\", label: \"Creative brief\", control: \"textarea\", placeholder: \"Thông điệp, bối cảnh, giới hạn thương hiệu và điểm cần tự rà soát…\", required: true, minLength: 3, maxLength: 12000, wide: true },\n      { name: \"style_direction\", label: \"Style direction\", control: \"textarea\", placeholder: \"Bố cục, ánh sáng, palette, chất liệu và cảm xúc mong muốn…\", maxLength: 6000, wide: true },\n      { name: \"negative_direction\", label: \"Điều cần tránh\", control: \"textarea\", placeholder: \"Các yếu tố không phù hợp với thương hiệu hoặc mục tiêu brief…\", maxLength: 4000, wide: true },\n      { name: \"tags\", label: \"Tags\", placeholder: \"launch, product, review\", maxLength: 1000 },\n      { name: \"project_id\", label: \"Project (tùy chọn)\", control: \"select\", options: imageStudioProjectOptions(context), emptyLabel: \"Không liên kết Project\" }\n    ];\n  }"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "  const IMAGE_STUDIO_FORM_COPY_ROWS = [\n    [\"form.title\", \"Tên bảng thiết kế\", \"Design board name\", \"画板名称\"],\n    [\"form.titleHint\", \"Ví dụ: Hình ảnh bộ sưu tập mùa hè\", \"Example: Summer collection visuals\", \"例如：夏季系列视觉设计\"],\n    [\"form.intent\", \"Mục đích thiết kế\", \"Design intent\", \"设计意图\"],\n    [\"form.intentHelp\", \"Chỉ dùng để sắp xếp ý tưởng, không tự tạo ảnh.\", \"Organizes ideas only; it does not create an image.\", \"仅用于整理想法，不会自动生成图像。\"],\n    [\"form.language\", \"Ngôn ngữ mô tả\", \"Description language\", \"描述语言\"],\n    [\"form.ratio\", \"Tỷ lệ khung hình\", \"Aspect ratio\", \"画面比例\"],\n    [\"form.format\", \"Định dạng mong muốn\", \"Preferred format\", \"期望格式\"],\n    [\"form.formatHelp\", \"Chỉ ghi nhận lựa chọn; chưa tạo tệp.\", \"Records your choice only; no file is created.\", \"仅记录选择，尚未创建文件。\"],\n    [\"form.brief\", \"Mô tả ý tưởng\", \"Creative brief\", \"创意说明\"],\n    [\"form.briefHint\", \"Thông điệp, bối cảnh, giới hạn thương hiệu và điểm cần rà soát…\", \"Message, context, brand limits and points to review…\", \"信息、背景、品牌限制和需要检查的要点……\"],\n    [\"form.style\", \"Định hướng phong cách\", \"Style direction\", \"风格方向\"],\n    [\"form.styleHint\", \"Bố cục, ánh sáng, màu sắc, chất liệu và cảm xúc mong muốn…\", \"Desired layout, lighting, colors, materials and mood…\", \"期望的构图、光线、颜色、材质与氛围……\"],\n    [\"form.avoid\", \"Điều cần tránh\", \"What to avoid\", \"需要避免的内容\"],\n    [\"form.avoidHint\", \"Những yếu tố không phù hợp với thương hiệu hoặc mục tiêu…\", \"Elements that do not fit your brand or goal…\", \"不符合品牌或目标的元素……\"],\n    [\"form.tags\", \"Thẻ\", \"Tags\", \"标签\"],\n    [\"form.tagsHint\", \"ra mắt, sản phẩm, đánh giá\", \"launch, product, review\", \"上新，产品，评审\"],\n    [\"form.project\", \"Dự án (không bắt buộc)\", \"Project (optional)\", \"项目（可选）\"],\n    [\"form.noProject\", \"Không liên kết dự án\", \"No project\", \"不关联项目\"]\n  ];\n  [\"vi\", \"en\", \"zh\"].forEach((locale, index) => {\n    IMAGE_STUDIO_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioUi.${row[0]}`] = row[index + 1]; });\n    IMAGE_STUDIO_FORM_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioUi.${row[0]}`] = row[index + 1]; });\n  });",
+      "old": "  [\"vi\", \"en\", \"zh\"].forEach((locale, index) => {\n    IMAGE_STUDIO_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioUi.${row[0]}`] = row[index + 1]; });\n  });"
+    }
+  ],
+  "rows": [
+    [
+      "imageStudioUi.form.title",
+      "Tên bảng thiết kế",
+      "Design board name",
+      "画板名称"
+    ],
+    [
+      "imageStudioUi.form.titleHint",
+      "Ví dụ: Hình ảnh bộ sưu tập mùa hè",
+      "Example: Summer collection visuals",
+      "例如：夏季系列视觉设计"
+    ],
+    [
+      "imageStudioUi.form.intent",
+      "Mục đích thiết kế",
+      "Design intent",
+      "设计意图"
+    ],
+    [
+      "imageStudioUi.form.intentHelp",
+      "Chỉ dùng để sắp xếp ý tưởng, không tự tạo ảnh.",
+      "Organizes ideas only; it does not create an image.",
+      "仅用于整理想法，不会自动生成图像。"
+    ],
+    [
+      "imageStudioUi.form.language",
+      "Ngôn ngữ mô tả",
+      "Description language",
+      "描述语言"
+    ],
+    [
+      "imageStudioUi.form.ratio",
+      "Tỷ lệ khung hình",
+      "Aspect ratio",
+      "画面比例"
+    ],
+    [
+      "imageStudioUi.form.format",
+      "Định dạng mong muốn",
+      "Preferred format",
+      "期望格式"
+    ],
+    [
+      "imageStudioUi.form.formatHelp",
+      "Chỉ ghi nhận lựa chọn; chưa tạo tệp.",
+      "Records your choice only; no file is created.",
+      "仅记录选择，尚未创建文件。"
+    ],
+    [
+      "imageStudioUi.form.brief",
+      "Mô tả ý tưởng",
+      "Creative brief",
+      "创意说明"
+    ],
+    [
+      "imageStudioUi.form.briefHint",
+      "Thông điệp, bối cảnh, giới hạn thương hiệu và điểm cần rà soát…",
+      "Message, context, brand limits and points to review…",
+      "信息、背景、品牌限制和需要检查的要点……"
+    ],
+    [
+      "imageStudioUi.form.style",
+      "Định hướng phong cách",
+      "Style direction",
+      "风格方向"
+    ],
+    [
+      "imageStudioUi.form.styleHint",
+      "Bố cục, ánh sáng, màu sắc, chất liệu và cảm xúc mong muốn…",
+      "Desired layout, lighting, colors, materials and mood…",
+      "期望的构图、光线、颜色、材质与氛围……"
+    ],
+    [
+      "imageStudioUi.form.avoid",
+      "Điều cần tránh",
+      "What to avoid",
+      "需要避免的内容"
+    ],
+    [
+      "imageStudioUi.form.avoidHint",
+      "Những yếu tố không phù hợp với thương hiệu hoặc mục tiêu…",
+      "Elements that do not fit your brand or goal…",
+      "不符合品牌或目标的元素……"
+    ],
+    [
+      "imageStudioUi.form.tags",
+      "Thẻ",
+      "Tags",
+      "标签"
+    ],
+    [
+      "imageStudioUi.form.tagsHint",
+      "ra mắt, sản phẩm, đánh giá",
+      "launch, product, review",
+      "上新，产品，评审"
+    ],
+    [
+      "imageStudioUi.form.project",
+      "Dự án (không bắt buộc)",
+      "Project (optional)",
+      "项目（可选）"
+    ],
+    [
+      "imageStudioUi.form.noProject",
+      "Không liên kết dự án",
+      "No project",
+      "不关联项目"
+    ]
+  ]
+}

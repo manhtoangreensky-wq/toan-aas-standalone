@@ -19072,16 +19072,16 @@ function renderAutoPostHub(page, context) {
   }
   function imageStudioArtboardFields(context) {
     return [
-      { name: "title", label: "Tên artboard", placeholder: "Ví dụ: Key visual bộ sưu tập mùa hè", required: true, minLength: 2, maxLength: 180 },
-      { name: "image_intent", label: "Ý định định hướng", control: "select", required: true, options: imageStudioIntentOptions(), help: "Nhãn để tổ chức mô tả; không gọi cơ chế xử lý, nhà cung cấp hoặc tạo ảnh." },
-      { name: "language", label: "Ngôn ngữ direction", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
-      { name: "aspect_ratio", label: "Tỷ lệ khung hình", control: "select", required: true, options: IMAGE_STUDIO_ASPECT_RATIOS },
-      { name: "output_format", label: "Định dạng đích", control: "select", required: true, options: imageStudioFormatOptions(), help: "Chỉ là siêu dữ liệu cho bước tự rà soát, không tạo tệp đích." },
-      { name: "creative_brief", label: "Creative brief", control: "textarea", placeholder: "Thông điệp, bối cảnh, giới hạn thương hiệu và điểm cần tự rà soát…", required: true, minLength: 3, maxLength: 12000, wide: true },
-      { name: "style_direction", label: "Style direction", control: "textarea", placeholder: "Bố cục, ánh sáng, palette, chất liệu và cảm xúc mong muốn…", maxLength: 6000, wide: true },
-      { name: "negative_direction", label: "Điều cần tránh", control: "textarea", placeholder: "Các yếu tố không phù hợp với thương hiệu hoặc mục tiêu brief…", maxLength: 4000, wide: true },
-      { name: "tags", label: "Tags", placeholder: "launch, product, review", maxLength: 1000 },
-      { name: "project_id", label: "Project (tùy chọn)", control: "select", options: imageStudioProjectOptions(context), emptyLabel: "Không liên kết Project" }
+      { name: "title", label: imageStudioText("form.title", "Tên bảng thiết kế"), placeholder: imageStudioText("form.titleHint", "Ví dụ: Hình ảnh bộ sưu tập mùa hè"), required: true, minLength: 2, maxLength: 180 },
+      { name: "image_intent", label: imageStudioText("form.intent", "Mục đích thiết kế"), control: "select", required: true, options: imageStudioIntentOptions(), help: imageStudioText("form.intentHelp", "Chỉ dùng để sắp xếp ý tưởng, không tự tạo ảnh.") },
+      { name: "language", label: imageStudioText("form.language", "Ngôn ngữ mô tả"), placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
+      { name: "aspect_ratio", label: imageStudioText("form.ratio", "Tỷ lệ khung hình"), control: "select", required: true, options: IMAGE_STUDIO_ASPECT_RATIOS },
+      { name: "output_format", label: imageStudioText("form.format", "Định dạng mong muốn"), control: "select", required: true, options: imageStudioFormatOptions(), help: imageStudioText("form.formatHelp", "Chỉ ghi nhận lựa chọn; chưa tạo tệp.") },
+      { name: "creative_brief", label: imageStudioText("form.brief", "Mô tả ý tưởng"), control: "textarea", placeholder: imageStudioText("form.briefHint", "Thông điệp, bối cảnh, giới hạn thương hiệu và điểm cần rà soát…"), required: true, minLength: 3, maxLength: 12000, wide: true },
+      { name: "style_direction", label: imageStudioText("form.style", "Định hướng phong cách"), control: "textarea", placeholder: imageStudioText("form.styleHint", "Bố cục, ánh sáng, màu sắc, chất liệu và cảm xúc mong muốn…"), maxLength: 6000, wide: true },
+      { name: "negative_direction", label: imageStudioText("form.avoid", "Điều cần tránh"), control: "textarea", placeholder: imageStudioText("form.avoidHint", "Những yếu tố không phù hợp với thương hiệu hoặc mục tiêu…"), maxLength: 4000, wide: true },
+      { name: "tags", label: imageStudioText("form.tags", "Thẻ"), placeholder: imageStudioText("form.tagsHint", "ra mắt, sản phẩm, đánh giá"), maxLength: 1000 },
+      { name: "project_id", label: imageStudioText("form.project", "Dự án (không bắt buộc)"), control: "select", options: imageStudioProjectOptions(context), emptyLabel: imageStudioText("form.noProject", "Không liên kết dự án") }
     ];
   }
   function imageStudioArtboardValues(value) {
