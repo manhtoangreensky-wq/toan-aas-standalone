@@ -2009,3 +2009,13 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | IEC-NAV | vừa |Bốnmobilelinks mỗi view |48rows≥44px/minwidth262,tên/href/current/tabIndex0 |Native24view48PNG45owned0 |
 | IEC-SCOPE | nặng |Exact22edits/3app148protected |Finiteoutside/golden/negative giữ,currentrenderer thật |Source14PASS/scopec4de6d42… |
 | IEC-DELIVERY | nặng |OnePR/exactCI/merge/deploy/runtime/receipt |Đúng bản/từngcổng,không nhận ảnh cuối |PENDING |
+
+## IMAGE-STUDIO-READ-FEEDBACK-20261122 — Issue #689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| ISRF-OUTCOME | nặng | Làm mới, lọc, xóa lọc, chuyển trang khi đọc thành công hoặc lỗi | Thành công chỉ khi dữ liệu sẵn sàng; danh sách rỗng không bị coi là lỗi | [Phiên kiểm tra](PHIEN-IMAGE-STUDIO-READ-FEEDBACK-20261122.md) |
+| ISRF-CURRENT | nặng | Đổi trang, đăng xuất, bắt đầu lượt mới trước khi lượt cũ trả về | Không hiển thị phản hồi của lượt cũ | Kiểm thử mã vật lý và tình huống chồng lượt |
+| ISRF-VALIDATION | nặng | Bộ lọc đã lưu không hợp lệ khi lượt cũ đang chờ | Giữ lỗi cụ thể, lượt cũ không ghi đè hoặc báo thành công | Kiểm thử chồng lượt |
+| ISRF-LOCALE | vừa | Chạy các hành động bằng Việt, Anh, Trung | Thông báo đúng ngôn ngữ | Kiểm thử từ điển và mã giao diện |
+| ISRF-DELIVERY | nặng | Kiểm tra CI, bản merge, triển khai và giao diện sau đăng nhập | Từng cổng phải có bằng chứng riêng | CHƯA HOÀN TẤT |

@@ -19033,6 +19033,40 @@
     return { filter: imageStudioReferenceFilterPayload(filters), offset: imageStudioListOffset(pagination.offset) };
   }
 
+  function imageStudioReadFeedbackText(key, fallback) {
+    const i18n = window.TOANAASI18n;
+    const fullKey = `imageStudioReadFeedback.${key}`;
+    const value = i18n && typeof i18n.t === "function" ? i18n.t(fullKey) : "";
+    return typeof value === "string" && value && value !== fullKey ? value : fallback;
+  }
+
+  async function imageStudioReadWithFeedback(route, kind, read, successKey, successFallback) {
+    const sessionEpoch = imageStudioSessionEpoch;
+    const previousEpoch = kind === "detail" ? imageStudioDetailHydrationEpoch : imageStudioHydrationEpoch;
+    let pending;
+    try { pending = read(); } catch (error) { pending = Promise.reject(error); }
+    let requestEpoch = kind === "detail" ? imageStudioDetailHydrationEpoch : imageStudioHydrationEpoch;
+    if (requestEpoch === previousEpoch) {
+      requestEpoch = kind === "detail" ? ++imageStudioDetailHydrationEpoch : ++imageStudioHydrationEpoch;
+    }
+    let result;
+    try {
+      result = await pending;
+    } catch (error) {
+      const currentEpoch = kind === "detail" ? imageStudioDetailHydrationEpoch : imageStudioHydrationEpoch;
+      if (!imageStudioRequestIsCurrent(requestEpoch, currentEpoch, sessionEpoch, route)) return;
+      toast((error && error.message) || "Yêu cầu chưa được xác nhận.", "error");
+      return;
+    }
+    const currentEpoch = kind === "detail" ? imageStudioDetailHydrationEpoch : imageStudioHydrationEpoch;
+    if (!imageStudioRequestIsCurrent(requestEpoch, currentEpoch, sessionEpoch, route)) return;
+    if (!result || base().imageStudioReadState !== "ready") {
+      toast(imageStudioReadFeedbackText("failed", "Không thể tải dữ liệu. Vui lòng thử lại."), "error");
+      return;
+    }
+    toast(imageStudioReadFeedbackText(successKey, successFallback));
+  }
+
   async function hydrateImageStudio(filterValue, offsetValue) {
     // Read only the private Image Studio API.  `/image`, `/image/edit` and
     // `/image/resize` remain separate product surfaces and must never fill
@@ -33138,20 +33172,18 @@
       if (action === "image-studio-filter") {
         if (!(base().capabilities && base().capabilities["image-studio-filter"] === true)) throw new Error("Cần signed Web session để tìm artboard riêng tư.");
         const filter = imageStudioArtboardFilterPayload(fields);
-        await hydrateImageStudio(filter, 0);
-        toast(filter.q || filter.state !== "active" ? "Đã áp dụng bộ lọc Image Studio." : "Đã hiển thị artboard đang hoạt động của Web account hiện tại.");
+        const filtered = Boolean(filter.q || filter.state !== "active");
+        await imageStudioReadWithFeedback(route, "list", () => hydrateImageStudio(filter, 0), filtered ? "filtered" : "listed", filtered ? "Đã áp dụng bộ lọc." : "Đã tải danh sách.");
         return;
       }
       if (action === "image-studio-filter-clear") {
         if (!(base().capabilities && base().capabilities["image-studio-filter"] === true)) throw new Error("Cần signed Web session để tìm artboard riêng tư.");
-        await hydrateImageStudio({ q: "", state: "active" }, 0);
-        toast("Đã hiển thị artboard đang hoạt động của Web account hiện tại.");
+        await imageStudioReadWithFeedback(route, "list", () => hydrateImageStudio({ q: "", state: "active" }, 0), "listed", "Đã tải danh sách.");
         return;
       }
       if (action === "image-studio-page") {
         if (!(base().capabilities && base().capabilities["image-studio-page"] === true)) throw new Error("Cần signed Web session để xem trang artboard riêng tư.");
-        await hydrateImageStudio(undefined, imageStudioListOffset(fields.__imageStudioOffset));
-        toast("Đã tải trang artboard từ API owner-scoped.");
+        await imageStudioReadWithFeedback(route, "list", () => hydrateImageStudio(undefined, imageStudioListOffset(fields.__imageStudioOffset)), "paged", "Đã tải trang.");
         return;
       }
       if (["image-studio-project-reference-filter", "image-studio-project-reference-filter-clear", "image-studio-asset-reference-filter", "image-studio-asset-reference-filter-clear"].includes(action)) {
@@ -33177,9 +33209,7 @@
       }
       if (action === "image-studio-refresh") {
         const artboardId = imageArtboardIdFromPath(route);
-        if (artboardId) await hydrateImageArtboard(artboardId, route);
-        else await hydrateImageStudio();
-        toast("Đã làm mới Image Creative Studio của Web account hiện tại.");
+        await imageStudioReadWithFeedback(route, artboardId ? "detail" : "list", () => artboardId ? hydrateImageArtboard(artboardId, route) : hydrateImageStudio(), "refreshed", "Đã làm mới.");
         return;
       }
       if (action === "image-artboard-create") {

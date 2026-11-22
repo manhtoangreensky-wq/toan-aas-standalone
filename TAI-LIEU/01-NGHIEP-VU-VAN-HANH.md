@@ -3839,3 +3839,18 @@ bài kiểm tra lỗi phải đi hết4lượt đọc trước khi quan sát l�
 Không thay chính sách đang chạy để ép bài kiểm tra đạt.
 Native/CI/delivery/signed UI được chốt riêng trên Issue689.
 [Báo cáo](../docs/reports/image-history-state-copy-20261118.md).
+
+## Thiết kế ảnh — phản hồi khi đọc dữ liệu, 22/11/2026
+
+PR #795 đã được đưa lên máy chủ ở bản `ef3643d84c269aa2a07e411debe400a44f72d8e6`;
+CI `45016469214`, triển khai `45018698084` và biên nhận Issue #689
+`7078655659`. Trạng thái giao diện sau đăng nhập trên production chưa được
+kiểm tra trong phiên này.
+
+Ứng viên kế tiếp chỉ thay thông báo làm mới, lọc, xóa lọc và chuyển trang:
+thành công chỉ được thông báo khi lượt đọc hiện tại đã sẵn sàng; lỗi tải
+hiện thông báo lỗi; phản hồi cũ sau đổi trang, đăng xuất hoặc lượt mới không
+báo thành công. Danh sách rỗng vẫn là kết quả tải thành công. Nội dung có
+Việt, Anh và Trung; không đổi API, quyền, ví hay nhà cung cấp.
+Chưa coi ứng viên này là đã triển khai. Trạng thái chờ của màn chi tiết và
+hai tình huống tranh chấp lượt đọc còn mở riêng trong Issue #689.

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {imageStudioReadFeedbackHistoricalSource, imageStudioReadFeedbackHistoricalSnapshot} from "./image-studio-read-feedback-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/image-studio-detail-customer-copy-contract.json", import.meta.url)));
 const fail = "Unreviewed Image Studio detail copy";
@@ -12,6 +13,7 @@ const rows = contract.records.filter(row => row.file.endsWith("portal-i18n.js"))
 assert.equal(rows.length, 21, fail);
 
 export function imageStudioDetailCopyHistoricalSource(source, file) {
+  source = imageStudioReadFeedbackHistoricalSource(source, file);
   const records = contract.records.filter(row => row.file === file);
   if (!records.length || !source.includes(records[0].new)) return source;
   for (const row of records) assert.equal(source.split(row.new).length - 1, 1, fail);
@@ -22,6 +24,7 @@ export function imageStudioDetailCopyHistoricalSource(source, file) {
 export function imageStudioDetailCopyHistoricalSnapshot(entries, locale) {
   const index = ["vi", "en", "zh"].indexOf(locale) + 1;
   assert.ok(Array.isArray(entries) && index > 0, fail);
+  entries = imageStudioReadFeedbackHistoricalSnapshot(entries, locale);
   const marker = entries.find(([key]) => key === "imageStudioDetailUi." + rows[0].next[0]);
   if (!marker || marker[1] !== rows[0].next[index]) return entries;
   for (const row of rows) {

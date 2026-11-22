@@ -1,0 +1,42 @@
+{
+  "task": "IMAGE-STUDIO-READ-FEEDBACK-20261122",
+  "base": "ef3643d84c269aa2a07e411debe400a44f72d8e6",
+  "records": [
+    {
+      "file": "static/portal/integration.js",
+      "old": "  async function hydrateImageStudio(filterValue, offsetValue) {",
+      "new": "  function imageStudioReadFeedbackText(key, fallback) {\n    const i18n = window.TOANAASI18n;\n    const fullKey = `imageStudioReadFeedback.${key}`;\n    const value = i18n && typeof i18n.t === \"function\" ? i18n.t(fullKey) : \"\";\n    return typeof value === \"string\" && value && value !== fullKey ? value : fallback;\n  }\n\n  async function imageStudioReadWithFeedback(route, kind, read, successKey, successFallback) {\n    const sessionEpoch = imageStudioSessionEpoch;\n    const previousEpoch = kind === \"detail\" ? imageStudioDetailHydrationEpoch : imageStudioHydrationEpoch;\n    let pending;\n    try { pending = read(); } catch (error) { pending = Promise.reject(error); }\n    let requestEpoch = kind === \"detail\" ? imageStudioDetailHydrationEpoch : imageStudioHydrationEpoch;\n    if (requestEpoch === previousEpoch) {\n      requestEpoch = kind === \"detail\" ? ++imageStudioDetailHydrationEpoch : ++imageStudioHydrationEpoch;\n    }\n    let result;\n    try {\n      result = await pending;\n    } catch (error) {\n      const currentEpoch = kind === \"detail\" ? imageStudioDetailHydrationEpoch : imageStudioHydrationEpoch;\n      if (!imageStudioRequestIsCurrent(requestEpoch, currentEpoch, sessionEpoch, route)) return;\n      toast((error && error.message) || \"Yêu cầu chưa được xác nhận.\", \"error\");\n      return;\n    }\n    const currentEpoch = kind === \"detail\" ? imageStudioDetailHydrationEpoch : imageStudioHydrationEpoch;\n    if (!imageStudioRequestIsCurrent(requestEpoch, currentEpoch, sessionEpoch, route)) return;\n    if (!result || base().imageStudioReadState !== \"ready\") {\n      toast(imageStudioReadFeedbackText(\"failed\", \"Không thể tải dữ liệu. Vui lòng thử lại.\"), \"error\");\n      return;\n    }\n    toast(imageStudioReadFeedbackText(successKey, successFallback));\n  }\n\n  async function hydrateImageStudio(filterValue, offsetValue) {",
+      "count": 1
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "      if (action === \"image-studio-filter\") {\n        if (!(base().capabilities && base().capabilities[\"image-studio-filter\"] === true)) throw new Error(\"Cần signed Web session để tìm artboard riêng tư.\");\n        const filter = imageStudioArtboardFilterPayload(fields);\n        await hydrateImageStudio(filter, 0);\n        toast(filter.q || filter.state !== \"active\" ? \"Đã áp dụng bộ lọc Image Studio.\" : \"Đã hiển thị artboard đang hoạt động của Web account hiện tại.\");\n        return;\n      }\n",
+      "new": "      if (action === \"image-studio-filter\") {\n        if (!(base().capabilities && base().capabilities[\"image-studio-filter\"] === true)) throw new Error(\"Cần signed Web session để tìm artboard riêng tư.\");\n        const filter = imageStudioArtboardFilterPayload(fields);\n        const filtered = Boolean(filter.q || filter.state !== \"active\");\n        await imageStudioReadWithFeedback(route, \"list\", () => hydrateImageStudio(filter, 0), filtered ? \"filtered\" : \"listed\", filtered ? \"Đã áp dụng bộ lọc.\" : \"Đã tải danh sách.\");\n        return;\n      }\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "      if (action === \"image-studio-filter-clear\") {\n        if (!(base().capabilities && base().capabilities[\"image-studio-filter\"] === true)) throw new Error(\"Cần signed Web session để tìm artboard riêng tư.\");\n        await hydrateImageStudio({ q: \"\", state: \"active\" }, 0);\n        toast(\"Đã hiển thị artboard đang hoạt động của Web account hiện tại.\");\n        return;\n      }\n",
+      "new": "      if (action === \"image-studio-filter-clear\") {\n        if (!(base().capabilities && base().capabilities[\"image-studio-filter\"] === true)) throw new Error(\"Cần signed Web session để tìm artboard riêng tư.\");\n        await imageStudioReadWithFeedback(route, \"list\", () => hydrateImageStudio({ q: \"\", state: \"active\" }, 0), \"listed\", \"Đã tải danh sách.\");\n        return;\n      }\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "      if (action === \"image-studio-page\") {\n        if (!(base().capabilities && base().capabilities[\"image-studio-page\"] === true)) throw new Error(\"Cần signed Web session để xem trang artboard riêng tư.\");\n        await hydrateImageStudio(undefined, imageStudioListOffset(fields.__imageStudioOffset));\n        toast(\"Đã tải trang artboard từ API owner-scoped.\");\n        return;\n      }\n",
+      "new": "      if (action === \"image-studio-page\") {\n        if (!(base().capabilities && base().capabilities[\"image-studio-page\"] === true)) throw new Error(\"Cần signed Web session để xem trang artboard riêng tư.\");\n        await imageStudioReadWithFeedback(route, \"list\", () => hydrateImageStudio(undefined, imageStudioListOffset(fields.__imageStudioOffset)), \"paged\", \"Đã tải trang.\");\n        return;\n      }\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "      if (action === \"image-studio-refresh\") {\n        const artboardId = imageArtboardIdFromPath(route);\n        if (artboardId) await hydrateImageArtboard(artboardId, route);\n        else await hydrateImageStudio();\n        toast(\"Đã làm mới Image Creative Studio của Web account hiện tại.\");\n        return;\n      }\n",
+      "new": "      if (action === \"image-studio-refresh\") {\n        const artboardId = imageArtboardIdFromPath(route);\n        await imageStudioReadWithFeedback(route, artboardId ? \"detail\" : \"list\", () => artboardId ? hydrateImageArtboard(artboardId, route) : hydrateImageStudio(), \"refreshed\", \"Đã làm mới.\");\n        return;\n      }\n",
+      "count": 1
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  const IMAGE_STUDIO_COPY_ROWS = [",
+      "new": "  const IMAGE_STUDIO_READ_FEEDBACK_ROWS = [\n    [\"refreshed\", \"Đã làm mới.\", \"Refreshed.\", \"已刷新。\"],\n    [\"filtered\", \"Đã áp dụng bộ lọc.\", \"Filter applied.\", \"已应用筛选。\"],\n    [\"listed\", \"Đã tải danh sách.\", \"List loaded.\", \"列表已加载。\"],\n    [\"paged\", \"Đã tải trang.\", \"Page loaded.\", \"页面已加载。\"],\n    [\"failed\", \"Không thể tải dữ liệu. Vui lòng thử lại.\", \"Could not load the data. Please try again.\", \"无法加载数据，请重试。\"]\n  ];\n  [\"vi\", \"en\", \"zh\"].forEach((locale, index) => {\n    IMAGE_STUDIO_READ_FEEDBACK_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioReadFeedback.${row[0]}`] = row[index + 1]; });\n  });\n\n  const IMAGE_STUDIO_COPY_ROWS = [",
+      "count": 1
+    }
+  ]
+}

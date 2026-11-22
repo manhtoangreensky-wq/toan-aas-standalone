@@ -4,6 +4,7 @@ import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {imageStudioDetailCopyHistoricalSource, imageStudioDetailCopyHistoricalSnapshot} from "./helpers/image-studio-detail-copy-historical.mjs";
 import {pageMetaRenderer, pageMetaSources} from "./helpers/chat-page-meta-runtime.mjs";
+import {imageStudioReadFeedbackHistoricalSource} from "./helpers/image-studio-read-feedback-historical.mjs";
 
 const root = new URL("../", import.meta.url);
 const contract = JSON.parse(fs.readFileSync(new URL("fixtures/image-studio-detail-customer-copy-contract.json", import.meta.url)));
@@ -20,7 +21,7 @@ test("physical sources contain exactly the reviewed copy and scoped light-theme 
       assert.equal(expected.split(record.old).length - 1, 1);
       expected = expected.replace(record.old, () => record.new);
     }
-    assert.equal(read(file), expected);
+    assert.equal(imageStudioReadFeedbackHistoricalSource(read(file), file), expected);
     assert.equal(imageStudioDetailCopyHistoricalSource(expected, file), prior(file));
     assert.equal(imageStudioDetailCopyHistoricalSource(expected + "\n/* unrelated */", file), prior(file) + "\n/* unrelated */");
   }

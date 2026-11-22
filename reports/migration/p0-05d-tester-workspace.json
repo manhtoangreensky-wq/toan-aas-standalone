@@ -45,8 +45,33 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-22",
-  "local_files_refresh_scope": "IMAGE-STUDIO-DETAIL-CUSTOMER-COPY-20261122;22records/2app/6AGY;30Node/237Python/24states/48views/96contrastPASS;167files5145PASS6historicalcopyFAIL resolved by138retests;release pending.",
+  "local_files_refresh_scope": "IMAGE-STUDIO-READ-FEEDBACK-20261122; six application records; regression locally checked; release pending.",
   "current_verification_session": {
+    "id": "IMAGE-STUDIO-READ-FEEDBACK-20261122",
+    "base_sha": "ef3643d84c269aa2a07e411debe400a44f72d8e6",
+    "tracker_issue": 689,
+    "manifest": "KIEM-THU/PHIEN-IMAGE-STUDIO-READ-FEEDBACK-20261122.md",
+    "case_ids": ["ISRF-OUTCOME", "ISRF-CURRENT", "ISRF-VALIDATION", "ISRF-LOCALE", "ISRF-DELIVERY"],
+    "status": "LOCAL_CHECKED_RELEASE_PENDING",
+    "exact_proposal_records": 6,
+    "focused_node_passed": 24,
+    "python_passed": 237,
+    "regression_files": 168,
+    "regression_passed": 5161,
+    "regression_failed": 0,
+    "regression_skipped": 0,
+    "separate_files": 4,
+    "separate_files_passed": 16,
+    "physical_cases": 75,
+    "guard_cases": 14,
+    "full_bundle_fake_get_cases": 48,
+    "real_network_calls_in_full_bundle_check": 0,
+    "signed_production_ui": "NOT_TESTED",
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "whole_goal_complete": false
+  },
+  "image_studio_detail_customer_copy_verification_session": {
     "id": "IMAGE-STUDIO-DETAIL-CUSTOMER-COPY-20261122",
     "base_sha": "f6aee803a72a80bf70cd0a4ce786858f94f9d7cc",
     "tracker_issue": 689,
@@ -396,9 +421,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 2011,
-      "bytes": 204566,
-      "sha256": "a991e90fcd3edacd4b7985f44cfa15362705eec088dbc5d8b95e81daed18dbe4"
+      "lines": 2021,
+      "bytes": 205763,
+      "sha256": "e6300b27a994adef12165be375100b81effd2eb5948e710c7e7d41bc4db536df"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
