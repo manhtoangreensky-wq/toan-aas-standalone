@@ -10177,6 +10177,11 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-image-studio-detail .po
   font-size: 16px;
 }
 
+/* Keep Image detail card headings readable on light surfaces. */
+html:not([data-portal-theme="dark"]) .portal-page:is(.portal-image-studio-detail, .portal-image-hub-detail) .portal-card-title {
+  color: var(--portal-ink);
+}
+
 /* Keep Image detail loading headings readable on light surfaces. */
 html:not([data-portal-theme="dark"]) .portal-page:is(.portal-image-studio-detail, .portal-image-hub-detail) [role="status"][aria-busy="true"] .portal-card-title {
   color: var(--portal-ink);

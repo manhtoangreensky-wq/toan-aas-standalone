@@ -2033,3 +2033,15 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | ISDL-SCOPE | nặng | Kiểm trang khác và nguồn ứng dụng | Không thêm xử lý bản nháp ở trang khác; đúng bốn thay đổi đã xét | Đối chiếu 20 lượt vẽ trang tổng quan |
 | ISDL-DELIVERY | nặng | CI, merge, triển khai, bản thực tế và giao diện production | Có bằng chứng riêng cho từng cổng | ĐANG THỰC HIỆN |
 | ISDL-OPEN | nặng | Lỗi đọc làm mất biểu mẫu, đổi phiên bản, rời trang | Giữ mở đến khi có thiết kế và kiểm chứng riêng | Chưa giải quyết trong đợt này |
+
+## IMAGE-STUDIO-LOCALE-COPY-20261123 — Issue #689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| ISLC-META | vừa | Mở chi tiết Studio/Hub ở Việt/Anh/Trung | Hero/title/description/breadcrumb đúng ngôn ngữ | [Phiên kiểm tra](PHIEN-IMAGE-STUDIO-LOCALE-COPY-20261123.md) |
+| ISLC-LIBRARY | vừa | Thư viện rỗng/có dữ liệu/lọc/tham chiếu không chọn được | 24 câu đúng, trạng thái thật và chuỗi khách giữ | Renderer/từ điển |
+| ISLC-FIELDS | nặng | Xem và nhập chín trường phương án | Nhãn đúng locale, names/options/required/limits giữ | So sánh trường và Chrome |
+| ISLC-SOURCE | nặng | So nguồn với BASE và thử thay đổi ngoài phạm vi | Đúng 32 record; inverse hữu hạn không che thay đổi khác | Contract/test nguồn |
+| ISLC-PRESERVE | nặng | Gõ riêng trong bốn biểu mẫu rồi làm mới | Cơ chế giữ nội dung của PR797 vẫn hoạt động | Hai ca Chrome trường dài/lựa chọn |
+| ISLC-CONTRAST | vừa | Tiêu đề thẻ chi tiết sáng/tối | 32/32 mẫu ≥4,5:1; hình học và màu tối giữ | Đo trình duyệt |
+| ISLC-DELIVERY | nặng | CI/merge/deploy/runtime/assets | Từng cổng có bằng chứng riêng | ĐANG THỰC HIỆN |

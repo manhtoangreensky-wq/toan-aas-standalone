@@ -4,6 +4,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 import {execFileSync} from "node:child_process";
 import {imageStudioDetailDraftHistoricalSource} from "./helpers/image-studio-detail-draft-historical.mjs";
+import {imageStudioLocaleCopyHistoricalSource} from "./helpers/image-studio-locale-copy-historical.mjs";
 
 const file = "static/portal/portal.js";
 const read = path => fs.readFileSync(new URL("../" + path, import.meta.url), "utf8").replace(/\r\n/g, "\n");
@@ -23,7 +24,7 @@ test("physical source contains only the reviewed loading and form changes", () =
     assert.equal(expected.split(row.old).length - 1, 1);
     expected = expected.replace(row.old, () => row.new);
   }
-  assert.equal(source, expected);
+  assert.equal(imageStudioLocaleCopyHistoricalSource(source, file), expected);
   assert.equal(block, record.new);
   assert.equal(imageStudioDetailDraftHistoricalSource(source, file), source.replace(record.new, () => record.old));
   assert.equal(imageStudioDetailDraftHistoricalSource(source + "\n/* unrelated */", file), source.replace(record.new, () => record.old) + "\n/* unrelated */");

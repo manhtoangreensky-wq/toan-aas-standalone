@@ -3350,9 +3350,30 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
 - [x] PR #797/head39a13dbc: CI45042526505 dừng ở helper lấy đoạn nguồn
   menu/header (110 Python đạt trước khi dừng). Sửa điểm cắt ở hai tệp
   test, giữ assertion; 6 Node + 15 Python điều hướng đạt, ứng dụng không đổi.
+- [x] PR #797 đã gộp/runtime `d165bad407a51a8cf6339b019a073f8a1a1eb37a`;
+  CI45045044485 hai job thành công; deploy45047560707; VPS nguồn sạch/
+  ba services/health/5+5assets đúng; receipt7082628798 đã đọc lại.
 - [ ] Giữ nội dung khi lỗi đọc làm mất biểu mẫu, đổi phiên bản hoặc rời trang.
 - [ ] Tiêu đề/mô tả/đường dẫn chi tiết còn chữ kỹ thuật: worker đã trả
   năm record, 18 ca nội dung và 12 đối chiếu trang khác đạt trong bộ nhớ;
   chỉ mở áp dụng sau đợt hiện tại.
 - [ ] Giao diện production sau đăng nhập, locale toàn app, auth, AX,
   responsive và motion cuối vẫn cần bằng chứng theo checklist.
+
+### Thiết kế ảnh — ngôn ngữ nhãn cố định, 23/11/2026
+
+- [x] Nhánh từ đúng runtime PR797; contract Issue689/comment7082649992.
+- [x] 32 record worker trong ba UI files: metadata5, library24, fields2,
+  màu1. R1A sửa thiếu hướng dẫn ảnh gốc trong spec, không tính lỗi worker.
+- [x] Nguồn vật lý đúng BASE+32record; 22 key thêm/24 hàng thay câu.
+  Node mục tiêu16/16; các kiểm soát fields/options/limits/customer giữ.
+- [x] Chrome24 màn VIENZH/StudioHub/3751440/loadingready, 32mẫu màu
+  đạt, hình học và tối giữ; hai ca nhập dài và chọn sau đổi nhãn đạt.
+- [x] Hồi quy 171 tệp/5.202 ca đạt, không lỗi/bỏ qua; bốn tệp tách riêng
+  16 ca đạt. Python lịch sử/vault/điều hướng155/155 và màu90/90.
+- [x] Review một phát hiện câu hứa giữ lựa chọn quá rộng: sửa đặc tả,
+  Antigravity trả đúng một hàng. Ba ca RED; sau sửa48 ca ảnh hưởng đạt,
+  gồm30 trạng thái thư viện nguồn vật lý. Không đổi logic chọn dữ liệu.
+- [ ] Docs/Tester/provenance, PR/CI/merge/deploy/receipt.
+- [ ] Chưa nhận toàn trang/toàn app hết chữ kỹ thuật; phản hồi lỗi,
+  metadata Studio gốc, bản nháp qua lỗi đọc/revision/route và motion còn mở.
