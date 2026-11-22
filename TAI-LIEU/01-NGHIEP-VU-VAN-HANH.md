@@ -1,5 +1,26 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — câu chữ và bố cục bảng thiết kế ảnh
+
+PR793 đã phát hành nhãn tỷ lệ/định dạng tại runtime
+`07a89b79c442981ecb7433b607c981740c95c774`; CI44997942830 hai job đạt,
+deploy44999820138 thành công, năm tệp công khai và năm tệp có phiên bản khớp.
+Issue689/comment7076148602 đã được đọc lại đúng nội dung.
+
+Ứng viên tiếp theo thay 19 câu cố định bằng hướng dẫn dễ hiểu ở ba ngôn ngữ,
+bỏ hai lời gọi khung giải thích lặp và để biểu mẫu tạo dùng đủ chiều ngang.
+Màu ba số đếm trên màn chi tiết sáng đổi theo màu chữ của giao diện; không
+thay số liệu, màu của màn tối hoặc hai giao diện Trung tâm ảnh.
+Các trường nhập, lựa chọn, quyền, thao tác, tên/nội dung khách và dữ liệu
+không thay đổi. Đây là màn sắp xếp ý tưởng; không bổ sung khả năng tạo ảnh.
+
+48 bố cục cô lập, 57 giá trị dịch, đối chiếu toàn DOM ngoài đúng khung bị bỏ,
+thao tác nhập/chọn và 147 kiểm tra Python đã đạt. Hồi quy166tệp có5145PASS/
+1lỗi đầu vào so sánh lịch sử; sửa đúng một reader, chạy lại4/4PASS,
+không chạy lại5145mục đã đạt. CI và triển khai của ứng viên được ghi riêng;
+giao diện production sau đăng nhập
+chưa được xác nhận từ đối chiếu tệp công khai.
+
 ## 22/11/2026 — chữ tỷ lệ và định dạng trong biểu mẫu ảnh
 
 PR792 đã phát hành các nhãn trường tại runtime

@@ -1,5 +1,22 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — đối chiếu trình bày bảng thiết kế ảnh
+
+Nguồn gốc đối chiếu là bộ chữ, hai renderer tạo/chi tiết và CSS tại
+BASE `07a89b79c442981ecb7433b607c981740c95c774`.
+
+| Chữ/hành vi gốc | Ứng viên | Ranh giới giữ |
+|---|---|---|
+| 19 câu có giải thích nội bộ | Câu hướng dẫn trực tiếp VI/EN/ZH | Key, thứ tự và nội dung khách |
+| Khung giải thích ở tạo và chi tiết | Bỏ đúng hai lời gọi, không ô trống | Helper, form, nút, quyền |
+| Biểu mẫu tạo chia hai cột với khung giải thích | Một cột dùng đủ chiều ngang | Màn chi tiết và lịch sử giữ bố cục |
+| Số đếm màn chi tiết sáng tương phản 1,0182:1 | Màu chữ chính, đo 11,2544:1 | Dữ liệu, hình học, màn tối và Trung tâm ảnh |
+
+Không thay chức năng lưu mô tả, tham khảo, lịch sử hay quy trình rà soát;
+không thêm xử lý/tạo ảnh, gọi nhà cung cấp hoặc thay backend.
+Đối chiếu toàn nguồn yêu cầu BASE cộng đúng 23 record từ bốn worker;
+các kiểm tra lịch sử chỉ đảo đúng các record đó tại đầu vào của test.
+
 ## 22/11/2026 — đối chiếu lựa chọn ảnh
 
 BASE `f4c5b6a9821cf957ce107778fd9abd884075fd50` có sẵn tám tỷ lệ và

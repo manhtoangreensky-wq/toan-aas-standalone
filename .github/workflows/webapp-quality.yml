@@ -106,6 +106,7 @@ jobs:
           node --test tests/portal-required-warning.test.mjs tests/portal-required-warning-source.test.mjs
           node --test tests/image-studio-create-fields-locale.test.mjs
           node --test tests/image-studio-option-labels.test.mjs
+          node --test tests/image-studio-presentation.test.mjs
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_audio_review_pending_historical_static.py tests/test_audio_review_visual_historical_static.py tests/test_audio_review_historical_static.py tests/test_media_fixed_feedback_historical_static.py tests/test_media_detail_historical_static.py tests/test_media_collection_historical_static.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_portal_required_warning_historical.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_shared_select_historical_static.py

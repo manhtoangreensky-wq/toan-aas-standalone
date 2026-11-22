@@ -1,5 +1,29 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 22/11/2026 — PR793 đã giao; làm gọn bảng thiết kế ảnh
+
+- [x] PR793/CI44997942830 hai job đạt; merge/runtime
+  `07a89b79c442981ecb7433b607c981740c95c774`, deploy44999820138 thành công.
+  Tracked source/index sạch; ba dịch vụ hoạt động, health hợp lệ,
+  5+5 asset khớp; Issue689/comment7076148602 đọc lại đúng.
+- [x] Bốn phiếu trình bày: CREATECOPY9, DETAILCOPY R2 10, CLEANUP3,
+  CONTRAST1; 23 record đối chiếu đúng worker. R1 chi tiết không áp dụng.
+- [x] BASE năm kiểm tra mục tiêu RED; ứng viên 23 kiểm tra mục tiêu/giữ
+  nhãn cũ đạt; 147 Python đạt.
+- [x] 48 màn VI/EN/ZH × Studio/Hub × tạo/chi tiết ×375/1440 × sáng/tối;
+  57 giá trị dịch/guard/archived, toàn DOM ngoài khung bị bỏ, fields/actions,
+  nhập/chọn, không overflow/error/network. Tám ảnh được lưu.
+- [x] Studio sáng từ1,0182 lên11,2544:1; ba số giữ dữ liệu/hình học.
+  Studio tối và cả hai Hub giữ màu đã đạt.
+- [x] Hồi quy166tệp5146ca:5145PASS1FAIL lịch sử; giữ5145kết quả đạt,
+  một reader thêm inverse hữu hạn, retest4/4PASS;0lỗi chưa giải quyết.
+  Không nhận một lượt fullPASS mới. Metadata portableLF sửa, retest1PASS.
+- [x] Tài liệu vận hành/đối chiếu chức năng/Tester và review một lượt
+  không có finding chặn; root tự kiểm delta reader hai dòng và4retests.
+- [ ] Manifest/provenance/phát hành/CI/merge/deploy/receipt.
+- [ ] Signed production UI, phần chữ còn lại/AX/auth/device/Safari/output
+  và M-FINAL01..06 vẫn mở. Motion cuối, toàn goal chưa hoàn thành.
+
 ## 22/11/2026 — PR792 đã giao; tỷ lệ và định dạng ảnh
 
 - [x] PR792/CI44994341111 hai job đạt; runtime
@@ -9,7 +33,8 @@
   16 mục tiêu và sáu đối chiếu renderer đạt; giữ nhãn trường PR792.
 - [x] 12 màn và 147 Python đạt.
 - [x] Hồi quy rộng 165 tệp đạt 5.139/5.139, không lỗi hoặc bỏ qua.
-- [ ] CI, merge, deploy và signed UI còn chờ.
+- [x] CI/merge/deploy/runtime của nhãn tùy chọn đã chốt ở PR793.
+- [ ] Signed production UI còn chờ.
 - [ ] Các phần chữ/bố cục khác, AX/auth/device/Safari/output và motion
   M-FINAL01..06 vẫn mở; motion cuối.
 
@@ -23,7 +48,8 @@
   11 kiểm tra mục tiêu, 12 màn cô lập và sáu đối chiếu renderer đạt.
 - [x] 147 Python đạt; hồi quy 165 tệp/5.139 dòng có sáu lỗi helper,
   sửa guard và chạy lại đúng hai tệp 47/47 đạt, đủ sáu lỗi được đối chiếu.
-- [ ] CI, merge, deploy và signed UI cho nhãn ảnh còn chờ.
+- [x] CI/merge/deploy/runtime của nhãn trường ảnh đã chốt ở PR792.
+- [ ] Signed production UI cho nhãn ảnh còn chờ.
 - [ ] Tỷ lệ, chữ định dạng, các phần khác của Image Studio, locale/AX/auth/
   thiết bị/Safari/output còn mở; motion M-FINAL01..06 giữ cuối.
 
@@ -37,7 +63,8 @@
   mã mục tiêu 4/4, trình duyệt cô lập 6/6, vùng chung 93 Node,
   âm thanh 257 Node, historical 129+2 Python, bộ dịch 16 Python và
   hồi quy riêng 4.796 trường hợp/152 tệp đạt. Không cộng trùng.
-- [ ] Kiểm tra phát hành, CI, deploy và signed UI cho cảnh báo còn chờ.
+- [x] Kiểm tra phát hành/CI/deploy/runtime cảnh báo đã chốt ở PR791.
+- [ ] Signed production UI cho cảnh báo còn chờ.
 - [ ] Thông báo do trình duyệt tự tạo và nhãn/placeholder trang ảnh
   còn lẫn ngôn ngữ là đơn vị riêng; không nhận toàn trang đã sạch.
   Locale/AX/auth/device/Safari/output còn mở; motion M-FINAL01..06 cuối.

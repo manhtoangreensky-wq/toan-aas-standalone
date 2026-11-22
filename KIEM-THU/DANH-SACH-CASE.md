@@ -1,5 +1,19 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## IMAGE-STUDIO-PRESENTATION-20261122 — câu chữ và khung giao diện
+
+Phiên `PHIEN-IMAGE-STUDIO-PRESENTATION-20261122.md`; chỉ dùng dữ liệu giả.
+
+| Mã | Mức | Phạm vi | PASS bắt buộc |
+|---|---|---|---|
+| ISP-COPY | nặng | 19 câu, VI/EN/ZH | Đúng 57 giá trị; giữ chữ khách và key |
+| ISP-BOUNDARY | vừa | Tạo/chi tiết Studio và Trung tâm ảnh | Bỏ đúng hai call, không khung trống; helper giữ |
+| ISP-LAYOUT | vừa | 375/1440, sáng/tối | Form tạo một cột đầy chiều ngang, không overflow |
+| ISP-CONTRAST | nặng | Ba số đếm chi tiết | Studio sáng ≥4,5:1; màu ba tổ hợp khác giữ nguyên |
+| ISP-PRESERVE | nặng | Toàn DOM/controls/actions trước/sau | Chỉ khác các câu duyệt và khung bị bỏ; nhập/chọn hoạt động |
+| ISP-SOURCE | nặng | Ba tệp ứng dụng | BASE cộng đúng 23 record; inverse lịch sử hữu hạn |
+| ISP-DELIVERY | nặng | CI, merge, VPS, tệp giao diện | Mỗi cổng có bằng chứng, không suy signed UI từ asset |
+
 ## IMAGE-STUDIO-OPTION-LABELS-20261122 — tỷ lệ và định dạng
 
 Phiên `PHIEN-IMAGE-STUDIO-OPTION-LABELS-20261122.md`; dùng dữ liệu giả.
