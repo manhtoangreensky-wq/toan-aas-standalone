@@ -15,6 +15,11 @@ sửa số đo về portableLF. Review một lượt không có finding chặn; 
 delta reader2dòng và4retests. Gatepush sẵn sàng sau manifest/provenance;
 không thêm source ứng dụng ngoài23record.
 
+CI45001895285 dừng ở một parser lịch sử CSS với175PASS/1FAIL. Reproduce
+tệp đó local1FAIL89PASS, thêm inverse hữu hạn tại đúng một reader, giữ mọi
+assertions/golden và bài khác; retest90/90PASS. Source ứng dụng không đổi;
+PR794 được cập nhật cùng nhánh, exactHEAD CI phải chạy lại trước phát hành.
+
 Nguồn worker đã được đối chiếu23/23:
 
 | Phiếu | SHA256 result |

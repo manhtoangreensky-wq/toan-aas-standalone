@@ -27,6 +27,13 @@ Không chạy lại5145ca đạt, không nhận một lượt fullPASS mới.
 Một lỗi metadata CRLF/LF đã sửa về1999dòng/203760bytes/hash đã đo;
 bài metadata chạy lại1PASS. Review chỉ đọc không có lỗi chặn phát hành;
 hai dòng reader bổ sung được root đối chiếu và kiểm4ca riêng.
+CI45001895285 tạiabd0826a: Node/hợp đồng chung đạt; critical gate dừng ở
+`test_teal_cyan_ui_foundation_contracts.py::test_light_image_studio_final_surface_keeps_artboards_truthful_and_readable`
+(175PASS/1FAIL). Bài lịch sử đòi mọi selector trong layer phải có prefix cũ,
+không thể nhận hai rule đã duyệt. Dùng đúng inverse Python hiện hữu chỉ tại
+đầu vào của một bài này, giữ toàn bộ assertions và mọi bài khác đọc nguồn
+vật lý. RED local1FAIL89PASS→GREEN90PASS/2,40s. Không sửa ứng dụng;
+CI exactHEAD mới vẫn bắt buộc trước merge/deploy.
 CI/merge/deploy/runtime/assets và
 signed production interaction là các gate riêng. Không dùng HTTP200 làm
 chứng minh đầu ra ảnh. PROVIDER_CALLS=0; WALLET_MUTATIONS=0.

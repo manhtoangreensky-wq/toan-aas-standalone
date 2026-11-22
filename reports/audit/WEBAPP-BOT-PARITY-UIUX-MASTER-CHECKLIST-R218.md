@@ -20,6 +20,9 @@
   Không nhận một lượt fullPASS mới. Metadata portableLF sửa, retest1PASS.
 - [x] Tài liệu vận hành/đối chiếu chức năng/Tester và review một lượt
   không có finding chặn; root tự kiểm delta reader hai dòng và4retests.
+- [x] CI45001895285 Node đạt; critical parser CSS lịch sử175PASS1FAIL.
+  LocalRED1FAIL89PASS; đúng một reader Python dùng inverse hữu hạn đã có,
+  giữ assertions và các reader vật lý khác; GREEN90PASS. Ứng dụng không đổi.
 - [ ] Manifest/provenance/phát hành/CI/merge/deploy/receipt.
 - [ ] Signed production UI, phần chữ còn lại/AX/auth/device/Safari/output
   và M-FINAL01..06 vẫn mở. Motion cuối, toàn goal chưa hoàn thành.
