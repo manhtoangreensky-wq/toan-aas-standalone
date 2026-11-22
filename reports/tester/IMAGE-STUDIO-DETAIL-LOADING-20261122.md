@@ -16,3 +16,9 @@ lỗi đọc, rời trang, đổi phiên bản và giao diện production vẫn 
 Hồi quy cuối 170 tệp/5.186 ca đạt, 0 lỗi/0 bỏ qua. Hai ca Chrome bổ sung
 giữ mọi trường dài và lựa chọn đạt; Python lịch sử 136/136, shell 4/4.
 Phát hành chưa được kết luận trong báo cáo này.
+
+CI đầu `45042526505`: nhóm Node đạt; nhóm Python dừng 110 PASS/1 FAIL.
+Bài kiểm tra nguồn cho menu bị cắt dở khi gặp nhánh mới; hai tệp
+`customer-header-hydration.test.mjs` và `customer-sidebar-hydration.test.mjs`
+đổi đúng điểm cắt, giữ assertion. Kiểm lại 6 Node và 15 Python điều hướng
+đạt. Không đổi mã ứng dụng sau lượt Chrome hoặc chạy lại 5.186 ca local.

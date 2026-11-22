@@ -8,7 +8,8 @@ const mount = source.indexOf('  function mountPortal(override) {');
 const start = source.indexOf('    const actualPath =', mount);
 const end = source.indexOf('    const surface = portalSurface(page);', start);
 const renderStart = source.indexOf('    function renderShell() {', end) + '    function renderShell() {'.length;
-const renderEnd = source.indexOf('      main.innerHTML = renderPage(page, context);', renderStart);
+const headerSessionUpdate = '      lastCustomerHeaderSessionToken = headerSessionToken;';
+const renderEnd = source.indexOf(headerSessionUpdate, renderStart) + headerSessionUpdate.length;
 assert.ok(mount > 0 && end > start && renderEnd > renderStart);
 
 function harness() {

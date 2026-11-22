@@ -3347,6 +3347,9 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   136/136 và shell 4/4; hai ca trình duyệt giữ toàn bộ trường dài/lựa chọn đạt.
   Tài liệu vận hành, đối chiếu, spec và phiên Tester đã cập nhật.
 - [ ] Đối chiếu nguồn, push, CI, merge, deploy và receipt.
+- [x] PR #797/head39a13dbc: CI45042526505 dừng ở helper lấy đoạn nguồn
+  menu/header (110 Python đạt trước khi dừng). Sửa điểm cắt ở hai tệp
+  test, giữ assertion; 6 Node + 15 Python điều hướng đạt, ứng dụng không đổi.
 - [ ] Giữ nội dung khi lỗi đọc làm mất biểu mẫu, đổi phiên bản hoặc rời trang.
 - [ ] Tiêu đề/mô tả/đường dẫn chi tiết còn chữ kỹ thuật: worker đã trả
   năm record, 18 ca nội dung và 12 đối chiếu trang khác đạt trong bộ nhớ;
