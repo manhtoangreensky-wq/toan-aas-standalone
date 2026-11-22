@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import {imageStudioPresentationHistoricalSource} from "./image-studio-presentation-historical.mjs";
 
 const file = "static/portal/portal-theme.css";
 const fail = "Unreviewed audio review readability";
@@ -17,6 +18,7 @@ const count = (source, part) => source.split(part).length - 1;
 export function audioReviewReadabilityHistoricalSource(source, name) {
   assert.equal(typeof source, "string", fail);
   assert.equal(typeof name, "string", fail);
+  source = imageStudioPresentationHistoricalSource(source, name);
   if (name !== file || !source.includes(marker)) return source;
   assert.equal(count(source, marker), 2, fail + " exact two selectors");
   assert.equal(count(source, old + "\n\n" + addition), 1, fail + " exact scoped rule and anchor");

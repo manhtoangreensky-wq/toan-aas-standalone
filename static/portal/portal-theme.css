@@ -10136,9 +10136,17 @@ article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.por
   box-shadow: none;
 }
 
+.portal-page:is(.portal-image-studio, .portal-image-hub) .portal-image-studio-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-field > label {
   color: var(--portal-ink);
   font-size: 13px;
+}
+
+html:not([data-portal-theme="dark"]) .portal-page.portal-image-studio-detail .portal-image-studio-estimate-grid strong {
+  color: var(--portal-ink);
 }
 
 .portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-image-studio-estimate-grid span {

@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 import re
+import runpy
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -4238,7 +4239,10 @@ def test_light_voice_studio_final_surface_keeps_direction_and_consent_readable()
 def test_light_image_studio_final_surface_keeps_artboards_truthful_and_readable() -> None:
     """Image Studio remains metadata-only while artboards use the shared light surface."""
 
-    theme_source = PORTAL_THEME.read_text(encoding="utf-8")
+    historical = runpy.run_path(str(ROOT / "tests/helpers/image_studio_presentation_historical.py"))
+    theme_source = historical["image_studio_presentation_historical_source"](
+        PORTAL_THEME.read_text(encoding="utf-8"), "static/portal/portal-theme.css"
+    )
     layer = re.search(
         r"/\* Final light Image Studio surface \*/(?P<css>.*?)(?=/\* Final light [^*]*\*/|\Z)",
         theme_source,

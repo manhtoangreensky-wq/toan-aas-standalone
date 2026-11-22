@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {imageStudioPresentationHistoricalSource, imageStudioPresentationHistoricalSnapshot} from "./image-studio-presentation-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/image-studio-option-labels-contract.json", import.meta.url)));
 const fail = "Unreviewed Image Studio option copy";
@@ -7,6 +8,7 @@ assert.equal(contract.base, "f4c5b6a9821cf957ce107778fd9abd884075fd50", fail);
 assert.equal(contract.records.length, 6, fail);
 export function imageStudioOptionsHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail);
+  source = imageStudioPresentationHistoricalSource(source, file);
   const records = contract.records.filter(row => row.file === file);
   if (!records.length) return source;
   const marker = file.endsWith("portal.js") ? 'imageStudioText(`ratio.${value}`' : "IMAGE_STUDIO_RATIO_COPY_ROWS";
@@ -18,6 +20,7 @@ export function imageStudioOptionsHistoricalSource(source, file) {
 export function imageStudioOptionsHistoricalSnapshot(entries, locale) {
   const index = ["vi", "en", "zh"].indexOf(locale) + 1;
   assert.ok(Array.isArray(entries) && index > 0, fail);
+  entries = imageStudioPresentationHistoricalSnapshot(entries, locale);
   const ratioKeys = contract.ratioRows.map(row => row[0]);
   const found = entries.filter(([key]) => typeof key === "string" && key.startsWith("imageStudioUi.ratio."));
   if (!found.length) return entries;

@@ -5,6 +5,7 @@ import {execFileSync} from "node:child_process";
 import {sources, runtime, collection, context} from "./helpers/media-collection-locale-runtime.mjs";
 import {receipt, ACTION, ROUTE} from "./helpers/audio-review-feedback-runtime.mjs";
 import {audioReviewReadabilityHistoricalSource as historical} from "./helpers/audio-review-readability-snapshot.mjs";
+import {imageStudioPresentationHistoricalSource} from "./helpers/image-studio-presentation-historical.mjs";
 
 const base = "cd9c5c14263e1397531056e318a9f46394a8562d";
 const file = "static/portal/portal-theme.css";
@@ -20,7 +21,7 @@ const lf = value => value.replace(/\r\n/g, "\n");
 
 test("theme CSS contains only the scoped review readability change", () => {
   const before = lf(execFileSync("git", ["show", base + ":" + file], {encoding: "utf8", maxBuffer: 20e6}));
-  const current = lf(fs.readFileSync(file, "utf8"));
+  const current = imageStudioPresentationHistoricalSource(lf(fs.readFileSync(file, "utf8")), file);
   assert.equal(before.split(old).length - 1, 1);
   assert.equal(current, before.replace(old, () => old + "\n\n" + addition));
   assert.equal(historical(current, file), before);
