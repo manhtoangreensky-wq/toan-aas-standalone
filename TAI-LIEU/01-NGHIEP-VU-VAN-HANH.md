@@ -1,5 +1,17 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — chi tiết bảng thiết kế ảnh
+
+PR794 đã phát hành tại `f6aee803a72a80bf70cd0a4ce786858f94f9d7cc`;
+CI45003687642 và deploy45005430183 thành công, dịch vụ hoạt động và
+5+5 tệp giao diện khớp. Issue689/comment7078053722 đã đọc lại.
+
+Ứng viên kế tiếp thay 21 câu cố định ở màn chi tiết bằng lời dễ hiểu
+theo VI/EN/ZH. Hai dòng trợ giúp của biểu mẫu tạo/chỉnh sửa trên nền sáng
+được làm rõ hơn; màn tối giữ màu cũ. Không đổi dữ liệu, quyền, thao tác,
+các ô nhập hay hành vi tạo ảnh. Kiểm tra cục bộ dùng dữ liệu giả; chưa
+coi ứng viên là đã triển khai hoặc tương tác production sau đăng nhập đã đạt.
+
 ## 22/11/2026 — câu chữ và bố cục bảng thiết kế ảnh
 
 PR793 đã phát hành nhãn tỷ lệ/định dạng tại runtime

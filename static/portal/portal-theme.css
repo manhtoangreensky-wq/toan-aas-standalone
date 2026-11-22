@@ -10140,6 +10140,10 @@ article.portal-page:is(.portal-music-directions, .portal-sfx-cue-sheet) :is(.por
   grid-template-columns: minmax(0, 1fr);
 }
 
+html:not([data-portal-theme="dark"]) .portal-page:is(.portal-image-studio, .portal-image-studio-detail, .portal-image-hub, .portal-image-hub-detail) :is(form[data-portal-action="image-artboard-create"], form[data-portal-action="image-artboard-update"]) .portal-field-help {
+  color: var(--portal-muted);
+}
+
 .portal-page:is(.portal-image-studio, .portal-image-studio-detail) .portal-field > label {
   color: var(--portal-ink);
   font-size: 13px;

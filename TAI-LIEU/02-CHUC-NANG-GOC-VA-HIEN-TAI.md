@@ -1,5 +1,12 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — đối chiếu chi tiết thiết kế ảnh
+
+BASE `f6aee803a72a80bf70cd0a4ce786858f94f9d7cc` đã có bảng thiết kế,
+phương án, trạng thái và liên kết công cụ ảnh. Ứng viên chỉ thay 21 câu
+cố định theo VI/EN/ZH và một quy tắc màu sáng cho trợ giúp của hai form.
+Không thêm chức năng hay thay điều kiện, giá trị, quyền, dữ liệu khách.
+
 ## 22/11/2026 — đối chiếu trình bày bảng thiết kế ảnh
 
 Nguồn gốc đối chiếu là bộ chữ, hai renderer tạo/chi tiết và CSS tại

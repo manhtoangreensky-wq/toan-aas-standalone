@@ -4,6 +4,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 import {execFileSync} from "node:child_process";
 import {imageStudioPresentationHistoricalSource, imageStudioPresentationHistoricalSnapshot} from "./helpers/image-studio-presentation-historical.mjs";
+import {imageStudioDetailCopyHistoricalSource} from "./helpers/image-studio-detail-copy-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("fixtures/image-studio-presentation-contract.json", import.meta.url)));
 const root = new URL("../", import.meta.url);
@@ -21,7 +22,7 @@ test("physical application sources equal BASE plus exactly the 23 reviewed recor
       assert.equal(source.split(row.old).length - 1, row.count, row.old);
       source = source.replace(row.old, () => row.new);
     }
-    assert.equal(read(file), source, file);
+    assert.equal(imageStudioDetailCopyHistoricalSource(read(file), file), source, file);
   }
 });
 
