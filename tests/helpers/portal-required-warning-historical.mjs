@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import {imageStudioFieldsHistoricalSource, imageStudioFieldsHistoricalSnapshot} from "./image-studio-fields-historical.mjs";
 
 const fail = "Unreviewed required-field warning";
 const portal = "static/portal/portal.js", catalogue = "static/portal/portal-i18n.js";
@@ -15,6 +16,7 @@ const count = (source, part) => source.split(part).length - 1;
 export function requiredWarningHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail);
   assert.equal(typeof file, "string", fail);
+  source = imageStudioFieldsHistoricalSource(source, file);
   if (![portal, catalogue].includes(file) || !source.includes(key)) return source;
   if (file === portal) {
     assert.equal(count(source, key), 1, fail);
@@ -38,6 +40,7 @@ const copy = {
 };
 export function requiredWarningHistoricalSnapshot(entries, locale) {
   assert.ok(Array.isArray(entries) && Object.hasOwn(copy, locale), fail);
+  entries = imageStudioFieldsHistoricalSnapshot(entries, locale);
   const found = entries.filter(([entryKey]) => entryKey === key);
   if (!found.length) return entries;
   assert.equal(found.length, 1, fail);

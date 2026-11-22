@@ -4,6 +4,7 @@ import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {requiredWarningHistoricalSource as inverse, requiredWarningHistoricalSnapshot as snapshot}
   from "./helpers/portal-required-warning-historical.mjs";
+import {imageStudioFieldsHistoricalSource} from "./helpers/image-studio-fields-historical.mjs";
 
 const base = "a09c7cc94a82537f77ab4e016d3dfa9ae7f23fcc";
 const lf = value => value.replace(/\r\n/g, "\n");
@@ -19,7 +20,7 @@ const rows = [
 
 for (const row of rows) test(`${row.file}: exact reviewed forward change and strict historical comparison`, () => {
   const original = lf(execFileSync("git", ["show", base + ":" + row.file], {encoding: "utf8", maxBuffer: 20e6}));
-  const actual = lf(fs.readFileSync(row.file, "utf8"));
+  const actual = imageStudioFieldsHistoricalSource(lf(fs.readFileSync(row.file, "utf8")), row.file);
   assert.equal(original.split(row.old).length - 1, 1);
   assert.equal(actual, original.replace(row.old, () => row.replacement));
   assert.equal(inverse(actual, row.file), original);

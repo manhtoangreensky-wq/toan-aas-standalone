@@ -1,5 +1,17 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## IMAGE-STUDIO-CREATE-FIELDS-20261122 — nhãn biểu mẫu ảnh
+
+Phiên `PHIEN-IMAGE-STUDIO-CREATE-FIELDS-20261122.md`; dùng dữ liệu giả.
+
+| Mã | Mức | Phạm vi | PASS bắt buộc |
+|---|---|---|---|
+| ISF-COPY | nặng | Mười trường và gợi ý ở VI/EN/ZH | Đúng ngôn ngữ, 18 khóa/54 giá trị |
+| ISF-DATA | nặng | Tên trường, giới hạn, options, dữ liệu khách | Giữ nguyên ngoài chữ cố định |
+| ISF-RENDER | nặng | Tạo/chỉnh sửa, điện thoại/máy tính | 12 màn đúng nhãn, không tràn ngang |
+| ISF-OUTSIDE | nặng | Phần ngoài form và dữ liệu trong form | So với BASE giữ nguyên; phát hiện thay đổi giả |
+| ISF-DELIVERY | nặng | CI, merge, VPS và asset | Mỗi cổng có chứng cứ riêng |
+
 ## PORTAL-REQUIRED-WARNING-20261122 — cảnh báo trường bắt buộc
 
 Phiên `PHIEN-PORTAL-REQUIRED-WARNING-20261122.md`; chỉ dùng dữ liệu giả.
