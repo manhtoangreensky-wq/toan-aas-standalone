@@ -1,5 +1,17 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## IMAGE-STUDIO-DETAIL-CUSTOMER-COPY-20261122 — chi tiết và trợ giúp
+
+Phiên `PHIEN-IMAGE-STUDIO-DETAIL-CUSTOMER-COPY-20261122.md`; dùng dữ liệu giả.
+
+| Mã | Mức | Phạm vi | PASS bắt buộc |
+|---|---|---|---|
+| ISD-COPY | nặng | 21 câu, VI/EN/ZH | 63 giá trị đúng, giữ nội dung khách |
+| ISD-STATES | nặng | Có quyền, chưa mở được, không tìm thấy, phương án | Phản hồi đúng trạng thái, giữ thao tác |
+| ISD-CONTRAST | nặng | Trợ giúp tạo/chỉnh sửa, 375/1440, sáng/tối | 96 mẫu ≥4,5:1; màu tối và bố cục giữ |
+| ISD-SOURCE | nặng | Hai tệp ứng dụng | Đúng 21 dòng chữ và một rule màu |
+| ISD-DELIVERY | nặng | CI, merge, VPS và asset | Chứng cứ riêng; signed UI không suy từ asset |
+
 ## IMAGE-STUDIO-PRESENTATION-20261122 — câu chữ và khung giao diện
 
 Phiên `PHIEN-IMAGE-STUDIO-PRESENTATION-20261122.md`; chỉ dùng dữ liệu giả.

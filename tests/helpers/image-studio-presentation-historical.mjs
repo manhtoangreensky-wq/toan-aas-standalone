@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {imageStudioDetailCopyHistoricalSource, imageStudioDetailCopyHistoricalSnapshot} from "./image-studio-detail-copy-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/image-studio-presentation-contract.json", import.meta.url)));
 const fail = "Unreviewed Image Studio presentation";
@@ -13,6 +14,7 @@ assert.equal(contract.otherRecords.length, 4, fail);
 // physical files and checks all 23 forward records independently.
 export function imageStudioPresentationHistoricalSource(source, file) {
   assert.equal(typeof source, "string", fail);
+  source = imageStudioDetailCopyHistoricalSource(source, file);
   if (file === "static/portal/portal-i18n.js") {
     if (!source.includes(line(contract.copy[0][2]))) return source;
     for (const [, , next] of contract.copy) assert.equal(count(source, line(next)), 1, fail);
@@ -38,6 +40,7 @@ export function imageStudioPresentationHistoricalSource(source, file) {
 export function imageStudioPresentationHistoricalSnapshot(entries, locale) {
   const index = ["vi", "en", "zh"].indexOf(locale) + 1;
   assert.ok(Array.isArray(entries) && index > 0, fail);
+  entries = imageStudioDetailCopyHistoricalSnapshot(entries, locale);
   const first = entries.find(([key]) => key === contract.copy[0][0] + contract.copy[0][2][0]);
   if (!first || first[1] !== contract.copy[0][2][index]) return entries;
   for (const [prefix, , next] of contract.copy) {

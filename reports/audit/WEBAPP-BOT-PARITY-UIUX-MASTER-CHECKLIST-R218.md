@@ -1,5 +1,26 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 22/11/2026 — PR794 đã giao; chi tiết thiết kế ảnh
+
+- [x] PR794 CI45003687642 hai job đạt, runtime
+  `f6aee803a72a80bf70cd0a4ce786858f94f9d7cc`, deploy45005430183 đạt,
+  ba dịch vụ/health/5+5 asset khớp; Issue689/comment7078053722 đọc lại đúng.
+- [x] Năm phiếu Antigravity và một phiếu sửa đặc tả trả đúng21dòng chữ/
+  một rule màu; so sánh nguồn vật lý và24trạng thái,63giá trị dịch đạt.
+- [x] 48 màn/96 mẫu trợ giúp: nền sáng2,0212→5,7971:1; nền tối tối thiểu
+  5,5225:1 và màu giữ nguyên. Nội dung/bố cục/form/nhập/chọn giữ.
+- [x] 30 kiểm tra Node mục tiêu và237Python sau sửa hai câu đạt.
+  Hồi quy167tệp/5151ca:5145PASS/6FAIL do
+  chữ thẻ đã đổi; so sánh lại đúng câu được duyệt, retest138/138PASS.
+  Không coi đây là một lượt hồi quy toàn bộ mới đã đạt.
+- [x] Review phát hiện câu suy đoán nguyên nhân; đã sửa tiêu đề/nội dung
+  trung tính theo phiếu R2, không sửa trạng thái hay che lỗi.
+- [ ] Review sửa đổi, tài liệu Tester/CI/merge/deploy/receipt.
+- [ ] Chi tiết chưa có trạng thái chờ riêng: baseline18ca, sáu ca loading
+  thiếu trạng thái chờ; Issue689/comment7078219437 để xử lý riêng.
+- [ ] Signed production UI, locale/AX/auth/device/Safari/output toàn app
+  và motion M-FINAL01..06 vẫn mở; motion cuối.
+
 ## 22/11/2026 — PR793 đã giao; làm gọn bảng thiết kế ảnh
 
 - [x] PR793/CI44997942830 hai job đạt; merge/runtime

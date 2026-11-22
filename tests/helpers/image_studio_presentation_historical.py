@@ -1,8 +1,10 @@
 """Exact input inverse for tests predating the Image presentation changes."""
 from pathlib import Path
 import json
+import runpy
 
 ROOT = Path(__file__).resolve().parents[2]
+DETAIL_PROJECT = runpy.run_path(str(ROOT / "tests/helpers/image_studio_detail_copy_historical.py"))["image_studio_detail_copy_historical_source"]
 CONTRACT = json.loads((ROOT / "tests/fixtures/image-studio-presentation-contract.json").read_bytes())
 FAIL = "Unreviewed Image Studio presentation"
 assert CONTRACT["base"] == "07a89b79c442981ecb7433b607c981740c95c774", FAIL
@@ -15,6 +17,7 @@ def _line(row):
 
 def image_studio_presentation_historical_source(source: str, file: str) -> str:
     assert isinstance(source, str) and isinstance(file, str), FAIL
+    source = DETAIL_PROJECT(source, file)
     if file == "static/portal/portal-i18n.js":
         if _line(CONTRACT["copy"][0][2]) not in source:
             return source

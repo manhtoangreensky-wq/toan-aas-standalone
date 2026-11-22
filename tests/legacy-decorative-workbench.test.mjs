@@ -48,6 +48,17 @@ const protectedRoutes=['/features/image','/features/music','/video/create','/vid
 const labels={vi:'Xưởng sáng tạo AI',en:'AI Studios',zh:'AI 创作工坊'};
 const controls=html=>[...html.matchAll(/<(?:a|button|input|form|select|textarea|option)\b[^>]*>/g)].map(match=>match[0]);
 const withAcceptedAlias=(html,locale)=>html.replace('<div class="portal-eyebrow">AI Studio</div>','<div class="portal-eyebrow">'+labels[locale]+'</div>');
+const detailContract=JSON.parse(fs.readFileSync(path.join(ROOT,'tests/fixtures/image-studio-detail-customer-copy-contract.json'),'utf8'));
+const descriptionRecord=detailContract.records.find(row=>row.old.includes('["page.newDescription",'));
+assert.ok(descriptionRecord);
+const previousDescription=JSON.parse(descriptionRecord.old.trim().replace(/,$/,'')),currentDescription=JSON.parse(descriptionRecord.new.trim().replace(/,$/,''));
+function historicalImageCard(html,locale,route){
+  if(route!=='/features/image')return html;
+  const index=['vi','en','zh'].indexOf(locale)+1;
+  const current='<p>'+currentDescription[index]+'</p>',previous='<p>'+previousDescription[index]+'</p>';
+  assert.equal(html.split(current).length-1,1,'one reviewed image card description');
+  return html.replace(current,()=>previous);
+}
 for(const locale of ['vi','en','zh'])for(const route of [...affected,...protectedRoutes])for(const knownWallet of [false,true]){
   test(`${locale}${route}/${knownWallet}: remove only legacy panel while preserving actual forms, states, raw data and controls`,()=>{
     const raw={wallet:knownWallet?{balance_xu:0,total_spent_xu:0,is_vip:false,plan:{plan_name:'CUSTOMER_PLAN',plan_status:'CUSTOMER_STATUS'}}:null,
@@ -57,7 +68,7 @@ for(const locale of ['vi','en','zh'])for(const route of [...affected,...protecte
     const expected=withoutLegacyDecorativeWorkbench(old.html);
     assert.equal(expected.count,affected.includes(route)?1:0,'BASE witness classification is explicit, not inferred from current output');
     assert.deepEqual(controls(current.html),controls(expected.html),'all real controls outside the known fake panel remain exact');
-    assert.equal(chatDocHistoricalMarkup(current.html,locale),withAcceptedAlias(expected.html,locale),'every unrelated markup byte remains exact, aside from independently accepted alias and finite root-access copy');
+    assert.equal(chatDocHistoricalMarkup(historicalImageCard(current.html,locale,route),locale),withAcceptedAlias(expected.html,locale),'every unrelated markup byte remains exact, aside from independently accepted alias, image card description and finite root-access copy');
     assert.doesNotMatch(current.html,/portal-interactive-feature-workbench|\bonclick\s*=/i);
   });
 }
