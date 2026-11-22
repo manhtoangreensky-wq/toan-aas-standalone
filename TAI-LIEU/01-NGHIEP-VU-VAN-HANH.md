@@ -1,5 +1,14 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — chữ tỷ lệ và định dạng trong biểu mẫu ảnh
+
+PR792 đã phát hành các nhãn trường tại runtime
+`f4c5b6a9821cf957ce107778fd9abd884075fd50`, CI44994341111 và
+deploy44996072775 thành công. Ứng viên kế tiếp dịch tám nhãn tỷ lệ
+và làm gọn ba nhãn định dạng; giá trị, thứ tự, mặc định và giới hạn
+không đổi. Các lựa chọn vẫn ghi nhận ý muốn thiết kế, không tự tạo ảnh.
+Chưa coi ứng viên đã phát hành hoặc đã kiểm tra production sau đăng nhập.
+
 ## 22/11/2026 — nhãn tạo và chỉnh sửa bảng thiết kế ảnh
 
 Ứng viên sau PR791 dịch mười nhãn trường, năm gợi ý nhập, hai câu hướng

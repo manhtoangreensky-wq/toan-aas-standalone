@@ -1,5 +1,12 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 22/11/2026 — đối chiếu lựa chọn ảnh
+
+BASE `f4c5b6a9821cf957ce107778fd9abd884075fd50` có sẵn tám tỷ lệ và
+ba định dạng. Tỷ lệ trước sửa lẫn chữ Việt/Anh ở mọi locale; định dạng
+kèm hậu tố kỹ thuật. Ứng viên chỉ đổi nhãn theo ngôn ngữ và làm gọn
+chữ định dạng. Không thêm giá trị hoặc thay kiểm tra dữ liệu.
+
 ## 22/11/2026 — đối chiếu biểu mẫu thiết kế ảnh
 
 Nguồn gốc tại BASE `05b7ba761bd35cf4da498443db9046ed59429d90` đã có

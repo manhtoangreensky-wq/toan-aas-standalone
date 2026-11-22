@@ -1,0 +1,162 @@
+{
+  "task": "IMAGE-STUDIO-OPTION-LABELS-20261122",
+  "base": "f4c5b6a9821cf957ce107778fd9abd884075fd50",
+  "records": [
+    {
+      "count": 1,
+      "file": "static/portal/portal.js",
+      "new": "  const IMAGE_STUDIO_ASPECT_RATIOS = Object.freeze([\n    [\"1:1\", \"1:1 · Vuông\"], [\"4:5\", \"4:5 · Dọc\"], [\"3:4\", \"3:4 · Dọc\"], [\"16:9\", \"16:9 · Ngang\"],\n    [\"9:16\", \"9:16 · Dọc\"], [\"3:2\", \"3:2 · Ngang\"], [\"2:3\", \"2:3 · Dọc\"], [\"custom\", \"Tỷ lệ tùy chỉnh\"]\n  ]);",
+      "old": "  const IMAGE_STUDIO_ASPECT_RATIOS = Object.freeze([\n    [\"1:1\", \"1:1 · Vuông\"], [\"4:5\", \"4:5 · Portrait\"], [\"3:4\", \"3:4 · Dọc\"], [\"16:9\", \"16:9 · Ngang\"],\n    [\"9:16\", \"9:16 · Story\"], [\"3:2\", \"3:2 · Landscape\"], [\"2:3\", \"2:3 · Portrait\"], [\"custom\", \"Tỷ lệ tùy chỉnh\"]\n  ]);"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal.js",
+      "new": "      { name: \"aspect_ratio\", label: imageStudioText(\"form.ratio\", \"Tỷ lệ khung hình\"), control: \"select\", required: true, options: IMAGE_STUDIO_ASPECT_RATIOS.map(([value, label]) => [value, imageStudioText(`ratio.${value}`, label)]) },",
+      "old": "      { name: \"aspect_ratio\", label: imageStudioText(\"form.ratio\", \"Tỷ lệ khung hình\"), control: \"select\", required: true, options: IMAGE_STUDIO_ASPECT_RATIOS },"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "  const IMAGE_STUDIO_RATIO_COPY_ROWS = [\n    [\"ratio.1:1\", \"1:1 · Vuông\", \"1:1 · Square\", \"1:1 · 方形\"],\n    [\"ratio.4:5\", \"4:5 · Dọc\", \"4:5 · Portrait\", \"4:5 · 竖版\"],\n    [\"ratio.3:4\", \"3:4 · Dọc\", \"3:4 · Portrait\", \"3:4 · 竖版\"],\n    [\"ratio.16:9\", \"16:9 · Ngang\", \"16:9 · Landscape\", \"16:9 · 横版\"],\n    [\"ratio.9:16\", \"9:16 · Dọc\", \"9:16 · Portrait\", \"9:16 · 竖版\"],\n    [\"ratio.3:2\", \"3:2 · Ngang\", \"3:2 · Landscape\", \"3:2 · 横版\"],\n    [\"ratio.2:3\", \"2:3 · Dọc\", \"2:3 · Portrait\", \"2:3 · 竖版\"],\n    [\"ratio.custom\", \"Tỷ lệ tùy chỉnh\", \"Custom ratio\", \"自定义比例\"]\n  ];\n  [\"vi\", \"en\", \"zh\"].forEach((locale, index) => {\n    IMAGE_STUDIO_RATIO_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioUi.${row[0]}`] = row[index + 1]; });\n  });\n\n  const IMAGE_STUDIO_LIBRARY_COPY_ROWS = [",
+      "old": "  const IMAGE_STUDIO_LIBRARY_COPY_ROWS = ["
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal.js",
+      "new": "  const IMAGE_STUDIO_OUTPUT_FORMATS = Object.freeze([[\"png\", \"PNG\"], [\"jpg\", \"JPG\"], [\"webp\", \"WebP\"]]);",
+      "old": "  const IMAGE_STUDIO_OUTPUT_FORMATS = Object.freeze([[\"png\", \"PNG · target metadata\"], [\"jpg\", \"JPG · target metadata\"], [\"webp\", \"WebP · target metadata\"]]);"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal.js",
+      "new": "  function imageStudioFormatLabel(value) {\n    const key = String(value || \"\").toLowerCase();\n    const row = IMAGE_STUDIO_OUTPUT_FORMATS.find(([format]) => format === key);\n    return row ? imageStudioText(`format.${key}`, row[1]) : imageStudioText(\"format.fallback\", \"Định dạng mong muốn\");\n  }",
+      "old": "  function imageStudioFormatLabel(value) {\n    const key = String(value || \"\").toLowerCase();\n    const row = IMAGE_STUDIO_OUTPUT_FORMATS.find(([format]) => format === key);\n    return row ? imageStudioText(`format.${key}`, row[1]) : imageStudioText(\"format.fallback\", \"Siêu dữ liệu đích\");\n  }"
+    },
+    {
+      "count": 1,
+      "file": "static/portal/portal-i18n.js",
+      "new": "    [\"format.png\", \"PNG\", \"PNG\", \"PNG\"],\n    [\"format.jpg\", \"JPG\", \"JPG\", \"JPG\"],\n    [\"format.webp\", \"WebP\", \"WebP\", \"WebP\"],\n    [\"format.fallback\", \"Định dạng mong muốn\", \"Preferred format\", \"期望格式\"],",
+      "old": "    [\"format.png\", \"PNG · siêu dữ liệu đích\", \"PNG · target metadata\", \"PNG · 目标元数据\"],\n    [\"format.jpg\", \"JPG · siêu dữ liệu đích\", \"JPG · target metadata\", \"JPG · 目标元数据\"],\n    [\"format.webp\", \"WebP · siêu dữ liệu đích\", \"WebP · target metadata\", \"WebP · 目标元数据\"],\n    [\"format.fallback\", \"Siêu dữ liệu đích\", \"Target metadata\", \"目标元数据\"],"
+    }
+  ],
+  "ratioRows": [
+    [
+      "imageStudioUi.ratio.1:1",
+      "1:1 · Vuông",
+      "1:1 · Square",
+      "1:1 · 方形"
+    ],
+    [
+      "imageStudioUi.ratio.4:5",
+      "4:5 · Dọc",
+      "4:5 · Portrait",
+      "4:5 · 竖版"
+    ],
+    [
+      "imageStudioUi.ratio.3:4",
+      "3:4 · Dọc",
+      "3:4 · Portrait",
+      "3:4 · 竖版"
+    ],
+    [
+      "imageStudioUi.ratio.16:9",
+      "16:9 · Ngang",
+      "16:9 · Landscape",
+      "16:9 · 横版"
+    ],
+    [
+      "imageStudioUi.ratio.9:16",
+      "9:16 · Dọc",
+      "9:16 · Portrait",
+      "9:16 · 竖版"
+    ],
+    [
+      "imageStudioUi.ratio.3:2",
+      "3:2 · Ngang",
+      "3:2 · Landscape",
+      "3:2 · 横版"
+    ],
+    [
+      "imageStudioUi.ratio.2:3",
+      "2:3 · Dọc",
+      "2:3 · Portrait",
+      "2:3 · 竖版"
+    ],
+    [
+      "imageStudioUi.ratio.custom",
+      "Tỷ lệ tùy chỉnh",
+      "Custom ratio",
+      "自定义比例"
+    ]
+  ],
+  "formatOld": [
+    [
+      "imageStudioUi.format.png",
+      "PNG · siêu dữ liệu đích",
+      "PNG · target metadata",
+      "PNG · 目标元数据"
+    ],
+    [
+      "imageStudioUi.format.jpg",
+      "JPG · siêu dữ liệu đích",
+      "JPG · target metadata",
+      "JPG · 目标元数据"
+    ],
+    [
+      "imageStudioUi.format.webp",
+      "WebP · siêu dữ liệu đích",
+      "WebP · target metadata",
+      "WebP · 目标元数据"
+    ],
+    [
+      "imageStudioUi.format.fallback",
+      "Siêu dữ liệu đích",
+      "Target metadata",
+      "目标元数据"
+    ]
+  ],
+  "formatNew": [
+    [
+      "imageStudioUi.format.png",
+      "PNG",
+      "PNG",
+      "PNG"
+    ],
+    [
+      "imageStudioUi.format.jpg",
+      "JPG",
+      "JPG",
+      "JPG"
+    ],
+    [
+      "imageStudioUi.format.webp",
+      "WebP",
+      "WebP",
+      "WebP"
+    ],
+    [
+      "imageStudioUi.format.fallback",
+      "Định dạng mong muốn",
+      "Preferred format",
+      "期望格式"
+    ]
+  ],
+  "authority": {
+    "ratio-proposal-nov22-r1": {
+      "model": "gemini-3.8-flash-high",
+      "resultSha256": "6930d4ecc4fb906aecb3211554ad205c99f5ee20776c3544970d7cef644836f5",
+      "packetSha256": "59bd7eddaf66f605fbec3fd2f68c831cfaac17ba77e534de6c1ef672dec3a816"
+    },
+    "ratio-proposal-nov22-r2": {
+      "model": "gemini-3.8-flash-high",
+      "resultSha256": "7cc45a884b100792298839f0f645b234084212e032f35cb1b948b5b51291fe89",
+      "packetSha256": "cc043062d3585780093a1f5c2486347a1d9f37994a4439c27dc98d924f883a46"
+    },
+    "format-proposal-nov22-r1": {
+      "model": "gemini-3.8-flash-high",
+      "resultSha256": "540aaed76188b05cd373d3a55e5febd8a12751b0eadc3e0de4babf163115654c",
+      "packetSha256": "2235fc11e8e5b02552fa0622bedc5218a35e55efe9c4378e3ea710f9cd2a73ef"
+    }
+  },
+  "applicationTakeover": false
+}

@@ -18120,10 +18120,10 @@
     ["intent.imageToImage", "Định hướng biến đổi ảnh", "Image-to-image direction", "图生图方向"],
     ["intent.removeBackground", "Định hướng tách nền", "Background-removal direction", "去背景方向"],
     ["intent.fallback", "Định hướng hình ảnh", "Visual direction", "视觉方向"],
-    ["format.png", "PNG · siêu dữ liệu đích", "PNG · target metadata", "PNG · 目标元数据"],
-    ["format.jpg", "JPG · siêu dữ liệu đích", "JPG · target metadata", "JPG · 目标元数据"],
-    ["format.webp", "WebP · siêu dữ liệu đích", "WebP · target metadata", "WebP · 目标元数据"],
-    ["format.fallback", "Siêu dữ liệu đích", "Target metadata", "目标元数据"],
+    ["format.png", "PNG", "PNG", "PNG"],
+    ["format.jpg", "JPG", "JPG", "JPG"],
+    ["format.webp", "WebP", "WebP", "WebP"],
+    ["format.fallback", "Định dạng mong muốn", "Preferred format", "期望格式"],
     ["state.active", "Đang hoạt động", "Active", "活跃"],
     ["state.draft", "Bản nháp", "Draft", "草稿"],
     ["state.review", "Đang tự rà soát", "In self-review", "自审中"],
@@ -18154,6 +18154,20 @@
   ["vi", "en", "zh"].forEach((locale, index) => {
     IMAGE_STUDIO_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioUi.${row[0]}`] = row[index + 1]; });
     IMAGE_STUDIO_FORM_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioUi.${row[0]}`] = row[index + 1]; });
+  });
+
+  const IMAGE_STUDIO_RATIO_COPY_ROWS = [
+    ["ratio.1:1", "1:1 · Vuông", "1:1 · Square", "1:1 · 方形"],
+    ["ratio.4:5", "4:5 · Dọc", "4:5 · Portrait", "4:5 · 竖版"],
+    ["ratio.3:4", "3:4 · Dọc", "3:4 · Portrait", "3:4 · 竖版"],
+    ["ratio.16:9", "16:9 · Ngang", "16:9 · Landscape", "16:9 · 横版"],
+    ["ratio.9:16", "9:16 · Dọc", "9:16 · Portrait", "9:16 · 竖版"],
+    ["ratio.3:2", "3:2 · Ngang", "3:2 · Landscape", "3:2 · 横版"],
+    ["ratio.2:3", "2:3 · Dọc", "2:3 · Portrait", "2:3 · 竖版"],
+    ["ratio.custom", "Tỷ lệ tùy chỉnh", "Custom ratio", "自定义比例"]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    IMAGE_STUDIO_RATIO_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioUi.${row[0]}`] = row[index + 1]; });
   });
 
   const IMAGE_STUDIO_LIBRARY_COPY_ROWS = [

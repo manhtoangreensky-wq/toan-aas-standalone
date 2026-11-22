@@ -1,5 +1,18 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 22/11/2026 — PR792 đã giao; tỷ lệ và định dạng ảnh
+
+- [x] PR792/CI44994341111 hai job đạt; runtime
+  `f4c5b6a9821cf957ce107778fd9abd884075fd50`, deploy44996072775 thành công;
+  ba dịch vụ/health/5+5 asset khớp; Issue689/comment7075655060 đọc lại đúng.
+- [x] Hai phiếu tùy chọn: sáu record đã duyệt (tỷ lệ R1+R2, định dạng R1);
+  16 mục tiêu và sáu đối chiếu renderer đạt; giữ nhãn trường PR792.
+- [x] 12 màn và 147 Python đạt.
+- [x] Hồi quy rộng 165 tệp đạt 5.139/5.139, không lỗi hoặc bỏ qua.
+- [ ] CI, merge, deploy và signed UI còn chờ.
+- [ ] Các phần chữ/bố cục khác, AX/auth/device/Safari/output và motion
+  M-FINAL01..06 vẫn mở; motion cuối.
+
 ## 22/11/2026 — PR791 đã giao; nhãn biểu mẫu thiết kế ảnh
 
 - [x] PR791/CI44955199251 hai job thành công; runtime

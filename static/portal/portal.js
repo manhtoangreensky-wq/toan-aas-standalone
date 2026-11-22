@@ -18930,10 +18930,10 @@ function renderAutoPostHub(page, context) {
     ["image_to_image", "Image-to-image direction"], ["remove_background", "Tách nền direction"]
   ]);
   const IMAGE_STUDIO_ASPECT_RATIOS = Object.freeze([
-    ["1:1", "1:1 · Vuông"], ["4:5", "4:5 · Portrait"], ["3:4", "3:4 · Dọc"], ["16:9", "16:9 · Ngang"],
-    ["9:16", "9:16 · Story"], ["3:2", "3:2 · Landscape"], ["2:3", "2:3 · Portrait"], ["custom", "Tỷ lệ tùy chỉnh"]
+    ["1:1", "1:1 · Vuông"], ["4:5", "4:5 · Dọc"], ["3:4", "3:4 · Dọc"], ["16:9", "16:9 · Ngang"],
+    ["9:16", "9:16 · Dọc"], ["3:2", "3:2 · Ngang"], ["2:3", "2:3 · Dọc"], ["custom", "Tỷ lệ tùy chỉnh"]
   ]);
-  const IMAGE_STUDIO_OUTPUT_FORMATS = Object.freeze([["png", "PNG · target metadata"], ["jpg", "JPG · target metadata"], ["webp", "WebP · target metadata"]]);
+  const IMAGE_STUDIO_OUTPUT_FORMATS = Object.freeze([["png", "PNG"], ["jpg", "JPG"], ["webp", "WebP"]]);
   const IMAGE_STUDIO_STATES = Object.freeze({
     active: "Đang hoạt động", draft: "Bản nháp", review: "Đang self-review", approved: "Self-review hoàn tất", archived: "Đã archive"
   });
@@ -18953,7 +18953,7 @@ function renderAutoPostHub(page, context) {
   function imageStudioFormatLabel(value) {
     const key = String(value || "").toLowerCase();
     const row = IMAGE_STUDIO_OUTPUT_FORMATS.find(([format]) => format === key);
-    return row ? imageStudioText(`format.${key}`, row[1]) : imageStudioText("format.fallback", "Siêu dữ liệu đích");
+    return row ? imageStudioText(`format.${key}`, row[1]) : imageStudioText("format.fallback", "Định dạng mong muốn");
   }
   function imageStudioFormatOptions() {
     return IMAGE_STUDIO_OUTPUT_FORMATS.map(([key]) => [key, imageStudioFormatLabel(key)]);
@@ -19075,7 +19075,7 @@ function renderAutoPostHub(page, context) {
       { name: "title", label: imageStudioText("form.title", "Tên bảng thiết kế"), placeholder: imageStudioText("form.titleHint", "Ví dụ: Hình ảnh bộ sưu tập mùa hè"), required: true, minLength: 2, maxLength: 180 },
       { name: "image_intent", label: imageStudioText("form.intent", "Mục đích thiết kế"), control: "select", required: true, options: imageStudioIntentOptions(), help: imageStudioText("form.intentHelp", "Chỉ dùng để sắp xếp ý tưởng, không tự tạo ảnh.") },
       { name: "language", label: imageStudioText("form.language", "Ngôn ngữ mô tả"), placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
-      { name: "aspect_ratio", label: imageStudioText("form.ratio", "Tỷ lệ khung hình"), control: "select", required: true, options: IMAGE_STUDIO_ASPECT_RATIOS },
+      { name: "aspect_ratio", label: imageStudioText("form.ratio", "Tỷ lệ khung hình"), control: "select", required: true, options: IMAGE_STUDIO_ASPECT_RATIOS.map(([value, label]) => [value, imageStudioText(`ratio.${value}`, label)]) },
       { name: "output_format", label: imageStudioText("form.format", "Định dạng mong muốn"), control: "select", required: true, options: imageStudioFormatOptions(), help: imageStudioText("form.formatHelp", "Chỉ ghi nhận lựa chọn; chưa tạo tệp.") },
       { name: "creative_brief", label: imageStudioText("form.brief", "Mô tả ý tưởng"), control: "textarea", placeholder: imageStudioText("form.briefHint", "Thông điệp, bối cảnh, giới hạn thương hiệu và điểm cần rà soát…"), required: true, minLength: 3, maxLength: 12000, wide: true },
       { name: "style_direction", label: imageStudioText("form.style", "Định hướng phong cách"), control: "textarea", placeholder: imageStudioText("form.styleHint", "Bố cục, ánh sáng, màu sắc, chất liệu và cảm xúc mong muốn…"), maxLength: 6000, wide: true },
