@@ -3875,3 +3875,25 @@ không tự gán phiên bản mới cho nội dung cũ.
 Mất nội dung sau lỗi đọc làm biến mất biểu mẫu, khi rời trang hoặc đổi phiên
 bản vẫn cần giải pháp riêng. Các trường hợp này còn mở trên Issue #689;
 không coi toàn bộ cơ chế bản nháp đã hoàn tất.
+
+Đợt màn chờ và giữ nội dung cùng phiên bản đã triển khai qua PR #797,
+runtime `d165bad407a51a8cf6339b019a073f8a1a1eb37a`, CI `45045044485`,
+deploy `45047560707`; biên nhận Issue #689 `7082628798`. VPS nguồn sạch,
+ba dịch vụ active và 5+5 tệp giao diện khớp byte. Các giới hạn bản nháp
+đã nêu vẫn còn mở.
+
+## Thiết kế ảnh — chữ trên trang và biểu mẫu, 23/11/2026
+
+Ứng viên kế tiếp dịch tiêu đề, mô tả và đường dẫn của chi tiết ảnh; làm
+dễ hiểu 24 câu thư viện và chín trường phương án ở Việt/Anh/Trung. Tên,
+nội dung khách, giá trị lựa chọn và giới hạn biểu mẫu giữ nguyên. Hướng
+dẫn vẫn nêu các loại ngoài Tạo mới cần ảnh gốc. Màu tiêu đề thẻ sáng dùng
+màu chữ hiện có để đọc rõ; giao diện tối và kích thước giữ nguyên.
+
+Đã kiểm nguồn đúng 32 record trong ba tệp giao diện; 24 màn Chrome với
+dữ liệu giả, 32 mẫu màu và hai ca gõ toàn bộ trường sau đổi nhãn đạt.
+Hồi quy 171 tệp/5.202 ca đạt; câu hướng dẫn thư viện sau review được rút
+gọn, không hứa giữ lựa chọn chưa lưu vắng khỏi kết quả tìm mới. 48 ca
+ảnh hưởng sau câu sửa đạt, gồm 30 trạng thái thư viện; Python bổ sung
+155/155 và màu 90/90. Phát hành cần bằng chứng riêng. Chữ lỗi thao tác, metadata
+Studio gốc và locale toàn ứng dụng chưa được xác nhận hoàn tất.

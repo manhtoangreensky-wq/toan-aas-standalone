@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {imageStudioDetailLoadingHistoricalSource} from "./image-studio-detail-loading-historical.mjs";
+import {imageStudioLocaleCopyHistoricalSnapshot} from "./image-studio-locale-copy-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/image-studio-read-feedback-contract.json", import.meta.url)));
 const fail = "Unreviewed Image Studio read feedback";
@@ -23,6 +24,7 @@ export function imageStudioReadFeedbackHistoricalSource(source, file) {
 }
 
 export function imageStudioReadFeedbackHistoricalSnapshot(entries, locale) {
+  entries = imageStudioLocaleCopyHistoricalSnapshot(entries, locale);
   assert.ok(Array.isArray(entries) && Object.hasOwn(labels, locale), fail);
   const found = entries.filter(([key]) => keys.includes(key));
   if (!found.length) return entries;

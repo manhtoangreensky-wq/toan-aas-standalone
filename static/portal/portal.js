@@ -10140,6 +10140,7 @@
     if (path === "/audio-hub") return audioWorkspaceText("hub.title", fallback);
     if (path === "/audio-hub/new") return audioWorkspaceText("hub.newTitle", fallback);
     if (["media-workspace-detail", "audio-hub-detail"].includes(page && page.layout)) return audioWorkspaceText("detail.pageTitle", fallback);
+    if (["image-studio-detail", "image-hub-detail"].includes(page && page.layout)) return imageStudioDetailText("page.detailTitle", "Chi tiết bảng thiết kế");
     if (path === "/image-hub") return imageStudioLibraryText("page.title", fallback);
     if (path === "/image-hub/new") return imageStudioDetailText("page.newTitle", fallback);
     if (["/image/create", "/image/new"].includes(path)) return imageUiText("page.title", fallback);
@@ -10285,6 +10286,7 @@
     if (path === "/audio-hub") return audioWorkspaceText("hub.description", fallback);
     if (path === "/audio-hub/new") return audioWorkspaceText("hub.newDescription", fallback);
     if (["media-workspace-detail", "audio-hub-detail"].includes(page && page.layout)) return audioWorkspaceText("detail.pageDescription", fallback);
+    if (["image-studio-detail", "image-hub-detail"].includes(page && page.layout)) return imageStudioDetailText("page.detailDescription", "Xem và chỉnh sửa ý tưởng, ảnh tham khảo và các phương án.");
     if (path === "/image-hub") return imageStudioLibraryText("page.description", fallback);
     if (path === "/image-hub/new") return imageStudioDetailText("page.newDescription", fallback);
     if (["/image/create", "/image/new"].includes(path)) return imageUiText("page.description", fallback);
@@ -11221,7 +11223,7 @@
       : uiText("chrome.searchWorkspace", "Tìm hoặc chuyển workspace");
     const crumbItems = (adminSurface
       ? ["TOAN AAS", localizedPageTitle(page, context)]
-      : ["TOAN AAS", page && page.layout === "chat-workspace-detail" ? uiText("chatPageMetaUiTitle", "Trò chuyện") : page && page.layout === "audio-hub-detail" ? audioWorkspaceText('workspace.hubLabel', 'Trung tâm sản xuất âm thanh') : page.section, localizedPageTitle(page, context)])
+      : ["TOAN AAS", page && page.layout === "chat-workspace-detail" ? uiText("chatPageMetaUiTitle", "Trò chuyện") : page && page.layout === "audio-hub-detail" ? audioWorkspaceText('workspace.hubLabel', 'Trung tâm sản xuất âm thanh') : ["image-studio-detail", "image-hub-detail"].includes(page && page.layout) ? imageStudioDetailText("page.detailSection", "Thiết kế ảnh") : page.section, localizedPageTitle(page, context)])
       .filter(Boolean);
     if (adminSurface && adminActiveGroup) crumbItems.splice(1, 0, adminActiveGroup.title);
     const displayCrumbItems = crumbItems.filter((piece, index, arr) => {
@@ -12254,6 +12256,7 @@
   function supportTicketHeroSection(page) {
     const routeKey = supportTicketHeroRouteKey(page);
     const route = normalizePath(page && (page.routePath || page.path) || "/");
+    if (["image-studio-detail", "image-hub-detail"].includes(page && page.layout)) return imageStudioDetailText("page.detailSection", "Thiết kế ảnh");
     if (page && page.layout === "chat-workspace-detail") return uiText("chatPageMetaUiTitle", "Trò chuyện");
     if (route === "/media-workspace/music-prompt-composer") return musicPromptComposerUiText("page.kicker", "Lập kế hoạch âm nhạc");
     if (["media-workspace", "media-workspace-detail"].includes(page && page.layout)) return audioWorkspaceText("workspace.libraryLabel", "Thư viện âm thanh");
@@ -19099,15 +19102,15 @@ function renderAutoPostHub(page, context) {
   }
   function imageStudioDirectionFields(context) {
     return [
-      { name: "title", label: "Tên biến thể direction", placeholder: "Ví dụ: Bản tối giản cho feed", required: true, minLength: 2, maxLength: 180 },
-      { name: "operation", label: "Loại biến thể", control: "select", required: true, options: imageStudioIntentOptions(), help: "Không chạy thao tác ảnh. Với chỉnh sửa, nâng cấp, biến đổi ảnh hoặc tách nền, hãy chọn ảnh gốc trong Kho tài sản." },
-      { name: "asset_id", label: "Ảnh gốc từ Asset Vault", control: "select", options: imageStudioAssetOptions(context), emptyLabel: "Không dùng ảnh gốc (chỉ phù hợp Create)", help: "Chỉ có metadata của ảnh thuộc account hiện tại; không có thumbnail, blob hay URL công khai." },
-      { name: "reference_asset_id", label: "Ảnh tham chiếu (tùy chọn)", control: "select", options: imageStudioAssetOptions(context), emptyLabel: "Không thêm ảnh tham chiếu" },
-      { name: "prompt_text", label: "Prompt / concept text", control: "textarea", placeholder: "Mô tả concept, đối tượng và thông điệp cần được biên tập…", maxLength: 12000, wide: true },
-      { name: "edit_instructions", label: "Chỉ dẫn chỉnh sửa", control: "textarea", placeholder: "Những thay đổi cần review nếu direction dựa trên ảnh Asset Vault…", maxLength: 6000, wide: true },
-      { name: "composition_notes", label: "Bố cục & visual notes", control: "textarea", placeholder: "Vị trí chủ thể, crop, ánh sáng, khoảng trống, hệ chữ…", maxLength: 6000, wide: true },
-      { name: "negative_direction", label: "Điều cần tránh", control: "textarea", placeholder: "Các yếu tố không nên xuất hiện trong direction này…", maxLength: 4000, wide: true },
-      { name: "tags", label: "Tags", placeholder: "hero, minimal, feed", maxLength: 1000 }
+      { name: "title", label: imageStudioDetailText("field.title", "Tên phương án"), placeholder: imageStudioDetailText("field.titleHint", "Ví dụ: Bố cục tối giản"), required: true, minLength: 2, maxLength: 180 },
+      { name: "operation", label: imageStudioDetailText("field.operation", "Loại phương án"), control: "select", required: true, options: imageStudioIntentOptions(), help: imageStudioDetailText("field.operationHelp", "Chọn loại phương án. Trừ Tạo mới, các loại còn lại cần ảnh gốc.") },
+      { name: "asset_id", label: imageStudioDetailText("field.asset", "Ảnh gốc"), control: "select", options: imageStudioAssetOptions(context), emptyLabel: imageStudioDetailText("field.noAsset", "Không dùng ảnh gốc (chỉ khi tạo mới)"), help: imageStudioDetailText("field.assetHelp", "Chọn ảnh trong Kho tệp của bạn.") },
+      { name: "reference_asset_id", label: imageStudioDetailText("field.reference", "Ảnh tham khảo (không bắt buộc)"), control: "select", options: imageStudioAssetOptions(context), emptyLabel: imageStudioDetailText("field.noReference", "Không thêm ảnh tham khảo") },
+      { name: "prompt_text", label: imageStudioDetailText("field.prompt", "Mô tả ý tưởng"), control: "textarea", placeholder: imageStudioDetailText("field.promptHint", "Mô tả chủ thể, bối cảnh và thông điệp…"), maxLength: 12000, wide: true },
+      { name: "edit_instructions", label: imageStudioDetailText("field.edit", "Chỉ dẫn chỉnh sửa"), control: "textarea", placeholder: imageStudioDetailText("field.editHint", "Nêu những thay đổi bạn muốn thực hiện…"), maxLength: 6000, wide: true },
+      { name: "composition_notes", label: imageStudioDetailText("field.composition", "Bố cục và ghi chú hình ảnh"), control: "textarea", placeholder: imageStudioDetailText("field.compositionHint", "Vị trí chủ thể, ánh sáng, khoảng trống, chữ…"), maxLength: 6000, wide: true },
+      { name: "negative_direction", label: imageStudioDetailText("field.avoid", "Điều cần tránh"), control: "textarea", placeholder: imageStudioDetailText("field.avoidHint", "Nêu các yếu tố không nên xuất hiện…"), maxLength: 4000, wide: true },
+      { name: "tags", label: imageStudioDetailText("field.tags", "Thẻ"), placeholder: imageStudioDetailText("field.tagsHint", "bìa, tối giản, bài đăng"), maxLength: 1000 }
     ];
   }
   function imageStudioDirectionValues(value) {

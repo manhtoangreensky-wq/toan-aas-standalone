@@ -2964,3 +2964,18 @@ Nguồn đối chiếu là bản đang triển khai `e177ce5f5791fd22e517d957063
 | Biểu mẫu có mã trùng có thể bị gán nhầm bản đang sửa | Bỏ khôi phục mọi biểu mẫu có nhận dạng mơ hồ | Hai tình huống mã trùng trên hai nhóm đường dẫn |
 | Giá trị chọn không còn khả dụng | Chỉ khôi phục lựa chọn còn có và còn bật | Sáu tình huống xóa/vô hiệu lựa chọn |
 | Lỗi đọc, rời trang hoặc dữ liệu đổi phiên bản | Còn mở, cần xử lý riêng | Không dùng kết quả cùng phiên bản để đóng các trường hợp này |
+
+## Thiết kế ảnh — đối chiếu ngôn ngữ nhãn, 23/11/2026
+
+BASE là runtime `d165bad407a51a8cf6339b019a073f8a1a1eb37a`.
+
+| Hiện trạng BASE | Ứng viên | Ranh giới giữ |
+|---|---|---|
+| Chi tiết Studio/Hub dùng tiêu đề và mô tả lẫn ngôn ngữ | Ba khóa chung cho title/description/section, áp vào hero/breadcrumb | Chỉ hai layout chi tiết |
+| 24 câu thư viện chứa giải thích kỹ thuật | Câu ngắn hướng dẫn tìm/chọn/mở công cụ | Giữ key, trạng thái không thể chọn và dữ liệu khách |
+| Chín trường phương án hardcode chữ Việt/Anh | 19 khóa VI/EN/ZH cho label/hint/help/empty choice | Names/order/required/limits/options/values giữ |
+| Lựa chọn không dùng ảnh gốc có ghi chỉ phù hợp Create | Dịch rõ chỉ khi Tạo mới | Không làm mất yêu cầu ảnh gốc của các loại khác |
+| 16/32 mẫu tiêu đề thẻ sáng quá nhạt | Một rule màu giới hạn ở chi tiết ảnh sáng | Geometry và màu tối giữ nguyên |
+
+Đối chiếu hiện vật mới có 32 record, 22 khóa thêm và 24 hàng thay câu.
+Không suy ra khả năng tạo ảnh hay trạng thái provider từ thay đổi này.

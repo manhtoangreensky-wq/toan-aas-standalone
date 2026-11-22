@@ -6,6 +6,7 @@ import {execFileSync} from "node:child_process";
 import {pageMetaRenderer, pageMetaSources} from "./helpers/chat-page-meta-runtime.mjs";
 import {imageStudioDetailLoadingHistoricalSource} from "./helpers/image-studio-detail-loading-historical.mjs";
 import {imageStudioDetailDraftHistoricalSource} from "./helpers/image-studio-detail-draft-historical.mjs";
+import {imageStudioLocaleCopyHistoricalSource} from "./helpers/image-studio-locale-copy-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("./fixtures/image-studio-detail-loading-contract.json", import.meta.url)));
 const source = fs.readFileSync(new URL("../static/portal/integration.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
@@ -20,7 +21,7 @@ test("physical source equals BASE plus exactly three reviewed records", () => {
     const base = execFileSync("git", ["show", contract.base + ":" + record.file], {encoding: "utf8", maxBuffer: 30e6}).replace(/\r\n/g, "\n");
     const current = fs.readFileSync(new URL("../" + record.file, import.meta.url), "utf8").replace(/\r\n/g, "\n");
     assert.equal(base.split(record.old).length - 1, 1);
-    assert.equal(imageStudioDetailDraftHistoricalSource(current, record.file), base.replace(record.old, () => record.new));
+    assert.equal(imageStudioDetailDraftHistoricalSource(imageStudioLocaleCopyHistoricalSource(current, record.file), record.file), base.replace(record.old, () => record.new));
     assert.equal(imageStudioDetailLoadingHistoricalSource(current, record.file), base);
     assert.equal(imageStudioDetailLoadingHistoricalSource(current + "\n/* unrelated */", record.file), base + "\n/* unrelated */");
     assert.throws(() => imageStudioDetailLoadingHistoricalSource(current + record.new, record.file));
