@@ -3310,3 +3310,22 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
 - [ ] Docs/Tester/review/prepush/provenance/onePR/exactCI/merge/deploy/receipt.
 - [ ] Wholeapp/locale/AX/auth/device/Safari/signedproduction/outputremain;
   motionM-FINAL01..06LAST/fullgoalACTIVE.
+
+### Thiết kế ảnh — phản hồi đọc dữ liệu, 22/11/2026
+
+- [x] PR #795: CI `45016469214`, deploy `45018698084`, runtime
+  `ef3643d84c269aa2a07e411debe400a44f72d8e6`, receipt Issue #689
+  `7078655659`. Không coi đây là xác minh giao diện signed production.
+- [x] BASE tái hiện thông báo thành công sai khi đọc lỗi hoặc lượt cũ.
+  Sáu thay đổi ứng dụng theo đề xuất worker; sửa đặc tả R2 cho bộ lọc đã
+  lưu lỗi trước khi tăng lượt đọc, không tính là lỗi worker.
+- [x] Kiểm 75 tình huống nguồn vật lý, 14 guard, chồng lượt và 48 tình
+  huống trên toàn bộ bundle với GET giả; không gọi mạng thật.
+- [x] Hồi quy 168 tệp/5.161 ca đạt, bốn tệp còn lại 16/16; Node mục tiêu
+  24/24, Python 237/237. Đã lập phiên kiểm tra và tài liệu trước push.
+- [ ] CI, merge, deploy, runtime và kiểm tra giao diện đã đăng nhập:
+  từng mục cần bằng chứng riêng.
+- [ ] Màn chờ chi tiết; đầu vào lọc không hợp lệ trước helper; tranh chấp
+  giữa lượt tải danh sách và tham chiếu: tái hiện và xử lý riêng theo thứ tự.
+- [ ] Toàn goal, locale toàn trang, accessibility, auth, responsive và motion
+  chưa hoàn tất; motion vẫn ở cuối.

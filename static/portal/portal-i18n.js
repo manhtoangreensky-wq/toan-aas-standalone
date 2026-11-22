@@ -18090,6 +18090,17 @@
     IMAGE_CREATE_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageUi.${row[0]}`] = row[index + 1]; });
   });
 
+  const IMAGE_STUDIO_READ_FEEDBACK_ROWS = [
+    ["refreshed", "Đã làm mới.", "Refreshed.", "已刷新。"],
+    ["filtered", "Đã áp dụng bộ lọc.", "Filter applied.", "已应用筛选。"],
+    ["listed", "Đã tải danh sách.", "List loaded.", "列表已加载。"],
+    ["paged", "Đã tải trang.", "Page loaded.", "页面已加载。"],
+    ["failed", "Không thể tải dữ liệu. Vui lòng thử lại.", "Could not load the data. Please try again.", "无法加载数据，请重试。"]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    IMAGE_STUDIO_READ_FEEDBACK_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioReadFeedback.${row[0]}`] = row[index + 1]; });
+  });
+
   const IMAGE_STUDIO_COPY_ROWS = [
     ["guarded.hubTitle", "Chưa thể mở bảng thiết kế", "Design boards could not be opened", "暂时无法打开画板"],
     ["guarded.studioTitle", "Chưa thể mở thiết kế ảnh", "Image design could not be opened", "暂时无法打开图像设计"],

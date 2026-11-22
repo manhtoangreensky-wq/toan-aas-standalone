@@ -2939,3 +2939,15 @@ không thêm chức năng hoặc đổi thứ tự nhánh.
 BASE13RED/8PASS;candidate1590PASS/0FAIL. NativeR1lỗi kỳ vọng bài kiểm tra,
 không tính Antigravity sai;R2đi hết4failedGETrồiretry thật.
 Các chữ ready/empty và khung thừa là đơn vị tiếp theo,không nhận đã xong.
+
+## Thiết kế ảnh — đối chiếu phản hồi đọc dữ liệu, 22/11/2026
+
+| Hành vi ở BASE `ef3643d84c269aa2a07e411debe400a44f72d8e6` | Ứng viên | Giới hạn |
+|---|---|---|
+| Làm mới, lọc, xóa lọc, chuyển trang có thể báo thành công sau lỗi đọc | Chỉ báo thành công khi lượt đọc hiện tại sẵn sàng; lỗi hiển thị thất bại | Giữ hàm tải, quyền, API và dữ liệu |
+| Phản hồi cũ vẫn có thể tạo thông báo | Bỏ thông báo khi đường dẫn, phiên hoặc lượt đọc tương ứng đã đổi | Không hủy yêu cầu mạng |
+| Lỗi kiểm tra bộ lọc đã lưu có thể xuất hiện trước khi đánh số lượt đọc | Giữ lỗi cụ thể và ngăn lượt đọc trước ghi đè | Không khẳng định đã sửa các tranh chấp khác |
+| Thông báo cố định chưa đủ ngôn ngữ | Năm thông báo có Việt, Anh và Trung | Không dịch nội dung do khách nhập |
+
+PR #795 đã triển khai; ứng viên phản hồi đọc đang chờ các cổng phát hành.
+Màn chờ chi tiết và kiểm tra giao diện production sau đăng nhập vẫn mở.
