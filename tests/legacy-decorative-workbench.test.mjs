@@ -7,6 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {withoutLegacyDecorativeWorkbench} from './helpers/legacy-decorative-workbench.mjs';
 import {chatDocHistoricalMarkup} from './helpers/chat-doc-access-snapshot.mjs';
 import {pageMetaHistoricalPortalSource} from './helpers/chat-page-meta-snapshot.mjs';
+import {imageStudioRootMetadataHistoricalSource} from './helpers/image-studio-root-metadata-historical.mjs';
 
 // Catch fabricated success/price/readiness/output panels returning before real
 // forms, and catch accidentally deleting anything outside those exact panels.
@@ -14,12 +15,13 @@ const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const BASE='c4da5f4a90a4ca37c46b66220c81928b806a4f2a';
 const helper=path.join(ROOT,'tests/helpers/publishing-child-render.mjs');
 let source=fs.readFileSync(helper,'utf8');
-// Only the four separately verified metadata fragments may precede this
+// Only separately verified, finite metadata records may precede this
 // historical whole-markup comparison; unknown/partial source changes fail.
 let currentSource=source;
 for(const [old,next]of [
   ["const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');",'const root='+JSON.stringify(ROOT)+';'],
-  ["const portal=fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8');",'const portal='+JSON.stringify(pageMetaHistoricalPortalSource(fs.readFileSync(path.join(ROOT,'static/portal/portal.js'),'utf8')))+';']
+  ["const portal=fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8');",'const portal='+JSON.stringify(pageMetaHistoricalPortalSource(fs.readFileSync(path.join(ROOT,'static/portal/portal.js'),'utf8')))+';'],
+  ["const i18n=fs.readFileSync(path.join(root,'static/portal/portal-i18n.js'),'utf8');",'const i18n='+JSON.stringify(imageStudioRootMetadataHistoricalSource(fs.readFileSync(path.join(ROOT,'static/portal/portal-i18n.js'),'utf8').replace(/\r\n/g,'\n'),'static/portal/portal-i18n.js'))+';']
 ]){assert.equal(currentSource.split(old).length-1,1);currentSource=currentSource.replace(old,next);}
 const {renderChild:renderCurrent}=await import('data:text/javascript;base64,'+Buffer.from(currentSource).toString('base64'));
 const edits=[["const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');",'const root='+JSON.stringify(ROOT)+';']];

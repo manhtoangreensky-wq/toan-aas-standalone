@@ -3,10 +3,18 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 import {execFileSync} from "node:child_process";
-import {pageMetaRenderer, pageMetaSources} from "./helpers/chat-page-meta-runtime.mjs";
+import {pageMetaRenderer, pageMetaSources as physicalPageMetaSources} from "./helpers/chat-page-meta-runtime.mjs";
 import {imageStudioLocaleCopyHistoricalSource, imageStudioLocaleCopyHistoricalSnapshot} from "./helpers/image-studio-locale-copy-historical.mjs";
+import {imageStudioRootMetadataHistoricalSource} from "./helpers/image-studio-root-metadata-historical.mjs";
 
-const read = file => fs.readFileSync(new URL("../" + file, import.meta.url), "utf8").replace(/\r\n/g, "\n");
+// Retain this earlier locale scope through an exact, independently tested root-metadata projection.
+const read = file => imageStudioRootMetadataHistoricalSource(fs.readFileSync(new URL("../" + file, import.meta.url), "utf8").replace(/\r\n/g, "\n"), file);
+const pageMetaSources = () => {
+  const physical = physicalPageMetaSources();
+  return {...physical,
+    portal: imageStudioRootMetadataHistoricalSource(physical.portal, "static/portal/portal.js"),
+    i18n: imageStudioRootMetadataHistoricalSource(physical.i18n, "static/portal/portal-i18n.js")};
+};
 const contract = JSON.parse(read("tests/fixtures/image-studio-locale-copy-contract.json"));
 const prior = file => execFileSync("git", ["show", contract.base + ":" + file], {encoding: "utf8", maxBuffer: 30e6}).replace(/\r\n/g, "\n");
 const source = read("static/portal/portal.js");
@@ -46,7 +54,7 @@ const controls = html => [...html.matchAll(/<(?:input|textarea|select|button|a)\
 const options = html => [...html.matchAll(/<option\b[^>]*>/g)].map(match => match[0]);
 const beforeSources = {...pageMetaSources(), portal: prior("static/portal/portal.js"), i18n: prior("static/portal/portal-i18n.js")};
 
-test("physical application source is exactly BASE plus the 32 reviewed records", () => {
+test("earlier locale source remains exactly BASE plus 32 records after the bounded root-metadata projection", () => {
   assert.equal(contract.records.length, 32);
   for (const file of [...new Set(contract.records.map(row => row.file))]) {
     let expected = prior(file);

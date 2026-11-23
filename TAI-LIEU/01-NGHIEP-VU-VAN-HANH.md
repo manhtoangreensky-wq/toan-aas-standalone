@@ -3884,7 +3884,7 @@ ba dịch vụ active và 5+5 tệp giao diện khớp byte. Các giới hạn b
 
 ## Thiết kế ảnh — chữ trên trang và biểu mẫu, 23/11/2026
 
-Ứng viên kế tiếp dịch tiêu đề, mô tả và đường dẫn của chi tiết ảnh; làm
+Đợt PR #798 dịch tiêu đề, mô tả và đường dẫn của chi tiết ảnh; làm
 dễ hiểu 24 câu thư viện và chín trường phương án ở Việt/Anh/Trung. Tên,
 nội dung khách, giá trị lựa chọn và giới hạn biểu mẫu giữ nguyên. Hướng
 dẫn vẫn nêu các loại ngoài Tạo mới cần ảnh gốc. Màu tiêu đề thẻ sáng dùng
@@ -3895,5 +3895,30 @@ dữ liệu giả, 32 mẫu màu và hai ca gõ toàn bộ trường sau đổi 
 Hồi quy 171 tệp/5.202 ca đạt; câu hướng dẫn thư viện sau review được rút
 gọn, không hứa giữ lựa chọn chưa lưu vắng khỏi kết quả tìm mới. 48 ca
 ảnh hưởng sau câu sửa đạt, gồm 30 trạng thái thư viện; Python bổ sung
-155/155 và màu 90/90. Phát hành cần bằng chứng riêng. Chữ lỗi thao tác, metadata
+155/155 và màu 90/90. Bằng chứng triển khai được ghi ngay dưới. Chữ lỗi thao tác, metadata
 Studio gốc và locale toàn ứng dụng chưa được xác nhận hoàn tất.
+
+PR #798 đã triển khai, runtime `3d21e950fb8e676ffd0b8c945a5ff6d9c8425736`,
+CI45050895504 và deploy45053284830 thành công. Nguồn VPS sạch, ba dịch
+vụ active, health và5+5tệp đúng; receipt689/7083404719 đã đọc lại.
+
+## Thiết kế ảnh — tiêu đề gốc và chữ thẻ, 23/11/2026
+
+Ứng viên tiếp theo đổi tiêu đề/mô tả gốc thành chữ đúng Việt/Anh/Trung;
+nhãn phân trang dùng tên Kho tệp, không đổi key hoặc cách tìm/chọn.
+Hai key thêm/bốn hàng đổi,7recordmetadata; tên khách và trường giữ nguyên.
+
+Ảnh thực tế phát hiện tiêu đề thẻ gốc trắng trên nền sáng, có18/36 mẫu
+dưới4,5:1. Một rule màu sáng hiện có được mở rộng thêm đúng hai layout
+gốc; token màu, độ đặc hiệu, kích thước/nền và tối không đổi. Sau sửa36/
+36mẫu đạt, thấp nhất12,352:1. Tổng ứng dụng đợt này8record/3tệp.
+
+Metadata12 màn Chrome và99ca Node ghép đạt; Python245 và lượt kiểm lại
+90màu là cùng tập, không cộng lặp. Giao diện signed production, chữ nhỏ/
+kicker ngoài phạm vi đo, validation/phản hồi, vòng đời bản nháp và motion
+vẫn cần kiểm riêng. Ứng viên này chưa có biên nhận triển khai.
+
+Các thẻ liên kết đến hai không gian ở danh mục ảnh cũng dùng title/
+description chung. Đã kiểm raw renderer ba locale, controls giữ nguyên.
+CI đầu có6 so sánh lịch sử chưa cập nhật nguồn i18n, đã sửa riêng bộ đọc
+test và kiểm147/147 đạt; không thay tám app records vì lỗi comparator.

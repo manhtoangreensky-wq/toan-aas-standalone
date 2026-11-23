@@ -10177,8 +10177,8 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-image-studio-detail .po
   font-size: 16px;
 }
 
-/* Keep Image detail card headings readable on light surfaces. */
-html:not([data-portal-theme="dark"]) .portal-page:is(.portal-image-studio-detail, .portal-image-hub-detail) .portal-card-title {
+/* Keep Image workspace card headings readable on light surfaces. */
+html:not([data-portal-theme="dark"]) .portal-page:is(.portal-image-studio, .portal-image-hub, .portal-image-studio-detail, .portal-image-hub-detail) .portal-card-title {
   color: var(--portal-ink);
 }
 

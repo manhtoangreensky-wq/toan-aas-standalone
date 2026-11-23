@@ -2979,3 +2979,17 @@ BASE là runtime `d165bad407a51a8cf6339b019a073f8a1a1eb37a`.
 
 Đối chiếu hiện vật mới có 32 record, 22 khóa thêm và 24 hàng thay câu.
 Không suy ra khả năng tạo ảnh hay trạng thái provider từ thay đổi này.
+
+## Thiết kế ảnh — đối chiếu tiêu đề gốc và màu thẻ, 23/11/2026
+
+BASE đã triển khai qua PR #798 tại `3d21e950fb8e676ffd0b8c945a5ff6d9c8425736`.
+
+| Hiện trạng BASE | Ứng viên đã kiểm cục bộ | Ranh giới giữ |
+|---|---|---|
+| Trang gốc dùng tên Anh và mô tả Việt pha Anh ở cả ba locale | Hai nhánh metadata riêng và hai key VI/EN/ZH | Chỉ `/image-studio`; route khác giữ |
+| Hub có mô tả EN/ZH kỹ thuật và nhãn tham chiếu cũ | Bốn hàng library đổi câu cố định | Không thay key, phân trang, điều kiện chọn hoặc tên khách |
+| 18/36 mẫu tiêu đề thẻ gốc sáng không đọc rõ | Mở rộng một rule màu sáng sẵn có,36/36 đạt | Geometry/background/dark foreground giữ |
+| Purity test thô có115keys nhưng kỳ vọng lịch sử93, đã lỗi trên BASE | Projection hữu hạn trước assertion lịch sử | Giữ93/38, regex và action assertions; test mới kiểm raw source và mọi key |
+
+Không đổi khả năng xử lý ảnh, quyền, provider, giá hoặc dữ liệu. Chưa dùng
+kết quả cục bộ để kết luận toàn-app locale/AX/auth/device hoặc đã triển khai.

@@ -18102,6 +18102,8 @@
   });
 
   const IMAGE_STUDIO_COPY_ROWS = [
+    ["page.title", "Thiết kế ảnh", "Image design", "图像设计"],
+    ["page.description", "Lưu ý tưởng, ảnh tham khảo và các phương án thiết kế tại một nơi.", "Keep ideas, reference images and design options in one place.", "在一处保存创意、参考图和设计方案。"],
     ["guarded.hubTitle", "Chưa thể mở bảng thiết kế", "Design boards could not be opened", "暂时无法打开画板"],
     ["guarded.studioTitle", "Chưa thể mở thiết kế ảnh", "Image design could not be opened", "暂时无法打开图像设计"],
     ["guarded.enabled", "Đăng nhập để mở các bảng thiết kế của bạn.", "Sign in to open your design boards.", "登录后打开您的画板。"],
@@ -18182,10 +18184,10 @@
   });
 
   const IMAGE_STUDIO_LIBRARY_COPY_ROWS = [
-    ["page.title", "Trung tâm vận hành hình ảnh", "Image operations hub", "图像运营中心"],
-    ["page.description", "Quản lý định hướng hình ảnh, phần tự rà soát và bước tiếp theo trong không gian hình ảnh của bạn.", "App-first operations board for art direction, self-review and independent next steps on owner-checked Image Studio data.", "基于经过所有者检查的图像工作室数据，为艺术方向、自审及独立后续步骤提供应用优先的调度看板。"],
-    ["pagination.projectReference", "tham chiếu dự án", "project references", "项目参考"],
-    ["pagination.assetReference", "tham chiếu ảnh trong Kho tài sản", "image Asset Vault references", "图像 Asset Vault 参考"],
+    ["page.title", "Bảng thiết kế ảnh", "Image design boards", "图像设计画板"],
+    ["page.description", "Quản lý bảng thiết kế, so sánh phương án và chọn bước tiếp theo.", "Manage design boards, compare options and choose the next step.", "管理画板、比较方案并选择下一步。"],
+    ["pagination.projectReference", "dự án tham khảo", "project references", "参考项目"],
+    ["pagination.assetReference", "ảnh tham khảo trong Kho tệp", "reference images in File Library", "文件库参考图"],
     ["reference.projectTitle", "Dự án của bạn", "Your projects", "您的项目"],
     ["reference.assetTitle", "Ảnh trong Kho tệp", "Images in File Library", "文件库中的图像"],
     ["reference.projectCopy", "Tìm và chọn dự án để liên kết với bảng thiết kế.", "Find and choose a project to link to the design board.", "查找并选择要关联到画板的项目。"],

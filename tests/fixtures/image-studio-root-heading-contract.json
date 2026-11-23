@@ -1,0 +1,10 @@
+{
+  "base": "3d21e950fb8e676ffd0b8c945a5ff6d9c8425736",
+  "records": [
+    {
+      "file": "static/portal/portal-theme.css",
+      "old": "/* Keep Image detail card headings readable on light surfaces. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page:is(.portal-image-studio-detail, .portal-image-hub-detail) .portal-card-title {\n  color: var(--portal-ink);\n}",
+      "new": "/* Keep Image workspace card headings readable on light surfaces. */\nhtml:not([data-portal-theme=\"dark\"]) .portal-page:is(.portal-image-studio, .portal-image-hub, .portal-image-studio-detail, .portal-image-hub-detail) .portal-card-title {\n  color: var(--portal-ink);\n}"
+    }
+  ]
+}
