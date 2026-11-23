@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {imageStudioRootMetadataHistoricalSource, imageStudioRootMetadataHistoricalSnapshot} from "./image-studio-root-metadata-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/image-studio-locale-copy-contract.json", import.meta.url)));
 assert.equal(contract.base, "d165bad407a51a8cf6339b019a073f8a1a1eb37a");
 assert.equal(contract.records.length, 32);
 
 export function imageStudioLocaleCopyHistoricalSource(source, file) {
+  source = imageStudioRootMetadataHistoricalSource(source, file);
   const records = contract.records.filter(row => row.file === file);
   if (!records.length || !source.includes(records[0].new)) return source;
   for (const record of [...records].reverse()) {
@@ -23,6 +25,7 @@ const detailRows = [
 ].map(row => JSON.parse(row.trim().replace(/,$/, "")));
 
 export function imageStudioLocaleCopyHistoricalSnapshot(entries, locale) {
+  entries = imageStudioRootMetadataHistoricalSnapshot(entries, locale);
   const index = ["vi", "en", "zh"].indexOf(locale) + 1;
   assert.ok(index > 0 && Array.isArray(entries));
   const library = new Map(changedLibrary.map(row => ["imageStudioLibraryUi." + row.next[0], row]));

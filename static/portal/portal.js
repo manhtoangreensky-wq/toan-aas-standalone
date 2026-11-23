@@ -10141,6 +10141,7 @@
     if (path === "/audio-hub/new") return audioWorkspaceText("hub.newTitle", fallback);
     if (["media-workspace-detail", "audio-hub-detail"].includes(page && page.layout)) return audioWorkspaceText("detail.pageTitle", fallback);
     if (["image-studio-detail", "image-hub-detail"].includes(page && page.layout)) return imageStudioDetailText("page.detailTitle", "Chi tiết bảng thiết kế");
+    if (path === "/image-studio") return imageStudioText("page.title", "Thiết kế ảnh");
     if (path === "/image-hub") return imageStudioLibraryText("page.title", fallback);
     if (path === "/image-hub/new") return imageStudioDetailText("page.newTitle", fallback);
     if (["/image/create", "/image/new"].includes(path)) return imageUiText("page.title", fallback);
@@ -10287,6 +10288,7 @@
     if (path === "/audio-hub/new") return audioWorkspaceText("hub.newDescription", fallback);
     if (["media-workspace-detail", "audio-hub-detail"].includes(page && page.layout)) return audioWorkspaceText("detail.pageDescription", fallback);
     if (["image-studio-detail", "image-hub-detail"].includes(page && page.layout)) return imageStudioDetailText("page.detailDescription", "Xem và chỉnh sửa ý tưởng, ảnh tham khảo và các phương án.");
+    if (path === "/image-studio") return imageStudioText("page.description", "Lưu ý tưởng, ảnh tham khảo và các phương án thiết kế tại một nơi.");
     if (path === "/image-hub") return imageStudioLibraryText("page.description", fallback);
     if (path === "/image-hub/new") return imageStudioDetailText("page.newDescription", fallback);
     if (["/image/create", "/image/new"].includes(path)) return imageUiText("page.description", fallback);

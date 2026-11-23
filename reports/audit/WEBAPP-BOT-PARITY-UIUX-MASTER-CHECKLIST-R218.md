@@ -3354,9 +3354,8 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   CI45045044485 hai job thành công; deploy45047560707; VPS nguồn sạch/
   ba services/health/5+5assets đúng; receipt7082628798 đã đọc lại.
 - [ ] Giữ nội dung khi lỗi đọc làm mất biểu mẫu, đổi phiên bản hoặc rời trang.
-- [ ] Tiêu đề/mô tả/đường dẫn chi tiết còn chữ kỹ thuật: worker đã trả
-  năm record, 18 ca nội dung và 12 đối chiếu trang khác đạt trong bộ nhớ;
-  chỉ mở áp dụng sau đợt hiện tại.
+- [x] Tiêu đề/mô tả/đường dẫn chi tiết đã xử lý trong PR #798; bằng chứng
+  CI/deploy/runtime/receipt ở đợt ngôn ngữ nhãn cố định bên dưới.
 - [ ] Giao diện production sau đăng nhập, locale toàn app, auth, AX,
   responsive và motion cuối vẫn cần bằng chứng theo checklist.
 
@@ -3374,6 +3373,23 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
 - [x] Review một phát hiện câu hứa giữ lựa chọn quá rộng: sửa đặc tả,
   Antigravity trả đúng một hàng. Ba ca RED; sau sửa48 ca ảnh hưởng đạt,
   gồm30 trạng thái thư viện nguồn vật lý. Không đổi logic chọn dữ liệu.
-- [ ] Docs/Tester/provenance, PR/CI/merge/deploy/receipt.
+- [x] PR #798 đã gộp/runtime3d21e950fb8e676ffd0b8c945a5ff6d9c8425736;
+  CI45050895504 hai job đạt; deploy45053284830; VPS nguồn sạch/ba dịch
+  vụ/health/5+5assets đúng; receipt689/7083404719 đã đọc lại đúng.
 - [ ] Chưa nhận toàn trang/toàn app hết chữ kỹ thuật; phản hồi lỗi,
   metadata Studio gốc, bản nháp qua lỗi đọc/revision/route và motion còn mở.
+
+### Thiết kế ảnh — tiêu đề gốc và màu thẻ, 23/11/2026
+
+- [x] Nhánh từ runtime PR798; contract689/7083497305, phụ lục7092942745.
+- [x] ROOT-META-A/B7record đúng hai worker, sourceBASE+7, thêm2key/đổi4hàng.
+  RED5/3; GREEN8/8,18 trạng thái/18 đối chiếu route; dữ liệu khách giữ.
+- [x] Chrome12 màn375/1440 VIENZH không lỗi/mạng/tràn; có nhập liệu.
+- [x] ROOT-HEADING: BASE18/36 mẫu dưới4,5; một rule worker đã xét, sau
+  sửa36/36 đạt, thấp nhất12,352; nền/hình học/màu tối giữ.
+- [x] Node99ca duy nhất ghép/16tệp,0 lỗi còn lại;1 baseline purity lỗi đã
+  tái hiện, sửa projection giữ assertion. Python245 đạt;90màu kiểm lại
+  là tập con. Review metadata vàCSS C0/I0/M0, không chạy test lặp bởi reviewer.
+- [ ] Docs/Tester/provenance, mộtPR, exactCI, merge/deploy/runtime/assets/receipt.
+- [ ] Giao diện signed production chưa quan sát; toàn-app locale/AX,
+  chữ nhỏ/kicker, auth/device và motion vẫn cần bằng chứng riêng.

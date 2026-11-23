@@ -1,0 +1,40 @@
+{
+  "base": "3d21e950fb8e676ffd0b8c945a5ff6d9c8425736",
+  "records": [
+    {
+      "file": "static/portal/portal.js",
+      "old": "    if (path === \"/image-hub\") return imageStudioLibraryText(\"page.title\", fallback);",
+      "new": "    if (path === \"/image-studio\") return imageStudioText(\"page.title\", \"Thiết kế ảnh\");\n    if (path === \"/image-hub\") return imageStudioLibraryText(\"page.title\", fallback);"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    if (path === \"/image-hub\") return imageStudioLibraryText(\"page.description\", fallback);",
+      "new": "    if (path === \"/image-studio\") return imageStudioText(\"page.description\", \"Lưu ý tưởng, ảnh tham khảo và các phương án thiết kế tại một nơi.\");\n    if (path === \"/image-hub\") return imageStudioLibraryText(\"page.description\", fallback);"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  const IMAGE_STUDIO_COPY_ROWS = [",
+      "new": "  const IMAGE_STUDIO_COPY_ROWS = [\n    [\"page.title\", \"Thiết kế ảnh\", \"Image design\", \"图像设计\"],\n    [\"page.description\", \"Lưu ý tưởng, ảnh tham khảo và các phương án thiết kế tại một nơi.\", \"Keep ideas, reference images and design options in one place.\", \"在一处保存创意、参考图和设计方案。\"],"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "    [\"page.title\", \"Trung tâm vận hành hình ảnh\", \"Image operations hub\", \"图像运营中心\"],",
+      "new": "    [\"page.title\", \"Bảng thiết kế ảnh\", \"Image design boards\", \"图像设计画板\"],"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "    [\"page.description\", \"Quản lý định hướng hình ảnh, phần tự rà soát và bước tiếp theo trong không gian hình ảnh của bạn.\", \"App-first operations board for art direction, self-review and independent next steps on owner-checked Image Studio data.\", \"基于经过所有者检查的图像工作室数据，为艺术方向、自审及独立后续步骤提供应用优先的调度看板。\"],",
+      "new": "    [\"page.description\", \"Quản lý bảng thiết kế, so sánh phương án và chọn bước tiếp theo.\", \"Manage design boards, compare options and choose the next step.\", \"管理画板、比较方案并选择下一步。\"],"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "    [\"pagination.projectReference\", \"tham chiếu dự án\", \"project references\", \"项目参考\"],",
+      "new": "    [\"pagination.projectReference\", \"dự án tham khảo\", \"project references\", \"参考项目\"],"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "    [\"pagination.assetReference\", \"tham chiếu ảnh trong Kho tài sản\", \"image Asset Vault references\", \"图像 Asset Vault 参考\"],",
+      "new": "    [\"pagination.assetReference\", \"ảnh tham khảo trong Kho tệp\", \"reference images in File Library\", \"文件库参考图\"],"
+    }
+  ]
+}

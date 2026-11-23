@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
+import {imageStudioLocaleCopyHistoricalSource} from "./helpers/image-studio-locale-copy-historical.mjs";
 
-const i18nSource = fs.readFileSync("static/portal/portal-i18n.js", "utf8");
-const portalSource = fs.readFileSync("static/portal/portal.js", "utf8");
+const historical = file => imageStudioLocaleCopyHistoricalSource(fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n"), file);
+const i18nSource = historical("static/portal/portal-i18n.js");
+const portalSource = historical("static/portal/portal.js");
 
 const catalogueStart = i18nSource.indexOf("  const IMAGE_STUDIO_DETAIL_COPY_ROWS = [");
 const catalogueEnd = i18nSource.indexOf("\n  ];", catalogueStart);
