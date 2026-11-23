@@ -2054,6 +2054,7 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | ISRM-DATA | nặng | Xem tên khách giống nhãn UI và ký tự đặc biệt | Nội dung khách nguyên vẹn/escape; controls/options giữ | Renderer và Chrome |
 | ISRM-DICT | vừa | Đọc từ điển và nhãn phân trang | Hai key thêm/bốn hàng đổi, cân bằng và khóa | Kiểm từ điển |
 | ISRM-OTHER | nặng | Sáu route khác ở ba locale | Metadata không đổi | 18 đối chiếu |
+| ISRM-CARDS | vừa | Thẻ liên kết hai không gian trên danh mục ảnh | Tiêu đề/mô tả mới đúng ba locale, controls giữ | Kiểm raw renderer độc lập và legacy markup |
 | ISRM-SOURCE | nặng | So BASE+7record, chèn thay đổi ngoài phạm vi | Chỉ hai app files; projection hữu hạn không che thay đổi lạ | Source/pressure checks |
 | ISRM-MOBILE | vừa | Xem375/1440 và nhập tên bảng | Không tràn/lỗi, nhập và giữ tên đúng | Chrome12 màn |
 | ISRH-CONTRAST | vừa | Tiêu đề thẻ hai trang gốc375/1440 sáng/tối | 36/36 mẫu≥4,5:1; nền/hình học/màu tối giữ | Đo CSS nguồn vật lý |

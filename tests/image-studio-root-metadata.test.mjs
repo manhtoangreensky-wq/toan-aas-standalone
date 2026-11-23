@@ -84,6 +84,20 @@ test("eighteen other-route metadata comparisons remain unchanged", () => {
   }
 });
 
+test("feature-page Image workspace cards consume the current localized metadata without changing controls", () => {
+  for (const locale of ["vi", "en", "zh"]) {
+    const raw = data(), view = render(locale, "/features/image", raw), old = before(locale, "/features/image", raw);
+    const html = view.qa.renderPage(view.page, {...view.context, ...raw}), oldHtml = old.qa.renderPage(old.page, {...old.context, ...raw});
+    assert.deepEqual(controls(html), controls(oldHtml));
+    for (const [index, route] of ["/image-studio", "/image-hub"].entries()) {
+      const card = html.match(new RegExp('<a class="portal-module-card" href="' + route + '"[^>]*>[\\s\\S]*?</a>'));
+      assert.ok(card, route);
+      assert.ok(card[0].includes("<h3>" + copy[locale][index][0] + "</h3>"), route);
+      assert.ok(card[0].includes("<p>" + copy[locale][index][1] + "</p>"), route);
+    }
+  }
+});
+
 test("finite source projection restores only reviewed root records and does not hide other or partial changes", () => {
   for (const file of [...new Set(contract.records.map(row => row.file))]) {
     const records = contract.records.filter(row => row.file === file);

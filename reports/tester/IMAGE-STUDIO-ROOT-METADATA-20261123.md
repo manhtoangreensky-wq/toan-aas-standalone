@@ -31,3 +31,18 @@ Chưa kết luận toàn-app locale/contrast/accessibility, auth/device/motion
 hoặc tương tác production sau đăng nhập. Chữ validation/phản hồi và vòng
 đời bản nháp vẫn theo checklist kế tiếp. CI/merge/deploy/runtime/assets
 cần bằng chứng riêng. Provider/ví/data thật/ENV không thay đổi.
+
+## Theo dõi CI đầu và sửa comparator
+
+Run45124090509/head d9712dc1:6 ca legacy-decorative-workbench của
+`/features/image` lỗi do thẻ Hub dùng title/description mới trong i18n,
+trong khi factory lịch sử chưa inverse phần i18n đó. Đây là6 khác biệt
+mới có chủ đích trong ứng dụng, không gọi là baseline. Auth QA bị skip
+theo dependency của CI thất bại; chưa merge/deploy.
+
+Chỉ đầu đọc i18n của test được chiếu qua inverse metadata đã duyệt;
+unknown source vẫn hiện cho comparator, expected HTML/controls/context/
+fake-panel assertions giữ nguyên. Thêm1 test raw current về cả hai thẻ
+trong ba locale;9 metadata+138legacy=147/147 đạt. Tám app records không
+đổi. Sổ ghép238Node/17tệp, không cộng lặp147 vào99 trước CI. Chờ exact-head
+CI mới, không bỏ gate hoặc sửa UI để thỏa snapshot cũ.

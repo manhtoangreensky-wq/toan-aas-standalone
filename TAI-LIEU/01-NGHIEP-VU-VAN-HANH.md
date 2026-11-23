@@ -3917,3 +3917,8 @@ Metadata12 màn Chrome và99ca Node ghép đạt; Python245 và lượt kiểm l
 90màu là cùng tập, không cộng lặp. Giao diện signed production, chữ nhỏ/
 kicker ngoài phạm vi đo, validation/phản hồi, vòng đời bản nháp và motion
 vẫn cần kiểm riêng. Ứng viên này chưa có biên nhận triển khai.
+
+Các thẻ liên kết đến hai không gian ở danh mục ảnh cũng dùng title/
+description chung. Đã kiểm raw renderer ba locale, controls giữ nguyên.
+CI đầu có6 so sánh lịch sử chưa cập nhật nguồn i18n, đã sửa riêng bộ đọc
+test và kiểm147/147 đạt; không thay tám app records vì lỗi comparator.

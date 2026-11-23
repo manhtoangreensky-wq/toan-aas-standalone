@@ -3391,5 +3391,8 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   tái hiện, sửa projection giữ assertion. Python245 đạt;90màu kiểm lại
   là tập con. Review metadata vàCSS C0/I0/M0, không chạy test lặp bởi reviewer.
 - [ ] Docs/Tester/provenance, mộtPR, exactCI, merge/deploy/runtime/assets/receipt.
+- [x] PR799/CI đầu45124090509 phát hiện6 legacy-card comparisons thiếu
+  inverse i18n. Sửa test reader, không đổi app; thêm raw card coverage,
+  147/147 đạt. Sổ Node ghép238/17tệp. Chờ exact-head CI mới, chưa deploy.
 - [ ] Giao diện signed production chưa quan sát; toàn-app locale/AX,
   chữ nhỏ/kicker, auth/device và motion vẫn cần bằng chứng riêng.

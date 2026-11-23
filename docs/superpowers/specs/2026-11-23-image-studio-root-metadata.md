@@ -83,3 +83,16 @@ và các comparator ảnh hưởng33/33 đạt. Python màu90/90 chạy lại sa
 là tập con của245 ca trước đó, không cộng thành335. Tổng Node cục bộ
 99 ca duy nhất/16 tệp theo kết quả ghép và lượt kiểm phần thay đổi; không
 khai là một lượt toàn suite mới. CI đúng HEAD vẫn là gate phát hành riêng.
+
+CI đầu45124090509/head d9712dc1 thất bại6 ca của
+`legacy-decorative-workbench.test.mjs`, cả ba locale/two wallet-fixture
+states tại `/features/image`. Root cause: thẻ liên kết dùng cùng metadata
+Hub đã đổi, nhưng factory đối chiếu lịch sử chỉ chiếu portal source, chưa
+chiếu i18n source. Không phải lỗi chức năng hoặc dữ liệu; controls/context
+đã qua các assertion trước điểm so HTML. Không rollback tám app records.
+
+Sửa QA đúng một đầu đọc i18n bằng inverse bảy metadata record đã được kiểm
+độc lập, không thay assertions/expected markup. Thêm raw-renderer case
+cho cả hai thẻ ở ba locale để bảo vệ đúng chữ mới. Nhóm147/147 đạt, gồm
+138 legacy và9 root metadata. Tổng kết ghép hiện238 ca Node/17tệp;
+99 trước CI là lịch sử, không cộng lặp147 vào99. Chờ CI đúng HEAD mới.

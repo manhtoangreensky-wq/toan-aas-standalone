@@ -20,3 +20,9 @@ không stage. Provenance sẽ được xác minh trên commit trước push.
 Chỉ một PR cho đợt này; exact-head CI, merge/tree comparison,
 deploy/runtime/assets/receipt là các gate riêng. Signed production UI
 chưa quan sát; toàn goal còn mở, motion cuối.
+
+Theo dõi CI đầu45124090509:6 legacy-card comparisons thiếu inverse i18n
+cho title/description Hub mới. Sửa đúng test reader, không sửa ứng dụng;
+thêm raw module-card coverage.147/147 mục tiêu đạt, sổ Node ghép238 ca/
+17tệp. Scope thêm đúng `tests/legacy-decorative-workbench.test.mjs`;
+tổng nguồn/test/docs25tệp trước2provenance. Không merge/deploy head cũ.

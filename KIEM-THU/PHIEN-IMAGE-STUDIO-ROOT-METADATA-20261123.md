@@ -28,3 +28,8 @@ QA có RED riêng rồi sửa, không phải lỗi worker/app. Python245/245 đ�
 Review metadata và addendum CSS đều C0/I0/M0, không chạy lặp test bởi
 reviewer. Trạng thái LOCAL_CHECKED_RELEASE_PENDING. CI/merge/deploy/
 runtime/assets và tương tác production sau đăng nhập có bằng chứng riêng.
+
+CI đầu45124090509 có6 lỗi legacy markup tại thẻ Hub của danh mục ảnh.
+Đã sửa đúng đầu đọc i18n lịch sử, giữ assertions, thêm kiểm raw cả hai thẻ
+ba locale.147/147 đạt (138 legacy+9 metadata);238 ca Node duy nhất/17tệp
+theo kết quả ghép hiện tại. Ứng dụng không đổi sau CI đầu. Chờ CI mới.
