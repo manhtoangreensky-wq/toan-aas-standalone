@@ -5,11 +5,13 @@ import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {pageMetaRenderer, pageMetaSources} from "./helpers/chat-page-meta-runtime.mjs";
 import {imageStudioRootMetadataHistoricalSource, imageStudioRootMetadataHistoricalSnapshot} from "./helpers/image-studio-root-metadata-historical.mjs";
+import {imageStudioValidationHistoricalSource} from "./helpers/image-studio-validation-historical.mjs";
 
-const read = file => fs.readFileSync(new URL("../" + file, import.meta.url), "utf8").replace(/\r\n/g, "\n");
+const read = file => imageStudioValidationHistoricalSource(fs.readFileSync(new URL("../" + file, import.meta.url), "utf8").replace(/\r\n/g, "\n"), file);
 const contract = JSON.parse(read("tests/fixtures/image-studio-root-metadata-contract.json"));
 const prior = file => execFileSync("git", ["show", contract.base + ":" + file], {encoding: "utf8", maxBuffer: 30e6}).replace(/\r\n/g, "\n");
 const sources = pageMetaSources();
+sources.i18n = imageStudioValidationHistoricalSource(sources.i18n, "static/portal/portal-i18n.js");
 const beforeSources = {...sources, portal: prior("static/portal/portal.js"), i18n: prior("static/portal/portal-i18n.js")};
 const proposedSources = {...beforeSources};
 for (const row of contract.records) {

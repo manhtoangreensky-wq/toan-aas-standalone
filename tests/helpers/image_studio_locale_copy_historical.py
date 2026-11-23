@@ -12,9 +12,36 @@ assert len(ROOT_METADATA["records"]) == 7
 ROOT_HEADING = json.loads((ROOT / "tests/fixtures/image-studio-root-heading-contract.json").read_bytes())
 assert ROOT_HEADING["base"] == "3d21e950fb8e676ffd0b8c945a5ff6d9c8425736"
 assert len(ROOT_HEADING["records"]) == 1
+VALIDATION = json.loads((ROOT / "tests/fixtures/image-studio-validation-contract.json").read_bytes())
+assert VALIDATION["base"] == "5a95e48c9df922cc19a4bd83dfef46f2d85c04d2"
+assert len(VALIDATION["records"]) == 30
+
+
+def image_studio_validation_historical_source(source: str, file: str) -> str:
+    records = [row for row in VALIDATION["records"] if row["file"] == file]
+    if not any(record["new"] in source for record in records):
+        return source
+    scopes = {
+        '"Ý định Image Studio không hợp lệ."': "imageArtboardPayload",
+        '"Loại biến thể Image Studio không hợp lệ."': "imageDirectionPayload",
+    }
+    for record in reversed(records):
+        scope = scopes.get(record["old"])
+        if scope:
+            start = source.find("  function " + scope + "(")
+            end = source.find("\n  }", start) + 4
+            assert start >= 0 and end > start, "Missing Image validation scope"
+            body = source[start:end]
+            assert body.count(record["new"]) == 1, "Unreviewed scoped Image validation"
+            source = source[:start] + body.replace(record["new"], record["old"], 1) + source[end:]
+        else:
+            assert source.count(record["new"]) == 1, "Unreviewed Image validation source"
+            source = source.replace(record["new"], record["old"], 1)
+    return source
 
 
 def image_studio_locale_copy_historical_source(source: str, file: str) -> str:
+    source = image_studio_validation_historical_source(source, file)
     heading_record = ROOT_HEADING["records"][0]
     if file == heading_record["file"] and heading_record["new"] in source:
         assert source.count(heading_record["new"]) == 1, "Unreviewed Image root heading CSS"

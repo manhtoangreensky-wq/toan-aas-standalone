@@ -43,7 +43,7 @@ Tiêu chí và thứ tự:
   tác nhập và tên khách giữ nguyên. Không suy thành toàn-app AX/contrast.
 - [x] Kiểm gộp Image/metadata/historical, Python245/245 và review metadata
   C0/I0/M0; phụ lục màu có review riêng C0/I0/M0, không lặp metadata.
-- [ ] Vận hành/đối chiếu/Tester/provenance → một PR → exactCI → merge
+- [x] Vận hành/đối chiếu/Tester/provenance → một PR → exactCI → merge
   → deploy → runtime/assets → receipt. Giao diện signed production riêng.
 
 Phản hồi/validation, bản nháp qua lỗi đọc/đổi revision/rời route và motion
@@ -56,6 +56,14 @@ hai module test không sửa với hai nguồn UI lấy từ commit BASE:4 ca,
 giữ nguyên số93/38, regex ngôn ngữ, uniqueness và mọi action assertion.
 Test root mới vẫn dùng nguồn vật lý không chiếu để kiểm2key mới/4hàng
 đổi và toàn bộ giá trị từ điển khác. Đây là sửa QA, không thêm thay đổi app.
+
+PR #799 đã phát hành: CI45129027195 hai job success trên HEAD
+b05d786ba3c902650f56751000461537dd1730ea. Merge/runtime
+5a95e48c9df922cc19a4bd83dfef46f2d85c04d2, cây nguồn
+4fbe691ab459831f3539fdb1c6fd5d8128a42848 trùng bản kiểm.
+Deploy45132203233 success; VPS đúng SHA, nguồn sạch, ba dịch vụ active,
+health hợp lệ và5+5assets đúng byte. Receipt689/7094535782 đã đọc lại.
+Signed production UI vẫn NOT_TESTED; không đóng toàn goal.
 
 ## Prerequisite ROOT-HEADING — sửa màu tiêu đề thẻ gốc
 

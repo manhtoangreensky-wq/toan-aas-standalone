@@ -46,3 +46,9 @@ fake-panel assertions giữ nguyên. Thêm1 test raw current về cả hai thẻ
 trong ba locale;9 metadata+138legacy=147/147 đạt. Tám app records không
 đổi. Sổ ghép238Node/17tệp, không cộng lặp147 vào99 trước CI. Chờ exact-head
 CI mới, không bỏ gate hoặc sửa UI để thỏa snapshot cũ.
+
+Đã phát hành PR799: CI45129027195 cả Verify Web App và Authenticated QA
+success đúng HEADb05d786b. Merge/runtime5a95e48c9df922cc19a4bd83dfef46f2d85c04d2;
+cây nguồn trùng bản kiểm, deploy45132203233 success, VPS nguồn sạch/
+ba services/health/5+5assets đúng. Receipt689/7094535782 đọc lại đúng.
+Signed production UI vẫn NOT_TESTED; không đóng toàn goal.
