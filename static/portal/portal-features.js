@@ -373,7 +373,7 @@
     const card = set(make("a", "portal-module-card"), "href", feature.route);
     set(card, "data-feature-key", feature.key); set(card, "data-feature-route", feature.route);
     set(card, "data-boundary", boundary);
-    const top = make("div", "portal-module-card-top"), signals = set(set(make("span", "portal-module-card-signals"), "hidden", "true"), "style", "display:none");
+    const top = make("div", "portal-module-card-top"), signals = make("span", "portal-module-card-signals");
     const engineIndex = ["web_native", "bot_companion", "guarded"].indexOf(feature.engine.mode);
     const readinessIndex = ["available", "planning_only", "local_execution", "canonical_read", "guarded", "disabled"].indexOf(feature.readiness.status);
     const boundaryIndex = { canonical_bridge: 0, web_planning: 1, runtime_generator: 2, account_management: 3 }[boundary] ?? 2;
