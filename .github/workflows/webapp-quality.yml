@@ -28,7 +28,7 @@ jobs:
     # stuck and blocked otherwise valid, independently reviewable PRs.
     # Keep setup allowance for a cold runner; the test process itself is
     # independently capped below, which is the anti-stall control.
-    timeout-minutes: 20
+    timeout-minutes: 35
 
     steps:
       - name: Check out source
