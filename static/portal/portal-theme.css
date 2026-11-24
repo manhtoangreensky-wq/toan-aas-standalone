@@ -5482,6 +5482,11 @@ body {
   color: var(--portal-context);
 }
 
+.portal-page .portal-module-card .portal-module-card-signals,
+.portal-page .portal-module-card .portal-boundary-label {
+  display: none !important;
+}
+
 .portal-page .portal-module-card .portal-engine-label {
   border-color: var(--portal-border);
   background: var(--portal-surface-light);
