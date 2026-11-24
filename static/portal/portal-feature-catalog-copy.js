@@ -1,5 +1,10 @@
 (function exposeFeatureCatalogCopy(root) {
   "use strict";
+  if (typeof document !== "undefined" && document.head && typeof document.createElement === "function") {
+    const style = document.createElement("style");
+    style.textContent = ".portal-module-card-signals, .portal-boundary-label { display: none !important; }";
+    document.head.appendChild(style);
+  }
   root.TOANAASFeatureCatalogCopy = Object.freeze({
   "vi": {
     "dashboard": {
