@@ -12,7 +12,7 @@ not a deployment, provider, PayOS, Telegram or runtime-equivalence result.
 
 | Scope | Command / evidence | Current result |
 | --- | --- | --- |
-| Static audit | Pinned Python 3.11 `scripts/migration/audit_bot_to_web.py` against the frozen Git snapshot and current Web source | 773 canonical Bot commands, 2,862 callback-data values and 902 Web routes; 38.69% static Web surface coverage, 83.91% safe disposition coverage, and runtime equivalence is `NOT_STATICALLY_VERIFIABLE` (0%). |
+| Static audit | Pinned Python 3.11 `scripts/migration/audit_bot_to_web.py` against the frozen Git snapshot and current Web source | 773 canonical Bot commands, 2,862 callback-data values and 905 Web routes; 38.69% static Web surface coverage, 83.91% safe disposition coverage, and runtime equivalence is `NOT_STATICALLY_VERIFIABLE` (0%). |
 | Menu terminal catalog | Focused static audit tests plus generated `parity_gap.json` filter | All 61 observed P0 Menu records (28 unique literal callbacks and 11 unique templates) are `TELEGRAM_ONLY`; no Menu family remains in the feature-disposition backlog. This is a Bot-only source boundary, not a Web action or runtime-parity claim. |
 | Workboard/Task terminal catalog | Focused static audit tests plus generated `parity_gap.json` filter | All 27 observed finite `pipe|*`/`task|*` records are `TELEGRAM_ONLY`; the source still exposes no Web route, browser action, Bot ID transfer, job/task mutation, provider call, output/delivery or ledger action. Case, suffix, unknown and future values remain source-review-required. |
 | Ticket terminal catalog | Focused static audit tests plus generated `parity_gap.json` filter | All 20 observed finite `ticket|*` terminal records (17 unique raw literals) are `TELEGRAM_ONLY`; nine customer categories preserve the Telegram pending/record boundary and eight Bot-admin menu/list/search controls preserve the Bot-admin boundary. Case, whitespace, suffix, dynamic ID and unlisted values remain source-review-required. This is a Bot-only source boundary, not a Web action or runtime-parity claim. |
@@ -25,6 +25,12 @@ The frozen snapshot does not contain `webapp_core_bridge.py`. Any older
 bridge, callback or route-coverage figures below are retained only as
 historical records and cannot be used to enable an integration or claim
 current parity.
+
+The Web-only inventory refresh on 2026-11-25 records 905 routes after
+independently delivered main PR808. The prior count in this note was 902.
+Bot and parity-coverage figures above remain the frozen static-audit
+snapshot; this Web-only refresh does not rescan Bot or establish current
+runtime equivalence, provider output, payment success or live delivery.
 
 ## Historical verification record (non-current)
 
