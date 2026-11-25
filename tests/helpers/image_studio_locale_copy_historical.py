@@ -15,9 +15,40 @@ assert len(ROOT_HEADING["records"]) == 1
 VALIDATION = json.loads((ROOT / "tests/fixtures/image-studio-validation-contract.json").read_bytes())
 assert VALIDATION["base"] == "5a95e48c9df922cc19a4bd83dfef46f2d85c04d2"
 assert len(VALIDATION["records"]) == 30
+FREE_TOOLS_COLORS = json.loads((ROOT / "tests/fixtures/free-tools-readable-colors-contract.json").read_bytes())
+assert FREE_TOOLS_COLORS["base"] == "a8cf07490448548a2a1be6800fb7e146abeac726"
+assert len(FREE_TOOLS_COLORS["records"]) == 9
+
+
+def upstream_catalog_historical_source(source: str, file: str) -> str:
+    records = [row for row in FREE_TOOLS_COLORS["catalog_sync"]["records"] if row["file"] == file]
+    if not any(row["new"] in source for row in records):
+        return source
+    for record in reversed(records):
+        assert source.count(record["new"]) == 1, "Unreviewed upstream catalog source"
+        source = source.replace(record["new"], record["old"], 1)
+    return source
+
+
+def free_tools_readable_colors_historical_source(source: str, file: str) -> str:
+    records = [row for row in FREE_TOOLS_COLORS["records"] if row["file"] == file]
+    if not any(record["new"] in source for record in records):
+        return source
+    for record in reversed(records):
+        assert source.count(record["new"]) == 1, "Unreviewed Free Tools color source"
+        source = source.replace(record["new"], record["old"], 1)
+    return source
 
 
 def image_studio_validation_historical_source(source: str, file: str) -> str:
+    source = free_tools_readable_colors_historical_source(source, file)
+    source = upstream_catalog_historical_source(source, file)
+    if file == "static/portal/portal.js":
+        records = FREE_TOOLS_COLORS["main_sync"]["portal_insertions"]
+        if any(record in source for record in records):
+            for record in records:
+                assert source.count(record) == 1, "Unreviewed upstream realtime banner source"
+                source = source.replace(record, "", 1)
     records = [row for row in VALIDATION["records"] if row["file"] == file]
     if not any(record["new"] in source for record in records):
         return source

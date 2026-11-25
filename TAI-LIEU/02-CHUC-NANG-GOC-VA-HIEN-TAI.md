@@ -3012,3 +3012,27 @@ BASE/runtime5a95e48c9df922cc19a4bd83dfef46f2d85c04d2.
 Không thêm tạo ảnh, lưu ảnh, provider hoặc khả năng thanh toán. Các nhãn
 Composer còn pha Anh và thông báo hành động là việc tiếp theo, chưa được
 đóng bởi bản sửa riêng thông báo nhập liệu.
+
+PR #800 đã triển khai tại `a8cf07490448548a2a1be6800fb7e146abeac726`;
+CI45551291541, deploy45553790822 và receipt689/7153868208 tách riêng,
+không dùng bản trước sync main làm bằng chứng phát hành.
+
+## Công cụ miễn phí — đối chiếu màu chữ/nền, 25/11/2026
+
+| Hiện trạng BASE PR800 | Ứng viên đã kiểm | Ranh giới giữ |
+|---|---|---|
+| Tab dùng nền cố định nhưng chữ đổi theo theme; tab chọn có cặp màu khó đọc | Cặp nền/chữ riêng sáng/tối, 640/640 mẫu ở 32 trạng thái đạt 4,5:1 | Tên tab, thứ tự, chọn bằng bàn phím, hình học và font giữ |
+| Một số nhãn, ô nhập, nút và số liệu khó đọc | 278 mẫu chữ đang bật đo được đều đạt; tám phần tử vô hiệu giữ nguyên | Không đổi phép tính, giá trị, thuộc tính hoặc hành động |
+| Khung QR kế thừa nền/chữ không đồng bộ | Chỉ đổi cặp màu khung ngoài và tiêu đề | Nền QR bên trong vẫn trắng; thuật toán và thông tin không đổi |
+| Probe focus sớm thiếu ngữ cảnh gợi ý cần thêm `!important` | ArrowRight thật ở tám view đạt, thấp nhất 11,7725:1 | Không áp dụng amendment không cần thiết |
+
+Chỉ chín record/ hai tệp ứng dụng, không phải thiết kế lại trang. Không
+thay chức năng, provider, quyền, ví hoặc dữ liệu. Chỉ kiểm thân panel
+ban đầu; output/lỗi sau hành động, toàn ứng dụng, Safari/thiết bị thật và
+giao diện production sau đăng nhập chưa được chứng minh bởi đợt màu.
+
+Nhánh màu đã giữ thêm UI danh mục/tiện ích của PR810 tại0a9022ce.
+Đây là phần kế thừa, không phải record màu mới. So nguồn vật lý vẫn
+đòi main cố định+đúng9record; QA ba record catalog chỉ phục vụ so lịch sử,
+không bỏ byte lạ hoặc đổi assertion. Bằng chứng sau ghép538Node/98Python;
+không mở rộng kết luận tới Bot/API/provider hoặc production interaction.

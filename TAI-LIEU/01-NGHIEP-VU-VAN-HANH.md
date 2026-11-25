@@ -3944,3 +3944,53 @@ bằng chứng này để nhận full bootstrap/auth/API/production đã hoạt 
 Ảnh Composer còn nhãn cũ pha Anh như “prompt/key visual/landing page”;
 đã giữ trong phần rà locale kế tiếp, không nhận toàn ứng dụng hết chữ Anh.
 Toàn goal và motion cuối vẫn mở.
+
+PR #800 đã triển khai ngày 25/11/2026. HEAD được CI kiểm là
+`9318a199fb5639c33452f51a04ec176b90ed1337`; merge/runtime
+`a8cf07490448548a2a1be6800fb7e146abeac726`, hai tree khớp nhau.
+CI `45551291541` gồm hai job đạt, deploy `45553790822` thành công.
+VPS đúng bản, nguồn theo dõi sạch, ba dịch vụ hoạt động, nội dung health
+đúng và năm tệp trực tiếp cùng năm bản có phiên bản khớp byte.
+Biên nhận Issue #689 `7153868208` đã được đọc lại đúng.
+Giao diện production sau đăng nhập vẫn chưa được quan sát.
+
+## Công cụ miễn phí — màu chữ và nền, 25/11/2026
+
+Ứng viên sửa đúng màu, không thay tính năng hoặc nội dung. Tab, tiêu đề,
+nhãn, ô nhập, nút đang bật, sáu số liệu văn bản và khung xem QR dùng cặp
+nền/chữ đọc được ở giao diện sáng và tối. Nền ảnh QR bên trong giữ trắng;
+không đổi thông tin chuyển khoản, giá trị nhập, phép tính hoặc cách tạo QR.
+
+Đúng chín record trong hai tệp UI. Chrome kiểm tám view ở
+360/375/768/1440, sáng/tối, 32 trạng thái tab: 640/640 mẫu chữ đạt 4,5:1,
+thấp nhất 5,4733. Hai mươi view thân công cụ ban đầu có 278 mẫu chữ đang
+bật đo được đều đạt, thấp nhất 5,0505. Tám phần tử vô hiệu giữ nguyên;
+bốn mẫu không đo chắc chắn thuộc nhóm vô hiệu, không được nhận PASS.
+Vòng focus-visible khi đi bằng bàn phím đạt trên tám view, thấp nhất
+11,7725:1. Không cộng số mẫu thành số phần tử duy nhất hoặc toàn ứng dụng.
+
+Nhóm ảnh hưởng 398 test đạt; Python có hai nhóm 9 và 142 test đạt,
+không cộng lặp. Lượt hồi quy lớn đầu quá 600 giây nên giữ là chưa đạt;
+lượt tiếp theo ghi riêng từng tệp, chưa dùng kết quả chưa xong để phát hành.
+Không gọi mạng hoặc tạo QR khi kiểm; form, hình học, font, điều khiển và
+độ mờ vô hiệu được đối chiếu cùng ngữ cảnh. Chưa kiểm full-bootstrap,
+Safari, thiết bị thật hoặc giao diện production sau đăng nhập.
+Đợt màu chưa có bằng chứng CI/triển khai riêng tại thời điểm ghi mục này.
+
+Hồi quy cuối đã giải quyết đủ 168 tệp chọn: 4.748 lượt đạt. Cộng nhóm
+ảnh hưởng thành 176 tệp chọn/5.146 lượt, 4.936 ca duy nhất theo file/name;
+các ca import lặp chỉ tính một. Ba tệp chạy nặng đạt riêng 14/88/354,
+không thay assertion hay ứng dụng. Đây là kết quả ghép các lượt đã
+thành công, không phải một lượt full-suite duy nhất. Metadata1/1 đạt và
+py_compile app cùng Python thay đổi exit0. Chờ CI và triển khai đợt màu.
+
+Main/VPS đã triển khai PR808 tạifbcbfdf4 trước phát hành màu. Nhánh màu
+kế thừa bản đó, giữ chín thay đổi màu; nhóm giao nhau sau hòa nhập422
+đạt và Pythoninverse3đạt. CI của main mới lỗi bằng chứng nguồn cũ nên
+không dùng làm chứng nhận; đợt màu tạo lại bằng chứng và kiểm CI riêng.
+
+Trong lúc chờ, PR810 lên main/VPS tại0a9022ce, cải thiện danh mục và
+khối cài tiện ích. Nhánh màu giữ nguyên phần này, không thay chức năng.
+27tệp JavaScript/538lượt và Python98/98 đạt sau ghép; ba record QA riêng
+giữ mọi thay đổi lạ, không chiếu nguồn dùng để hiển thị. CI45652044355
+đạt cho bản63ad906a trước ghép; bản ghép vẫn cần CI và triển khai riêng.

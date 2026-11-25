@@ -13983,8 +13983,8 @@
             </div>
           </div>
           <div class="portal-free-tool-col" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
-            <div id="free-tools-qr-preview-container" class="portal-card portal-card-pad" style="width: 100%; max-width: 360px; text-align:center; background: rgba(0,0,0,0.25); border: 1px solid var(--portal-border-strong); border-radius: 16px; padding: 20px;">
-              <div style="font-size: 13px; font-weight: 600; color: var(--portal-accent); margin-bottom: 14px;">${c("vietqr.preview.title", "MÃ VIETQR THANH TOÁN")}</div>
+            <div id="free-tools-qr-preview-container" class="portal-card portal-card-pad" style="width: 100%; max-width: 360px; text-align:center; background: var(--portal-surface); border: 1px solid var(--portal-border-strong); border-radius: 16px; padding: 20px;">
+              <div style="font-size: 13px; font-weight: 600; color: var(--portal-ink); margin-bottom: 14px;">${c("vietqr.preview.title", "MÃ VIETQR THANH TOÁN")}</div>
               <div style="min-height: 260px; display:flex; align-items:center; justify-content:center; background: #ffffff; border-radius: 12px; padding: 8px; margin-bottom: 14px;">
                 <img id="free-tools-qr-img" alt="${c("vietqr.preview.alt", "Mã VietQR")}" style="max-width: 100%; height: auto; display:none;" />
                 <div id="free-tools-qr-placeholder" style="color: #666666; font-size: 13px; padding: 40px 10px;">${c("vietqr.preview.placeholder", "Nhập số tài khoản rồi bấm Tạo mã QR để xem trước.")}</div>
@@ -14153,27 +14153,27 @@
         <div class="portal-free-tools-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px;">
           <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
             <div style="font-size: 11px; color: var(--portal-muted);">${c("text.stat.chars", "Tổng ký tự")}</div>
-            <div id="free-tools-text-chars" style="font-size: 20px; font-weight: 700; color: var(--portal-accent); margin-top: 4px;">0</div>
+            <div id="free-tools-text-chars" style="font-size: 20px; font-weight: 700; color: var(--portal-ink); margin-top: 4px;">0</div>
           </div>
           <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
             <div style="font-size: 11px; color: var(--portal-muted);">${c("text.stat.charsNoSpaces", "Không khoảng trắng")}</div>
-            <div id="free-tools-text-chars-nospaces" style="font-size: 20px; font-weight: 700; color: #a6fff0; margin-top: 4px;">0</div>
+            <div id="free-tools-text-chars-nospaces" style="font-size: 20px; font-weight: 700; color: var(--portal-ink); margin-top: 4px;">0</div>
           </div>
           <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
             <div style="font-size: 11px; color: var(--portal-muted);">${c("text.stat.words", "Số từ")}</div>
-            <div id="free-tools-text-words" style="font-size: 20px; font-weight: 700; color: var(--portal-accent); margin-top: 4px;">0</div>
+            <div id="free-tools-text-words" style="font-size: 20px; font-weight: 700; color: var(--portal-ink); margin-top: 4px;">0</div>
           </div>
           <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
             <div style="font-size: 11px; color: var(--portal-muted);">${c("text.stat.lines", "Số dòng / số câu")}</div>
-            <div id="free-tools-text-lines-sentences" style="font-size: 20px; font-weight: 700; color: #ffffff; margin-top: 4px;">0 / 0</div>
+            <div id="free-tools-text-lines-sentences" style="font-size: 20px; font-weight: 700; color: var(--portal-ink); margin-top: 4px;">0 / 0</div>
           </div>
           <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
             <div style="font-size: 11px; color: var(--portal-muted);">${c("text.stat.readTime", "Thời gian đọc")}</div>
-            <div id="free-tools-text-read-time" style="font-size: 20px; font-weight: 700; color: #7beddb; margin-top: 4px;">${c("text.stat.zeroSeconds", "~0 giây")}</div>
+            <div id="free-tools-text-read-time" style="font-size: 20px; font-weight: 700; color: var(--portal-ink); margin-top: 4px;">${c("text.stat.zeroSeconds", "~0 giây")}</div>
           </div>
           <div class="portal-stat-box" style="background: rgba(255,255,255,0.03); border: 1px solid var(--portal-border); border-radius: 12px; padding: 12px; text-align: center;">
             <div style="font-size: 11px; color: var(--portal-muted);">${c("text.stat.voiceTime", "Thời gian lồng tiếng")}</div>
-            <div id="free-tools-text-voice-time" style="font-size: 20px; font-weight: 700; color: #ffd166; margin-top: 4px;">${c("text.stat.zeroSeconds", "~0 giây")}</div>
+            <div id="free-tools-text-voice-time" style="font-size: 20px; font-weight: 700; color: var(--portal-ink); margin-top: 4px;">${c("text.stat.zeroSeconds", "~0 giây")}</div>
           </div>
         </div>
         <div class="portal-field">

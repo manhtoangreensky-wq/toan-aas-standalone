@@ -2071,4 +2071,18 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | ISVC-DICT | vừa |Đọc catalogue hiện tại và lịch sử |Đúng51key thêm/khóa, mọi giá trị cũ giữ |Dictionary/inverse pressure |
 | ISVC-SOURCE | nặng |So BASE+30record và thêm thay đổi lạ |Đúng2app files, inverse không che bytes lạ/thiếu/lặp |Source/pressure checks |
 | ISVC-MOBILE | vừa |Nhập sai trên375/1440 Việt/Anh/Trung |Thông báo thấy được, không tràn, input giữ, không ghi/mạng |12màn Chrome |
-| ISVC-DELIVERY | nặng |CI/merge/deploy/runtime/assets/receipt |Từng gate có bằng chứng riêng |CHƯA PHÁT HÀNH |
+| ISVC-DELIVERY | nặng |CI/merge/deploy/runtime/assets/receipt |Từng gate có bằng chứng riêng |PR800; CI45551291541; deploy45553790822; runtime a8cf0749; receipt689-7153868208; signed UI còn kiểm riêng |
+
+## FREE-TOOLS-READABLE-COLORS-20261125 — Issue #689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| FT-RC-TOP | nặng | Mở Công cụ miễn phí ở 360/375/768/1440, sáng/tối | Chữ đầu trang đọc rõ; 640/640 mẫu ≥4,5:1, chữ/hình học/font giữ | [Phiên kiểm tra](PHIEN-FREE-TOOLS-READABLE-COLORS-20261125.md) |
+| FT-RC-TABS | nặng | Hover, focus và chọn tab bằng bàn phím | Bốn trạng thái ở tám màn giữ tên/tab/selection; không tràn/lỗi | 32 trạng thái Chrome nguồn vật lý |
+| FT-RC-KEYBOARD | nặng | Dùng phím mũi tên chuyển tab | Focus thật nhìn thấy, vòng 3px đạt ≥3:1 ở tám màn | Thấp nhất 11,7725:1; không sửa focus bổ sung |
+| FT-RC-PANELS | nặng | Xem nội dung ban đầu của mười công cụ ở sáng/tối | 278/278 mẫu đang bật và đo được ≥4,5:1 | 20 màn; tám mẫu disabled giữ, bốn chưa kết luận là disabled |
+| FT-RC-QR | nặng | Xem vỏ bản xem trước QR, không tạo mã | Nền/chữ bên ngoài rõ; nền trắng ảnh bên trong và thuật toán giữ | Source/comparator; không gọi tạo QR |
+| FT-RC-CONTROLS | nặng | Đối chiếu input, lựa chọn và điều khiển bị vô hiệu | IDs/giá trị/chữ/hình học/độ mờ và hành động giữ nguyên | So baseline cùng ngữ cảnh và test nguồn |
+| FT-RC-SOURCE | nặng | So nguồn với BASE và gây thiếu/lặp/thay đổi lạ trong dữ liệu kiểm | Đúng chín record/hai app files; inverse không che bytes lạ | Source/inverse pressure; nhóm ảnh hưởng 398 đạt |
+| FT-RC-REGRESSION | nặng | Chạy các nhóm hồi quy đã khai báo | Không có lỗi mới; báo riêng quan sát và ca duy nhất, không cộng lặp | Node gộp 176 tệp/5.146 lượt/4.936 khóa duy nhất, 0 lỗi/bỏ qua; Python hai nhóm 9/142 đạt |
+| FT-RC-DELIVERY | nặng | CI/merge/deploy/runtime/health/assets/receipt | Mỗi cổng có bằng chứng riêng; không nhận signed UI từ HTTP/asset | CHƯA PHÁT HÀNH |
