@@ -73,3 +73,13 @@ nhập, toàn bộ bootstrap/auth/API, trạng thái sau hành động/đầu ra
 thiết bị thật/Safari hoặc whole-app compliance. Không gọi QR/nguồn
 bên ngoài, không ghi dữ liệu thật, không chạm provider/ví/ENV.
 Toàn goal và motion cuối vẫn mở.
+
+## Kiểm tương thích main sau cùng
+
+PR808 đã có trên main/VPS tạifbcbfdf4; phụ lục689/7161431864 trước
+merge86a0504a. Chín record màu giữ nguyên; API/realtime/extension/pricing
+và test upstream bằng đúng main. Một comparator hữu hạn bổ sung hai
+insertion banner29dòng; không thay assertion cũ hoặc bỏ kiểm thay đổi lạ.
+Nguồn vật lý vẫn so main cố định+9record.10tệp giao nhau422/422,
+Pythoninverse3/3 đạt. Không nhận full regression sau sync; CI mới trên
+HEAD cuối bắt buộc. CI upstream lỗi fingerprint cũ không dùng làm PASS.

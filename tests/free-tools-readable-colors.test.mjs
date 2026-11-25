@@ -2,12 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
-import {freeToolsReadableColorsHistoricalSource} from "./helpers/free-tools-readable-colors-historical.mjs";
+import {freeToolsReadableColorsHistoricalSource, upstreamRealtimeBannerHistoricalSource} from "./helpers/free-tools-readable-colors-historical.mjs";
 
 const root = new URL("../", import.meta.url);
 const read = file => fs.readFileSync(new URL(file, root), "utf8").replace(/\r\n/g, "\n");
 const contract = JSON.parse(read("tests/fixtures/free-tools-readable-colors-contract.json"));
-const prior = file => execFileSync("git", ["show", contract.base + ":" + file], {encoding: "utf8", maxBuffer: 30e6}).replace(/\r\n/g, "\n");
+const revisionSource = (revision, file) => execFileSync("git", ["show", revision + ":" + file], {encoding: "utf8", maxBuffer: 30e6}).replace(/\r\n/g, "\n");
+const prior = file => revisionSource(contract.base, file);
 
 test("physical Free Tools sources are delivered BASE plus exactly nine reviewed color records", () => {
   assert.equal(contract.model, "gemini-4-hydrogen-xhigh");
@@ -15,13 +16,28 @@ test("physical Free Tools sources are delivered BASE plus exactly nine reviewed 
   assert.deepEqual([...new Set(contract.records.map(record => record.file))].sort(),
     ["static/portal/portal-theme.css", "static/portal/portal.js"]);
   for (const file of new Set(contract.records.map(record => record.file))) {
-    let expected = prior(file);
+    let expected = revisionSource(contract.main_sync.base, file);
     for (const record of contract.records.filter(record => record.file === file)) {
       assert.equal(expected.split(record.old).length - 1, 1);
       expected = expected.replace(record.old, () => record.new);
     }
     assert.equal(read(file), expected, file);
   }
+});
+
+test("independently delivered upstream portal source is exactly the original baseline plus its two banner insertions", () => {
+  assert.equal(contract.main_sync.prior, contract.base);
+  assert.equal(contract.main_sync.base, "fbcbfdf4f6dc3563ceba8b4f2815ae1ebb63d90b");
+  assert.equal(contract.main_sync.portal_insertions.length, 2);
+  const file = "static/portal/portal.js", upstream = revisionSource(contract.main_sync.base, file);
+  assert.equal(upstreamRealtimeBannerHistoricalSource(upstream, file), prior(file));
+  assert.equal(upstreamRealtimeBannerHistoricalSource(prior(file), file), prior(file));
+  assert.equal(upstreamRealtimeBannerHistoricalSource(upstream + "\n/* unknown */", file), prior(file) + "\n/* unknown */");
+  for (const record of contract.main_sync.portal_insertions) {
+    assert.throws(() => upstreamRealtimeBannerHistoricalSource(upstream + record, file));
+    assert.throws(() => upstreamRealtimeBannerHistoricalSource(upstream.replace(record, ""), file));
+  }
+  assert.equal(upstreamRealtimeBannerHistoricalSource(upstream, "unrelated.js"), upstream);
 });
 
 test("reviewed JavaScript records change color fragments only and leave QR image surface and every non-style byte intact", () => {

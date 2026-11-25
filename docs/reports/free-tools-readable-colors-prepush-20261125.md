@@ -56,3 +56,17 @@ Source commit → refresh/verify Web-only provenance → commit evidence →
 một PR → CI đúng HEAD → merge/tree → triển khai đúng SHA → runtime/
 health/5+5assets/receipt là các cổng còn lại. Không nhận màu đã lên web
 từ kết quả cục bộ. Composer và motion thuộc các bước tiếp theo.
+
+## Bổ sung hòa nhập main
+
+Main đã triển khai PR808 tại `fbcbfdf4f6dc3563ceba8b4f2815ae1ebb63d90b`
+trước khi nhánh màu push; phụ lục689/7161431864 ghi trước merge86a0504a.
+API/realtime/extension/pricing và hai test upstream giữ nguyên byte.
+Chín record màu không thay đổi. Chỉ bổ sung QA cho đúng hai insertion
+banner29dòng bằng fixture có SHA cố định, không ẩn thay đổi tùy ý.
+Nguồn vật lý vẫn được so toàn tệp với main mới+9record.
+
+Mười tệp giao nhau422/422 và Python inverse3/3 đạt sau sync. CI upstream
+45599142644 lỗi provenance cũ; nhánh màu làm mới Web-only provenance
+và yêu cầu CI mới đầy đủ trên HEAD cuối. Sổ hồi quy lớn phía trên thuộc
+trạng thái trước sync, không được cộng lại hoặc nhận đã chạy full lần nữa.

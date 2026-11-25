@@ -3983,3 +3983,8 @@ các ca import lặp chỉ tính một. Ba tệp chạy nặng đạt riêng 14/
 không thay assertion hay ứng dụng. Đây là kết quả ghép các lượt đã
 thành công, không phải một lượt full-suite duy nhất. Metadata1/1 đạt và
 py_compile app cùng Python thay đổi exit0. Chờ CI và triển khai đợt màu.
+
+Main/VPS đã triển khai PR808 tạifbcbfdf4 trước phát hành màu. Nhánh màu
+kế thừa bản đó, giữ chín thay đổi màu; nhóm giao nhau sau hòa nhập422
+đạt và Pythoninverse3đạt. CI của main mới lỗi bằng chứng nguồn cũ nên
+không dùng làm chứng nhận; đợt màu tạo lại bằng chứng và kiểm CI riêng.

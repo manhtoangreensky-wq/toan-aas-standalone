@@ -113,3 +113,21 @@ kiểm, không nhận mọi output/lỗi/providerstate đềuđạt. Khi toànb�
 
 Ba phiếu Composer biểu mẫu/kếtquả/danhmục dịch chạyoutput-only riêng,
 chưađược trộn vào ứng dụng hoặc PRmàu. Chốt màu xong mới mở dependency.
+
+## Hòa nhập main — 25/11/2026
+
+Trước push, main/runtime đã ở `fbcbfdf4f6dc3563ceba8b4f2815ae1ebb63d90b`
+qua PR808/deploy45599321226. SSH xác minh SHA, nguồn sạch và ba dịch vụ
+active. CI45599142644 lỗi fingerprint cũ, không được dùng làm PASS.
+Phụ lục689/7161431864 có trước merge `86a0504ae6aef15ef02db157ff6b17241241b34c`.
+Kế thừa nguyên byte API/realtime/extension/pricing và hai test upstream.
+
+Chín record màu không đổi và không giao với hai insertion banner29dòng.
+Fixture giữ BASE gốc/chín record; `main_sync` ghi SHA cố định mới và đúng
+hai insertion. Test nguồn vật lý so toàn tệp với main mới+9record. Reader
+lịch sử chỉ bỏ đúng hai insertion khi so quá khứ; unknown/partial/duplicate
+vẫn bị phát hiện. Không chiếu nguồn vật lý dùng để vẽ giao diện.
+
+Nhóm giao nhau10tệp422/422 đạt,0skip; Python inverse3/3. Không cộng các
+lượt kiểm lại này vào sổ176tệp cũ hoặc nhận full regression mới sau sync.
+Web-only provenance phải tạo lại rồi CI đúng HEAD cuối trước merge/deploy.

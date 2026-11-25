@@ -31,6 +31,12 @@ def free_tools_readable_colors_historical_source(source: str, file: str) -> str:
 
 
 def image_studio_validation_historical_source(source: str, file: str) -> str:
+    if file == "static/portal/portal.js":
+        records = FREE_TOOLS_COLORS["main_sync"]["portal_insertions"]
+        if any(record in source for record in records):
+            for record in records:
+                assert source.count(record) == 1, "Unreviewed upstream realtime banner source"
+                source = source.replace(record, "", 1)
     source = free_tools_readable_colors_historical_source(source, file)
     records = [row for row in VALIDATION["records"] if row["file"] == file]
     if not any(record["new"] in source for record in records):

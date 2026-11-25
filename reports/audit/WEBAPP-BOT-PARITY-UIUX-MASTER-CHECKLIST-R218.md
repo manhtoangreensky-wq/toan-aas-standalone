@@ -3452,3 +3452,7 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   deploy/runtime/health/5+5assets/receipt. Chưa nhận màu đã lên production.
 - [ ] Chỉ kiểm panel ban đầu; trạng thái output/lỗi, whole-app contrast/
   AX, signedUI, thiết bị thật/Safari vẫn mở. Motion xếp cuối.
+- [x] Trước push main/runtime lênfbcbfdf4(PR808/deploy45599321226);
+  phụ lục689/7161431864, merge86a0504a giữ exactupstream. Bổ sung inverse
+  hữu hạn đúng2insertion banner29dòng; không đổi9record màu. Nhóm giao
+  nhau422/422,Pythoninverse3/3; freshHEADCI sau provenance vẫn bắt buộc.

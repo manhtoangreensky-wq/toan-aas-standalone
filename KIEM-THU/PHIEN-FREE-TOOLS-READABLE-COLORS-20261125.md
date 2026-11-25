@@ -85,3 +85,10 @@ bên ngoài. Không nhận đầu ra thao tác, giao diện production sau
 đăng nhập, thiết bị thật, Safari, toàn-app locale/accessibility hoặc
 motion đã đạt. Không sửa Bot/engine/auth/backend/ENV/dữ liệu thật.
 `PROVIDER_CALLS=0`; `WALLET_MUTATIONS=0`; `WHOLE_GOAL_COMPLETE=NO`.
+
+Trước push, main đã triển khai PR808/runtimefbcbfdf4. Phụ lục
+Issue689/7161431864 và merge86a0504a kế thừa đúng upstream; chín record
+màu không đổi. Comparator lịch sử bổ sung đúng hai insertion banner,
+nguồn vật lý so fixedmain+9record. Nhóm giao nhau10tệp422/422,
+Pythoninverse3/3 đạt; không cộng vào sổ full trước sync. CI cuối và
+provenance mới vẫn là cổng phát hành, không dùng CI upstream bị lỗi.
