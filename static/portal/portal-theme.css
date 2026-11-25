@@ -24003,3 +24003,12 @@ html:not([data-portal-theme="dark"]) .portal-page:is(.portal-media-workspace-det
 html[data-portal-theme="dark"] .portal-page:is(.portal-media-workspace-detail, .portal-audio-hub-detail) .portal-media-audio-filter .portal-form-note {
   color: var(--portal-ink);
 }
+
+/* Clean end-user catalog cards: hide technical engine, boundary and readiness labels */
+.portal-module-card-signals,
+.portal-boundary-label,
+.portal-engine-label,
+.portal-readiness-label {
+  display: none !important;
+}
+
