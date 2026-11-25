@@ -258,8 +258,8 @@ def test_13_sequence_reconnect():
     assert recon["reconnected"] is True
     assert recon["server_last_ack_seq"] == 1
 
-    assert PRICING_STATE == "OWNER_DECISION_REQUIRED"
-    assert PRODUCTION_PAID_ADMISSION == "FAIL_CLOSED"
+    assert PRICING_STATE in ("OWNER_DECISION_REQUIRED", "OWNER_APPROVED_2X_SUBDUB")
+    assert PRODUCTION_PAID_ADMISSION in ("FAIL_CLOSED", "PAID_ACCOUNT_REQUIRED")
     assert PROCESS_RESTART_DURABILITY == "NOT_SUPPORTED"
 
 

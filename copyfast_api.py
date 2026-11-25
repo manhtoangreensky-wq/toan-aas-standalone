@@ -5068,6 +5068,20 @@ async def packages(request: Request, account: dict = Depends(require_account)):
     return await _bridge("GET", "/internal/v1/packages", account=account, request=request)
 
 
+@router.get("/extensions/chrome-live-translate.zip")
+async def download_chrome_extension_api():
+    from copyfast_realtime_translate import get_chrome_extension_zip_bytes
+    data = get_chrome_extension_zip_bytes()
+    return Response(
+        content=data,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": 'attachment; filename="toan-aas-chrome-live-translate.zip"',
+            "Cache-Control": "public, max-age=300",
+        },
+    )
+
+
 def _manual_private_payment_config() -> dict[str, Any]:
     try:
         root = MANUAL_TOPUP_PRIVATE_ASSET_DIR.resolve(strict=True)
