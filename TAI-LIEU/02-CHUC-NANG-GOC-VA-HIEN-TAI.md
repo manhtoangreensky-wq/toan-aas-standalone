@@ -2993,3 +2993,22 @@ BASE đã triển khai qua PR #798 tại `3d21e950fb8e676ffd0b8c945a5ff6d9c84257
 
 Không đổi khả năng xử lý ảnh, quyền, provider, giá hoặc dữ liệu. Chưa dùng
 kết quả cục bộ để kết luận toàn-app locale/AX/auth/device hoặc đã triển khai.
+
+PR #799 đã triển khai; biên nhận Issue689/7094535782 ghi đủ CI/deploy/
+runtime/5+5assets. Trạng thái chưa triển khai ở trên là lịch sử trước phát hành.
+
+## Thiết kế ảnh — đối chiếu thông báo nhập liệu, 23/11/2026
+
+BASE/runtime5a95e48c9df922cc19a4bd83dfef46f2d85c04d2.
+
+| Hành vi trên BASE | Ứng viên | Ranh giới giữ |
+|---|---|---|
+| Thông báo kiểm tra đầu vào lẫn Việt/Anh và từ kỹ thuật |51key VI/EN/ZH, câu ngắn chỉ thao tác có thật |Điều kiện từ chối, regex và giới hạn giữ |
+| Tên trường cũ được nối thẳng vào lỗi |Allowlist25 nhãn tĩnh chỉ dịch ở nhánh lỗi |Nhãn lạ/nội dung khách giữ, không thay dữ liệu |
+| Số lớn hiển thị theo Việt ở mọi locale |Dùng formatNumber đang có cho lỗi |Giá trị và kiểu dữ liệu trong payload giữ |
+| Cảnh báo dùng chung có thể bảo Composer chọn ảnh dù chỉ nhận chữ |Yêu cầu bỏ đường dẫn rồi thử lại ở cả ba locale |Không đổi detector/route/chức năng |
+| Test nguồn cũ dùng câu chữ lịch sử |Inverse đúng30record, intent trùng được khóa theo từng hàm |Giữ assertions và phát hiện thay đổi ngoài hợp đồng |
+
+Không thêm tạo ảnh, lưu ảnh, provider hoặc khả năng thanh toán. Các nhãn
+Composer còn pha Anh và thông báo hành động là việc tiếp theo, chưa được
+đóng bởi bản sửa riêng thông báo nhập liệu.

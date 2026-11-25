@@ -10366,7 +10366,7 @@
     const source = value && typeof value === "object" ? value : {};
     const q = imageStudioLine(source.q, "Từ khóa artboard", 0, 180, true);
     const state = String(source.state || "active").trim().toLowerCase();
-    if (!IMAGE_STUDIO_ARTBOARD_FILTER_STATES.has(state)) throw new Error("Bộ lọc trạng thái artboard không hợp lệ.");
+    if (!IMAGE_STUDIO_ARTBOARD_FILTER_STATES.has(state)) throw new Error(imageStudioValidationText("validation.filterState", "Chọn lại trạng thái bảng thiết kế."));
     const safety = imageStudioMetadataSafetyError(q, state);
     if (safety) throw new Error(safety);
     return { q, state };
@@ -10505,30 +10505,151 @@
       pinned_image_assets: uniqueById(assetRows, 240)
     };
   }
+  const IMAGE_STUDIO_VALIDATION_LABELS = Object.freeze({
+    "Tag": [
+      "label.tag",
+      "thẻ"
+    ],
+    "Tên artboard": [
+      "label.boardTitle",
+      "tên bảng thiết kế"
+    ],
+    "Ý định direction": [
+      "label.intent",
+      "loại phương án"
+    ],
+    "Ngôn ngữ direction": [
+      "label.directionLanguage",
+      "ngôn ngữ phương án"
+    ],
+    "Tỷ lệ khung hình": [
+      "label.ratio",
+      "tỷ lệ khung hình"
+    ],
+    "Định dạng đích": [
+      "label.format",
+      "định dạng ảnh"
+    ],
+    "Creative brief": [
+      "label.brief",
+      "mô tả ý tưởng"
+    ],
+    "Style direction": [
+      "label.style",
+      "định hướng phong cách"
+    ],
+    "Điều cần tránh": [
+      "label.avoid",
+      "điều cần tránh"
+    ],
+    "Tên biến thể direction": [
+      "label.optionTitle",
+      "tên phương án"
+    ],
+    "Loại biến thể": [
+      "label.operation",
+      "loại phương án"
+    ],
+    "Prompt / concept text": [
+      "label.prompt",
+      "mô tả ý tưởng"
+    ],
+    "Chỉ dẫn chỉnh sửa": [
+      "label.edit",
+      "chỉ dẫn chỉnh sửa"
+    ],
+    "Bố cục & visual notes": [
+      "label.composition",
+      "bố cục và ghi chú hình ảnh"
+    ],
+    "Project liên kết": [
+      "label.project",
+      "dự án liên kết"
+    ],
+    "Ảnh gốc Asset Vault": [
+      "label.source",
+      "ảnh gốc"
+    ],
+    "Ảnh tham chiếu Asset Vault": [
+      "label.reference",
+      "ảnh tham khảo"
+    ],
+    "Từ khóa artboard": [
+      "label.boardSearch",
+      "từ khóa tìm bảng thiết kế"
+    ],
+    "Từ khóa reference": [
+      "label.referenceSearch",
+      "từ khóa tìm ảnh hoặc dự án"
+    ],
+    "Mục tiêu ảnh": [
+      "label.goal",
+      "mục tiêu ảnh"
+    ],
+    "Mục tiêu riêng": [
+      "label.customGoal",
+      "mục tiêu riêng"
+    ],
+    "Mô tả chủ thể": [
+      "label.subject",
+      "mô tả chủ thể"
+    ],
+    "Preset phong cách": [
+      "label.preset",
+      "mẫu phong cách"
+    ],
+    "Phong cách": [
+      "label.customStyle",
+      "phong cách"
+    ],
+    "Ngôn ngữ": [
+      "label.language",
+      "ngôn ngữ"
+    ]
+  });
+
+  function imageStudioValidationText(key, fallback, params) {
+    const i18n = window.TOANAASI18n;
+    const fullKey = `imageStudioValidationUi.${key}`;
+    const value = i18n && typeof i18n.t === "function" ? i18n.t(fullKey, params) : "";
+    if (typeof value === "string" && value && value !== fullKey) return value;
+    const values = params && typeof params === "object" ? params : {};
+    return String(fallback || "").replace(/\{([A-Za-z]+)\}/g, (match, name) => Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : match);
+  }
+  function imageStudioValidationLabel(label) {
+    if (!Object.prototype.hasOwnProperty.call(IMAGE_STUDIO_VALIDATION_LABELS, label)) return label;
+    const entry = IMAGE_STUDIO_VALIDATION_LABELS[label];
+    return imageStudioValidationText(entry[0], entry[1]);
+  }
+  function imageStudioValidationNumber(value) {
+    const i18n = window.TOANAASI18n;
+    return i18n && typeof i18n.formatNumber === "function" ? i18n.formatNumber(value) : Number(value).toLocaleString("vi-VN");
+  }
+
   function imageStudioSecretSafetyError(...values) {
     const text = values.map((value) => String(value || "")).join("\n");
-    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Image Creative Studio không nhận ký tự điều khiển không an toàn.";
+    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return imageStudioValidationText("unsafe.control", "Nội dung có ký tự không hợp lệ. Hãy kiểm tra và nhập lại.");
     const sensitiveKind = supportSensitiveContentKind(text);
-    if (sensitiveKind === "manual-payment") return "Image Creative Studio không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
-    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "Image Creative Studio không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
+    if (sensitiveKind === "manual-payment") return imageStudioValidationText("unsafe.payment", "Không đưa thông tin thanh toán vào nội dung thiết kế.");
+    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return imageStudioValidationText("unsafe.secret", "Không nhập mật khẩu, mã xác thực hoặc thông tin bảo mật.");
     return "";
   }
   function imageStudioMetadataSafetyError(...values) {
     const secret = imageStudioSecretSafetyError(...values);
     if (secret) return secret;
     const text = values.map((value) => String(value || "")).join("\n");
-    if (/(?:file|javascript|data):|https?:\/\/|\bwww\./i.test(text)) return "Image Creative Studio không nhận URL hoặc scheme tệp; hãy chọn Asset Vault reference đã được kiểm tra quyền sở hữu.";
-    if (/\b(?:(?:provider|engine|image|render|preview|job|media|file)[ _-]*(?:id|ref(?:erence)?|token)|telegram[ _-]*file[ _-]*id)\b\s*(?::|=|\bis\b)\s*\S+/i.test(text)) return "Image Creative Studio không nhận provider, engine, Bot, job hoặc file handle trong metadata.";
+    if (/(?:file|javascript|data):|https?:\/\/|\bwww\./i.test(text)) return imageStudioValidationText("unsafe.link", "Không dán đường dẫn ở đây. Hãy bỏ đường dẫn rồi thử lại.");
+    if (/\b(?:(?:provider|engine|image|render|preview|job|media|file)[ _-]*(?:id|ref(?:erence)?|token)|telegram[ _-]*file[ _-]*id)\b\s*(?::|=|\bis\b)\s*\S+/i.test(text)) return imageStudioValidationText("unsafe.handle", "Chỉ nhập mô tả và ý tưởng cho thiết kế.");
     return "";
   }
   function imageStudioLine(value, label, minimum, maximum, allowEmpty) {
     const text = String(value || "").replace(/\s+/g, " ").trim();
-    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(label + " cần từ " + minimum + " đến " + maximum + " ký tự hợp lệ.");
+    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(imageStudioValidationText("validation.length", "Nhập {label} từ {minimum} đến {maximum} ký tự.", { label: imageStudioValidationLabel(label), minimum: imageStudioValidationNumber(minimum), maximum: imageStudioValidationNumber(maximum) }));
     return text;
   }
   function imageStudioBody(value, label, maximum, allowEmpty) {
     const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
-    if (text.length > maximum || (!allowEmpty && !text) || text.includes("\u0000")) throw new Error(label + " tối đa " + maximum.toLocaleString("vi-VN") + " ký tự hợp lệ.");
+    if (text.length > maximum || (!allowEmpty && !text) || text.includes("\u0000")) throw new Error(imageStudioValidationText("validation.maximum", "Nhập {label} không quá {maximum} ký tự.", { label: imageStudioValidationLabel(label), maximum: imageStudioValidationNumber(maximum) }));
     return text;
   }
   function imageStudioTags(value) {
@@ -10541,13 +10662,13 @@
       const fingerprint = tag.toLocaleLowerCase("vi-VN");
       if (!seen.has(fingerprint)) { seen.add(fingerprint); result.push(tag); }
     });
-    if (result.length > 20) throw new Error("Tối đa 20 tags cho mỗi artboard hoặc biến thể direction.");
+    if (result.length > 20) throw new Error(imageStudioValidationText("validation.tags", "Mỗi bảng thiết kế hoặc phương án có tối đa 20 thẻ."));
     return result;
   }
   function imageStudioReference(value, label, allowEmpty) {
     const id = String(value || "").trim();
     if (!id && allowEmpty) return "";
-    if (!validImageStudioArtboardId(id)) throw new Error(label + " phải là Asset Vault/Project UUID hợp lệ do server cấp.");
+    if (!validImageStudioArtboardId(id)) throw new Error(imageStudioValidationText("validation.reference", "Vui lòng chọn lại {label} trong danh sách.", { label: imageStudioValidationLabel(label) }));
     return id;
   }
   function imageArtboardPayload(fields) {
@@ -10560,9 +10681,9 @@
     const styleDirection = imageStudioBody(fields.style_direction, "Style direction", 6000, true);
     const negativeDirection = imageStudioBody(fields.negative_direction, "Điều cần tránh", 4000, true);
     const tags = imageStudioTags(fields.tags);
-    if (!IMAGE_STUDIO_INTENTS.has(imageIntent)) throw new Error("Ý định Image Studio không hợp lệ.");
-    if (!IMAGE_STUDIO_ASPECT_RATIOS.has(aspectRatio)) throw new Error("Tỷ lệ khung hình Image Studio không hợp lệ.");
-    if (!IMAGE_STUDIO_OUTPUT_FORMATS.has(outputFormat)) throw new Error("Định dạng đích Image Studio không hợp lệ.");
+    if (!IMAGE_STUDIO_INTENTS.has(imageIntent)) throw new Error(imageStudioValidationText("validation.intent", "Loại phương án không hợp lệ. Hãy chọn lại."));
+    if (!IMAGE_STUDIO_ASPECT_RATIOS.has(aspectRatio)) throw new Error(imageStudioValidationText("validation.ratio", "Tỷ lệ khung hình không hợp lệ. Hãy chọn lại."));
+    if (!IMAGE_STUDIO_OUTPUT_FORMATS.has(outputFormat)) throw new Error(imageStudioValidationText("validation.format", "Định dạng ảnh không hợp lệ. Hãy chọn lại."));
     const safety = imageStudioMetadataSafetyError(title, imageIntent, language, aspectRatio, outputFormat, creativeBrief, styleDirection, negativeDirection, ...tags);
     if (safety) throw new Error(safety);
     return { title, image_intent: imageIntent, language, aspect_ratio: aspectRatio, output_format: outputFormat, creative_brief: creativeBrief, style_direction: styleDirection, negative_direction: negativeDirection, tags, project_id: imageStudioReference(fields.project_id, "Project liên kết", true) || null };
@@ -10577,13 +10698,13 @@
     const assetId = imageStudioReference(fields.asset_id, "Ảnh gốc Asset Vault", true);
     const referenceAssetId = imageStudioReference(fields.reference_asset_id, "Ảnh tham chiếu Asset Vault", true);
     const tags = imageStudioTags(fields.tags);
-    if (!IMAGE_STUDIO_INTENTS.has(operation)) throw new Error("Loại biến thể Image Studio không hợp lệ.");
-    if (operation !== "create" && !assetId) throw new Error("Edit, Upscale, Image-to-image và Tách nền cần chọn ảnh gốc từ Asset Vault.");
+    if (!IMAGE_STUDIO_INTENTS.has(operation)) throw new Error(imageStudioValidationText("validation.intent", "Loại phương án không hợp lệ. Hãy chọn lại."));
+    if (operation !== "create" && !assetId) throw new Error(imageStudioValidationText("validation.source", "Hãy chọn ảnh gốc cho phương án này."));
     // Keep browser validation aligned with the server's operation contract so
     // a valid-looking form cannot turn into a preventable 422 receipt.
-    if (operation === "create" && !promptText) throw new Error("Create direction cần prompt / concept text.");
-    if (["edit", "image_to_image"].includes(operation) && !promptText && !editInstructions) throw new Error("Edit và Image-to-image cần prompt hoặc chỉ dẫn chỉnh sửa.");
-    if (["upscale", "remove_background"].includes(operation) && !promptText && !editInstructions && !compositionNotes) throw new Error("Upscale và Tách nền cần prompt, chỉ dẫn chỉnh sửa hoặc visual note.");
+    if (operation === "create" && !promptText) throw new Error(imageStudioValidationText("validation.createText", "Hãy nhập mô tả ý tưởng trước khi tạo phương án."));
+    if (["edit", "image_to_image"].includes(operation) && !promptText && !editInstructions) throw new Error(imageStudioValidationText("validation.editText", "Hãy nhập mô tả ý tưởng hoặc chỉ dẫn chỉnh sửa."));
+    if (["upscale", "remove_background"].includes(operation) && !promptText && !editInstructions && !compositionNotes) throw new Error(imageStudioValidationText("validation.visualText", "Hãy nhập mô tả ý tưởng, chỉ dẫn chỉnh sửa hoặc ghi chú hình ảnh."));
     const safety = imageStudioMetadataSafetyError(title, operation, promptText, editInstructions, compositionNotes, negativeDirection, ...tags);
     if (safety) throw new Error(safety);
     return { title, operation, prompt_text: promptText, edit_instructions: editInstructions, composition_notes: compositionNotes, negative_direction: negativeDirection, asset_id: assetId || null, reference_asset_id: referenceAssetId || null, tags };
@@ -10624,7 +10745,7 @@
     const raw = String(value || "").trim().toLowerCase().replace(/×/g, "x").replace(/\s+/g, "").replace(/x/g, ":");
     const normalized = IMAGE_PROMPT_COMPOSER_RATIO_ALIASES.get(raw) || raw;
     if (!IMAGE_PROMPT_COMPOSER_RATIOS.has(normalized)) {
-      throw new Error("Tỷ lệ Prompt Composer không hợp lệ.");
+      throw new Error(imageStudioValidationText("composer.ratio", "Chọn lại tỷ lệ khung hình."));
     }
     return normalized;
   }
@@ -10632,7 +10753,7 @@
     const standard = imageStudioMetadataSafetyError(...values);
     if (standard) return standard;
     if (IMAGE_PROMPT_COMPOSER_POLICY_PATTERN.test(values.map((value) => String(value || "")).join("\n"))) {
-      return "Prompt Composer chưa hỗ trợ yêu cầu mô phỏng nghệ sĩ, tác giả hoặc phong cách được nhận diện.";
+      return imageStudioValidationText("composer.originalStyle", "Chọn phong cách riêng, không mô phỏng một nghệ sĩ hoặc tác giả cụ thể.");
     }
     return "";
   }
@@ -10644,14 +10765,14 @@
     const style = imageStudioLine(fields.style, "Phong cách", 0, 180, true);
     const ratio = imagePromptComposerRatio(fields.ratio || "1:1");
     const language = imageStudioLine(fields.language || "vi", "Ngôn ngữ", 1, 8, false).toLowerCase();
-    if (!IMAGE_PROMPT_COMPOSER_GOALS.has(goalCode)) throw new Error("Mục tiêu Prompt Composer không hợp lệ.");
-    if (!IMAGE_PROMPT_COMPOSER_STYLE_PRESETS.has(stylePreset)) throw new Error("Preset phong cách Prompt Composer không hợp lệ.");
-    if (!IMAGE_PROMPT_COMPOSER_LANGUAGES.has(language)) throw new Error("Ngôn ngữ Prompt Composer không hợp lệ.");
-    if (goalCode === "custom" && !customGoal) throw new Error("Mục tiêu riêng cần từ 2 đến 180 ký tự.");
-    if (goalCode !== "custom" && customGoal) throw new Error("Chỉ nhập mục tiêu riêng khi chọn mục tiêu Tuỳ chỉnh.");
-    if (customGoal && customGoal.length < 2) throw new Error("Mục tiêu riêng cần từ 2 đến 180 ký tự.");
-    if (stylePreset === "custom" && style.length < 2) throw new Error("Phong cách riêng cần từ 2 đến 180 ký tự khi chọn Tự nhập.");
-    if (stylePreset !== "custom" && style) throw new Error("Chỉ nhập phong cách riêng khi chọn Tự nhập.");
+    if (!IMAGE_PROMPT_COMPOSER_GOALS.has(goalCode)) throw new Error(imageStudioValidationText("composer.goal", "Chọn lại mục tiêu ảnh."));
+    if (!IMAGE_PROMPT_COMPOSER_STYLE_PRESETS.has(stylePreset)) throw new Error(imageStudioValidationText("composer.preset", "Chọn lại mẫu phong cách."));
+    if (!IMAGE_PROMPT_COMPOSER_LANGUAGES.has(language)) throw new Error(imageStudioValidationText("composer.language", "Chọn lại ngôn ngữ mô tả."));
+    if (goalCode === "custom" && !customGoal) throw new Error(imageStudioValidationText("composer.customGoalRange", "Mục tiêu riêng cần từ 2 đến 180 ký tự."));
+    if (goalCode !== "custom" && customGoal) throw new Error(imageStudioValidationText("composer.customGoalOnly", "Chỉ nhập mục tiêu riêng khi chọn Tuỳ chỉnh."));
+    if (customGoal && customGoal.length < 2) throw new Error(imageStudioValidationText("composer.customGoalRange", "Mục tiêu riêng cần từ 2 đến 180 ký tự."));
+    if (stylePreset === "custom" && style.length < 2) throw new Error(imageStudioValidationText("composer.customStyleRange", "Phong cách riêng cần từ 2 đến 180 ký tự khi chọn Tự nhập."));
+    if (stylePreset !== "custom" && style) throw new Error(imageStudioValidationText("composer.customStyleOnly", "Chỉ nhập phong cách riêng khi chọn Tự nhập."));
     const safety = imagePromptComposerSafetyError(goalCode, customGoal, subject, style, ratio, language);
     if (safety) throw new Error(safety);
     return { goal_code: goalCode, custom_goal: customGoal, subject, style_preset: stylePreset, style, ratio, language };

@@ -3922,3 +3922,25 @@ Các thẻ liên kết đến hai không gian ở danh mục ảnh cũng dùng t
 description chung. Đã kiểm raw renderer ba locale, controls giữ nguyên.
 CI đầu có6 so sánh lịch sử chưa cập nhật nguồn i18n, đã sửa riêng bộ đọc
 test và kiểm147/147 đạt; không thay tám app records vì lỗi comparator.
+
+PR #799 đã triển khai tại5a95e48c9df922cc19a4bd83dfef46f2d85c04d2.
+CI45129027195 hai job đạt, deploy45132203233; VPS sạch/ba dịch vụ/health/
+5+5assets đúng. Biên nhận689/7094535782 đã đọc lại. Các câu “ứng viên/
+chưa triển khai” phía trên là trạng thái trước phát hành, không phải hiện tại.
+
+## Thiết kế ảnh — thông báo nhập liệu, 23/11/2026
+
+Ứng viên kế tiếp chỉ đổi câu báo đầu vào chưa hợp lệ: Việt ra Việt,
+Anh ra Anh, Trung ra Trung. Không đổi nội dung được chấp nhận, chuẩn hóa,
+giới hạn, dữ liệu gửi hoặc nội dung do khách nhập.25 nhãn trường cố định
+được dịch chỉ khi báo lỗi; nhãn không biết giữ nguyên. Cảnh báo đường
+dẫn chỉ yêu cầu bỏ đường dẫn, không hướng người dùng ô nhập chữ sang
+một lựa chọn ảnh không có thật.
+
+Đúng30record/2tệp ứng dụng,51key thêm.213 ca mới và391 ca gộp ảnh hưởng
+đạt;12 màn375/1440 ba ngôn ngữ chạy renderer/hàm kiểm tra/nhánh hành động/
+toast thật với dữ liệu giả, không gọi mạng hoặc ghi dữ liệu. Không dùng
+bằng chứng này để nhận full bootstrap/auth/API/production đã hoạt động.
+Ảnh Composer còn nhãn cũ pha Anh như “prompt/key visual/landing page”;
+đã giữ trong phần rà locale kế tiếp, không nhận toàn ứng dụng hết chữ Anh.
+Toàn goal và motion cuối vẫn mở.

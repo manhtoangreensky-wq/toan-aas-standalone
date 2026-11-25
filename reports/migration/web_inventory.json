@@ -10505,6 +10505,7 @@
         "docs/AGY-DISPATCH-POINT-20261107.md",
         "docs/reports/document-convert-customer-copy-20261119.md",
         "docs/reports/document-ocr-customer-copy-20261119.md",
+        "docs/reports/image-studio-validation-copy-prepush-20261123.md",
         "docs/reports/media-collection-locale-20261120.md",
         "docs/reports/media-collection-locale-prepush-20261120.md",
         "docs/reports/media-detail-customer-copy-20261121.md",
@@ -10533,10 +10534,9 @@
         "reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json",
         "reports/audit/R218-SUBDUB-LABEL-CONTRAST-QA-20261024.json",
         "reports/audit/R218-SUBDUB-MOBILE-RANGE-QA-20261024.json",
-        "reports/audit/R218-SUBDUB-ORIGINAL-TOGGLE-R1-REVIEW-20261024.json",
-        "reports/audit/R218-SUBDUB-ORIGINAL-TOGGLE-R2-REVIEW-20261024.json"
+        "reports/audit/R218-SUBDUB-ORIGINAL-TOGGLE-R1-REVIEW-20261024.json"
       ],
-      "occurrences": 83,
+      "occurrences": 84,
       "provider": "Gemini"
     },
     {
@@ -18798,9 +18798,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 705,
-  "source_files_scanned": 705,
-  "source_fingerprint_sha256": "263db138f438156d674c22b259bb633471d5b8286b4f5d927c81359b27e82060",
+  "source_files_discovered": 708,
+  "source_files_scanned": 708,
+  "source_fingerprint_sha256": "55eac71a3a7d4bbd953e1a87678b354b239677150aabb85ac010d248f95e1d0c",
   "source_root": "repository-root",
   "ui_path_references": [
     {

@@ -1,0 +1,159 @@
+{
+  "id": "IMAGE-STUDIO-VALIDATION-COPY-20261123",
+  "base": "5a95e48c9df922cc19a4bd83dfef46f2d85c04d2",
+  "worker_model": "gemini-3.8-flash-high",
+  "worker_code_failures": 0,
+  "specification_amendment": "Shared link warning is neutral for metadata and text-only Composer.",
+  "records": [
+    {
+      "file": "static/portal/integration.js",
+      "old": "  function imageStudioSecretSafetyError(...values) {",
+      "new": "  const IMAGE_STUDIO_VALIDATION_LABELS = Object.freeze({\n    \"Tag\": [\n      \"label.tag\",\n      \"thẻ\"\n    ],\n    \"Tên artboard\": [\n      \"label.boardTitle\",\n      \"tên bảng thiết kế\"\n    ],\n    \"Ý định direction\": [\n      \"label.intent\",\n      \"loại phương án\"\n    ],\n    \"Ngôn ngữ direction\": [\n      \"label.directionLanguage\",\n      \"ngôn ngữ phương án\"\n    ],\n    \"Tỷ lệ khung hình\": [\n      \"label.ratio\",\n      \"tỷ lệ khung hình\"\n    ],\n    \"Định dạng đích\": [\n      \"label.format\",\n      \"định dạng ảnh\"\n    ],\n    \"Creative brief\": [\n      \"label.brief\",\n      \"mô tả ý tưởng\"\n    ],\n    \"Style direction\": [\n      \"label.style\",\n      \"định hướng phong cách\"\n    ],\n    \"Điều cần tránh\": [\n      \"label.avoid\",\n      \"điều cần tránh\"\n    ],\n    \"Tên biến thể direction\": [\n      \"label.optionTitle\",\n      \"tên phương án\"\n    ],\n    \"Loại biến thể\": [\n      \"label.operation\",\n      \"loại phương án\"\n    ],\n    \"Prompt / concept text\": [\n      \"label.prompt\",\n      \"mô tả ý tưởng\"\n    ],\n    \"Chỉ dẫn chỉnh sửa\": [\n      \"label.edit\",\n      \"chỉ dẫn chỉnh sửa\"\n    ],\n    \"Bố cục & visual notes\": [\n      \"label.composition\",\n      \"bố cục và ghi chú hình ảnh\"\n    ],\n    \"Project liên kết\": [\n      \"label.project\",\n      \"dự án liên kết\"\n    ],\n    \"Ảnh gốc Asset Vault\": [\n      \"label.source\",\n      \"ảnh gốc\"\n    ],\n    \"Ảnh tham chiếu Asset Vault\": [\n      \"label.reference\",\n      \"ảnh tham khảo\"\n    ],\n    \"Từ khóa artboard\": [\n      \"label.boardSearch\",\n      \"từ khóa tìm bảng thiết kế\"\n    ],\n    \"Từ khóa reference\": [\n      \"label.referenceSearch\",\n      \"từ khóa tìm ảnh hoặc dự án\"\n    ],\n    \"Mục tiêu ảnh\": [\n      \"label.goal\",\n      \"mục tiêu ảnh\"\n    ],\n    \"Mục tiêu riêng\": [\n      \"label.customGoal\",\n      \"mục tiêu riêng\"\n    ],\n    \"Mô tả chủ thể\": [\n      \"label.subject\",\n      \"mô tả chủ thể\"\n    ],\n    \"Preset phong cách\": [\n      \"label.preset\",\n      \"mẫu phong cách\"\n    ],\n    \"Phong cách\": [\n      \"label.customStyle\",\n      \"phong cách\"\n    ],\n    \"Ngôn ngữ\": [\n      \"label.language\",\n      \"ngôn ngữ\"\n    ]\n  });\n\n  function imageStudioValidationText(key, fallback, params) {\n    const i18n = window.TOANAASI18n;\n    const fullKey = `imageStudioValidationUi.${key}`;\n    const value = i18n && typeof i18n.t === \"function\" ? i18n.t(fullKey, params) : \"\";\n    if (typeof value === \"string\" && value && value !== fullKey) return value;\n    const values = params && typeof params === \"object\" ? params : {};\n    return String(fallback || \"\").replace(/\\{([A-Za-z]+)\\}/g, (match, name) => Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : match);\n  }\n  function imageStudioValidationLabel(label) {\n    if (!Object.prototype.hasOwnProperty.call(IMAGE_STUDIO_VALIDATION_LABELS, label)) return label;\n    const entry = IMAGE_STUDIO_VALIDATION_LABELS[label];\n    return imageStudioValidationText(entry[0], entry[1]);\n  }\n  function imageStudioValidationNumber(value) {\n    const i18n = window.TOANAASI18n;\n    return i18n && typeof i18n.formatNumber === \"function\" ? i18n.formatNumber(value) : Number(value).toLocaleString(\"vi-VN\");\n  }\n\n  function imageStudioSecretSafetyError(...values) {"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Image Creative Studio không nhận ký tự điều khiển không an toàn.\"",
+      "new": "imageStudioValidationText(\"unsafe.control\", \"Nội dung có ký tự không hợp lệ. Hãy kiểm tra và nhập lại.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Image Creative Studio không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.\"",
+      "new": "imageStudioValidationText(\"unsafe.payment\", \"Không đưa thông tin thanh toán vào nội dung thiết kế.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Image Creative Studio không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.\"",
+      "new": "imageStudioValidationText(\"unsafe.secret\", \"Không nhập mật khẩu, mã xác thực hoặc thông tin bảo mật.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Image Creative Studio không nhận URL hoặc scheme tệp; hãy chọn Asset Vault reference đã được kiểm tra quyền sở hữu.\"",
+      "new": "imageStudioValidationText(\"unsafe.link\", \"Không dán đường dẫn ở đây. Hãy bỏ đường dẫn rồi thử lại.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Image Creative Studio không nhận provider, engine, Bot, job hoặc file handle trong metadata.\"",
+      "new": "imageStudioValidationText(\"unsafe.handle\", \"Chỉ nhập mô tả và ý tưởng cho thiết kế.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "  function imageStudioLine(value, label, minimum, maximum, allowEmpty) {\n    const text = String(value || \"\").replace(/\\s+/g, \" \").trim();\n    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes(\"\\u0000\")) throw new Error(label + \" cần từ \" + minimum + \" đến \" + maximum + \" ký tự hợp lệ.\");\n    return text;\n  }",
+      "new": "  function imageStudioLine(value, label, minimum, maximum, allowEmpty) {\n    const text = String(value || \"\").replace(/\\s+/g, \" \").trim();\n    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes(\"\\u0000\")) throw new Error(imageStudioValidationText(\"validation.length\", \"Nhập {label} từ {minimum} đến {maximum} ký tự.\", { label: imageStudioValidationLabel(label), minimum: imageStudioValidationNumber(minimum), maximum: imageStudioValidationNumber(maximum) }));\n    return text;\n  }"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "  function imageStudioBody(value, label, maximum, allowEmpty) {\n    const text = String(value || \"\").replace(/\\r\\n/g, \"\\n\").replace(/\\r/g, \"\\n\").trim();\n    if (text.length > maximum || (!allowEmpty && !text) || text.includes(\"\\u0000\")) throw new Error(label + \" tối đa \" + maximum.toLocaleString(\"vi-VN\") + \" ký tự hợp lệ.\");\n    return text;\n  }",
+      "new": "  function imageStudioBody(value, label, maximum, allowEmpty) {\n    const text = String(value || \"\").replace(/\\r\\n/g, \"\\n\").replace(/\\r/g, \"\\n\").trim();\n    if (text.length > maximum || (!allowEmpty && !text) || text.includes(\"\\u0000\")) throw new Error(imageStudioValidationText(\"validation.maximum\", \"Nhập {label} không quá {maximum} ký tự.\", { label: imageStudioValidationLabel(label), maximum: imageStudioValidationNumber(maximum) }));\n    return text;\n  }"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "  function imageStudioReference(value, label, allowEmpty) {\n    const id = String(value || \"\").trim();\n    if (!id && allowEmpty) return \"\";\n    if (!validImageStudioArtboardId(id)) throw new Error(label + \" phải là Asset Vault/Project UUID hợp lệ do server cấp.\");\n    return id;\n  }",
+      "new": "  function imageStudioReference(value, label, allowEmpty) {\n    const id = String(value || \"\").trim();\n    if (!id && allowEmpty) return \"\";\n    if (!validImageStudioArtboardId(id)) throw new Error(imageStudioValidationText(\"validation.reference\", \"Vui lòng chọn lại {label} trong danh sách.\", { label: imageStudioValidationLabel(label) }));\n    return id;\n  }"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Tối đa 20 tags cho mỗi artboard hoặc biến thể direction.\"",
+      "new": "imageStudioValidationText(\"validation.tags\", \"Mỗi bảng thiết kế hoặc phương án có tối đa 20 thẻ.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Ý định Image Studio không hợp lệ.\"",
+      "new": "imageStudioValidationText(\"validation.intent\", \"Loại phương án không hợp lệ. Hãy chọn lại.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Tỷ lệ khung hình Image Studio không hợp lệ.\"",
+      "new": "imageStudioValidationText(\"validation.ratio\", \"Tỷ lệ khung hình không hợp lệ. Hãy chọn lại.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Định dạng đích Image Studio không hợp lệ.\"",
+      "new": "imageStudioValidationText(\"validation.format\", \"Định dạng ảnh không hợp lệ. Hãy chọn lại.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Loại biến thể Image Studio không hợp lệ.\"",
+      "new": "imageStudioValidationText(\"validation.intent\", \"Loại phương án không hợp lệ. Hãy chọn lại.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Edit, Upscale, Image-to-image và Tách nền cần chọn ảnh gốc từ Asset Vault.\"",
+      "new": "imageStudioValidationText(\"validation.source\", \"Hãy chọn ảnh gốc cho phương án này.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Create direction cần prompt / concept text.\"",
+      "new": "imageStudioValidationText(\"validation.createText\", \"Hãy nhập mô tả ý tưởng trước khi tạo phương án.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Edit và Image-to-image cần prompt hoặc chỉ dẫn chỉnh sửa.\"",
+      "new": "imageStudioValidationText(\"validation.editText\", \"Hãy nhập mô tả ý tưởng hoặc chỉ dẫn chỉnh sửa.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Upscale và Tách nền cần prompt, chỉ dẫn chỉnh sửa hoặc visual note.\"",
+      "new": "imageStudioValidationText(\"validation.visualText\", \"Hãy nhập mô tả ý tưởng, chỉ dẫn chỉnh sửa hoặc ghi chú hình ảnh.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Bộ lọc trạng thái artboard không hợp lệ.\"",
+      "new": "imageStudioValidationText(\"validation.filterState\", \"Chọn lại trạng thái bảng thiết kế.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Tỷ lệ Prompt Composer không hợp lệ.\"",
+      "new": "imageStudioValidationText(\"composer.ratio\", \"Chọn lại tỷ lệ khung hình.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Prompt Composer chưa hỗ trợ yêu cầu mô phỏng nghệ sĩ, tác giả hoặc phong cách được nhận diện.\"",
+      "new": "imageStudioValidationText(\"composer.originalStyle\", \"Chọn phong cách riêng, không mô phỏng một nghệ sĩ hoặc tác giả cụ thể.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Mục tiêu Prompt Composer không hợp lệ.\"",
+      "new": "imageStudioValidationText(\"composer.goal\", \"Chọn lại mục tiêu ảnh.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Preset phong cách Prompt Composer không hợp lệ.\"",
+      "new": "imageStudioValidationText(\"composer.preset\", \"Chọn lại mẫu phong cách.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Ngôn ngữ Prompt Composer không hợp lệ.\"",
+      "new": "imageStudioValidationText(\"composer.language\", \"Chọn lại ngôn ngữ mô tả.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "    if (goalCode === \"custom\" && !customGoal) throw new Error(\"Mục tiêu riêng cần từ 2 đến 180 ký tự.\");",
+      "new": "    if (goalCode === \"custom\" && !customGoal) throw new Error(imageStudioValidationText(\"composer.customGoalRange\", \"Mục tiêu riêng cần từ 2 đến 180 ký tự.\"));"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "    if (customGoal && customGoal.length < 2) throw new Error(\"Mục tiêu riêng cần từ 2 đến 180 ký tự.\");",
+      "new": "    if (customGoal && customGoal.length < 2) throw new Error(imageStudioValidationText(\"composer.customGoalRange\", \"Mục tiêu riêng cần từ 2 đến 180 ký tự.\"));"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Chỉ nhập mục tiêu riêng khi chọn mục tiêu Tuỳ chỉnh.\"",
+      "new": "imageStudioValidationText(\"composer.customGoalOnly\", \"Chỉ nhập mục tiêu riêng khi chọn Tuỳ chỉnh.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Phong cách riêng cần từ 2 đến 180 ký tự khi chọn Tự nhập.\"",
+      "new": "imageStudioValidationText(\"composer.customStyleRange\", \"Phong cách riêng cần từ 2 đến 180 ký tự khi chọn Tự nhập.\")"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "old": "\"Chỉ nhập phong cách riêng khi chọn Tự nhập.\"",
+      "new": "imageStudioValidationText(\"composer.customStyleOnly\", \"Chỉ nhập phong cách riêng khi chọn Tự nhập.\")"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  const IMAGE_STUDIO_READ_FEEDBACK_ROWS = [",
+      "new": "  const IMAGE_STUDIO_VALIDATION_COPY_ROWS = [\n    [\"unsafe.control\", \"Nội dung có ký tự không hợp lệ. Hãy kiểm tra và nhập lại.\", \"Content contains invalid characters. Please check and re-enter.\", \"内容包含无效字符。请检查后重新输入。\"],\n    [\"unsafe.payment\", \"Không đưa thông tin thanh toán vào nội dung thiết kế.\", \"Do not include payment information in design content.\", \"请勿在设计内容中包含支付信息。\"],\n    [\"unsafe.secret\", \"Không nhập mật khẩu, mã xác thực hoặc thông tin bảo mật.\", \"Do not enter passwords, verification codes, or security information.\", \"请勿输入密码、验证码或安全信息。\"],\n    [\"unsafe.link\", \"Không dán đường dẫn ở đây. Hãy bỏ đường dẫn rồi thử lại.\", \"Do not paste links here. Remove the link and try again.\", \"请勿在此处粘贴链接。请删除链接后重试。\"],\n    [\"unsafe.handle\", \"Chỉ nhập mô tả và ý tưởng cho thiết kế.\", \"Enter only descriptions and ideas for the design.\", \"仅输入设计描述和创意。\"],\n    [\"validation.length\", \"Nhập {label} từ {minimum} đến {maximum} ký tự.\", \"Enter {label} between {minimum} and {maximum} characters.\", \"输入{label}，长度为 {minimum} 至 {maximum} 个字符。\"],\n    [\"validation.maximum\", \"Nhập {label} không quá {maximum} ký tự.\", \"Enter {label} with no more than {maximum} characters.\", \"输入{label}，不超过 {maximum} 个字符。\"],\n    [\"validation.reference\", \"Vui lòng chọn lại {label} trong danh sách.\", \"Please select {label} again from the list.\", \"请从列表中重新选择{label}。\"],\n    [\"validation.tags\", \"Mỗi bảng thiết kế hoặc phương án có tối đa 20 thẻ.\", \"Each design board or option can have up to 20 tags.\", \"每个画板或方案最多可添加 20 个标签。\"],\n    [\"validation.intent\", \"Loại phương án không hợp lệ. Hãy chọn lại.\", \"Invalid option type. Please choose again.\", \"方案类型无效。请重新选择。\"],\n    [\"validation.ratio\", \"Tỷ lệ khung hình không hợp lệ. Hãy chọn lại.\", \"Invalid aspect ratio. Please select again.\", \"宽高比无效。请重新选择。\"],\n    [\"validation.format\", \"Định dạng ảnh không hợp lệ. Hãy chọn lại.\", \"Invalid image format. Please select again.\", \"图片格式无效。请重新选择。\"],\n    [\"validation.source\", \"Hãy chọn ảnh gốc cho phương án này.\", \"Choose a source image for this option.\", \"请为此方案选择原图。\"],\n    [\"validation.createText\", \"Hãy nhập mô tả ý tưởng trước khi tạo phương án.\", \"Enter an idea description before creating an option.\", \"请在创建方案前输入创意描述。\"],\n    [\"validation.editText\", \"Hãy nhập mô tả ý tưởng hoặc chỉ dẫn chỉnh sửa.\", \"Please enter an idea description or edit instructions.\", \"请输入创意描述或编辑说明。\"],\n    [\"validation.visualText\", \"Hãy nhập mô tả ý tưởng, chỉ dẫn chỉnh sửa hoặc ghi chú hình ảnh.\", \"Please enter an idea description, edit instructions, or visual notes.\", \"请输入创意描述、编辑说明或视觉备注。\"],\n    [\"label.tag\", \"thẻ\", \"tag\", \"标签\"],\n    [\"label.boardTitle\", \"tên bảng thiết kế\", \"design board name\", \"画板名称\"],\n    [\"label.intent\", \"loại phương án\", \"option type\", \"方案类型\"],\n    [\"label.directionLanguage\", \"ngôn ngữ phương án\", \"option language\", \"方案语言\"],\n    [\"label.ratio\", \"tỷ lệ khung hình\", \"aspect ratio\", \"宽高比\"],\n    [\"label.format\", \"định dạng ảnh\", \"image format\", \"图片格式\"],\n    [\"label.brief\", \"mô tả ý tưởng\", \"idea description\", \"创意描述\"],\n    [\"label.style\", \"định hướng phong cách\", \"style direction\", \"风格方向\"],\n    [\"label.avoid\", \"điều cần tránh\", \"things to avoid\", \"避免内容\"],\n    [\"label.optionTitle\", \"tên phương án\", \"option title\", \"方案名称\"],\n    [\"label.operation\", \"loại phương án\", \"option type\", \"方案类型\"],\n    [\"label.prompt\", \"mô tả ý tưởng\", \"idea description\", \"创意描述\"],\n    [\"label.edit\", \"chỉ dẫn chỉnh sửa\", \"editing instructions\", \"编辑说明\"],\n    [\"label.composition\", \"bố cục và ghi chú hình ảnh\", \"composition and image notes\", \"构图与画面说明\"],\n    [\"label.project\", \"dự án liên kết\", \"linked project\", \"关联项目\"],\n    [\"label.source\", \"ảnh gốc\", \"source image\", \"原图\"],\n    [\"label.reference\", \"ảnh tham khảo\", \"reference image\", \"参考图片\"],\n    [\"label.boardSearch\", \"từ khóa tìm bảng thiết kế\", \"design board search keywords\", \"画板搜索关键词\"],\n    [\"label.referenceSearch\", \"từ khóa tìm ảnh hoặc dự án\", \"image or project search keywords\", \"图片或项目搜索关键词\"],\n    [\"label.goal\", \"mục tiêu ảnh\", \"image goal\", \"图片目标\"],\n    [\"label.customGoal\", \"mục tiêu riêng\", \"custom goal\", \"自定义目标\"],\n    [\"label.subject\", \"mô tả chủ thể\", \"subject description\", \"主体描述\"],\n    [\"label.preset\", \"mẫu phong cách\", \"style preset\", \"风格预设\"],\n    [\"label.customStyle\", \"phong cách\", \"style\", \"风格\"],\n    [\"label.language\", \"ngôn ngữ\", \"language\", \"语言\"],\n    [\"validation.filterState\", \"Chọn lại trạng thái bảng thiết kế.\", \"Choose the design board status again.\", \"请重新选择画板状态。\"],\n    [\"composer.ratio\", \"Chọn lại tỷ lệ khung hình.\", \"Choose the aspect ratio again.\", \"请重新选择画面比例。\"],\n    [\"composer.originalStyle\", \"Chọn phong cách riêng, không mô phỏng một nghệ sĩ hoặc tác giả cụ thể.\", \"Choose an original style rather than imitating a specific artist or creator.\", \"请选择原创风格，不要模仿特定艺术家或创作者。\"],\n    [\"composer.goal\", \"Chọn lại mục tiêu ảnh.\", \"Choose the image goal again.\", \"请重新选择图像目标。\"],\n    [\"composer.preset\", \"Chọn lại mẫu phong cách.\", \"Choose the style preset again.\", \"请重新选择风格预设。\"],\n    [\"composer.language\", \"Chọn lại ngôn ngữ mô tả.\", \"Choose the description language again.\", \"请重新选择描述语言。\"],\n    [\"composer.customGoalRange\", \"Mục tiêu riêng cần từ 2 đến 180 ký tự.\", \"The custom goal must contain 2 to 180 characters.\", \"自定义目标需包含 2 至 180 个字符。\"],\n    [\"composer.customGoalOnly\", \"Chỉ nhập mục tiêu riêng khi chọn Tuỳ chỉnh.\", \"Enter a custom goal only when Custom is selected.\", \"仅在选择自定义时输入自定义目标。\"],\n    [\"composer.customStyleRange\", \"Phong cách riêng cần từ 2 đến 180 ký tự khi chọn Tự nhập.\", \"The custom style must contain 2 to 180 characters when Custom is selected.\", \"选择自定义时，自定义风格需包含 2 至 180 个字符。\"],\n    [\"composer.customStyleOnly\", \"Chỉ nhập phong cách riêng khi chọn Tự nhập.\", \"Enter a custom style only when Custom is selected.\", \"仅在选择自定义时输入自定义风格。\"],\n  ];\n  [\"vi\", \"en\", \"zh\"].forEach((locale, index) => {\n    IMAGE_STUDIO_VALIDATION_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageStudioValidationUi.${row[0]}`] = row[index + 1]; });\n  });\n\n  const IMAGE_STUDIO_READ_FEEDBACK_ROWS = ["
+    }
+  ]
+}

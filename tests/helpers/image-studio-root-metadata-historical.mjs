@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {imageStudioRootHeadingHistoricalSource} from "./image-studio-root-heading-historical.mjs";
+import {imageStudioValidationHistoricalSource, imageStudioValidationHistoricalSnapshot} from "./image-studio-validation-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/image-studio-root-metadata-contract.json", import.meta.url)));
 assert.equal(contract.base, "3d21e950fb8e676ffd0b8c945a5ff6d9c8425736");
 assert.equal(contract.records.length, 7);
 
 export function imageStudioRootMetadataHistoricalSource(source, file) {
+  source = imageStudioValidationHistoricalSource(source, file);
   source = imageStudioRootHeadingHistoricalSource(source, file);
   const records = contract.records.filter(row => row.file === file);
   if (!records.length || !source.includes(records[0].new)) return source;
@@ -26,6 +28,7 @@ const changed = new Map(contract.records.slice(3).map(record => {
 }));
 
 export function imageStudioRootMetadataHistoricalSnapshot(entries, locale) {
+  entries = imageStudioValidationHistoricalSnapshot(entries, locale);
   const index = ["vi", "en", "zh"].indexOf(locale) + 1;
   assert.ok(index > 0 && Array.isArray(entries));
   const recognized = entries.filter(([key]) => added.has(key) || changed.has(key));

@@ -2059,3 +2059,16 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | ISRM-MOBILE | vừa | Xem375/1440 và nhập tên bảng | Không tràn/lỗi, nhập và giữ tên đúng | Chrome12 màn |
 | ISRH-CONTRAST | vừa | Tiêu đề thẻ hai trang gốc375/1440 sáng/tối | 36/36 mẫu≥4,5:1; nền/hình học/màu tối giữ | Đo CSS nguồn vật lý |
 | ISRM-DELIVERY | nặng | CI/merge/deploy/runtime/assets | Từng cổng có bằng chứng riêng | ĐANG THỰC HIỆN |
+
+## IMAGE-STUDIO-VALIDATION-COPY-20261123 — Issue #689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| ISVC-VALID | nặng | Nhập hợp lệ và chuẩn hóa các payload ảnh |Giữ dữ liệu/kiểu/normalization, không gọi dịch hoặc sửa input |[Phiên kiểm tra](PHIEN-IMAGE-STUDIO-VALIDATION-COPY-20261123.md) |
+| ISVC-ERROR | nặng | Nhập sai/thiếu ở line/body/reference/tags/board/direction/filter/Composer |Cùng điều kiện từ chối, câu đúng VI/EN/ZH và số theo locale |213ca nguồn vật lý |
+| ISVC-LABEL | vừa |25nhãn tĩnh, nhãn khách lạ và thiếu I18n |Dịch chỉ nhãn tĩnh trong lỗi; nội dung khách/fallback giữ |Kiểm hàm vật lý |
+| ISVC-LINK | nặng |Dán liên kết vào metadata và Composer chỉ nhập chữ |Bảo bỏ liên kết, không hứa chọn ảnh không có |Ba locale và Chrome |
+| ISVC-DICT | vừa |Đọc catalogue hiện tại và lịch sử |Đúng51key thêm/khóa, mọi giá trị cũ giữ |Dictionary/inverse pressure |
+| ISVC-SOURCE | nặng |So BASE+30record và thêm thay đổi lạ |Đúng2app files, inverse không che bytes lạ/thiếu/lặp |Source/pressure checks |
+| ISVC-MOBILE | vừa |Nhập sai trên375/1440 Việt/Anh/Trung |Thông báo thấy được, không tràn, input giữ, không ghi/mạng |12màn Chrome |
+| ISVC-DELIVERY | nặng |CI/merge/deploy/runtime/assets/receipt |Từng gate có bằng chứng riêng |CHƯA PHÁT HÀNH |

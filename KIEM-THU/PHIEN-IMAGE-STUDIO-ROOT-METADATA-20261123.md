@@ -33,3 +33,9 @@ CI đầu45124090509 có6 lỗi legacy markup tại thẻ Hub của danh mục �
 Đã sửa đúng đầu đọc i18n lịch sử, giữ assertions, thêm kiểm raw cả hai thẻ
 ba locale.147/147 đạt (138 legacy+9 metadata);238 ca Node duy nhất/17tệp
 theo kết quả ghép hiện tại. Ứng dụng không đổi sau CI đầu. Chờ CI mới.
+
+Đã phát hành PR #799: CI45129027195 hai job success đúng HEADb05d786b;
+merge/runtime5a95e48c9df922cc19a4bd83dfef46f2d85c04d2. Deploy45132203233
+success; VPS nguồn sạch, ba dịch vụ/health đúng và5+5assets khớp commit.
+Receipt689/7094535782 đọc lại đúng. Trạng thái DELIVERED, không phải
+signed production UI PASS; bằng chứng tương tác production vẫn riêng.

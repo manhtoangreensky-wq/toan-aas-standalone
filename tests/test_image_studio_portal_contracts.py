@@ -6,11 +6,15 @@ checks keep that boundary explicit as the portal changes.
 """
 
 from pathlib import Path
+from tests.helpers.image_studio_locale_copy_historical import image_studio_validation_historical_source
 
 
 ROOT = Path(__file__).parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
-INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
+INTEGRATION = image_studio_validation_historical_source(
+    (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8"),
+    "static/portal/integration.js",
+)
 SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 PAGES = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")

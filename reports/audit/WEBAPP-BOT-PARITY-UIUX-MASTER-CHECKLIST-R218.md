@@ -3396,3 +3396,32 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   147/147 đạt. Sổ Node ghép238/17tệp. Chờ exact-head CI mới, chưa deploy.
 - [ ] Giao diện signed production chưa quan sát; toàn-app locale/AX,
   chữ nhỏ/kicker, auth/device và motion vẫn cần bằng chứng riêng.
+
+- [x] PR799 đã phát hành: CI45129027195 hai job success đúngb05d786b;
+  merge/runtime5a95e48c9df922cc19a4bd83dfef46f2d85c04d2. Deploy45132203233
+  success, VPS sạch/ba services/health/5+5assets; receipt7094535782 đọc lại.
+
+### Thiết kế ảnh — thông báo nhập liệu, 23/11/2026
+
+- [x] Dependency PR799 đã giao; contract689/7094579676 trước BUILD.
+- [x] Antigravity integration/catalogue+LINK amendment đúng30record/
+  2app files/51key/25labels. SPEC_SAI dấu nháy và hướng dẫn chọn ảnh đã
+  sửa ở phiếu, workerCodeFailures0; không reset lịch sử.
+- [x] RED213ca172fail/41pass; GREEN213/213. Payload/acceptance/input/
+  valid-path no-translation và unknown customer label giữ.
+- [x] Nhóm tám tệp391/391, gồm213mới; inverse hữu hạn giữassertions,
+  validation.intent giống nhau đảo đúng hai hàm riêng.
+- [x]12màn Chrome375/1440/VIENZH, input giữ/locale đúng/role alert/
+  không tràn/mạng/ghi. Hai ảnh375ổn định là kiểm lại, không cộng thêm.
+- [x] Review delta cuối C0/I0/M0; không kiểm lại nhóm test bởi reviewer.
+- [x] Một lỗi Python câu rawURL đã có trên BASE được tái hiện bằng
+  exactBASEtest/app7ca6pass1fail; không rollback chữ giao diện để làm xanh.
+- [ ] Hồi quy/Python còn lại, tài liệu/Tester/provenance → mộtPR → CI/
+  merge/deploy/runtime/assets/receipt. Signed production UI vẫn riêng.
+- [x] Hồi quy còn lại166tệp4.744lượt đạt; gộp174tệp/5.135lượt/
+  4.925ca duy nhất. Python tĩnh42/42,metadata1/1,py_compile exit0.
+  Native auth cục bộ đứng, đã dừng đúng QA; exact-head authCI vẫn giữ.
+  Tài liệu vận hành/đối chiếu/Tester/8case và12nhãn/2mẫu đã đủ.
+- [ ] Nhãn Composer còn prompt/keyvisual/landingpage; thông báo hành động/
+  lỗi động, draft qua lỗi/revision/route, whole-app locale/AX/auth/device
+  và motion cuối vẫn mở. GoalACTIVE, không nhận hoàn tất.
