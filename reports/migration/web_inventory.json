@@ -10536,7 +10536,7 @@
         "reports/audit/R218-SUBDUB-MOBILE-RANGE-QA-20261024.json",
         "reports/audit/R218-SUBDUB-ORIGINAL-TOGGLE-R1-REVIEW-20261024.json"
       ],
-      "occurrences": 84,
+      "occurrences": 85,
       "provider": "Gemini"
     },
     {
@@ -18798,9 +18798,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 708,
-  "source_files_scanned": 708,
-  "source_fingerprint_sha256": "55eac71a3a7d4bbd953e1a87678b354b239677150aabb85ac010d248f95e1d0c",
+  "source_files_discovered": 711,
+  "source_files_scanned": 711,
+  "source_fingerprint_sha256": "9ccb659bcb7dc73630e8015dcc7c9a23952246fcfff62e544d21c36a1de11dbc",
   "source_root": "repository-root",
   "ui_path_references": [
     {
