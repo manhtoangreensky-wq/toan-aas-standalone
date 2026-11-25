@@ -7,9 +7,10 @@
  * 3. Exact WebSocket URL dispatch.
  * 4. Fails closed with UI_STATE=FAILED if session creation or capture fails.
  * 5. Authoritative Stop verification: never calls updateUiStopped unconditionally on stop failure.
+ * 6. User account login and balance (Xu) verification at 2x SubDub rate.
  */
 
-const DEFAULT_API_BASE = "https://tg.toanaas.vn";
+const DEFAULT_API_BASE = "https://app.toanaas.vn";
 
 function updateUiRunningElements(elements) {
   const { btnToggle, statusMsg, selectMode, selectLang, selectVoice } = elements;
@@ -96,6 +97,39 @@ function handleStopResponse(stopRes, elements) {
   }
 }
 
+let _currentUserBalanceXu = 0;
+let _isAuthenticated = false;
+
+async function checkAccountAuth(apiBase) {
+  try {
+    const res = await fetch(`${apiBase}/api/v1/auth/me`, { credentials: "include" });
+    if (!res.ok) {
+      return { authenticated: false };
+    }
+    const data = await res.json();
+    const account = data?.data || data?.account || data || {};
+    
+    // Check wallet balance
+    let balance = 0;
+    try {
+      const walletRes = await fetch(`${apiBase}/api/v1/wallet`, { credentials: "include" });
+      if (walletRes.ok) {
+        const wData = await walletRes.json();
+        const w = wData?.data || wData || {};
+        balance = typeof w.balance_xu === "number" ? w.balance_xu : (typeof w.balance === "number" ? w.balance : 0);
+      }
+    } catch (_) {}
+
+    return {
+      authenticated: true,
+      email: account.email || account.display_name || "Tài khoản TOAN AAS",
+      balanceXu: balance,
+    };
+  } catch (err) {
+    return { authenticated: false, error: err.message };
+  }
+}
+
 if (typeof document !== "undefined") {
   document.addEventListener("DOMContentLoaded", async () => {
     const selectMode = document.getElementById("select-mode");
@@ -104,9 +138,98 @@ if (typeof document !== "undefined") {
     const btnToggle = document.getElementById("btn-toggle");
     const statusMsg = document.getElementById("status-msg");
 
+    const accountBar = document.getElementById("account-bar");
+    const userEmail = document.getElementById("user-email");
+    const userBalance = document.getElementById("user-balance");
+    const balanceWarning = document.getElementById("balance-warning");
+    const loginCard = document.getElementById("login-card");
+    const controlsContainer = document.getElementById("controls-container");
+    const inputEmail = document.getElementById("input-email");
+    const inputPassword = document.getElementById("input-password");
+    const btnLogin = document.getElementById("btn-login");
+    const loginError = document.getElementById("login-error");
+    const btnLogout = document.getElementById("btn-logout");
+
     const elements = { selectMode, selectLang, selectVoice, btnToggle, statusMsg };
 
-    // Check current session state
+    async function refreshAccountUi() {
+      const auth = await checkAccountAuth(DEFAULT_API_BASE);
+      _isAuthenticated = auth.authenticated;
+      _currentUserBalanceXu = auth.balanceXu || 0;
+
+      if (auth.authenticated) {
+        if (loginCard) loginCard.style.display = "none";
+        if (accountBar) accountBar.style.display = "flex";
+        if (controlsContainer) controlsContainer.style.display = "block";
+        if (userEmail) userEmail.textContent = auth.email;
+        if (userBalance) userBalance.textContent = `Số dư: ${_currentUserBalanceXu.toLocaleString("vi-VN")} Xu`;
+        if (balanceWarning) {
+          balanceWarning.style.display = _currentUserBalanceXu > 0 ? "none" : "block";
+        }
+      } else {
+        if (loginCard) loginCard.style.display = "block";
+        if (accountBar) accountBar.style.display = "none";
+        if (controlsContainer) controlsContainer.style.display = "none";
+      }
+    }
+
+    await refreshAccountUi();
+
+    if (btnLogin) {
+      btnLogin.addEventListener("click", async () => {
+        const email = inputEmail?.value?.trim();
+        const password = inputPassword?.value;
+        if (!email || !password) {
+          if (loginError) {
+            loginError.style.display = "block";
+            loginError.textContent = "Vui lòng nhập đầy đủ Email và Mật khẩu";
+          }
+          return;
+        }
+
+        btnLogin.disabled = true;
+        btnLogin.textContent = "Đang đăng nhập...";
+        if (loginError) loginError.style.display = "none";
+
+        try {
+          const res = await fetch(`${DEFAULT_API_BASE}/api/v1/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ email, password }),
+          });
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.detail || err.message || `Đăng nhập thất bại (${res.status})`);
+          }
+
+          await refreshAccountUi();
+        } catch (err) {
+          if (loginError) {
+            loginError.style.display = "block";
+            loginError.textContent = err.message || "Lỗi đăng nhập tài khoản";
+          }
+        } finally {
+          btnLogin.disabled = false;
+          btnLogin.textContent = "Đăng nhập";
+        }
+      });
+    }
+
+    if (btnLogout) {
+      btnLogout.addEventListener("click", async () => {
+        try {
+          await fetch(`${DEFAULT_API_BASE}/api/v1/auth/logout`, {
+            method: "POST",
+            credentials: "include",
+          });
+        } catch (_) {}
+        await refreshAccountUi();
+      });
+    }
+
+    // Check current session state from background service worker
     if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
       chrome.runtime.sendMessage({ type: "GET_SESSION_STATUS" }, (response) => {
         if (response?.session?.active) {
@@ -132,6 +255,12 @@ if (typeof document !== "undefined") {
               handleStopResponse(stopRes, elements);
             });
           } else {
+            // Check balance before starting
+            if (_isAuthenticated && _currentUserBalanceXu <= 0) {
+              updateUiFailedElements(elements, "Tài khoản cần có số dư Xu để sử dụng dịch trực tiếp (Cước phí: 2x SubDub). Vui lòng nạp Xu tại app.toanaas.vn/wallet-app.");
+              return;
+            }
+
             // Stopped -> Start: Handshake with authenticated backend FIRST
             btnToggle.disabled = true;
             btnToggle.textContent = "⏳ Đang khởi tạo phiên...";
@@ -158,7 +287,7 @@ if (typeof document !== "undefined") {
 
               if (!createRes.ok) {
                 const errJson = await createRes.json().catch(() => ({}));
-                throw new Error(errJson.detail || `Lỗi máy chủ (${createRes.status}): Vui lòng đăng nhập Web TOAN AAS`);
+                throw new Error(errJson.detail || `Lỗi máy chủ (${createRes.status}): Vui lòng kiểm tra đăng nhập và số dư Xu`);
               }
 
               const sessionData = await createRes.json();

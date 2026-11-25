@@ -11,12 +11,18 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #0f172a;
       color: #f8fafc;
+      box-sizing: border-box;
     }
     .header {
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
       gap: 8px;
-      margin-bottom: 16px;
     }
     .badge {
       background: #2563eb;
@@ -30,8 +36,101 @@
       font-size: 15px;
       font-weight: 700;
     }
-    .form-group {
+    .account-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: #1e293b;
+      padding: 8px 10px;
+      border-radius: 6px;
       margin-bottom: 12px;
+      font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .account-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-email {
+      font-weight: 600;
+      color: #f1f5f9;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .user-balance {
+      color: #10b981;
+      font-weight: 700;
+    }
+    .btn-logout {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #94a3b8;
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .btn-logout:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #f8fafc;
+    }
+    .warning-badge {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      font-size: 11px;
+      padding: 6px 8px;
+      border-radius: 5px;
+      line-height: 1.4;
+    }
+    .warning-badge a {
+      color: #38bdf8;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+    .pricing-note {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    .login-card {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .login-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: #f8fafc;
+    }
+    .login-sub {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-bottom: 10px;
+      line-height: 1.35;
+    }
+    .input-field {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      color: #f8fafc;
+      font-size: 13px;
+      outline: none;
+    }
+    .input-field:focus {
+      border-color: #2563eb;
+    }
+    .form-group {
+      margin-bottom: 10px;
     }
     label {
       display: block;
@@ -41,6 +140,7 @@
     }
     select {
       width: 100%;
+      box-sizing: border-box;
       padding: 8px 10px;
       background: #1e293b;
       border: 1px solid rgba(255, 255, 255, 0.15);
@@ -51,6 +151,7 @@
     }
     .btn-primary {
       width: 100%;
+      box-sizing: border-box;
       padding: 10px;
       background: #2563eb;
       border: none;
@@ -59,7 +160,7 @@
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      margin-top: 8px;
+      margin-top: 6px;
       transition: background 0.15s;
     }
     .btn-primary:hover {
@@ -77,44 +178,102 @@
       text-align: center;
       margin-top: 10px;
     }
+    .login-footer {
+      margin-top: 10px;
+      font-size: 11px;
+      text-align: center;
+      color: #94a3b8;
+    }
+    .login-footer a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+    .login-footer a:hover {
+      text-decoration: underline;
+    }
+    .error-msg {
+      font-size: 11px;
+      color: #f87171;
+      margin-top: 6px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <div class="header">
-    <span class="badge">文 VI</span>
-    <span class="title">TOAN AAS Live Dub</span>
+    <div class="brand">
+      <span class="badge">文 VI</span>
+      <span class="title">TOAN AAS Live Dub</span>
+    </div>
   </div>
 
-  <div class="form-group">
-    <label>Chế độ dịch:</label>
-    <select id="select-mode">
-      <option value="LIVE_DUB_BILINGUAL" selected>Lồng tiếng + Phụ đề song ngữ</option>
-      <option value="CAPTION_TRANSLATE">Chỉ phụ đề dịch (Không dub)</option>
-      <option value="CAPTION_ONLY">Chỉ nhận diện phụ đề gốc</option>
-    </select>
+  <!-- Account info bar (when logged in) -->
+  <div id="account-bar" class="account-bar" style="display: none;">
+    <div class="account-row">
+      <span class="user-email" id="user-email">—</span>
+      <button id="btn-logout" class="btn-logout" type="button">Đăng xuất</button>
+    </div>
+    <div class="account-row">
+      <span id="user-balance" class="user-balance">Số dư: 0 Xu</span>
+      <span class="pricing-note">Giá 2x SubDub</span>
+    </div>
+    <div id="balance-warning" class="warning-badge" style="display: none;">
+      ⚠️ Tài khoản cần có số dư Xu để dịch trực tiếp. <a href="https://app.toanaas.vn/wallet-app" target="_blank">Nạp Xu tại đây</a>.
+    </div>
   </div>
 
-  <div class="form-group">
-    <label>Ngôn ngữ dịch sang:</label>
-    <select id="select-lang">
-      <option value="vi" selected>Tiếng Việt (vi)</option>
-      <option value="en">English (en)</option>
-      <option value="zh">Tiếng Trung (zh)</option>
-      <option value="ja">Tiếng Nhật (ja)</option>
-    </select>
+  <!-- Login card (when not authenticated) -->
+  <div id="login-card" class="login-card" style="display: none;">
+    <div class="login-title">Đăng nhập tài khoản TOAN AAS</div>
+    <div class="login-sub">Đăng nhập tài khoản app.toanaas.vn để liên kết số dư Xu và sử dụng dịch trực tiếp.</div>
+    <div class="form-group">
+      <label for="input-email">Email:</label>
+      <input type="email" id="input-email" class="input-field" placeholder="name@example.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label for="input-password">Mật khẩu:</label>
+      <input type="password" id="input-password" class="input-field" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button id="btn-login" class="btn-primary" type="button">Đăng nhập</button>
+    <div id="login-error" class="error-msg" style="display: none;"></div>
+    <div class="login-footer">
+      <a href="https://app.toanaas.vn/register" target="_blank">Chưa có tài khoản? Đăng ký tại web</a>
+    </div>
   </div>
 
-  <div class="form-group">
-    <label>Giọng lồng tiếng:</label>
-    <select id="select-voice">
-      <option value="male" selected>Nam Minh (Giọng Nam trầm ấm)</option>
-      <option value="female">Hoài My (Giọng Nữ truyền cảm)</option>
-      <option value="voice_vault">Voice Vault (Giọng cá nhân của tôi)</option>
-    </select>
-  </div>
+  <!-- Main translation controls -->
+  <div id="controls-container">
+    <div class="form-group">
+      <label for="select-mode">Chế độ dịch:</label>
+      <select id="select-mode">
+        <option value="LIVE_DUB_BILINGUAL" selected>Lồng tiếng + Phụ đề song ngữ</option>
+        <option value="CAPTION_TRANSLATE">Chỉ phụ đề dịch (Không dub)</option>
+        <option value="CAPTION_ONLY">Chỉ nhận diện phụ đề gốc</option>
+      </select>
+    </div>
 
-  <button id="btn-toggle" class="btn-primary">▶ Bắt đầu dịch tab này</button>
-  <div id="status-msg" class="status-text" style="display: none;"></div>
+    <div class="form-group">
+      <label for="select-lang">Ngôn ngữ dịch sang:</label>
+      <select id="select-lang">
+        <option value="vi" selected>Tiếng Việt (vi)</option>
+        <option value="en">English (en)</option>
+        <option value="zh">Tiếng Trung (zh)</option>
+        <option value="ja">Tiếng Nhật (ja)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="select-voice">Giọng lồng tiếng:</label>
+      <select id="select-voice">
+        <option value="male" selected>Nam Minh (Giọng Nam trầm ấm)</option>
+        <option value="female">Hoài My (Giọng Nữ truyền cảm)</option>
+        <option value="voice_vault">Voice Vault (Giọng cá nhân của tôi)</option>
+      </select>
+    </div>
+
+    <button id="btn-toggle" class="btn-primary">▶ Bắt đầu dịch tab này</button>
+    <div id="status-msg" class="status-text" style="display: none;"></div>
+  </div>
 
   <script src="popup.js"></script>
 </body>

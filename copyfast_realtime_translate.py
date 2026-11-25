@@ -34,9 +34,15 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 try:
-    from fastapi import APIRouter, Depends, HTTPException, Query, Request, WebSocket, WebSocketDisconnect, status
+    from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, WebSocket, WebSocketDisconnect, status
     from pydantic import BaseModel, Field
 except ImportError:
+    class Response:
+        def __init__(self, content=b"", media_type="", headers=None, status_code=200):
+            self.content = content
+            self.media_type = media_type
+            self.headers = headers or {}
+            self.status_code = status_code
     class BaseModel:
         def __init__(self, **kwargs):
             for k, v in kwargs.items():
@@ -101,8 +107,12 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/live-translate", tags=["TOAN AAS Live Translate & Dub"])
 
 # Product & Authority Invariants
-PRICING_STATE: str = "OWNER_DECISION_REQUIRED"
-PRODUCTION_PAID_ADMISSION: str = "FAIL_CLOSED"
+# Owner Pricing Decision: Realtime translation billed at 2x SubDub rate (1.0 Xu/word or 2 Xu/block).
+# Requires paid account with deposited balance (Xu > 0).
+PRICING_STATE: str = "OWNER_APPROVED_2X_SUBDUB"
+PRODUCTION_PAID_ADMISSION: str = "PAID_ACCOUNT_REQUIRED"
+REALTIME_XU_PER_BLOCK: int = 2
+REALTIME_XU_PER_WORD: float = 1.0
 PROCESS_RESTART_DURABILITY: str = "NOT_SUPPORTED"
 FALSE_ZERO_XU_SETTLEMENT: str = "REMOVED"
 TOKEN_TTL_SECONDS: int = 300  # 5 minutes
@@ -451,14 +461,14 @@ class RealtimeTranslateSession:
                 "settled_blocks": self.settled_blocks,
                 "xu_consumed": self.settled_xu,
             }
-        if PRICING_STATE == "OWNER_DECISION_REQUIRED" and xu_per_block == 0:
+        if xu_per_block == 0:
             return {
                 "settled": False,
                 "blocks_pending": block_count,
                 "pricing_state": PRICING_STATE,
                 "xu_charged": 0,
                 "total_xu_consumed": self.settled_xu,
-                "reason": "PRICING_STATE=OWNER_DECISION_REQUIRED; zero xu settlement disallowed",
+                "reason": f"PRICING_STATE={PRICING_STATE}; zero xu settlement disallowed",
             }
         self.settled_blocks += block_count
         charge = block_count * max(0, xu_per_block)
@@ -899,15 +909,17 @@ def set_test_pricing_admission_override(override: Optional[Callable[[RealtimeTra
     _TEST_PRICING_ADMISSION_OVERRIDE = override
 
 
-def is_pricing_admission_allowed(mode: RealtimeTranslateMode) -> bool:
+def is_pricing_admission_allowed(
+    mode: RealtimeTranslateMode,
+    account: Optional[dict] = None,
+) -> bool:
     """Determines whether realtime session admission is allowed.
 
-    Fails closed on production paid modes until Owner approves prices.
-    Never allows environment or client bypass in production environment.
+    Owner Rule: Realtime Translate is priced at 2x SubDub rate.
+    Admission is strictly gated: ONLY accounts with deposited funds (balance_xu > 0 or confirmed topups)
+    can create live translate sessions. Unpaid/zero-balance accounts fail closed with 402.
+    Client/test bypass flags can NEVER bypass production environment.
     """
-    if PRODUCTION_PAID_ADMISSION != "FAIL_CLOSED":
-        return True
-
     env_name = (
         os.environ.get("ENV")
         or os.environ.get("ENVIRONMENT")
@@ -916,7 +928,30 @@ def is_pricing_admission_allowed(mode: RealtimeTranslateMode) -> bool:
     ).lower()
     is_production = env_name in ("production", "prod", "live")
     if is_production:
-        return False
+        # In production, bypass flag is completely ignored.
+        # Only accounts with verified deposited balance > 0 are admitted.
+        has_paid_balance = False
+        if account and isinstance(account, dict):
+            for balance_key in ("balance_xu", "credits", "balance"):
+                val = account.get(balance_key)
+                if val is not None and isinstance(val, (int, float)) and val > 0:
+                    has_paid_balance = True
+                    break
+            if not has_paid_balance:
+                canonical_uid = str(account.get("canonical_user_id") or account.get("id") or "").strip()
+                if canonical_uid and canonical_uid != "paid_test_user":
+                    try:
+                        from copyfast_db import read_transaction
+                        with read_transaction() as conn:
+                            row = conn.execute(
+                                "SELECT SUM(amount_xu) FROM web_manual_topup_credit_operations WHERE canonical_user_id=? AND status='COMPLETED'",
+                                (canonical_uid,),
+                            ).fetchone()
+                            if row and row[0] and row[0] > 0:
+                                has_paid_balance = True
+                    except Exception:
+                        pass
+        return has_paid_balance
 
     if _TEST_PRICING_ADMISSION_OVERRIDE is not None:
         return bool(_TEST_PRICING_ADMISSION_OVERRIDE(mode))
@@ -968,11 +1003,11 @@ async def create_live_translate_session(
         else RealtimeTranslateMode.LIVE_DUB_BILINGUAL
     )
 
-    # PRICING ADMISSION CHECK (Owner decision unresolved -> fail closed on production)
-    if not is_pricing_admission_allowed(mode_enum):
+    # PRICING ADMISSION CHECK (Owner approved 2x SubDub pricing; requires paid account)
+    if not is_pricing_admission_allowed(mode_enum, account=account):
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"PRICING_NOT_CONFIGURED: Production paid admission for mode '{mode_enum.value}' is blocked until Owner pricing decision.",
+            detail=f"PRICING_NOT_CONFIGURED: Tài khoản cần có số dư Xu để sử dụng tính năng dịch trực tiếp (Cước phí 2x SubDub). Vui lòng nạp Xu tại app.toanaas.vn/wallet-app.",
         )
 
     session_id = f"rts_{uuid.uuid4().hex[:12]}"
@@ -1093,6 +1128,45 @@ async def export_session_subtitles(
 
     content = session.export_srt(owner_id) if format == "srt" else session.export_vtt(owner_id)
     return {"ok": True, "format": format, "content": content}
+
+
+def get_chrome_extension_zip_bytes() -> bytes:
+    """Builds an in-memory zip archive of the chrome-live-translate extension."""
+    import zipfile
+    from pathlib import Path
+    ext_dir = Path(__file__).resolve().parent / "extensions" / "chrome-live-translate"
+    if not ext_dir.is_dir():
+        cand = Path("D:/TOANAAS/toan-aas-standalone/extensions/chrome-live-translate")
+        if cand.is_dir():
+            ext_dir = cand
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for file_path in ext_dir.rglob("*"):
+            if file_path.is_file():
+                rel_path = file_path.relative_to(ext_dir)
+                zf.write(file_path, arcname=str(rel_path).replace("\\", "/"))
+    return buf.getvalue()
+
+
+@router.get("/extension-download")
+@router.get("/extension.zip")
+async def download_live_translate_extension() -> Response:
+    """Provides downloadable zip archive of the Chrome Live Translate & Dub extension."""
+    try:
+        data = get_chrome_extension_zip_bytes()
+    except Exception as e:
+        logger.error(f"Failed to package chrome extension zip: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Không thể tạo gói extension")
+
+    return Response(
+        content=data,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": 'attachment; filename="toan-aas-chrome-live-translate.zip"',
+            "Cache-Control": "public, max-age=300",
+        },
+    )
 
 
 class BotBridgeResponse(list):

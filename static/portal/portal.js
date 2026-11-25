@@ -28509,6 +28509,34 @@ function renderAutoPostHub(page, context) {
       </div>
     </section>`;
 
+    const extensionBannerHtml = `<section class="portal-card portal-card-pad portal-subdub-extension-card" style="margin-top: 24px; border: 1px solid rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.03);">
+      <div class="portal-card-header">
+        <div>
+          <span class="portal-section-kicker" style="color: #10b981;">TIỆN ÍCH MỞ RỘNG TRÌNH DUYỆT</span>
+          <h2 class="portal-card-title">TOAN AAS Live Translate & Dub (Chrome Extension)</h2>
+          <p class="portal-card-subtitle">Dịch và lồng tiếng thời gian thực trực tiếp trên mọi tab video trình duyệt (YouTube, Facebook, Twitter, họp trực tuyến...).</p>
+        </div>
+        <a class="portal-btn portal-btn--primary" href="/api/v1/live-translate/extension-download" download="toan-aas-chrome-live-translate.zip" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+          <span>Tải Extension (.ZIP)</span>
+          <b aria-hidden="true">↓</b>
+        </a>
+      </div>
+      <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+        <div style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+          <strong style="display:block; margin-bottom: 6px; color: #f8fafc;">1. Cài đặt vào Chrome / Edge</strong>
+          <span style="font-size: 13px; color: #94a3b8; line-height: 1.5;">Tải file ZIP và giải nén. Mở <code>chrome://extensions</code>, bật <b>Developer mode</b>, bấm <b>Load unpacked</b> và chọn thư mục vừa giải nén.</span>
+        </div>
+        <div style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+          <strong style="display:block; margin-bottom: 6px; color: #f8fafc;">2. Đăng nhập tài khoản</strong>
+          <span style="font-size: 13px; color: #94a3b8; line-height: 1.5;">Mở tiện ích, đăng nhập bằng tài khoản <code>app.toanaas.vn</code> của bạn. Tiện ích tự động liên kết số dư Xu với tài khoản.</span>
+        </div>
+        <div style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+          <strong style="display:block; margin-bottom: 6px; color: #f8fafc;">3. Cước phí & Số dư Xu</strong>
+          <span style="font-size: 13px; color: #94a3b8; line-height: 1.5;">Yêu cầu tài khoản có nạp Xu (> 0 Xu). Cước phí dịch trực tiếp thời gian thực tính gấp đôi SubDub thông thường (2x SubDub rate).</span>
+        </div>
+      </div>
+    </section>`;
+
     const rendered = `<article class="portal-page portal-subdub-hub portal-subdub-journey-view" lang="${safeText(locale)}" data-subdub-authoring-ready="${authoringReady ? "true" : "false"}">
       ${renderHero({ ...page, description: copy.heroSubtitle }, context)}
       ${authoringReady ? "" : `<p class="portal-form-note" role="status" data-subdub-authoring-session-status>${safeText(copy.authoringSessionPending)}</p>`}
@@ -28523,6 +28551,7 @@ function renderAutoPostHub(page, context) {
       ${stage3Html}
       ${stage4Html}
       ${companionToolsHtml}
+      ${extensionBannerHtml}
     </article>`;
     return subDubAuthoringMarkup(rendered, authoringReady);
   }
