@@ -92,3 +92,11 @@ màu không đổi. Comparator lịch sử bổ sung đúng hai insertion banner
 nguồn vật lý so fixedmain+9record. Nhóm giao nhau10tệp422/422,
 Pythoninverse3/3 đạt; không cộng vào sổ full trước sync. CI cuối và
 provenance mới vẫn là cổng phát hành, không dùng CI upstream bị lỗi.
+
+Hòa nhập tiếp PR810 tại0a9022ce: phụ lục689/7168548459, mergec7ac3f7b.
+Giữ UI upstream; màu vẫn chín record. QA inverse ba record catalog có
+hash fixed-main trước/sau, giữ byte lạ và assertion cũ; nguồn vật lý so
+0a9022ce+9record, `portal.css` nguyên main.27tệp/538lượt Node,
+Python98/98 và reviewC0/I0/M0 đạt. Ca Python câu lịch sử lỗi cùng
+main/ứng viên giữ báo riêng. CI45652044355 đạt trên63ad906a, không
+thay freshCI bản ghép; phát hành vẫn cần provenance/CI/runtime/assets.

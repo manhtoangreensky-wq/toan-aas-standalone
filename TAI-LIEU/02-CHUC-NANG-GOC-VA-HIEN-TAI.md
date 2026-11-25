@@ -3030,3 +3030,9 @@ Chỉ chín record/ hai tệp ứng dụng, không phải thiết kế lại tra
 thay chức năng, provider, quyền, ví hoặc dữ liệu. Chỉ kiểm thân panel
 ban đầu; output/lỗi sau hành động, toàn ứng dụng, Safari/thiết bị thật và
 giao diện production sau đăng nhập chưa được chứng minh bởi đợt màu.
+
+Nhánh màu đã giữ thêm UI danh mục/tiện ích của PR810 tại0a9022ce.
+Đây là phần kế thừa, không phải record màu mới. So nguồn vật lý vẫn
+đòi main cố định+đúng9record; QA ba record catalog chỉ phục vụ so lịch sử,
+không bỏ byte lạ hoặc đổi assertion. Bằng chứng sau ghép538Node/98Python;
+không mở rộng kết luận tới Bot/API/provider hoặc production interaction.

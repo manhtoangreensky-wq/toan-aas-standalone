@@ -8,6 +8,16 @@ assert.equal(contract.base, "a8cf07490448548a2a1be6800fb7e146abeac726");
 assert.equal(contract.records.length, 9);
 const priorProtectedSources = new Map();
 
+export function upstreamCatalogHistoricalSource(source, file) {
+  const records = contract.catalog_sync.records.filter(row => row.file === file);
+  if (!records.some(row => source.includes(row.new))) return source;
+  for (const record of [...records].reverse()) {
+    assert.equal(source.split(record.new).length - 1, 1, "Unreviewed upstream catalog source");
+    source = source.replace(record.new, () => record.old);
+  }
+  return source;
+}
+
 export function upstreamRealtimeProtectedHistoricalSource(source, file) {
   const pin = contract.main_sync.protected_source_pins.find(row => row.file === file);
   if (!pin || createHash("sha256").update(source).digest("hex") !== pin.afterLfSha256) return source;

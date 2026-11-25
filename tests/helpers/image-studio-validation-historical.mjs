@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import {freeToolsReadableColorsHistoricalSource, upstreamRealtimeBannerHistoricalSource, upstreamRealtimeProtectedHistoricalSource} from "./free-tools-readable-colors-historical.mjs";
+import {freeToolsReadableColorsHistoricalSource, upstreamCatalogHistoricalSource, upstreamRealtimeBannerHistoricalSource, upstreamRealtimeProtectedHistoricalSource} from "./free-tools-readable-colors-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/image-studio-validation-contract.json", import.meta.url), "utf8"));
 assert.equal(contract.records.length, 30);
@@ -11,8 +11,9 @@ const scopes = new Map([
 
 export function imageStudioValidationHistoricalSource(source, file) {
   source = upstreamRealtimeProtectedHistoricalSource(source, file);
-  source = upstreamRealtimeBannerHistoricalSource(source, file);
   source = freeToolsReadableColorsHistoricalSource(source, file);
+  source = upstreamCatalogHistoricalSource(source, file);
+  source = upstreamRealtimeBannerHistoricalSource(source, file);
   const records = contract.records.filter(row => row.file === file);
   if (!records.some(row => source.includes(row.new))) return source;
   for (const record of [...records].reverse()) {

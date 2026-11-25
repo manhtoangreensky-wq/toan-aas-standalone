@@ -77,3 +77,20 @@ nguồn API/realtime, giữ pin gốc, dữ liệu lạ và kiểm rawphysicalfi
 17tệp nguồn452/452đạt,reviewC0/I0/M0; ứng dụng0thayđổi. Sửa cùngPR,
 refresh/verifyprovenance vàCIHEADmới trướcmerge. Không dùng rawhash
 để nhận API, wallet hoặc provider thực thi thành công.
+
+## Main PR810 — bằng chứng hợp nhất cuối
+
+Phụ lục689/7168548459 và mergec7ac3f7b giữ nguyên UI đã triển khai tại
+0a9022ce. Nguồn màu vẫn đúng chín record gốc; `portal.css` nguyên main.
+QA thêm đúng ba record catalog, xác minh toàn nguồn với hash cố định,
+không thay toàn tệp để bỏ mất byte lạ. Chuỗi inverse giữ assertion/pin
+cũ, unknown prefix/suffix/internal và lỗi duplicate/edited record.
+
+27tệp JavaScript538/538, ba tệp Python98/98 đạt; review cuốiC0/I0/M0.
+Một ca Python bổ sung đòi câu lịch sử lỗi giống trên fixed-main và ứng
+viên; báo riêng, không sửa app hay nới assertion. Lượt QA trước chưa
+đạt không cộng. CI45652044355 đạt trên63ad906a, artefact15043310897/
+15042896999, không thay CI bản ghép. Tài liệu vận hành/đối chiếu,
+phiên Tester, checklist và metadata ghi phần hòa nhập này.
+Refresh/verify Web-only provenance sau source commit, push cùngPR809
+và CI đúng HEAD vẫn là điều kiện trước merge/triển khai.

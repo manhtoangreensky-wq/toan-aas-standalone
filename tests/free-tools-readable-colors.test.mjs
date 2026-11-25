@@ -4,6 +4,7 @@ import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {freeToolsReadableColorsHistoricalSource, upstreamRealtimeBannerHistoricalSource, upstreamRealtimeProtectedHistoricalSource} from "./helpers/free-tools-readable-colors-historical.mjs";
+import * as historical from "./helpers/free-tools-readable-colors-historical.mjs";
 
 const root = new URL("../", import.meta.url);
 const read = file => fs.readFileSync(new URL(file, root), "utf8").replace(/\r\n/g, "\n");
@@ -17,12 +18,54 @@ test("physical Free Tools sources are delivered BASE plus exactly nine reviewed 
   assert.deepEqual([...new Set(contract.records.map(record => record.file))].sort(),
     ["static/portal/portal-theme.css", "static/portal/portal.js"]);
   for (const file of new Set(contract.records.map(record => record.file))) {
-    let expected = revisionSource(contract.main_sync.base, file);
+    let expected = revisionSource(contract.catalog_sync.base, file);
     for (const record of contract.records.filter(record => record.file === file)) {
       assert.equal(expected.split(record.old).length - 1, 1);
       expected = expected.replace(record.old, () => record.new);
     }
     assert.equal(read(file), expected, file);
+  }
+  assert.equal(read("static/portal/portal.css"), revisionSource(contract.catalog_sync.base, "static/portal/portal.css"));
+});
+
+test("catalog historical projection accepts only three exact fixed-main files and preserves mutations, unknown files and already projected bytes", () => {
+  assert.equal(typeof historical.upstreamCatalogHistoricalSource, "function");
+  assert.equal(contract.catalog_sync.base, "0a9022cefd272369ac150e3b108768fc9f0fb91e");
+  assert.equal(contract.catalog_sync.prior, contract.main_sync.base);
+  assert.deepEqual(contract.catalog_sync.source_pins.map(row => row.file),
+    ["static/portal/portal.js", "static/portal/portal-theme.css", "static/portal/portal.css"]);
+  assert.equal(contract.catalog_sync.records.length, 3);
+  const hash = text => createHash("sha256").update(text).digest("hex");
+  for (const pin of contract.catalog_sync.source_pins) {
+    const before = revisionSource(contract.catalog_sync.prior, pin.file);
+    const upstream = revisionSource(contract.catalog_sync.base, pin.file);
+    assert.equal(hash(before), pin.beforeLfSha256);
+    assert.equal(hash(upstream), pin.afterLfSha256);
+    assert.equal(historical.upstreamCatalogHistoricalSource(upstream, pin.file), before);
+    assert.equal(historical.upstreamCatalogHistoricalSource(before, pin.file), before);
+    for (const [changed, expected] of [
+      [upstream + "\n/* unknown */", before + "\n/* unknown */"],
+      ["/* customer */\n" + upstream, "/* customer */\n" + before],
+      [upstream + " ", before + " "],
+    ]) {
+      assert.equal(historical.upstreamCatalogHistoricalSource(changed, pin.file), expected);
+      assert.notEqual(hash(expected), pin.beforeLfSha256);
+    }
+    const record = contract.catalog_sync.records.find(row => row.file === pin.file);
+    assert.equal(before.split(record.old).length - 1, 1);
+    assert.equal(before.replace(record.old, () => record.new), upstream);
+    const internal = text => text.replace("\n", "\n/* unreviewed internal byte */\n");
+    assert.equal(historical.upstreamCatalogHistoricalSource(internal(upstream), pin.file), internal(before));
+    assert.notEqual(hash(internal(before)), pin.beforeLfSha256);
+    const changedRecord = upstream.replace(record.new, () => record.new.replace("\n", "\n/* mutation */\n"));
+    assert.equal(historical.upstreamCatalogHistoricalSource(changedRecord, pin.file), changedRecord);
+    assert.throws(() => historical.upstreamCatalogHistoricalSource(upstream + record.new, pin.file));
+    assert.equal(historical.upstreamCatalogHistoricalSource(upstream, "unrelated.js"), upstream);
+    const other = contract.catalog_sync.source_pins.find(row => row.file !== pin.file).file;
+    assert.equal(historical.upstreamCatalogHistoricalSource(upstream, other), upstream);
+    const composed = freeToolsReadableColorsHistoricalSource(read(pin.file), pin.file);
+    assert.equal(composed, upstream);
+    assert.equal(historical.upstreamCatalogHistoricalSource(composed, pin.file), before);
   }
 });
 

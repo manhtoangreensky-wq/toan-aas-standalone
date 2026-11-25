@@ -101,7 +101,8 @@ sau đăng nhập hoặc tuân thủ tương phản toàn ứng dụng.
   chỉđảo9record,khôngche unknown/missing/duplicate changes.
 - [x] Nhóm ảnh hưởng 398/398, hai nhóm Python 9/142, review gộp một lượt.
 - [x] Hồi quy còn lại R2 và metadata đạt; số đo và nguồn đếm ghi trên.
-- [ ] Vận hành/đối chiếu/Tester/cases/provenance trước push.
+- [x] Vận hành/đối chiếu/Tester/cases trước push.
+- [ ] Provenance Web-only cập nhật cho nguồn sau hòa nhập PR810.
 - [ ] MộtPR/exactCI/merge/tree/exactdeploy/runtime/health/5+5assets/receipt.
 - [ ] Wholeappcontrast/AX,device/Safari vàsignedUI giữmở;motioncuối.
 
@@ -143,3 +144,31 @@ nguyên cho assertion cũ bắt lỗi. Test độc lập vẫn đọc nguồn v�
 C0/I0/M0. Không sửa ứng dụng, không nhận hành vi API/tiền/provider đã
 được kiểm bởi việc đối chiếu này. Các lượt giao nhau không cộng lặp vào
 sổ hồi quy cũ. Tiếp tục cùngPR809, tạo lại provenance vàfreshHEADCI.
+
+## Hòa nhập PR810 và nghiệm thu QA cuối
+
+Main/runtime lên `0a9022cefd272369ac150e3b108768fc9f0fb91e` qua
+PR810/deploy45638383705; phụ lục689/7168548459 có trước mergec7ac3f7b.
+Ba tệp UI upstream giữ nguyên. Nguồn vật lý màu bằng main này cộng chín
+record gốc; `portal.css` bằng nguyên main. Hai báo cáo sinh tự động tạm
+giữ snapshot đã biết, phải sinh lại Web-only; đối tượng Bot và các
+trường preflight ngoài Web không đổi.
+
+QA cuối dùng ba record catalog OLD/NEW hữu hạn, kiểm toàn nguồn trước/
+sau bằng hash hai Git SHA cố định. Thứ tự: đảo chín màu → đảo catalog
+→ đảo PR808. Không thay toàn tệp theo hash: cách đó không giữ được
+các ca chèn byte lạ giữa nguồn. Test cũ, pin và error assertion giữ;
+unknown prefix/suffix/internal giữ, record bị sửa không nhận diện,
+record trùng bị từ chối. Các lượt QA chưa đạt giữ riêng, không tính lỗi
+worker hoặc sửa app.
+
+Nhóm cuối27tệp/538lượt JavaScript đạt,0lỗi0bỏqua; Python ba tệp98/98.
+Bằng chứng `free-tools-main810-final-nov25.xml` và terminal Python98;
+review delta cuốiC0/I0/M0, không chạy lặp suite. Ca bổ sung
+`test_image_studio_is_truthful_about_no_execution_or_media_output`
+lỗi cùng câu lịch sử thiếu trên fixed-main0a9022ce và ứng viên; không
+sửa giao diện/assertion để che lỗi cũ.
+
+CI45652044355 hai job đạt trên63ad906a, artefact browser15043310897
+và authenticated15042896999; chỉ chứng minh SHA cũ, không thay CI bản
+ghép mới. Tiếp tục cùngPR809, không mở PR/checklist cạnh tranh.

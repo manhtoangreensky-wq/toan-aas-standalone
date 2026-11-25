@@ -3988,3 +3988,9 @@ Main/VPS đã triển khai PR808 tạifbcbfdf4 trước phát hành màu. Nhánh
 kế thừa bản đó, giữ chín thay đổi màu; nhóm giao nhau sau hòa nhập422
 đạt và Pythoninverse3đạt. CI của main mới lỗi bằng chứng nguồn cũ nên
 không dùng làm chứng nhận; đợt màu tạo lại bằng chứng và kiểm CI riêng.
+
+Trong lúc chờ, PR810 lên main/VPS tại0a9022ce, cải thiện danh mục và
+khối cài tiện ích. Nhánh màu giữ nguyên phần này, không thay chức năng.
+27tệp JavaScript/538lượt và Python98/98 đạt sau ghép; ba record QA riêng
+giữ mọi thay đổi lạ, không chiếu nguồn dùng để hiển thị. CI45652044355
+đạt cho bản63ad906a trước ghép; bản ghép vẫn cần CI và triển khai riêng.

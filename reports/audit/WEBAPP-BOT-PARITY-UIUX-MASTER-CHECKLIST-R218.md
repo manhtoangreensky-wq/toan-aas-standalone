@@ -3460,3 +3460,11 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   đúng2file/2hash nguồn đã triển khai; rawphysicalvẫnbằngfixedmain,
   unknown/mutationgiữ,oldassertionsgiữ.17tệp452/452đạt,reviewC0I0M0,
   appedits0. KhôngnhậnAPI/tiền/providerPASS; cùngPR/freshCIcònchờ.
+- [x] Hòa nhập PR810 tại0a9022ce, phụ lục689/7168548459/mergec7ac3f7b:
+  upstream nguyên byte,9record màu không đổi; inverse3record catalog
+  có hash trước/sau, giữunknown/internal/assertion.27tệp538Node và
+  98Python đạt,reviewC0I0M0. Ca Python câu lịch sử lỗi cùngmain/ứngviên.
+- [x] CI45652044355 trên63ad906a đạt hai job, artefact15043310897/
+  15042896999; bằng chứng bản trước ghép, không dùng thay finalHEADCI.
+- [ ] Bản ghép PR810: provenance mới → CI đúngHEAD → merge/tree →
+  deploy/runtime/health/5+5assets/receipt. Chưa nhận màu đã live.

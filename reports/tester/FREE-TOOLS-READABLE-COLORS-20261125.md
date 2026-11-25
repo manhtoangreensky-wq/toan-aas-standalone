@@ -90,3 +90,12 @@ API/realtime; nội dung lạ giữ nguyên, test rawphysicalđòi exactmain và
 pin/assertion gốc không đổi.17tệp452/452đạt,0skip;reviewC0I0M0.
 Đây là sửa tương thích kiểm tra, ứng dụng0thayđổi; không nhận runtime
 API/tiền/provider từ hash. Vẫn cần freshCI trên cùngPR809 trước giao.
+
+PR810 sync: phụ lục689/7168548459, mergec7ac3f7b, fixed-main0a9022ce.
+Ba UI upstream giữ nguyên, chín record màu không đổi. Inverse ba record
+catalog có hash toàn nguồn cố định, giữ byte lạ trong/ngoài record và
+giữ lỗi assertion cũ; không thay toàn tệp theo hash. Nhóm cuối27tệp/
+538lượt JavaScript và Python98/98 đạt; review delta cuốiC0/I0/M0.
+Ca Python bổ sung đòi câu lịch sử lỗi cùng trên main/ứng viên báo riêng.
+CI45652044355 hai job đạt cho63ad906a, artefact15043310897/15042896999;
+không phải CI bản ghép. Provenance/CI/merge/deploy/live bản ghép còn mở.
