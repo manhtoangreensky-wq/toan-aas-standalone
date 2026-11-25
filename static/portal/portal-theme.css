@@ -24054,3 +24054,12 @@ html[data-portal-theme="dark"] .portal-page.portal-free-tools .portal-free-tool-
   background: var(--portal-rail) !important;
   color: var(--portal-rail-text) !important;
 }
+
+/* Clean end-user catalog cards: hide technical engine, boundary and readiness labels */
+.portal-module-card-signals,
+.portal-boundary-label,
+.portal-engine-label,
+.portal-readiness-label {
+  display: none !important;
+}
+
