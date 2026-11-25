@@ -3416,8 +3416,10 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
 - [x] Review delta cuối C0/I0/M0; không kiểm lại nhóm test bởi reviewer.
 - [x] Một lỗi Python câu rawURL đã có trên BASE được tái hiện bằng
   exactBASEtest/app7ca6pass1fail; không rollback chữ giao diện để làm xanh.
-- [ ] Hồi quy/Python còn lại, tài liệu/Tester/provenance → mộtPR → CI/
-  merge/deploy/runtime/assets/receipt. Signed production UI vẫn riêng.
+- [x] Hồi quy/Python, tài liệu/Tester/provenance → PR800 → CI45551291541
+  → merge/runtimea8cf07490448548a2a1be6800fb7e146abeac726 →
+  deploy45553790822; VPS sạch/ba dịch vụ/health/5+5assets và biên nhận
+  Issue689/7153868208 đọc lại đúng. Signed production UI vẫn riêng.
 - [x] Hồi quy còn lại166tệp4.744lượt đạt; gộp174tệp/5.135lượt/
   4.925ca duy nhất. Python tĩnh42/42,metadata1/1,py_compile exit0.
   Native auth cục bộ đứng, đã dừng đúng QA; exact-head authCI vẫn giữ.
@@ -3425,3 +3427,28 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
 - [ ] Nhãn Composer còn prompt/keyvisual/landingpage; thông báo hành động/
   lỗi động, draft qua lỗi/revision/route, whole-app locale/AX/auth/device
   và motion cuối vẫn mở. GoalACTIVE, không nhận hoàn tất.
+
+### Công cụ miễn phí — màu chữ và nền, 25/11/2026
+
+- [x] Dependency PR800 đã phát hành; contract Issue689/7154102334.
+- [x] Đúng chín record của Antigravity trong hai UI files; model mới
+  `gemini-4-hydrogen-xhigh`, không đăng nhập lại hoặc đổi settings.
+- [x] Fixture/RED 1 lỗi/3 đạt; nhóm nguồn/ảnh hưởng 398/398, inverse
+  hữu hạn giữ thay đổi lạ và từ chối record thiếu/lặp.
+- [x] Ma trận nguồn vật lý cuối có ngữ cảnh `body.portal-body`:
+  tám view, 32 trạng thái tab, 640/640 mẫu chữ đạt, min5,4733;
+  20 view panel, 278/278 mẫu đang bật đo được đạt, min5,0505.
+- [x] Tám phần tử vô hiệu và QR whitebox giữ nguyên; bốn mẫu màu không
+  chắc chắn đều vô hiệu, không gán PASS. Không đổi font/hình học/control.
+- [x] ArrowRight thật tám view, vòng focus-visible 3px min11,7725:1.
+  Probe sớm là thiếu ngữ cảnh QA; không áp focus amendment dư thừa.
+- [x] Python hai nhóm9/142 đạt, báo riêng. Review gộp C0/I0/M0, không
+  chạy lặp test. Không có lỗi code worker; palette/parser/context sửa ở QA.
+- [x] Hồi quy còn lại đủ168tệp/4.748lượt đạt; ghép nhóm ảnh hưởng thành
+  176tệp chọn/5.146lượt/4.936khóa file+name duy nhất. Ba tệp chậm được
+  kiểm riêng14/88/354đạt, giữ assertions/app/CI. Lượt timeout600s và
+  recovery bị gián đoạn giữ riêng. Metadata1/1 vàpy_compileexit0.
+- [ ] Tài liệu/Tester/metadata/provenance → mộtPR → exactCI → merge/
+  deploy/runtime/health/5+5assets/receipt. Chưa nhận màu đã lên production.
+- [ ] Chỉ kiểm panel ban đầu; trạng thái output/lỗi, whole-app contrast/
+  AX, signedUI, thiết bị thật/Safari vẫn mở. Motion xếp cuối.

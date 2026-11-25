@@ -37,3 +37,13 @@ issue dùng lại, không tạo thêm thẻ trống. Source/provenance/CI/deploy
 Flow trình duyệt dùng renderer/hàm kiểm tra/nhánh hành động và toast
 nguồn vật lý với dữ liệu giả. Đây không phải fullbootstrap/auth/API.
 Không đăng nhập mới, không đọc cookie/profile. Provider/ví/dữ liệu thật0.
+
+## Biên nhận phát hành — 25/11/2026
+
+Các cổng phát hành chờ ở trên đã hoàn tất qua PR800. HEAD kiểm
+`9318a199fb5639c33452f51a04ec176b90ed1337`; CI45551291541 có hai job
+đạt. Merge/runtime `a8cf07490448548a2a1be6800fb7e146abeac726`, tree
+khớp bản kiểm; deploy45553790822 thành công. VPS nguồn sạch, Web/Bot/
+nginx active, health đúng, năm tệp công khai và năm URL có phiên bản
+khớp byte. Biên nhận Issue689/7153868208 đã đọc lại đúng. Signed
+production interaction và toàn goal vẫn mở; không nhận chúng từ assets.

@@ -60,3 +60,17 @@ helper upstream, validation2files vẫn main+30records. Xung đột provenance
 không được chọn cũ làm bằng chứng; refreshWeb-only và freshHEADCI riêng.
 Nhóm giao nhau sau sync391/391,metadata1/1 đạt; không chạy lại full
 hồi quy cục bộ hoặc nhận auth cục bộPASS từ kết quả này.
+
+## Biên nhận phát hành cuối — 25/11/2026
+
+PR800 đã gộp và triển khai. CI45551291541 Verify Web App và Authenticated
+WebApp QA đều đạt trên HEAD `9318a199fb5639c33452f51a04ec176b90ed1337`;
+browser artifact14993494571, authenticated artifact14994209141.
+Merge/runtime `a8cf07490448548a2a1be6800fb7e146abeac726`, tree bằng
+`e9dd8534d07840170915c96b491dc4632ebca550` như bản kiểm. Deploy45553790822
+thành công, VPS đúng SHA/nguồn sạch/ba dịch vụ active/health đúng/
+5+5assets khớp. Receipt689/7153868208 đọc lại đúng.
+
+Các đoạn chờ phía trên là lịch sử trước phát hành; không còn là trạng
+thái delivery hiện tại. Giao diện production sau đăng nhập và toàn-app
+locale/AX/responsive/auth/device/motion chưa được đóng bởi biên nhận này.

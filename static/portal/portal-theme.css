@@ -23990,6 +23990,17 @@ html:not([data-portal-theme="dark"]) .portal-page.portal-media-workspace-detail 
   color: var(--portal-ink);
 }
 
+/* Keep Free Tools panel headings, labels and hints readable in both themes. */
+:root .portal-page.portal-free-tools .portal-free-tool-panel :is(.portal-section-kicker, .portal-card-title, .portal-card-subtitle, .portal-label) {
+  color: var(--portal-ink);
+}
+:root .portal-page.portal-free-tools .portal-free-tool-panel :is(.portal-input, .portal-textarea)::placeholder {
+  color: var(--portal-muted-strong);
+}
+:root .portal-page.portal-free-tools .portal-free-tool-result :is(.portal-section-kicker, dt, .portal-free-tool-note) {
+  color: var(--portal-ink);
+}
+
 /* Keep audio collection field labels and search guidance readable. */
 html:not([data-portal-theme="dark"]) .portal-page:is(.portal-media-workspace-detail, .portal-audio-hub-detail) :is(form[data-portal-action="media-collection-update"], form[data-portal-action="media-audio-filter"], form[data-portal-action="media-item-attach"]) .portal-field > label {
   color: var(--portal-ink);
@@ -24002,4 +24013,44 @@ html:not([data-portal-theme="dark"]) .portal-page:is(.portal-media-workspace-det
 }
 html[data-portal-theme="dark"] .portal-page:is(.portal-media-workspace-detail, .portal-audio-hub-detail) .portal-media-audio-filter .portal-form-note {
   color: var(--portal-ink);
+}
+
+/* Pair Free Tools surfaces and text using the active theme tokens. */
+:root .portal-page.portal-free-tools > .portal-hero .portal-eyebrow,
+:root .portal-page.portal-free-tools .portal-free-tools-intro .portal-section-kicker,
+:root .portal-page.portal-free-tools .portal-free-tools-intro p {
+  color: var(--portal-ink);
+}
+:root .portal-page.portal-free-tools .portal-free-tools-intro dl > div {
+  background: var(--portal-surface);
+}
+:root .portal-page.portal-free-tools .portal-free-tools-intro :is(dt, dd) {
+  color: var(--portal-ink);
+}
+:root .portal-page.portal-free-tools .portal-free-tools-tab {
+  background: var(--portal-surface);
+  color: var(--portal-ink);
+}
+:root .portal-page.portal-free-tools .portal-free-tools-tab:hover,
+:root .portal-page.portal-free-tools .portal-free-tools-tab:focus-visible {
+  background: var(--portal-surface-soft);
+  color: var(--portal-ink);
+}
+:root .portal-page.portal-free-tools .portal-free-tools-tab.is-active {
+  background: var(--portal-action);
+  color: var(--portal-on-action);
+}
+:root .portal-page.portal-free-tools .portal-free-tools-tab:focus-visible {
+  outline-color: var(--portal-focus);
+}
+/* Override the legacy important primary fill only within Free Tools. */
+:root .portal-page.portal-free-tools .portal-free-tool-panel .portal-button--primary:not(:disabled) {
+  background: var(--portal-action) !important;
+  color: var(--portal-on-action) !important;
+}
+/* Keep dark Free Tools actions on a dark surface with light text. */
+html[data-portal-theme="dark"] .portal-page.portal-free-tools .portal-free-tools-tab.is-active,
+html[data-portal-theme="dark"] .portal-page.portal-free-tools .portal-free-tool-panel .portal-button--primary:not(:disabled) {
+  background: var(--portal-rail) !important;
+  color: var(--portal-rail-text) !important;
 }

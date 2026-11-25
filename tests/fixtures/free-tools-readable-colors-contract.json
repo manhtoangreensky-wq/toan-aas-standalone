@@ -1,0 +1,52 @@
+{
+  "id": "FREE-TOOLS-READABLE-COLORS-20261125",
+  "base": "a8cf07490448548a2a1be6800fb7e146abeac726",
+  "model": "gemini-4-hydrogen-xhigh",
+  "records": [
+    {
+      "file": "static/portal/portal-theme.css",
+      "old": "html[data-portal-theme=\"dark\"] .portal-page:is(.portal-media-workspace-detail, .portal-audio-hub-detail) .portal-media-audio-filter .portal-form-note {\n  color: var(--portal-ink);\n}",
+      "new": "html[data-portal-theme=\"dark\"] .portal-page:is(.portal-media-workspace-detail, .portal-audio-hub-detail) .portal-media-audio-filter .portal-form-note {\n  color: var(--portal-ink);\n}\n\n/* Pair Free Tools surfaces and text using the active theme tokens. */\n:root .portal-page.portal-free-tools > .portal-hero .portal-eyebrow,\n:root .portal-page.portal-free-tools .portal-free-tools-intro .portal-section-kicker,\n:root .portal-page.portal-free-tools .portal-free-tools-intro p {\n  color: var(--portal-ink);\n}\n:root .portal-page.portal-free-tools .portal-free-tools-intro dl > div {\n  background: var(--portal-surface);\n}\n:root .portal-page.portal-free-tools .portal-free-tools-intro :is(dt, dd) {\n  color: var(--portal-ink);\n}\n:root .portal-page.portal-free-tools .portal-free-tools-tab {\n  background: var(--portal-surface);\n  color: var(--portal-ink);\n}\n:root .portal-page.portal-free-tools .portal-free-tools-tab:hover,\n:root .portal-page.portal-free-tools .portal-free-tools-tab:focus-visible {\n  background: var(--portal-surface-soft);\n  color: var(--portal-ink);\n}\n:root .portal-page.portal-free-tools .portal-free-tools-tab.is-active {\n  background: var(--portal-action);\n  color: var(--portal-on-action);\n}\n:root .portal-page.portal-free-tools .portal-free-tools-tab:focus-visible {\n  outline-color: var(--portal-focus);\n}\n/* Override the legacy important primary fill only within Free Tools. */\n:root .portal-page.portal-free-tools .portal-free-tool-panel .portal-button--primary:not(:disabled) {\n  background: var(--portal-action) !important;\n  color: var(--portal-on-action) !important;\n}\n/* Keep dark Free Tools actions on a dark surface with light text. */\nhtml[data-portal-theme=\"dark\"] .portal-page.portal-free-tools .portal-free-tools-tab.is-active,\nhtml[data-portal-theme=\"dark\"] .portal-page.portal-free-tools .portal-free-tool-panel .portal-button--primary:not(:disabled) {\n  background: var(--portal-rail) !important;\n  color: var(--portal-rail-text) !important;\n}"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "<div id=\"free-tools-text-chars\" style=\"font-size: 20px; font-weight: 700; color: var(--portal-accent); margin-top: 4px;\">",
+      "new": "<div id=\"free-tools-text-chars\" style=\"font-size: 20px; font-weight: 700; color: var(--portal-ink); margin-top: 4px;\">"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "<div id=\"free-tools-text-chars-nospaces\" style=\"font-size: 20px; font-weight: 700; color: #a6fff0; margin-top: 4px;\">",
+      "new": "<div id=\"free-tools-text-chars-nospaces\" style=\"font-size: 20px; font-weight: 700; color: var(--portal-ink); margin-top: 4px;\">"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "<div id=\"free-tools-text-words\" style=\"font-size: 20px; font-weight: 700; color: var(--portal-accent); margin-top: 4px;\">",
+      "new": "<div id=\"free-tools-text-words\" style=\"font-size: 20px; font-weight: 700; color: var(--portal-ink); margin-top: 4px;\">"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "<div id=\"free-tools-text-lines-sentences\" style=\"font-size: 20px; font-weight: 700; color: #ffffff; margin-top: 4px;\">",
+      "new": "<div id=\"free-tools-text-lines-sentences\" style=\"font-size: 20px; font-weight: 700; color: var(--portal-ink); margin-top: 4px;\">"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "<div id=\"free-tools-text-read-time\" style=\"font-size: 20px; font-weight: 700; color: #7beddb; margin-top: 4px;\">",
+      "new": "<div id=\"free-tools-text-read-time\" style=\"font-size: 20px; font-weight: 700; color: var(--portal-ink); margin-top: 4px;\">"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "<div id=\"free-tools-text-voice-time\" style=\"font-size: 20px; font-weight: 700; color: #ffd166; margin-top: 4px;\">",
+      "new": "<div id=\"free-tools-text-voice-time\" style=\"font-size: 20px; font-weight: 700; color: var(--portal-ink); margin-top: 4px;\">"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "<div id=\"free-tools-qr-preview-container\" class=\"portal-card portal-card-pad\" style=\"width: 100%; max-width: 360px; text-align:center; background: rgba(0,0,0,0.25); border: 1px solid var(--portal-border-strong); border-radius: 16px; padding: 20px;\">\n              <div style=\"font-size: 13px; font-weight: 600; color: var(--portal-accent); margin-bottom: 14px;\">${c(\"vietqr.preview.title\", \"MÃ VIETQR THANH TOÁN\")}</div>",
+      "new": "<div id=\"free-tools-qr-preview-container\" class=\"portal-card portal-card-pad\" style=\"width: 100%; max-width: 360px; text-align:center; background: var(--portal-surface); border: 1px solid var(--portal-border-strong); border-radius: 16px; padding: 20px;\">\n              <div style=\"font-size: 13px; font-weight: 600; color: var(--portal-ink); margin-bottom: 14px;\">${c(\"vietqr.preview.title\", \"MÃ VIETQR THANH TOÁN\")}</div>"
+    },
+    {
+      "file": "static/portal/portal-theme.css",
+      "old": "/* Keep audio collection field labels and search guidance readable. */",
+      "new": "/* Keep Free Tools panel headings, labels and hints readable in both themes. */\n:root .portal-page.portal-free-tools .portal-free-tool-panel :is(.portal-section-kicker, .portal-card-title, .portal-card-subtitle, .portal-label) {\n  color: var(--portal-ink);\n}\n:root .portal-page.portal-free-tools .portal-free-tool-panel :is(.portal-input, .portal-textarea)::placeholder {\n  color: var(--portal-muted-strong);\n}\n:root .portal-page.portal-free-tools .portal-free-tool-result :is(.portal-section-kicker, dt, .portal-free-tool-note) {\n  color: var(--portal-ink);\n}\n\n/* Keep audio collection field labels and search guidance readable. */"
+    }
+  ]
+}
