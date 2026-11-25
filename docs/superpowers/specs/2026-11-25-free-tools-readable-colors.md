@@ -131,3 +131,15 @@ vẫn bị phát hiện. Không chiếu nguồn vật lý dùng để vẽ giao 
 Nhóm giao nhau10tệp422/422 đạt,0skip; Python inverse3/3. Không cộng các
 lượt kiểm lại này vào sổ176tệp cũ hoặc nhận full regression mới sau sync.
 Web-only provenance phải tạo lại rồi CI đúng HEAD cuối trước merge/deploy.
+
+CI đầu PR809 `45637352354` trên43882e29 đi qua provenance nhưng gặp
+pin lịch sử151nguồn đòi hash API trước PR808. Sửa QA riêng: chỉ đúng
+hai file API/realtime và toàn bộ hash nguồn khớp fixedmainfbcb mới
+được chiếu về Gitbasea8cf khi so lịch sử. Nội dung lạ hoặc bị sửa giữ
+nguyên cho assertion cũ bắt lỗi. Test độc lập vẫn đọc nguồn vật lý và
+đòi toàn bộ hai file bằng fixedmain; pin/assertion gốc không sửa.
+
+17tệp kiểm nguồn chịu ảnh hưởng đạt452/452,0fail0skip; review delta
+C0/I0/M0. Không sửa ứng dụng, không nhận hành vi API/tiền/provider đã
+được kiểm bởi việc đối chiếu này. Các lượt giao nhau không cộng lặp vào
+sổ hồi quy cũ. Tiếp tục cùngPR809, tạo lại provenance vàfreshHEADCI.

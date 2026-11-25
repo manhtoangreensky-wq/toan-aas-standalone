@@ -69,7 +69,17 @@
       "affected_node_failed": 0,
       "affected_node_skipped": 0,
       "python_inverse_passed": 3,
-      "fresh_final_head_ci": "REQUIRED_AFTER_WEB_ONLY_PROVENANCE_REFRESH"
+      "fresh_final_head_ci": "REQUIRED_AFTER_WEB_ONLY_PROVENANCE_REFRESH",
+      "first_color_pr_ci": 45637352354,
+      "first_color_pr_ci_head": "43882e29c458feb9064190f1a410d5d190c199a0",
+      "first_color_pr_ci_failure": "HISTORICAL_151_SOURCE_PINS_STILL_EXPECTED_PRE_PR808_API_HASH",
+      "qa_repair": "EXACT_TWO_FILE_FIXED_MAIN_HASH_PROJECTION_FOR_HISTORICAL_COMPARISONS_ONLY; raw current API/realtime independently checked fixed-main exact",
+      "qa_repair_application_edits": 0,
+      "qa_repair_source_files_selected": 17,
+      "qa_repair_node_observations": 452,
+      "qa_repair_node_failed": 0,
+      "qa_repair_node_skipped": 0,
+      "qa_repair_review_open_findings": 0
     },
     "manifest": "KIEM-THU/PHIEN-FREE-TOOLS-READABLE-COLORS-20261125.md",
     "report": "reports/tester/FREE-TOOLS-READABLE-COLORS-20261125.md",

@@ -5,6 +5,18 @@
   "main_sync": {
     "base": "fbcbfdf4f6dc3563ceba8b4f2815ae1ebb63d90b",
     "prior": "a8cf07490448548a2a1be6800fb7e146abeac726",
+    "protected_source_pins": [
+      {
+        "file": "copyfast_api.py",
+        "beforeLfSha256": "8e18ea3ae8e3a11af54673760371815fbcd4e49ea7ca4573b97971ad5ac71ecf",
+        "afterLfSha256": "153bdfa529c3928a04a9d41730e3765bbdda060ed49a08981acea5d867ee7c5d"
+      },
+      {
+        "file": "copyfast_realtime_translate.py",
+        "beforeLfSha256": "193d7fe27eb4799b0010d5695f5104d8f613e0bbd79f06ee6e033d8c6ef4301f",
+        "afterLfSha256": "0bffd102ef146a0436b9f8f783d2e035b9874bace9e6a47ec07e3befe35eb14e"
+      }
+    ],
     "portal_insertions": [
       "    const extensionBannerHtml = `<section class=\"portal-card portal-card-pad portal-subdub-extension-card\" style=\"margin-top: 24px; border: 1px solid rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.03);\">\n      <div class=\"portal-card-header\">\n        <div>\n          <span class=\"portal-section-kicker\" style=\"color: #10b981;\">TIỆN ÍCH MỞ RỘNG TRÌNH DUYỆT</span>\n          <h2 class=\"portal-card-title\">TOAN AAS Live Translate & Dub (Chrome Extension)</h2>\n          <p class=\"portal-card-subtitle\">Dịch và lồng tiếng thời gian thực trực tiếp trên mọi tab video trình duyệt (YouTube, Facebook, Twitter, họp trực tuyến...).</p>\n        </div>\n        <a class=\"portal-btn portal-btn--primary\" href=\"/api/v1/live-translate/extension-download\" download=\"toan-aas-chrome-live-translate.zip\" style=\"text-decoration:none; display:inline-flex; align-items:center; gap:8px;\">\n          <span>Tải Extension (.ZIP)</span>\n          <b aria-hidden=\"true\">↓</b>\n        </a>\n      </div>\n      <div style=\"margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;\">\n        <div style=\"padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);\">\n          <strong style=\"display:block; margin-bottom: 6px; color: #f8fafc;\">1. Cài đặt vào Chrome / Edge</strong>\n          <span style=\"font-size: 13px; color: #94a3b8; line-height: 1.5;\">Tải file ZIP và giải nén. Mở <code>chrome://extensions</code>, bật <b>Developer mode</b>, bấm <b>Load unpacked</b> và chọn thư mục vừa giải nén.</span>\n        </div>\n        <div style=\"padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);\">\n          <strong style=\"display:block; margin-bottom: 6px; color: #f8fafc;\">2. Đăng nhập tài khoản</strong>\n          <span style=\"font-size: 13px; color: #94a3b8; line-height: 1.5;\">Mở tiện ích, đăng nhập bằng tài khoản <code>app.toanaas.vn</code> của bạn. Tiện ích tự động liên kết số dư Xu với tài khoản.</span>\n        </div>\n        <div style=\"padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);\">\n          <strong style=\"display:block; margin-bottom: 6px; color: #f8fafc;\">3. Cước phí & Số dư Xu</strong>\n          <span style=\"font-size: 13px; color: #94a3b8; line-height: 1.5;\">Yêu cầu tài khoản có nạp Xu (> 0 Xu). Cước phí dịch trực tiếp thời gian thực tính gấp đôi SubDub thông thường (2x SubDub rate).</span>\n        </div>\n      </div>\n    </section>`;\n\n",
       "      ${extensionBannerHtml}\n"

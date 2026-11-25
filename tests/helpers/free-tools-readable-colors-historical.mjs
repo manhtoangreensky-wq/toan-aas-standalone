@@ -1,9 +1,24 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {createHash} from "node:crypto";
+import {execFileSync} from "node:child_process";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/free-tools-readable-colors-contract.json", import.meta.url), "utf8"));
 assert.equal(contract.base, "a8cf07490448548a2a1be6800fb7e146abeac726");
 assert.equal(contract.records.length, 9);
+const priorProtectedSources = new Map();
+
+export function upstreamRealtimeProtectedHistoricalSource(source, file) {
+  const pin = contract.main_sync.protected_source_pins.find(row => row.file === file);
+  if (!pin || createHash("sha256").update(source).digest("hex") !== pin.afterLfSha256) return source;
+  if (!priorProtectedSources.has(file)) {
+    const prior = execFileSync("git", ["show", contract.main_sync.prior + ":" + file],
+      {cwd: new URL("../../", import.meta.url), encoding: "utf8", maxBuffer: 30e6, windowsHide: true}).replace(/\r\n/g, "\n");
+    assert.equal(createHash("sha256").update(prior).digest("hex"), pin.beforeLfSha256);
+    priorProtectedSources.set(file, prior);
+  }
+  return priorProtectedSources.get(file);
+}
 
 export function upstreamRealtimeBannerHistoricalSource(source, file) {
   if (file !== "static/portal/portal.js") return source;

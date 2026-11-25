@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
-import {freeToolsReadableColorsHistoricalSource, upstreamRealtimeBannerHistoricalSource} from "./helpers/free-tools-readable-colors-historical.mjs";
+import {createHash} from "node:crypto";
+import {freeToolsReadableColorsHistoricalSource, upstreamRealtimeBannerHistoricalSource, upstreamRealtimeProtectedHistoricalSource} from "./helpers/free-tools-readable-colors-historical.mjs";
 
 const root = new URL("../", import.meta.url);
 const read = file => fs.readFileSync(new URL(file, root), "utf8").replace(/\r\n/g, "\n");
@@ -38,6 +39,23 @@ test("independently delivered upstream portal source is exactly the original bas
     assert.throws(() => upstreamRealtimeBannerHistoricalSource(upstream.replace(record, ""), file));
   }
   assert.equal(upstreamRealtimeBannerHistoricalSource(upstream, "unrelated.js"), upstream);
+});
+
+test("historical protected-file pins accept only exact delivered upstream bytes while raw physical sources remain fixed-main exact", () => {
+  const hash = text => createHash("sha256").update(text).digest("hex");
+  assert.deepEqual(contract.main_sync.protected_source_pins.map(row => row.file),
+    ["copyfast_api.py", "copyfast_realtime_translate.py"]);
+  for (const pin of contract.main_sync.protected_source_pins) {
+    const before = prior(pin.file), upstream = revisionSource(contract.main_sync.base, pin.file);
+    assert.equal(hash(before), pin.beforeLfSha256);
+    assert.equal(hash(upstream), pin.afterLfSha256);
+    assert.equal(read(pin.file), upstream, "Current protected application source is unprojected fixed-main exact");
+    assert.equal(upstreamRealtimeProtectedHistoricalSource(upstream, pin.file), before);
+    assert.equal(upstreamRealtimeProtectedHistoricalSource(before, pin.file), before);
+    assert.equal(upstreamRealtimeProtectedHistoricalSource(upstream + "\n/* unknown */", pin.file), upstream + "\n/* unknown */");
+    assert.notEqual(hash(upstreamRealtimeProtectedHistoricalSource(upstream + " ", pin.file)), pin.beforeLfSha256);
+    assert.equal(upstreamRealtimeProtectedHistoricalSource(upstream, "unrelated.py"), upstream);
+  }
 });
 
 test("reviewed JavaScript records change color fragments only and leave QR image surface and every non-style byte intact", () => {

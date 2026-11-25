@@ -70,3 +70,10 @@ Mười tệp giao nhau422/422 và Python inverse3/3 đạt sau sync. CI upstrea
 45599142644 lỗi provenance cũ; nhánh màu làm mới Web-only provenance
 và yêu cầu CI mới đầy đủ trên HEAD cuối. Sổ hồi quy lớn phía trên thuộc
 trạng thái trước sync, không được cộng lại hoặc nhận đã chạy full lần nữa.
+
+CI đầu PR80945637352354 phát hiện pin lịch sử API chưa chấp nhận đúng
+PR808 đã triển khai. Bốn tệp QA thêm đối chiếu hữu hạn cho đúng hai hash
+nguồn API/realtime, giữ pin gốc, dữ liệu lạ và kiểm rawphysicalfixedmain.
+17tệp nguồn452/452đạt,reviewC0/I0/M0; ứng dụng0thayđổi. Sửa cùngPR,
+refresh/verifyprovenance vàCIHEADmới trướcmerge. Không dùng rawhash
+để nhận API, wallet hoặc provider thực thi thành công.

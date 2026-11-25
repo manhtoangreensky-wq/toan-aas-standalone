@@ -83,3 +83,10 @@ insertion banner29dòng; không thay assertion cũ hoặc bỏ kiểm thay đổ
 Nguồn vật lý vẫn so main cố định+9record.10tệp giao nhau422/422,
 Pythoninverse3/3 đạt. Không nhận full regression sau sync; CI mới trên
 HEAD cuối bắt buộc. CI upstream lỗi fingerprint cũ không dùng làm PASS.
+
+CI PR80945637352354 sau đó phát hiện pin lịch sử toàn nguồn còn hash
+API trước PR808. Mapping QA chỉ nhận đúng hai hash fixedmain của
+API/realtime; nội dung lạ giữ nguyên, test rawphysicalđòi exactmain và
+pin/assertion gốc không đổi.17tệp452/452đạt,0skip;reviewC0I0M0.
+Đây là sửa tương thích kiểm tra, ứng dụng0thayđổi; không nhận runtime
+API/tiền/provider từ hash. Vẫn cần freshCI trên cùngPR809 trước giao.
