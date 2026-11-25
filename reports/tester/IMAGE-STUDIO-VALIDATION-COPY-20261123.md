@@ -53,3 +53,10 @@ Signed production UI=`NOT_TESTED`. Các nhãn Composer pha Anh, phản hồi
 hành động/lỗi động, draft qua lỗi/revision/route, whole-app locale/AX/
 responsive/auth/device/Safari và motion cuối vẫn mở.
 ProviderCalls0/WalletMutations0/EnvMutations0/ProductionDataMutations0.
+
+25/11: CI45136242250 hai job success đúngc7328b71. Chưamerge vì main/VPS
+đã thêm các PRcatalogue/QA và ởb24da8f1. Hòa nhập main giữ exactcatalog/
+helper upstream, validation2files vẫn main+30records. Xung đột provenance
+không được chọn cũ làm bằng chứng; refreshWeb-only và freshHEADCI riêng.
+Nhóm giao nhau sau sync391/391,metadata1/1 đạt; không chạy lại full
+hồi quy cục bộ hoặc nhận auth cục bộPASS từ kết quả này.

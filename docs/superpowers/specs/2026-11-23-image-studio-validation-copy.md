@@ -73,3 +73,11 @@ Chỉ báo mức bằng chứng đã quan sát; signed production UI vẫn
 Thông báo hành động/lỗi động, bản nháp qua lỗi đọc/đổi revision/rời route,
 locale toàn app, accessibility/responsive/auth/device/Safari và motion
 cuối vẫn mở. Không mở rộng đợt thông báo nhập liệu sang các việc trên.
+
+## Dependency cập nhật25/11
+
+Main/VPSb24da8f1e41f51c1f51ae5b3abb7d99da10cebf1 đã có sửa catalogue
+và QA riêng. PR800CIc732success nhưng chưamerge. Hòa nhập main cùng PR,
+giữ nguyên mọi sửa main; xung đột chỉ hai tệp provenance, phải refresh
+Web-only sau mergecommit. 30recordvalidation không đổi; cổngfreshHEAD
+CI/AuthQA bắt buộc trước merge/deploy. Phụ lụcIssue689/7153324764.
