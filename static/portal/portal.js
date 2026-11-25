@@ -28510,21 +28510,30 @@ function renderAutoPostHub(page, context) {
     </section>`;
 
     const extensionBannerHtml = `<section class="portal-card portal-card-pad portal-subdub-extension-card" style="margin-top: 24px; border: 1px solid rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.03);">
-      <div class="portal-card-header">
+      <div class="portal-card-header" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
         <div>
-          <span class="portal-section-kicker" style="color: #10b981;">TIỆN ÍCH MỞ RỘNG TRÌNH DUYỆT</span>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <span class="portal-section-kicker" style="color: #10b981; margin:0;">TIỆN ÍCH MỞ RỘNG TRÌNH DUYỆT</span>
+            <span style="font-size:11px; padding:2px 8px; border-radius:999px; background:rgba(16,185,129,0.15); color:#10b981; font-weight:600;">⚡ Cài đặt nhanh</span>
+          </div>
           <h2 class="portal-card-title">TOAN AAS Live Translate & Dub (Chrome Extension)</h2>
-          <p class="portal-card-subtitle">Dịch và lồng tiếng thời gian thực trực tiếp trên mọi tab video trình duyệt (YouTube, Facebook, Twitter, họp trực tuyến...).</p>
+          <p class="portal-card-subtitle">Dịch và lồng tiếng thời gian thực trực tiếp trên mọi tab video trình duyệt (YouTube, Facebook, Twitter, Meet...).</p>
         </div>
-        <a class="portal-btn portal-btn--primary" href="/api/v1/live-translate/extension-download" download="toan-aas-chrome-live-translate.zip" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
-          <span>Tải Extension (.ZIP)</span>
-          <b aria-hidden="true">↓</b>
-        </a>
+        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+          <a class="portal-btn portal-btn--primary" href="https://chromewebstore.google.com/detail/toan-aas-live-translate" target="_blank" rel="noopener" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; background:#10b981; border-color:#10b981;">
+            <span>Thêm vào Chrome (Web Store)</span>
+            <b aria-hidden="true">↗</b>
+          </a>
+          <a class="portal-btn portal-btn--secondary" href="/api/v1/live-translate/extension-download" download="toan-aas-chrome-live-translate.zip" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+            <span>Tải bản ZIP (.zip)</span>
+            <b aria-hidden="true">↓</b>
+          </a>
+        </div>
       </div>
       <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
         <div style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
-          <strong style="display:block; margin-bottom: 6px; color: #f8fafc;">1. Cài đặt vào Chrome / Edge</strong>
-          <span style="font-size: 13px; color: #94a3b8; line-height: 1.5;">Tải file ZIP và giải nén. Mở <code>chrome://extensions</code>, bật <b>Developer mode</b>, bấm <b>Load unpacked</b> và chọn thư mục vừa giải nén.</span>
+          <strong style="display:block; margin-bottom: 6px; color: #f8fafc;">1. Cài đặt 1-Click hoặc ZIP</strong>
+          <span style="font-size: 13px; color: #94a3b8; line-height: 1.5;">Bấm <b>Thêm vào Chrome</b> để cài trực tiếp từ Store. Hoặc tải file ZIP, mở trang <code style="user-select:all;">chrome://extensions</code> (bật <i>Developer mode</i> → <i>Load unpacked</i>).</span>
         </div>
         <div style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
           <strong style="display:block; margin-bottom: 6px; color: #f8fafc;">2. Đăng nhập tài khoản</strong>
