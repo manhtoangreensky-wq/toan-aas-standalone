@@ -1,5 +1,23 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Danh mục video — 26/11/2026
+
+Dùng phiên `PHIEN-CATALOGUE-VIDEO-NATIVE-20261126.md` vàtámcaseCVN.
+Chỉ kiểm root `/features`; đây làbộ chữ nhẹ riêng,không lấy bằng chứng
+trangfamily/workspace làm kết quả root. Giữ đủ135thẻ,108mục cũ.
+Tên riêng/định dạng tệp giữ;chữ chung phải theo ngôn ngữ đã chọn.
+
+Tìm bằng chữdịch,rồi keygốc;Xóa để về135thẻ;Tab thấyfocus rõ.
+Không bấm tạo/xử lý/tải video hoặc dùng dữ liệu khách. Ảnh/đo màu
+phải có đúngclass`portal-body--features`,customerShell vànormalizer;
+không sửa CSS theo khung QA thiếu context. Các lượt QAkhông hợp lệ
+phải giữriêng,không báo thành lỗi ứng dụng hoặcworker.
+
+PR812 trước đó đã giao/receipt đọc lại. CVN hiện làứngviên local,
+không suy CI/deploy/signedproduction từNode hoặcảnh côlập.
+Ghiđúnglocale/theme/viewport/BASE/HEAD vàtrạng thái từnggate.
+Toàn-app/auth/device/Safari vàmotion cuối vẫn mở.
+
 ## Phản hồi lỗi rà soát âm thanh — 22/11/2026
 
 Dùng phiên `PHIEN-AUDIO-REVIEW-CURRENT-ERRORS-20261122.md` và sáu
