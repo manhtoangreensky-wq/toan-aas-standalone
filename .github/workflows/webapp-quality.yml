@@ -116,6 +116,7 @@ jobs:
           node --test tests/image-studio-root-heading.test.mjs
           node --test tests/image-studio-validation.test.mjs
           node --test tests/free-tools-readable-colors.test.mjs
+          node --test tests/native-label-recovery.test.mjs tests/native-label-recovery-source.test.mjs tests/native-subdub-extension.test.mjs
           python -m pytest --noconftest -q tests/test_free_tools_readable_colors_historical.py
           node --test tests/image-composer-native-locale.test.mjs tests/image-composer-native-locale-history.test.mjs tests/image-composer-receipt-normalization.test.mjs tests/image-composer-receipt-pipeline.test.mjs tests/image-composer-results-locale.test.mjs tests/image-composer-feedback-locale.test.mjs tests/image-composer-feedback-actions.test.mjs tests/image-composer-other-routes.test.mjs
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_image_composer_native_text.py tests/test_image_composer_native_note.py tests/test_image_prompt_composer_portal_contracts.py

@@ -859,13 +859,13 @@
       { name: "script", label: "Nội dung lời thoại", control: "textarea", placeholder: "Nhập văn bản để chuẩn bị giọng nói…", required: true, minLength: 1 },
       { name: "default_voice_gender", label: "Giọng đọc mặc định", control: "select", options: [{ value: "female", label: "Nữ" }, { value: "male", label: "Nam" }], required: true, help: "Chọn giọng nam hoặc nữ. Hệ thống kiểm tra lựa chọn trước khi xử lý." },
       { name: "speed", label: "Tốc độ đọc", labelKey: "field.speed.label", type: "number", defaultValue: "1.0", min: 0.1, max: 2, step: 0.05, inputMode: "decimal", presets: [{ value: "0.85", label: "Chậm (0,85×)", labelKey: "option.speed.0.85" }, { value: "1.0", label: "Chuẩn (1,0×)", labelKey: "option.speed.1.0" }, { value: "1.2", label: "Nhanh (1,2×)", labelKey: "option.speed.1.2" }], helpKey: "field.speed.help", help: "Tốc độ đọc từ 0,1× đến 2,0×. Bạn có thể chọn mức gợi ý hoặc nhập số trực tiếp." },
-      { name: "volume_percent", label: "Âm lượng (%)", labelKey: "field.volume_percent.label", type: "number", defaultValue: "100", min: 0, max: 200, step: 10, placeholder: "100", placeholderKey: "field.volume_percent.placeholder", range: { ariaLabel: "Thanh âm lượng", ariaLabelKey: "field.volume_percent.label" }, helpKey: "field.volume_percent.help", help: "Âm lượng đọc từ 0% đến 200%; 100% là mức chuẩn." }
+      { name: "volume_percent", label: "Âm lượng (%)", labelKey: "field.volume_percent.label", type: "number", defaultValue: "100", min: 0, max: 200, step: 10, placeholder: "100", placeholderKey: "field.volume_percent.placeholder", range: { ariaLabel: "Thanh âm lượng", ariaLabelKey: "voiceUi.field.volume_percent.label" }, helpKey: "field.volume_percent.help", help: "Âm lượng đọc từ 0% đến 200%; 100% là mức chuẩn." }
     ],
     voiceSaved: [
       { name: "script", label: "Nội dung lời thoại", control: "textarea", placeholder: "Nhập văn bản để chuẩn bị giọng nói…", required: true, minLength: 1 },
       { name: "voice_profile_id", label: "Giọng từ Voice Vault", control: "select", optionsFrom: "voiceProfiles", emptyLabel: "Chọn một giọng đã sẵn sàng", help: "Saved TTS chỉ estimate khi Voice Vault canonical xác nhận profile này thuộc tài khoản và sẵn sàng.", required: true },
       { name: "speed", label: "Tốc độ đọc", labelKey: "field.speed.label", type: "number", defaultValue: "1.0", min: 0.1, max: 2, step: 0.05, inputMode: "decimal", presets: [{ value: "0.85", label: "Chậm (0,85×)", labelKey: "option.speed.0.85" }, { value: "1.0", label: "Chuẩn (1,0×)", labelKey: "option.speed.1.0" }, { value: "1.2", label: "Nhanh (1,2×)", labelKey: "option.speed.1.2" }], helpKey: "field.speed.help", help: "Tốc độ đọc từ 0,1× đến 2,0×. Bạn có thể chọn mức gợi ý hoặc nhập số trực tiếp." },
-      { name: "volume_percent", label: "Âm lượng (%)", labelKey: "field.volume_percent.label", type: "number", defaultValue: "100", min: 0, max: 200, step: 10, placeholder: "100", placeholderKey: "field.volume_percent.placeholder", range: { ariaLabel: "Thanh âm lượng", ariaLabelKey: "field.volume_percent.label" }, helpKey: "field.volume_percent.help", help: "Âm lượng đọc từ 0% đến 200%; 100% là mức chuẩn." }
+      { name: "volume_percent", label: "Âm lượng (%)", labelKey: "field.volume_percent.label", type: "number", defaultValue: "100", min: 0, max: 200, step: 10, placeholder: "100", placeholderKey: "field.volume_percent.placeholder", range: { ariaLabel: "Thanh âm lượng", ariaLabelKey: "voiceUi.field.volume_percent.label" }, helpKey: "field.volume_percent.help", help: "Âm lượng đọc từ 0% đến 200%; 100% là mức chuẩn." }
     ],
     voiceClone: [
       { name: "display_name", label: "Tên giọng (tuỳ chọn)", placeholder: "Ví dụ: Giọng thương hiệu TOAN AAS", maxLength: 120, help: "Nếu để trống, Bot canonical đặt tên mặc định an toàn; tên này không phải provider voice ID." },
@@ -9911,7 +9911,7 @@
 
   function displayName(context) {
     const candidate = context.profile.displayName || context.profile.name || context.session.displayName || context.session.email;
-    return typeof candidate === "string" && candidate.trim() ? candidate.trim().slice(0, 80) : "Phiên bảo mật đang chờ";
+    return typeof candidate === "string" && candidate.trim() ? candidate.trim().slice(0, 80) : "";
   }
 
   function displayPageTitle(page, context) {
@@ -11221,7 +11221,7 @@
   }
 
   function renderHeader(page, context) {
-    const name = displayName(context);
+    const name = displayName(context) || uiText("nav.account", "Tài khoản");
     const adminSurface = isAdminPortalSurface(page);
     const adminActiveGroup = adminSurface ? activeAdminNavigationGroup(page, context) : null;
     const commandSearchReady = adminSurface || Boolean(context.session && context.session.authenticated === true);
@@ -22554,7 +22554,7 @@ function renderAutoPostHub(page, context) {
 
   function renderDashboardWorkspaceSummary(context) {
     const readState = dashboardReadState(context);
-    const name = displayName(context);
+    const name = displayName(context) || uiText("dashboard.summary.guest", "bạn");
     const drafts = dashboardActiveDrafts(context);
     const projects = (Array.isArray(context.projects) ? context.projects : []).filter((item) => item && typeof item === "object" && validProjectId(item.id) && String(item.state || "active") === "active");
     const jobs = Array.isArray(context.jobs) ? context.jobs : [];
@@ -28525,40 +28525,19 @@ function renderAutoPostHub(page, context) {
       </div>
     </section>`;
 
-    const extensionBannerHtml = `<section class="portal-card portal-card-pad portal-subdub-extension-card" style="margin-top: 24px; border: 1px solid rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.03);">
-      <div class="portal-card-header" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
-        <div>
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-            <span class="portal-section-kicker" style="color: #10b981; margin:0;">TIỆN ÍCH MỞ RỘNG TRÌNH DUYỆT</span>
-            <span style="font-size:11px; padding:2px 8px; border-radius:999px; background:rgba(16,185,129,0.15); color:#10b981; font-weight:600;">⚡ Cài đặt nhanh</span>
-          </div>
-          <h2 class="portal-card-title">TOAN AAS Live Translate & Dub (Chrome Extension)</h2>
-          <p class="portal-card-subtitle">Dịch và lồng tiếng thời gian thực trực tiếp trên mọi tab video trình duyệt (YouTube, Facebook, Twitter, Meet...).</p>
+    const extensionBannerHtml = `<section class="portal-card portal-card-pad portal-subdub-extension-card">
+      <div class="portal-card-header">
+        <div class="portal-subdub-extension-copy">
+          <div class="portal-subdub-extension-eyebrow"><span class="portal-section-kicker">${safeText(uiText("subdubExtensionUi.kicker", "Dịch trực tiếp"))}</span><span class="portal-subdub-extension-badge">${safeText(uiText("subdubExtensionUi.badge", "Tiện ích Chrome"))}</span></div>
+          <h2 class="portal-card-title">${safeText(uiText("subdubExtensionUi.title", "Dịch và lồng tiếng khi xem video"))}</h2>
+          <p class="portal-card-subtitle">${safeText(uiText("subdubExtensionUi.body", "Sử dụng tiện ích TOAN AAS trên Chrome với video YouTube, Facebook, Twitter hoặc Meet."))}</p>
         </div>
-        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
-          <a class="portal-btn portal-btn--primary" href="https://chromewebstore.google.com/detail/toan-aas-live-translate" target="_blank" rel="noopener" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; background:#10b981; border-color:#10b981;">
-            <span>Thêm vào Chrome (Web Store)</span>
-            <b aria-hidden="true">↗</b>
-          </a>
-          <a class="portal-btn portal-btn--secondary" href="/api/v1/live-translate/extension-download" download="toan-aas-chrome-live-translate.zip" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
-            <span>Tải bản ZIP (.zip)</span>
-            <b aria-hidden="true">↓</b>
-          </a>
-        </div>
+        <a class="portal-button portal-button--primary" href="/api/v1/live-translate/extension-download" download="toan-aas-chrome-live-translate.zip">${safeText(uiText("subdubExtensionUi.download", "Tải tiện ích (.zip)"))}<b aria-hidden="true">↓</b></a>
       </div>
-      <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
-        <div style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
-          <strong style="display:block; margin-bottom: 6px; color: #f8fafc;">1. Cài đặt 1-Click hoặc ZIP</strong>
-          <span style="font-size: 13px; color: #94a3b8; line-height: 1.5;">Bấm <b>Thêm vào Chrome</b> để cài trực tiếp từ Store. Hoặc tải file ZIP, mở trang <code style="user-select:all;">chrome://extensions</code> (bật <i>Developer mode</i> → <i>Load unpacked</i>).</span>
-        </div>
-        <div style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
-          <strong style="display:block; margin-bottom: 6px; color: #f8fafc;">2. Đăng nhập tài khoản</strong>
-          <span style="font-size: 13px; color: #94a3b8; line-height: 1.5;">Mở tiện ích, đăng nhập bằng tài khoản <code>app.toanaas.vn</code> của bạn. Tiện ích tự động liên kết số dư Xu với tài khoản.</span>
-        </div>
-        <div style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
-          <strong style="display:block; margin-bottom: 6px; color: #f8fafc;">3. Cước phí & Số dư Xu</strong>
-          <span style="font-size: 13px; color: #94a3b8; line-height: 1.5;">Yêu cầu tài khoản có nạp Xu (> 0 Xu). Cước phí dịch trực tiếp thời gian thực tính gấp đôi SubDub thông thường (2x SubDub rate).</span>
-        </div>
+      <div class="portal-subdub-extension-steps">
+        <div class="portal-subdub-extension-step"><strong>${safeText(uiText("subdubExtensionUi.installTitle", "1. Cài tiện ích"))}</strong><span>${safeText(uiText("subdubExtensionUi.installBody", "Tải gói tiện ích, giải nén rồi thêm vào Chrome."))}</span><details class="portal-subdub-extension-guide"><summary>${safeText(uiText("subdubExtensionUi.installGuide", "Hướng dẫn cài đặt"))}</summary><p>${safeText(uiText("subdubExtensionUi.installSteps", "Mở chrome://extensions, bật Chế độ dành cho nhà phát triển rồi chọn Tải tiện ích đã giải nén và mở thư mục vừa giải nén."))}</p></details></div>
+        <div class="portal-subdub-extension-step"><strong>${safeText(uiText("subdubExtensionUi.accountTitle", "2. Đăng nhập tài khoản"))}</strong><span>${safeText(uiText("subdubExtensionUi.accountBody", "Mở tiện ích và đăng nhập bằng tài khoản app.toanaas.vn của bạn."))}</span></div>
+        <div class="portal-subdub-extension-step"><strong>${safeText(uiText("subdubExtensionUi.balanceTitle", "3. Kiểm tra số dư"))}</strong><span>${safeText(uiText("subdubExtensionUi.balanceBody", "Cần tài khoản đã nạp Xu. Cước dịch trực tiếp bằng hai lần cước Phụ đề & Lồng tiếng thông thường."))}</span></div>
       </div>
     </section>`;
 

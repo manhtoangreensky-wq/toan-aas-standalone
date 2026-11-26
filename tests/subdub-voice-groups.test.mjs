@@ -10,7 +10,7 @@ const start = source.indexOf("  const SUBDUB_PRODUCT_MODES = Object.freeze({");
 const end = source.indexOf("\n  function renderDocumentHub", start);
 const companion = source.indexOf("  function subDubVoiceCompanionUrl(");
 assert.ok(start >= 0 && end > start && companion >= 0, "real renderer boundaries exist");
-const renderer = source.slice(companion, source.indexOf("\n  }", companion) + 4) + "\n" + source.slice(start, end);
+const renderer = "const uiText = (_key, fallback) => fallback;\n" + source.slice(companion, source.indexOf("\n  }", companion) + 4) + "\n" + source.slice(start, end);
 const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
   .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 const decode = (value) => value.replaceAll("&quot;", '"').replaceAll("&#39;", "'")

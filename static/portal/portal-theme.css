@@ -33,6 +33,33 @@
   .portal-dashboard-product-hero .portal-product-launcher-card { transition: border-color 160ms ease, background-color 160ms ease; }
 }
 
+/* Keep only the SubDub extension banner native, readable and touchable. */
+:root .portal-subdub-hub .portal-subdub-extension-card {
+  margin-top: 24px;
+  background: var(--portal-surface);
+  border-color: var(--portal-border);
+  color: var(--portal-ink);
+}
+.portal-subdub-extension-card .portal-card-header { gap: 16px; align-items: center; }
+.portal-subdub-extension-copy { flex: 1 1 280px; min-width: 0; }
+.portal-subdub-extension-eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; }
+.portal-subdub-extension-eyebrow .portal-section-kicker { margin: 0; }
+.portal-subdub-extension-badge { padding: 2px 8px; border-radius: 999px; background: var(--portal-surface-strong); font-size: 12px; font-weight: 600; }
+.portal-subdub-extension-steps { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+.portal-subdub-extension-step { min-width: 0; padding: 12px; background: var(--portal-surface-strong); border: 1px solid var(--portal-border); border-radius: 8px; overflow-wrap: anywhere; }
+.portal-subdub-extension-step > strong { display: block; margin-bottom: 6px; }
+.portal-subdub-extension-step > span, .portal-subdub-extension-guide p { font-size: 14px; line-height: 1.6; }
+:root .portal-subdub-extension-card :is(.portal-section-kicker, .portal-card-title, .portal-card-subtitle, .portal-subdub-extension-badge, .portal-subdub-extension-step strong, .portal-subdub-extension-step span, .portal-subdub-extension-guide summary, .portal-subdub-extension-guide p) { color: var(--portal-ink); }
+.portal-subdub-extension-guide summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; font-size: 14px; text-decoration: underline; }
+:root .portal-subdub-extension-card .portal-button--primary { min-height: 44px; background: var(--portal-action) !important; color: var(--portal-on-action) !important; }
+html[data-portal-theme="dark"] .portal-subdub-extension-card .portal-button--primary { background: var(--portal-rail) !important; color: var(--portal-rail-text) !important; }
+:root .portal-subdub-extension-card :is(a, summary):focus-visible { outline-color: var(--portal-focus) !important; }
+
+/* The guide paragraph must outrank the later generic dark paragraph rule. */
+:root .portal-page.portal-subdub-hub .portal-subdub-extension-card .portal-subdub-extension-guide p {
+  color: var(--portal-ink);
+}
+
 /* Canonical teal–cyan Portal system.
    This is intentionally loaded after portal.css so existing route, component,
    security and JavaScript contracts retain their DOM ownership. */

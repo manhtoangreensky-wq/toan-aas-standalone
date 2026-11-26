@@ -2100,4 +2100,17 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | ICNL-READABLE | nặng | Xem 360/375/768/1440 sáng/tối ba ngôn ngữ; đi Tab | Chữ/placeholder ≥4,5:1; focus ≥3:1, dày2px; ô nhập16px và cao≥44px | Matrix48: 2.112 mẫu đang bật; 0 lỗi/request ngoài/tràn |
 | ICNL-PROTECTED | nặng | So source/inverse và sáu route khác ở ba locale | Đúng39+14record/năm source; giữ byte/key lạ và controls ngoài Composer | Raw/history19; other-routes18; nhóm Python lịch sử18 |
 | ICNL-HTTP | nặng | Chạy API contracts trên SQLite QA tạm tại CI Ubuntu | Auth/CSRF/ownership/idempotency/không persistence ngoài hợp đồng đạt | Local300s/0completed chưa PASS; gate Ubuntu tám phút bắt buộc |
-| ICNL-DELIVERY | nặng | CI đúng HEAD → merge/tree → deploy/runtime/health/assets/receipt | Mỗi cổng có bằng chứng riêng, không nhận signed UI từ asset | CHƯA PHÁT HÀNH |
+| ICNL-DELIVERY | nặng | CI đúng HEAD → merge/tree → deploy/runtime/health/assets/receipt | Mỗi cổng có bằng chứng riêng, không nhận signed UI từ asset | PR811; CI45762823823/API10pass; deploy45765839822; runtime1a57e621; receipt689/7184206269 vàPR811/7184206373 đọc lại |
+
+## UI-NATIVE-LABEL-RECOVERY-20261126 — Issue #689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| NLR-IDENTITY | nặng | Mở header/dashboard với tên trống và tên thật ở ba locale | Không lấy câu trạng thái kỹ thuật làm tên; tên thật/escape giữ | [Phiên kiểm tra](PHIEN-NATIVE-LABEL-RECOVERY-20261126.md),actualrenderer |
+| NLR-RANGE | nặng | Xem nhãn truy cập slider ở TTS và giọng đã lưu | Việt/Anh/Trung đúng;0–200,bước10,100mặc định,một payloadfield giữ | Sáu actualrenderer cases |
+| NLR-BANNER | nặng | Mở SubDub ba locale | 13nhãn/39giá trị native,3bước,không chữ Việt cố định ởEN/ZH | Actuali18nVM3case |
+| NLR-DOWNLOAD | nặng | Kiểm link tải hiện có và link Store cũ | Chỉ bỏ Store301homepage;ZIP download200/CRC/manifest vàfilename giữ | GET chỉ đọc,không cài/chạy |
+| NLR-READABLE | nặng | Xem375/1440 sáng/tối ba locale | Chữ≥4,5:1,focus≥3:1,vùng bấm≥44px;không tràn/lỗi/requestngoài | 12view/168samples,min5,4733 |
+| NLR-GUIDE | vừa | Tab đến Hướng dẫn cài đặt rồi Enter | Details đóng ban đầu,mở bằng phím,focus rõ;không submit/download | Browser12view,native details |
+| NLR-PROTECTED | nặng | So nguồn và các test guard/draft/ARIA SubDub | Đúng8+2record/3source,oldpins/assertions/unknownbytes giữ | Raw/history9;affected83/recovery56;Python16 |
+| NLR-DELIVERY | nặng | CI exactHEAD→merge/tree→deploy/runtime/assets/receipt | Từng bằng chứng riêng;không nhận signed UI từHTTP/asset | CHƯA PHÁT HÀNH |

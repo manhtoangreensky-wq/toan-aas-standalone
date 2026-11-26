@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {nativeLabelRecoveryHistoricalSource, nativeLabelRecoveryHistoricalSnapshot} from "./native-label-recovery-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/image-composer-native-locale-contract.json", import.meta.url), "utf8"));
 assert.equal(contract.base, "6ec003dbf8f80739f5fb93ff7bd1d7cc703c6792");
@@ -21,6 +22,7 @@ assert.equal(nav.size, 2);
 for (const rows of nav.values()) assert.equal(rows.length, 3);
 
 export function imageComposerNativeLocaleHistoricalSource(source, file) {
+  source = nativeLabelRecoveryHistoricalSource(source, file);
   const records = changes.filter(row => row.file === file);
   if (!records.some(row => source.includes(row.new))) return source;
   for (const row of [...records].reverse()) {
@@ -31,6 +33,7 @@ export function imageComposerNativeLocaleHistoricalSource(source, file) {
 }
 
 export function imageComposerNativeLocaleHistoricalSnapshot(entries, locale) {
+  entries = nativeLabelRecoveryHistoricalSnapshot(entries, locale);
   const index = ["vi", "en", "zh"].indexOf(locale);
   assert(index >= 0 && Array.isArray(entries));
   const feedback = entries.filter(([key]) => feedbackAdditions.has(key));

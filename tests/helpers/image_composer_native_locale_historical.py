@@ -1,6 +1,7 @@
 """Finite inverse for older source assertions; never used by application code."""
 import json
 from pathlib import Path
+from tests.helpers.native_label_recovery_historical import native_label_recovery_historical_source
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = json.loads((ROOT / "tests/fixtures/image-composer-native-locale-contract.json").read_bytes())
@@ -10,6 +11,7 @@ CHANGES = [*CONTRACT["records"], *CONTRACT.get("amendments", [])]
 
 
 def image_composer_native_locale_historical_source(source: str, file: str) -> str:
+    source = native_label_recovery_historical_source(source, file)
     records = [row for row in CHANGES if row["file"] == file]
     if not any(row["new"] in source for row in records):
         return source

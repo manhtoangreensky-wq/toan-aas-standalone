@@ -677,3 +677,21 @@ không dùng đó để nhận full bootstrap, auth, ghi dữ liệu thật ho�
 giao diện production đã đạt. API cục bộ hết300giây ở ca đầu,0ca xong;
 CI Ubuntu phải đạt trước merge. Sau phát hành cần ghi riêng revision,
 dịch vụ, asset và kết quả quan sát sau đăng nhập; motion vẫn xếp cuối.
+
+## Phiên nhãn native và tiện ích Chrome — 26/11/2026
+
+Nguồn ca `NLR-*`; phiên `UI-NATIVE-LABEL-RECOVERY-20261126`,BASE1a57e621.
+Kiểm tên trống ở header/dashboard và tên giả có Facebook/TikTok/chữHTML:
+chỉ fallback được dịch,tên thật không bị sửa hoặc thực thi mã. Xem
+slider âm lượng ở TTS/giọng đã lưu:nhãn truy cập đúng ba ngôn ngữ,
+giá trị và giới hạn giữ.
+
+Ở `/subdub`,kiểm banner ba locale/sáng-tối/375-1440; nút tải và
+Hướng dẫn cài đặt≥44px,Tab/Enter mở details đóng mặc định,focus rõ.
+Không bấm tải/cài bằng tài khoản production. GóiZIP đã được GET/CRC
+chỉ-đọc riêng,không cài hoặc chạy. LinkStore saiđích được bỏ,không
+tự thay bằng link đoán. Không thao tác tiện ích/provider/số dư.
+
+Chi tiết [phiên kiểm tra](PHIEN-NATIVE-LABEL-RECOVERY-20261126.md).
+Các bước đang chờCI/phát hành không được tự ghi đã lên web; full
+auth/draft/device/Safari/signedproduction vàmotion vẫn kiểm riêng.
