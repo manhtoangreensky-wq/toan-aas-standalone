@@ -23,6 +23,10 @@
   targets≥44px,0error/external/overflow. Ảnh375sáng/tối đã mở.
 - [x]8gốc+2amendmentexactrecords/3files;83observations76pass/7QAfail,
   recovery56/56,Python16/16,reviewC0/I0/M0. Không cộng lặp,0workerfail.
+- [x] CI45773932118 RED1criticalfail/134pass: testchọn nhầm scoped
+  selector. BASEtestPASS,localRED1fail; phụlục7185636101 trướcsửa.
+  Đúng1dòngregex/MULTILINE,assertions/app/pinskhôngđổi; recovery
+  Python90/90 vàraw/banner12/12. CI mớivẫnchờ,khôngnhậnđãpháthành.
 - [ ] Source/protected/browser/review/docs/Tester/CI/merge/deploy/
   runtime/assets/receipt. Spec `2026-11-26-native-label-recovery.md`,
   một batch/PR, không sửa ké catalog/gallery/Admin. Motion cuối.

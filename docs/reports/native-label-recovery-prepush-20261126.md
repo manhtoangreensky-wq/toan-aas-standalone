@@ -55,3 +55,25 @@ Metadata1/1 đã đạt;main kiểm lại vẫn1a57e621,không PR trùng nhánh.
 Review và các gatelocal nêu trên đủ,scope manifest sẽ kiểm31tệp
 (3application),10stateexcluded,zero credentialfindings trướcstaging.
 `PUSH_GATE=READY_SINGLE_PR_EXACT_HEAD_CI`;`TESTER_SESSION=READY`.
+
+## Phụ lục CI parser — cùng PR812
+
+CI45773932118 ởa20f38fe: nhóm hồi quy đạt,critical dừng1fail/134pass
+do regex đọc nhầm selector scoped. Local cùngtest RED1fail; BASE1a57
+qua testcase đó. Issue689/7185636101 công bố phạm vi trước sửa.
+Chỉ1dòng testneođầudòng/MULTILINE,giữ mọiassertions vàrawsource.
+FilePythonảnhhưởngGREEN90/90 trong9,48s; raw/nativebanner12/12,
+không skip/fail. Không chạy lại browser hoặc suy đây làfullsuite mới.
+Ứngdụng vẫn đúng10records/pins; CVNbađềxuất giữngoàirepo.
+
+Reviewdelta root: đúngtestparser vàtài liệu/bằngchứng; khôngappchange,
+không giảm tươngphản hoặcgiới hạnkiểmtra. Đợt bổ sung thêm1testfile
+vàodanhmụcpháthành:32scopefiles+2provenance,3appfileskhôngđổi.
+Metadata/secret/protected/provenance phải cậpnhật vàverifytrướcpush;
+vẫn cùngPR812,khôngmerge/deploytrướcexact-headCIhaijobSUCCESS.
+
+Metadatađúngcase `test_readiness_json_has_explicit_truth_and_file_metadata`
+đạt1/1. Một lệnh điều phối đã mở rộng nhầm sang cảfileTester:32pass/
+1failởassertionmodefiletạm(0666khác0600)trênWindows. Testcasevàsyncscript
+khôngđổi soBASE; không sửa/chạyghiGitHubthật đểépqua,khônggọi
+wholefilePASS hoặcgánlỗiworker. FullUbuntuCI vẫn làcổngpháthành.

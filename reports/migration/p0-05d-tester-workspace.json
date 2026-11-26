@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-26",
-  "local_files_refresh_scope": "UI-NATIVE-LABEL-RECOVERY-20261126:8records+2amendments/3UI files,14keys,localQApass; exactCI/releasepending.",
+  "local_files_refresh_scope": "UI-NATIVE-LABEL-RECOVERY-20261126 plus CI parser recovery: same10applicationrecords,90Python+12raw/bannerpass; exactCI/releasepending.",
   "current_verification_session": {
     "id": "UI-NATIVE-LABEL-RECOVERY-20261126",
     "base_sha": "1a57e62152855b1cff39956d43ad0ccfd5f3d5cb",
@@ -104,7 +104,37 @@
     "provider_calls": 0,
     "wallet_mutations": 0,
     "production_data_writes": 0,
-    "whole_goal_complete": false
+    "whole_goal_complete": false,
+    "ci_parser_recovery": {
+      "failed_ci": 45773932118,
+      "failed_head": "a20f38fecab86e1e32e6102609c531f5df66a014",
+      "failed_critical_cases": 1,
+      "passed_before_maxfail": 134,
+      "authenticated_qa": "SKIPPED_NOT_PASS",
+      "amendment_comment": 7185636101,
+      "local_red_failed": 1,
+      "immutable_base_single_case_passed": 1,
+      "python_file_passed": 90,
+      "python_seconds": 9.48,
+      "raw_source_banner_passed": 12,
+      "recovery_failures": 0,
+      "recovery_skips": 0,
+      "application_changes": 0,
+      "worker_code_failures": 0,
+      "reason": "Test suffix selector matched scoped SubDub primary rule; anchor exact unqualified selector without changing assertions",
+      "status": "LOCAL_RECOVERY_PASS_EXACT_HEAD_CI_PENDING",
+      "metadata_focused_passed": 1,
+      "metadata_windows_file_observation": {
+        "passed": 32,
+        "failed": 1,
+        "reason": "Unchanged private-temp mode assertion observed0666 instead0600 on Windows",
+        "actual_github_writes": 0,
+        "assertions_weakened": false,
+        "whole_file_pass_claimed": false,
+        "baseline_execution": "NOT_RUN",
+        "authoritative_ubuntu_ci": "PENDING"
+      }
+    }
   },
   "image_studio_validation_verification_session": {
     "id": "IMAGE-STUDIO-VALIDATION-COPY-20261123",

@@ -66,6 +66,22 @@ không đọc/chạm state LOCALE-CAMPAIGN.
 - [ ] Docs/Tester/provenance → exact-headCI → merge/tree → Webdeploy →
   runtime/assets/receipt. Signed UI/fullauth/device/Safari vẫn riêng.
 
+### Phụ lục CI45773932118 — test chọn nhầm selector
+
+CI ở HEADa20f38fe qua nhóm hồi quy/bridge/ComposerAPI nhưng critical
+contracts dừng1fail/134pass; authenticatedQA bịskip. Test
+`test_primary_actions_use_the_accessible_dark_teal_and_readable_on_action_text`
+đọc suffixselector của banner trước selector nút chung. Local đúng
+testcase RED1fail; cùng testcase với CSS BASE1a57 bất biếnPASS.
+Phụ lục Issue689/comment7185636101 ghi trước sửa.
+
+Chỉ mở1dòng regex trong `tests/test_teal_cyan_ui_foundation_contracts.py`:
+neo đầu selector vàMULTILINE; không đổi token/nền/chữ/contrastassertions,
+không inversephysicalCSS,không sửaứng dụng/fixture10records/pins.
+Đây là QAparser/ngườiđiềuphối,0workercodefail. Chạy lại đúngfile ảnhhưởng,
+native-source guards rồi cậpnhậtdocs/provenance vàcùngPR812;CI mới
+phải đạt trướcmerge/deploy. Không trộn CVN proposal vàoNLRrelease.
+
 Lệnh đầu: `node --test tests/native-label-recovery.test.mjs`.
 Kỳ vọng RED9fail/3pass trước sửa; số thực tế phải được ghi, không
 đổi assertion để ép trùng dự đoán. Sau sửa12pass/0fail/0skip.

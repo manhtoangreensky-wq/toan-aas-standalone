@@ -32,6 +32,9 @@ keys tổng cùngguest; sourcepin/inverse giữ mọi byte/key lạ.
 | Phục hồi legacyharness | 7file,56case đạt; chỉ thêm dependencyuiText,frozenassertions |
 | Pythonhistorical/static | 16/16 đạt; không HTTP/provider/databaseprod |
 | Compile/syntax/diff | app/helperPython,haiJSbundle,diffcheck exit0 |
+| CI45773932118 | regressionđạt; critical1fail/134pass,authenticatedskip |
+| CIparserRED/BASE | physical1fail; cùng testcase vớiCSSBASE1a57PASS |
+| CIparserrecovery | filePython90/90,9,48s; rawsource/banner12/12; nofail/skip |
 
 Không tính hai spec thiếu sót hoặc harness thiếu dependency là worker
 codefail. Tests cũ không thay assertion/pin; rawComposer kiểm pin gốc
@@ -59,7 +62,19 @@ Review độc lập gộpC0/I0/M0,readyexact-headCI; reviewer không chạy lặ
 suite/browser. Evidence ngoài repo: `native-label-final-affected-nov26.xml`,
 `native-subdub-harness-recovery-nov26.xml`,
 `native-subdub-banner-physical-final-nov26/summary.json`,
-`native-label-python-historical-nov26.xml`.
+`native-label-python-historical-nov26.xml`,
+`native-label-ci-parser-red-nov26.xml`,
+`native-label-ci-parser-green-nov26.xml`,
+`native-label-ci-parser-source-nov26.xml`.
+
+Issue689/comment7185636101 mở đúng1dòngregex testnútchung trướcsửa:
+neođầudòng/MULTILINE để tránh suffixselectorbanner. Assertions nền/
+chữ/token giữnguyên;khônginverse hoặc sửaCSS,khônglỗiworker.
+Rootreviewdelta cùngPR812; exact-headCI mới vẫn bắtbuộc.
+
+Metadatafocused1/1đạt. LệnhmởcảfileTester thayvìcasefocused đãquan sát
+32pass/1fail ởmodefiletạm0666vs0600trênWindows. Khôngsửa testcase/
+syncscript hoặcquyềnmáy; khôngghiGitHubthật,khôngwholefilePASS.
 
 CI/merge/tree/Webdeploy/runtime/health/5+5assets/receipts còn là gate
 riêng. Fullauth/draft/device/Safari/signedproduction/toàn-app locale/AX
