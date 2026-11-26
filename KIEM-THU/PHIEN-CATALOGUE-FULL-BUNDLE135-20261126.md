@@ -5,7 +5,8 @@
 ID `CATALOGUE-FULL-BUNDLE135-20261126`; BASE
 `fdfe2f753e641c5a5ecc7d6a19305fa3c42b7b30`;
 branch `codex/catalogue-full-bundle135-20261126`; Issue689.
-Proposal7193096148, BUILD7194116213 và phụ lục7199225755/7199695259 đọc lại exact.
+Proposal7193096148, BUILD7194116213 và phụ lục7199225755/7199695259/
+7200174365 đọc lại exact.
 PR814 đã giao/receipt đọc lại; không chạy lại các phần đã đạt.
 
 ## Phạm vi và kết quả
@@ -38,6 +39,15 @@ Ledger2532unique đạt bằng hợp nhất hai receipt, không phải một ful
 Fixture/pin/kỳ vọng cũ giữ. Source inverse không dùng whole-current-hash
 để giấu unknown bytes; snapshot giữ guard cũ/unknown entries/order/identity.
 New acceptance đọc raw physical, không qua inverse.
+
+CI đầu45872549883/HEADc63e6920 dừng ở đúng một Comparator source pin
+Composer:505/506ca nhóm đạt, authenticated QA skip theo dependency.
+Reader tự hash raw i18n, không đi qua NLR import closure. Local RED1fail/
+0error; chỉ đưa đầu vào hash qua finite FBC source inverse, giữ expected/
+fixture/records và raw FBC acceptance. Không appchange hoặc workerfailure.
+Nhóm pin/consumer liên quan19PASS/0fail/error/skip, exit0.
+Không chạy lại505ca CI đã đạt hoặc110tệp local/browser. Chưa merge/deploy;
+CI exactHEAD mới vẫn là cổng bắt buộc.
 
 ## Browser và giới hạn
 

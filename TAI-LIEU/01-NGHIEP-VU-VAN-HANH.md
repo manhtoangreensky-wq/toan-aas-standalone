@@ -25,6 +25,11 @@ bộ đọc kiểm tra, giữ kỳ vọng và ứng dụng. Chạy lại ba tệ
 khép đủ51ca lỗi. Đây là ledger2532ca phân biệt từ hai receipt, không
 phải một lượt chạy lại toàn bộ. CI và phát hành vẫn chốt riêng trước giao hàng.
 
+CI đầu của PR815 phát hiện một phép so toàn từ điển tại mốc Composer cũ.
+Chỉ sửa đầu vào kiểm tra lịch sử, giữ ứng dụng và mọi kỳ vọng; nhóm19ca
+liên quan đã đạt sau RED1ca. CI mới cần đạt trước merge/triển khai;
+VPS vẫn giữ bản PR814 đã đối chiếu, không tự phát hành khi CI lỗi.
+
 Không dùng đối chiếu tài nguyên công khai để nhận giao diện production
 sau đăng nhập đã đạt. Full-family chrome, Gallery/Admin, auth/draft,
 accessibility toàn phần, thiết bị/Safari và motion cuối vẫn mở.

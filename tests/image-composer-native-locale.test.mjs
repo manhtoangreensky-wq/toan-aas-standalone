@@ -4,6 +4,7 @@ import fs from "node:fs";
 import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {pageMetaRenderer, pageMetaSources} from "./helpers/chat-page-meta-runtime.mjs";
+import {featureCatalogFullBundle135HistoricalSource} from "./helpers/feature-catalog-full-bundle135-historical.mjs";
 
 const root = new URL("../", import.meta.url);
 const read = file => fs.readFileSync(new URL(file, root), "utf8").replace(/\r\n/g, "\n");
@@ -13,7 +14,7 @@ const hash = value => createHash("sha256").update(value).digest("hex");
 const escape = text => text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 
 for (const pin of contract.applicationSources) {
-  test(`physical Composer source retains fixed release and only approved records: ${pin.file}`, () => {
+  test(`historical Composer source retains fixed release after finite FBC projection: ${pin.file}`, () => {
     assert.equal(contract.base, "6ec003dbf8f80739f5fb93ff7bd1d7cc703c6792");
     assert.equal(contract.records.length, 39);
     assert.equal(contract.copyRows.length, 85);
@@ -35,7 +36,9 @@ for (const pin of contract.applicationSources) {
       }
       assert.equal(hash(expected), downstreamPin.afterLfSha256);
     }
-    assert.equal(hash(read(pin.file)), hash(expected), "Current application must contain exactly the accepted worker changes");
+    // FBC has raw-current acceptance of its own; retain this older release pin.
+    const historical = featureCatalogFullBundle135HistoricalSource(read(pin.file), pin.file);
+    assert.equal(hash(historical), hash(expected), "Historical application must contain exactly the accepted worker changes");
   });
 }
 

@@ -20,6 +20,9 @@
 - [x] Consumerclosure110tệp2532=2481pass/51QAfail,mixedepoch hai reader;
   phụlục7199695259/readback→ba tệp215pass/exit0,đủ51lỗi khép.
   Ledger2532unique từhai receipt,không freshwhole run/không appchange.
+- [x] CI45872549883 fail1historicalComposerpin/505pass;authQA skip.
+  Phụlục7200174365/readback trước một QA readerfix,expected/fixture/
+  apphash6c6e8664 giữ. RED1→related19PASS/exit0,workerfail0.
 - [ ] Metadata/manifest/protected/
   secrets/provenance/exactCI/merge/Webdeploy/runtime/14assets/2receipts.
 - [ ] Fullfamilychrome/Gallery/Admin/actionBlockReason/auth/draft/

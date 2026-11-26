@@ -55,6 +55,7 @@
     "build_unlock": 7194116213,
     "documents_amendment": 7199225755,
     "historical_input_amendment": 7199695259,
+    "ci_pin_amendment": 7200174365,
     "manifest": "KIEM-THU/PHIEN-CATALOGUE-FULL-BUNDLE135-20261126.md",
     "case_ids": [
       "FBC-COPY",
@@ -132,7 +133,17 @@
     "auth_draft_full_lifecycle": "NOT_TESTED",
     "device_safari": "NOT_TESTED",
     "motion": "LAST_STEP_OPEN",
-    "ci": "NOT_RUN",
+    "initial_ci": 45872549883,
+    "initial_ci_head": "c63e6920aa0698a7963dbc35a1b6937ce35baf07",
+    "initial_ci_conclusion": "FAILURE_ONE_HISTORICAL_COMPOSER_PIN_505_OF_506_PASS",
+    "initial_authenticated_qa": "SKIPPED_DEPENDENCY",
+    "ci_correction_qa_reader": "tests/image-composer-native-locale.test.mjs",
+    "ci_correction_red_cases": 1,
+    "ci_correction_red_failed": 1,
+    "ci_correction_related_passed": 19,
+    "ci_correction_expected_hashes_fixtures_held": true,
+    "ci_correction_application_changes": 0,
+    "ci": "CORRECTED_EXACT_HEAD_PENDING",
     "deploy": "NOT_DEPLOYED",
     "provider_calls": 0,
     "wallet_mutations": 0,
@@ -869,9 +880,9 @@
     },
     {
       "path": "KIEM-THU/PHIEN-CATALOGUE-FULL-BUNDLE135-20261126.md",
-      "lines": 64,
-      "bytes": 3750,
-      "sha256": "8685a65220d7c2fb9e7c17507d277ad0c970cc22c820ecf1531e828793b2abbd"
+      "lines": 74,
+      "bytes": 4357,
+      "sha256": "9776d9025ecb8560c555fcec644928ad7fd52aaba0927dad4292090a2da6c167"
     },
     {
       "path": "KIEM-THU/PHIEN-CATALOGUE-VIDEO-NATIVE-20261126.md",
@@ -887,9 +898,9 @@
     },
     {
       "path": "docs/reports/feature-catalog-full-bundle135-prepush-20261126.md",
-      "lines": 33,
-      "bytes": 2104,
-      "sha256": "c3c0c1c83f7e83b6409e5fa4ffe9750d671a4f5076b00dfd2be0ee83d4553863"
+      "lines": 40,
+      "bytes": 2595,
+      "sha256": "da4c8b85b0574c2abc744ac7389d085875a6baa7dd230355c05006fb3a4c5c47"
     },
     {
       "path": "docs/reports/feature-catalog-video-native-prepush-20261126.md",
@@ -905,9 +916,9 @@
     },
     {
       "path": "docs/superpowers/plans/2026-11-26-feature-catalog-full-bundle135.md",
-      "lines": 33,
-      "bytes": 2251,
-      "sha256": "1fd22b53601eaeaedebd4f08b3cc3ba0fa248834097886f21c39078fee390e4a"
+      "lines": 39,
+      "bytes": 2623,
+      "sha256": "df25f78a6dda9078360b618663c94f77dc416f9acede4a752afd9f145d44775a"
     },
     {
       "path": "docs/superpowers/plans/2026-11-26-feature-catalog-video-native.md",
@@ -923,9 +934,9 @@
     },
     {
       "path": "docs/superpowers/specs/2026-11-26-feature-catalog-full-bundle135.md",
-      "lines": 108,
-      "bytes": 6862,
-      "sha256": "c29c3155d8bddc646dd4bd12f876b029bcfe804cc10aebcf3e04ead4d1b02170"
+      "lines": 117,
+      "bytes": 7574,
+      "sha256": "eff812432c8f31d7d2595856d6c81b643c6449b1c24ad78e6134c7e9395bdefa"
     },
     {
       "path": "docs/superpowers/specs/2026-11-26-feature-catalog-video-native.md",
@@ -941,9 +952,9 @@
     },
     {
       "path": "reports/tester/CATALOGUE-FULL-BUNDLE135-20261126.md",
-      "lines": 27,
-      "bytes": 1739,
-      "sha256": "7c23cabb75cddbccab112aebb1cae92645402b7db003c8899eda18b6375fbab3"
+      "lines": 33,
+      "bytes": 2129,
+      "sha256": "f02d86aa1d22546a770bab9027fff099e724622064aee32b8c521b2c02eb6fdf"
     },
     {
       "path": "reports/tester/CATALOGUE-VIDEO-NATIVE-20261126.md",

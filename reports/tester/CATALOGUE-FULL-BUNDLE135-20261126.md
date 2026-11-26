@@ -25,3 +25,9 @@ Browser12view,4860mẫu chữ,min5,5225:1/focus5,8601:1/linkheight165,09375px,
 Component không chứng minh full family chrome, production sau đăng nhập,
 thiết bị/Safari hoặc motion. CI/release còn gate riêng; không wholegoalPASS.
 PROVIDER_CALLS=0product; WALLET_MUTATIONS=0; PRODUCTION_DATA_WRITES=0.
+
+CI đầu45872549883: một raw Composer source pin FAIL,505/506nhóm PASS,
+authenticated QA chưa chạy theo dependency. Phụlục7200174365 đọc lại
+trước sửa đúng một QA reader. RED1fail/0error→19pin/consumerPASS,
+giữ expected hashes/fixture/recordset/appdata. Không chạy lại505ca hoặc
+browser; CI exactHEAD mới vẫn chờ, không nhận đã merge/deploy.

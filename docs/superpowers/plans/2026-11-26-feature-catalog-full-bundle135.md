@@ -28,6 +28,12 @@ Mỗi bước cơ học2–5phút;gatesphức tạp giữ chung và chạy tuầ
 8. Web-onlyprovenance/verify,mộtPR,CIexactHEADhaiSUCCESS,mergepin/
    treeexact,exclusiveWebdeploy,runtime/7+7assets/2receiptreadback.
 
+CI45872549883 phát hiện một raw Composer historical pin không đi qua
+import closure đã chạy. Phụ lục7200174365 trước sửa đúng một QA reader,
+giữ expected hashes/records/fixtures và rawFBCacceptance. RED1fail/0error,
+GREEN nhóm liên quan19PASS/exit0; chỉ push correction vào cùng PR815,
+không appchange/workerfail hoặc merge run lỗi.
+
 10statescósẵn giữ;khôngđọccampaignstate,khôngcleanup lanman.
 Signedproductionkhông cóphiênđăngnhậphiệnhành:khôngloginmới,
 ghiNOT_TESTED,tiếptụcnhữngphầngoalkhôngbịảnhhưởng. Motioncuối.

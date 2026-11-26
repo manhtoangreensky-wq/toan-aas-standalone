@@ -21,6 +21,11 @@ trả đúng canonical trong một lượt R1; không dịch lại hoặc sửa 
 Tài liệu từng nói giữ tuyệt đối destination-pagecopy thiếu ngoại lệ Tài liệu;
 đã sửa phạm vi và thêm kiểm actual consumer, không chấm thành lỗi worker.
 
+CI đầu phát hiện raw historical Composer pin chưa đi qua finiteFBCinverse.
+Expected hash trước đồng bộ giữ nguyên; chỉ chiếu đầu vào phép so về mốc
+lịch sử, acceptance FBC vẫn rawcurrent. RED1→19relatedPASS; không đổi
+bản dịch, khả năng công cụ hoặc pin/fixture để làm xanh.
+
 ## 26/11/2026 — giản lược mô tả, không đổi khả năng của công cụ
 
 Nguồn đối chiếu là bộ chữ nhẹ135mục/renderer/registry trênBASE

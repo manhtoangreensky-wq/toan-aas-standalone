@@ -55,6 +55,15 @@ assertion/fixture/pin và three raw-current documents acceptance mới.
 Đây là ROOT_QA_CONSUMER_INPUT_MIXED_EPOCH, không worker/app defect.
 Chỉ chạy lại ba tệp consumer bị ảnh hưởng, không lặp 2481 ca đã đạt
 hoặc browser/app không đổi.
+CI45872549883/HEADc63e6920 dừng ở một raw historical Composer source pin:
+505/506ca nhóm Composer đạt, authenticated QA skip theo dependency.
+`tests/image-composer-native-locale.test.mjs:38` tự đọc toàn i18n để hash,
+không đi qua import closure NLR nên chưa nhận FBC inverse. Mở đúng tệp QA
+này: import finite FBC source leaf và áp vào đầu vào phép hash, ghi rõ
+historical; giữ tất cả expected hashes/records/fixture/assertion strength.
+Không đổi apphash6c6e8664 hoặc worker data. Root QA omission, workerfail0.
+Kiểm lại đúng file pin/consumer liên quan và exactHEAD CI, không lặp browser
+hoặc toàn110tệp local. Không merge/deploy run lỗi.
 Thêm `tests/feature-catalog-full-bundle135-documents.test.mjs` chạy
 `localizedPageDescription` thật cho hai dạng metadata `/documents` ở ba locale,
 BASE RED rồi current GREEN bằng switch chỉ trong tiến trình QA con.

@@ -30,4 +30,11 @@ phải đạt trước push; sau đó một PR/CIexactHEADhaiSUCCESS/pinnedmerge
 treeexact/exclusiveWebdeploy/runtime/7+7assets/receiptIssue689+PRreadback.
 Signedproduction/fullfamilychrome/Gallery/Admin/actionBlockReason/auth/
 draft/AX/device/Safari/motionLAST vẫn mở. WHOLE_GOAL_COMPLETE=NO.
-PUSH_GATE=READY_FOR_FINAL_MACHINE_PREFLIGHT; chưa push nếu thiếu manifest/provenance.
+CI45872549883/HEADc63e6920 fail một historical Composer raw hash,
+505/506ca nhóm đạt/authenticated skip. Phụlục7200174365/readback trước
+sửa duy nhất reader trong tests/image-composer-native-locale.test.mjs:
+finiteFBCsourceprojection trước hash, giữ expected/records/fixture.
+LocalRED1fail/0error→19relatedPASS/exit0,apphash6c6e8664/workerfail0 giữ.
+Không lặp505ca hoặcbrowser. Correction trên cùngPR815; exactCI mới/
+manifestdelta/provenanceverify làcổng trướcmerge,không dùng runlỗi.
+PUSH_GATE=READY_FOR_CI_RECOVERY_MACHINE_PREFLIGHT.
