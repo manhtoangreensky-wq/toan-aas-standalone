@@ -3061,3 +3061,23 @@ giữ byte/key lạ và từ chối bản ghi thiếu/lặp/đã sửa. So 18 tr
 Không thêm khả năng tạo ảnh, gọi engine/provider hay ghi dữ liệu thật.
 HTTP/CI/merge/deploy/runtime và signed production vẫn là bằng chứng
 riêng; không dùng unit/component PASS thay cho các cổng này.
+
+Composer đã khép phát hành ở PR811/CI45762823823/deploy45765839822,
+runtime1a57e621; hai receipt689/7184206269 vàPR811/7184206373 đọc lại.
+Các trạng thái chờ ở mục trên là lịch sử trước phát hành.
+
+## Nhãn native và banner tiện ích — đối chiếu BASE PR811
+
+| Hành vi BASE | Ứng viên | Ranh giới giữ |
+|---|---|---|
+| Tên trống hiện một câu trạng thái phiên tiếng Việt ở nhiều locale | Header dùng Tài khoản; lời chào bạn/there/您 | Tên thật/precedence/trim80/escape/auth giữ |
+| Slider Voice dùng key thiếu namespace nên nhãn truy cập còn Việt | Hai key thêm voiceUi namespace đã có | Numeric/range/disabled/payload và renderer chung giữ |
+| Banner tiện ích hardcode Việt pha Anh ở cả ba locale | 13 key,39 giá trị VI/EN/ZH | Chế độ/thiết lập/SubDub draft/authoring guards giữ |
+| Link Store thiếu mã tiện ích,301vềhomepage | Bỏ riêng CTA sai; giữ gói ZIP tải thật200/CRC9file | Không đổi ZIP/API/extensioncode; không tự thêm URL mới |
+| Hai CTA cao24px,108mẫu màu dưới4,5:1 trong12view | Nút/hướng dẫn≥44px;168mẫu cuối≥4,5,min5,4733 | Chỉ CSS/banner,giữ brand/global styles/motion |
+| Lời chàoR1 và paragraphdetails bị sai do spec | Hai amendment riêng,không sửa record gốc | Tests/ngưỡng giữ;không tính worker codefail |
+
+Source acceptance đọc rawBASE+8+2records,năm mươi ba record Composer
+trước giữ nguyên pin. Các helper test lịch sử chỉ đảo đúng phần đã duyệt,
+không vào ứng dụng. Không suy bản dịch banner thành xác nhận xử lý
+video, mức phí, provider, số dư hay việc cài/chạy tiện ích.

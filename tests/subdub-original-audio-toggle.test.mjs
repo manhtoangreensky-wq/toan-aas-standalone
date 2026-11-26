@@ -5,7 +5,7 @@ const source = readFileSync("static/portal/portal.js", "utf8");
 const start = source.indexOf("  const SUBDUB_PRODUCT_MODES = Object.freeze({"), end = source.indexOf("\n  function renderDocumentHub", start);
 const c = source.indexOf("  function subDubVoiceCompanionUrl("), ce = source.indexOf("\n  }", c);
 assert.ok(start >= 0 && end > start && c >= 0 && ce > c, "actual renderer boundaries");
-const renderer = source.slice(c, ce + 4) + "\n" + source.slice(start, end);
+const renderer = "const uiText = (_key, fallback) => fallback;\n" + source.slice(c, ce + 4) + "\n" + source.slice(start, end);
 const escape = (v) => String(v ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 const modes = [["SUBTITLE_ONLY", "subtitle_only"], ["TRANSLATED_SUBTITLE", "translated_subtitle"], ["DUBBING_ONLY", "dubbing_only"], ["SUBTITLE_PLUS_DUBBING", "subtitle_plus_dubbing"]];
 const session = { authenticated: true, csrfToken: "unit-account-a" };

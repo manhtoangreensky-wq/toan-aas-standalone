@@ -4037,3 +4037,39 @@ là PASS; CI Ubuntu có cổng API giới hạn tám phút trước khi merge.
 Đây là ứng viên, chưa có CI/merge/deploy riêng tại thời điểm ghi mục
 này. Full-app auth/draft, giao diện production sau đăng nhập, Safari,
 thiết bị thật và motion vẫn là các mục riêng trong checklist.
+
+Biên nhận cuối Composer: PR811 đã triển khai tại
+`1a57e62152855b1cff39956d43ad0ccfd5f3d5cb`, CI45762823823 hai job
+đạt, APIUbuntu10/10, deploy45765839822. VPS đúngtree/nguồn sạch/
+ba dịch vụ/health,5+5assetskhớp; receipt689/7184206269 và
+PR811/7184206373 đọc lại. Signed UI vẫn chưa kiểm vì tab về đăng nhập.
+
+## Nhãn tài khoản, âm lượng và tiện ích Chrome — 26/11/2026
+
+Ứng viên kế tiếp chỉ sửa chữ và trình bày đang có. Khi chưa có tên
+hiển thị, đầu trang ghi Tài khoản theo ngôn ngữ giao diện; lời chào
+dùng bạn/there/您. Tên thật, thứ tự nguồn tên, cách cắt80ký tự và escape
+giữ nguyên. Không dùng trạng thái phiên kỹ thuật làm tên người dùng.
+Thanh âm lượng ở hai màn giọng đọc dùng nhãn truy cập đã dịch, không
+đổi giá trị0–200%,bước10,mặc định100 hoặc trường số gửi đi.
+
+Banner tiện ích dịch ở Phụ đề & Lồng tiếng dùng13nhãn VI/EN/ZH,giữ ba
+bước cài/đăng nhập/số dư. Chỉ bỏ link Store sai đích: GET trả301về
+trang chủ. Nút tải gói hiện có được giữ,href và filename không đổi.
+Gói công khai200ZIP21.873byte,9tệp,CRC toàn bộ hợp lệ,manifestV3;
+không cài/chạy tiện ích. Chi tiết cài đặt đóng mặc định, mở bằng
+bàn phím; các tên điều khiển Chrome chỉ nằm trong hướng dẫn khi mở.
+Không thay logic tài khoản, số dư hoặc mức cước.
+
+Nền/chữ, bước hướng dẫn và nút dùng token riêng trong banner. Ma trận
+componentHTTP12view sáng/tối,VI/EN/ZH,375/1440 có168mẫu chữ đo được,
+min5,4733:1; focus min4,7429:1 và mọi vùng bấm kiểm≥44px.0lỗi/tràn/
+requestngoài; đã mở ảnh375sáng/tối. Không dùng kết quả này để nhận
+tiện ích, provider hoặc thanh toán hoạt động.
+
+8record gốc+2amendment do worker trả,3tệp ứng dụng. Hai lỗi lời chào/
+paragraphtối là thiếu sót spec đã sửa qua worker,không lỗi codeworker.
+Nhóm83observations có76pass/7harnessfail do thiếu dependencydịch trong
+test trích renderer; giữassertions, phục hồi56/56.16Pythonhistorical,
+compile/syntax/diffđạt; reviewC0/I0/M0. Cổng CI/merge/deploy/runtime/
+asset/receipt riêng của ứng viên còn chờ, không nhận đã lên web.

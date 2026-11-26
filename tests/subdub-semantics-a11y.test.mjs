@@ -14,7 +14,7 @@ const escape = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll(
 function render(mode, locale = 'vi') {
   const window = { location: { search: `?mode=${mode}&lang=${locale}` } };
   return new Function('window', 'interfaceLocaleFor', 'safeText', 'badge', 'renderHero', 'transientFormDrafts', 'locale',
-    companion + '\n' + block + '\nreturn renderSubDubHub({}, { locale });')(
+    'const uiText = (_key, fallback) => fallback;\n' + companion + '\n' + block + '\nreturn renderSubDubHub({}, { locale });')(
     window, context => context.locale, escape, () => '', () => '', new Map(), locale
   );
 }

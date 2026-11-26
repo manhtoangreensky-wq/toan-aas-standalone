@@ -18090,6 +18090,94 @@
     IMAGE_CREATE_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageUi.${row[0]}`] = row[index + 1]; });
   });
 
+  Object.assign(MESSAGES.vi, {"dashboard.summary.guest": "bạn"});
+  Object.assign(MESSAGES.en, {"dashboard.summary.guest": "there"});
+  Object.assign(MESSAGES.zh, {"dashboard.summary.guest": "您"});
+
+  const SUBDUB_EXTENSION_UI_COPY_ROWS = [
+    [
+      "kicker",
+      "Dịch trực tiếp",
+      "Live translation",
+      "实时翻译"
+    ],
+    [
+      "badge",
+      "Tiện ích Chrome",
+      "Chrome extension",
+      "Chrome 扩展"
+    ],
+    [
+      "title",
+      "Dịch và lồng tiếng khi xem video",
+      "Translate and dub while watching videos",
+      "观看视频时翻译和配音"
+    ],
+    [
+      "body",
+      "Sử dụng tiện ích TOAN AAS trên Chrome với video YouTube, Facebook, Twitter hoặc Meet.",
+      "Use the TOAN AAS Chrome extension with videos on YouTube, Facebook, Twitter or Meet.",
+      "使用 TOAN AAS Chrome 扩展处理 YouTube、Facebook、Twitter 或 Meet 中的视频。"
+    ],
+    [
+      "download",
+      "Tải tiện ích (.zip)",
+      "Download extension (.zip)",
+      "下载扩展（.zip）"
+    ],
+    [
+      "installTitle",
+      "1. Cài tiện ích",
+      "1. Install the extension",
+      "1. 安装扩展"
+    ],
+    [
+      "installBody",
+      "Tải gói tiện ích, giải nén rồi thêm vào Chrome.",
+      "Download the extension package, extract it and add it to Chrome.",
+      "下载并解压扩展包，然后将其添加到 Chrome。"
+    ],
+    [
+      "installGuide",
+      "Hướng dẫn cài đặt",
+      "Installation instructions",
+      "安装说明"
+    ],
+    [
+      "installSteps",
+      "Mở chrome://extensions, bật Chế độ dành cho nhà phát triển rồi chọn Tải tiện ích đã giải nén và mở thư mục vừa giải nén.",
+      "Open chrome://extensions, turn on Developer mode, select Load unpacked and open the extracted folder.",
+      "打开 chrome://extensions，启用开发者模式，选择加载已解压的扩展程序，然后打开已解压的文件夹。"
+    ],
+    [
+      "accountTitle",
+      "2. Đăng nhập tài khoản",
+      "2. Sign in",
+      "2. 登录账户"
+    ],
+    [
+      "accountBody",
+      "Mở tiện ích và đăng nhập bằng tài khoản app.toanaas.vn của bạn.",
+      "Open the extension and sign in with your app.toanaas.vn account.",
+      "打开扩展并使用您的 app.toanaas.vn 账户登录。"
+    ],
+    [
+      "balanceTitle",
+      "3. Kiểm tra số dư",
+      "3. Check your balance",
+      "3. 查看余额"
+    ],
+    [
+      "balanceBody",
+      "Cần tài khoản đã nạp Xu. Cước dịch trực tiếp bằng hai lần cước Phụ đề & Lồng tiếng thông thường.",
+      "An account topped up with Xu is required. Live translation costs twice the standard Subtitles & Dubbing rate.",
+      "需要已充值 Xu 的账户。实时翻译费用为常规字幕与配音费用的两倍。"
+    ]
+  ];
+  ["vi", "en", "zh"].forEach((locale, index) => {
+    SUBDUB_EXTENSION_UI_COPY_ROWS.forEach((row) => { MESSAGES[locale][`subdubExtensionUi.${row[0]}`] = row[index + 1]; });
+  });
+
   const IMAGE_COMPOSER_UI_COPY_ROWS = [
     ["goal.product", "Ảnh sản phẩm", "Product image", "产品图"],
     ["goal.ad", "Ảnh quảng cáo", "Advertising image", "广告图"],

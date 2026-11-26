@@ -14,7 +14,7 @@ function harness({ mode = 'subtitle_only', locale = 'vi', shared = {}, modes = {
   const drafts = new Map([['/subdub', { shared, modes }]]);
   const browserWindow = { location: { search: '?mode=' + mode } };
   const api = new Function('window', 'interfaceLocaleFor', 'safeText', 'badge', 'renderHero', 'transientFormDrafts',
-    companion + '\n' + block + '\nreturn {renderSubDubHub, captureSubDubDraft, subDubDraftSnapshot};')(
+    'const uiText = (_key, fallback) => fallback;\n' + companion + '\n' + block + '\nreturn {renderSubDubHub, captureSubDubDraft, subDubDraftSnapshot};')(
     browserWindow, context => context.locale, escape, () => '', () => '', drafts);
   return { html: api.renderSubDubHub({}, { locale, wallet }), api };
 }

@@ -1,5 +1,38 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 26/11/2026 — PR811 đã giao; nhãn native và SubDub kế tiếp
+
+- [x] PR811 CI45762823823 hai job SUCCESS; UbuntuAPI10pass/0fail,
+  merge/runtime1a57e62152855b1cff39956d43ad0ccfd5f3d5cb,
+  deploy45765839822SUCCESS; tree bằngtestedHEAD404ba427, VPSsạch/
+  ba dịch vụ/health/5+5assetskhớp. Receipt689/7184206269 và
+  PR811/7184206373 đọc lại đúng. Không làm lại đợt Composer đã giao.
+- [x] Đọc artifact authenticated15091732002 hiện tại thay vì rerun:
+  456route records đạt gate tải/locale/theme/reload/overflow, nhưng
+  test không kiểm semantic tất cả câu chữ. Gap mới được truy source.
+- [x] NLR-IDENTITY và NLR-VOICE-RANGE: actual renderer12case,
+  RED9fail/3pass đúngfallback/ARIA; không lỗi khởi tạo hoặc app edits.
+- [x] NLR-IDENTITY: bỏ fallback tên kỹ thuật; header Tài khoản,
+  dashboard bạn/there/您, giữ tên thật nguyên vẹn và không đổi auth.
+- [x] NLR-VOICE-RANGE: hai namespaceARIAkey đã đúng; giữ toàn bộ
+  numeric/range behavior, không sửa renderer chung.
+- [x] NLR-SUBDUB-EXTENSION:13keys/3locale,3steps/nativeclosedguide;
+  bỏStore301homepage,giữZIPdownload200/CRC9files/manifestV3.
+  Không cài/chạy tiện ích/provider/giá/ví.
+- [x] NLR-SUBDUB-READABLE:12view168samples,min5,4733;focusmin4,7429;
+  targets≥44px,0error/external/overflow. Ảnh375sáng/tối đã mở.
+- [x]8gốc+2amendmentexactrecords/3files;83observations76pass/7QAfail,
+  recovery56/56,Python16/16,reviewC0/I0/M0. Không cộng lặp,0workerfail.
+- [x] CI45773932118 RED1criticalfail/134pass: testchọn nhầm scoped
+  selector. BASEtestPASS,localRED1fail; phụlục7185636101 trướcsửa.
+  Đúng1dòngregex/MULTILINE,assertions/app/pinskhôngđổi; recovery
+  Python90/90 vàraw/banner12/12. CI mớivẫnchờ,khôngnhậnđãpháthành.
+- [ ] Source/protected/browser/review/docs/Tester/CI/merge/deploy/
+  runtime/assets/receipt. Spec `2026-11-26-native-label-recovery.md`,
+  một batch/PR, không sửa ké catalog/gallery/Admin. Motion cuối.
+- [ ] Signed production redirect về login đã quan sát, không đăng nhập
+  mới; toàn-app locale/AX/auth/drafts/device/Safari và motion vẫn mở.
+
 ## 22/11/2026 — PR794 đã giao; chi tiết thiết kế ảnh
 
 - [x] PR794 CI45003687642 hai job đạt, runtime

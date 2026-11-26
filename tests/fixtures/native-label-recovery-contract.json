@@ -1,0 +1,183 @@
+{
+  "id": "UI-NATIVE-LABEL-RECOVERY-20261126",
+  "base": "1a57e62152855b1cff39956d43ad0ccfd5f3d5cb",
+  "model": "gemini-4-hydrogen-xhigh",
+  "trackerComment": 7184533142,
+  "proposalSessions": 4,
+  "workerCodeFailures": 0,
+  "records": [
+    {
+      "id": "NATIVE-LABEL-IDENTITY-R1-1",
+      "file": "static/portal/portal.js",
+      "old": "    return typeof candidate === \"string\" && candidate.trim() ? candidate.trim().slice(0, 80) : \"Phiên bảo mật đang chờ\";",
+      "new": "    return typeof candidate === \"string\" && candidate.trim() ? candidate.trim().slice(0, 80) : \"\";"
+    },
+    {
+      "id": "NATIVE-LABEL-IDENTITY-R1-2",
+      "file": "static/portal/portal.js",
+      "old": "  function renderHeader(page, context) {\n    const name = displayName(context);",
+      "new": "  function renderHeader(page, context) {\n    const name = displayName(context) || uiText(\"nav.account\", \"Tài khoản\");"
+    },
+    {
+      "id": "NATIVE-LABEL-IDENTITY-R1-3",
+      "file": "static/portal/portal.js",
+      "old": "  function renderDashboardWorkspaceSummary(context) {\n    const readState = dashboardReadState(context);\n    const name = displayName(context);",
+      "new": "  function renderDashboardWorkspaceSummary(context) {\n    const readState = dashboardReadState(context);\n    const name = displayName(context) || dashboardText(\"summary.guest\", \"bạn\");"
+    },
+    {
+      "id": "NATIVE-LABEL-IDENTITY-R1-4",
+      "file": "static/portal/portal-i18n.js",
+      "old": "  const IMAGE_COMPOSER_UI_COPY_ROWS = [",
+      "new": "  Object.assign(MESSAGES.vi, {\"dashboard.summary.guest\": \"bạn\"});\n  Object.assign(MESSAGES.en, {\"dashboard.summary.guest\": \"there\"});\n  Object.assign(MESSAGES.zh, {\"dashboard.summary.guest\": \"您\"});\n\n  const IMAGE_COMPOSER_UI_COPY_ROWS = ["
+    },
+    {
+      "id": "NATIVE-LABEL-VOICE-RANGE-R1-1",
+      "file": "static/portal/portal.js",
+      "old": "    voice: [\n      { name: \"script\", label: \"Nội dung lời thoại\", control: \"textarea\", placeholder: \"Nhập văn bản để chuẩn bị giọng nói…\", required: true, minLength: 1 },\n      { name: \"default_voice_gender\", label: \"Giọng đọc mặc định\", control: \"select\", options: [{ value: \"female\", label: \"Nữ\" }, { value: \"male\", label: \"Nam\" }], required: true, help: \"Chọn giọng nam hoặc nữ. Hệ thống kiểm tra lựa chọn trước khi xử lý.\" },\n      { name: \"speed\", label: \"Tốc độ đọc\", labelKey: \"field.speed.label\", type: \"number\", defaultValue: \"1.0\", min: 0.1, max: 2, step: 0.05, inputMode: \"decimal\", presets: [{ value: \"0.85\", label: \"Chậm (0,85×)\", labelKey: \"option.speed.0.85\" }, { value: \"1.0\", label: \"Chuẩn (1,0×)\", labelKey: \"option.speed.1.0\" }, { value: \"1.2\", label: \"Nhanh (1,2×)\", labelKey: \"option.speed.1.2\" }], helpKey: \"field.speed.help\", help: \"Tốc độ đọc từ 0,1× đến 2,0×. Bạn có thể chọn mức gợi ý hoặc nhập số trực tiếp.\" },\n      { name: \"volume_percent\", label: \"Âm lượng (%)\", labelKey: \"field.volume_percent.label\", type: \"number\", defaultValue: \"100\", min: 0, max: 200, step: 10, placeholder: \"100\", placeholderKey: \"field.volume_percent.placeholder\", range: { ariaLabel: \"Thanh âm lượng\", ariaLabelKey: \"field.volume_percent.label\" }, helpKey: \"field.volume_percent.help\", help: \"Âm lượng đọc từ 0% đến 200%; 100% là mức chuẩn.\" }\n    ],\n    voiceSaved: [\n      { name: \"script\", label: \"Nội dung lời thoại\", control: \"textarea\", placeholder: \"Nhập văn bản để chuẩn bị giọng nói…\", required: true, minLength: 1 },\n      { name: \"voice_profile_id\", label: \"Giọng từ Voice Vault\", control: \"select\", optionsFrom: \"voiceProfiles\", emptyLabel: \"Chọn một giọng đã sẵn sàng\", help: \"Saved TTS chỉ estimate khi Voice Vault canonical xác nhận profile này thuộc tài khoản và sẵn sàng.\", required: true },\n      { name: \"speed\", label: \"Tốc độ đọc\", labelKey: \"field.speed.label\", type: \"number\", defaultValue: \"1.0\", min: 0.1, max: 2, step: 0.05, inputMode: \"decimal\", presets: [{ value: \"0.85\", label: \"Chậm (0,85×)\", labelKey: \"option.speed.0.85\" }, { value: \"1.0\", label: \"Chuẩn (1,0×)\", labelKey: \"option.speed.1.0\" }, { value: \"1.2\", label: \"Nhanh (1,2×)\", labelKey: \"option.speed.1.2\" }], helpKey: \"field.speed.help\", help: \"Tốc độ đọc từ 0,1× đến 2,0×. Bạn có thể chọn mức gợi ý hoặc nhập số trực tiếp.\" },\n      { name: \"volume_percent\", label: \"Âm lượng (%)\", labelKey: \"field.volume_percent.label\", type: \"number\", defaultValue: \"100\", min: 0, max: 200, step: 10, placeholder: \"100\", placeholderKey: \"field.volume_percent.placeholder\", range: { ariaLabel: \"Thanh âm lượng\", ariaLabelKey: \"field.volume_percent.label\" }, helpKey: \"field.volume_percent.help\", help: \"Âm lượng đọc từ 0% đến 200%; 100% là mức chuẩn.\" }\n    ],\n",
+      "new": "    voice: [\n      { name: \"script\", label: \"Nội dung lời thoại\", control: \"textarea\", placeholder: \"Nhập văn bản để chuẩn bị giọng nói…\", required: true, minLength: 1 },\n      { name: \"default_voice_gender\", label: \"Giọng đọc mặc định\", control: \"select\", options: [{ value: \"female\", label: \"Nữ\" }, { value: \"male\", label: \"Nam\" }], required: true, help: \"Chọn giọng nam hoặc nữ. Hệ thống kiểm tra lựa chọn trước khi xử lý.\" },\n      { name: \"speed\", label: \"Tốc độ đọc\", labelKey: \"field.speed.label\", type: \"number\", defaultValue: \"1.0\", min: 0.1, max: 2, step: 0.05, inputMode: \"decimal\", presets: [{ value: \"0.85\", label: \"Chậm (0,85×)\", labelKey: \"option.speed.0.85\" }, { value: \"1.0\", label: \"Chuẩn (1,0×)\", labelKey: \"option.speed.1.0\" }, { value: \"1.2\", label: \"Nhanh (1,2×)\", labelKey: \"option.speed.1.2\" }], helpKey: \"field.speed.help\", help: \"Tốc độ đọc từ 0,1× đến 2,0×. Bạn có thể chọn mức gợi ý hoặc nhập số trực tiếp.\" },\n      { name: \"volume_percent\", label: \"Âm lượng (%)\", labelKey: \"field.volume_percent.label\", type: \"number\", defaultValue: \"100\", min: 0, max: 200, step: 10, placeholder: \"100\", placeholderKey: \"field.volume_percent.placeholder\", range: { ariaLabel: \"Thanh âm lượng\", ariaLabelKey: \"voiceUi.field.volume_percent.label\" }, helpKey: \"field.volume_percent.help\", help: \"Âm lượng đọc từ 0% đến 200%; 100% là mức chuẩn.\" }\n    ],\n    voiceSaved: [\n      { name: \"script\", label: \"Nội dung lời thoại\", control: \"textarea\", placeholder: \"Nhập văn bản để chuẩn bị giọng nói…\", required: true, minLength: 1 },\n      { name: \"voice_profile_id\", label: \"Giọng từ Voice Vault\", control: \"select\", optionsFrom: \"voiceProfiles\", emptyLabel: \"Chọn một giọng đã sẵn sàng\", help: \"Saved TTS chỉ estimate khi Voice Vault canonical xác nhận profile này thuộc tài khoản và sẵn sàng.\", required: true },\n      { name: \"speed\", label: \"Tốc độ đọc\", labelKey: \"field.speed.label\", type: \"number\", defaultValue: \"1.0\", min: 0.1, max: 2, step: 0.05, inputMode: \"decimal\", presets: [{ value: \"0.85\", label: \"Chậm (0,85×)\", labelKey: \"option.speed.0.85\" }, { value: \"1.0\", label: \"Chuẩn (1,0×)\", labelKey: \"option.speed.1.0\" }, { value: \"1.2\", label: \"Nhanh (1,2×)\", labelKey: \"option.speed.1.2\" }], helpKey: \"field.speed.help\", help: \"Tốc độ đọc từ 0,1× đến 2,0×. Bạn có thể chọn mức gợi ý hoặc nhập số trực tiếp.\" },\n      { name: \"volume_percent\", label: \"Âm lượng (%)\", labelKey: \"field.volume_percent.label\", type: \"number\", defaultValue: \"100\", min: 0, max: 200, step: 10, placeholder: \"100\", placeholderKey: \"field.volume_percent.placeholder\", range: { ariaLabel: \"Thanh âm lượng\", ariaLabelKey: \"voiceUi.field.volume_percent.label\" }, helpKey: \"field.volume_percent.help\", help: \"Âm lượng đọc từ 0% đến 200%; 100% là mức chuẩn.\" }\n    ],\n"
+    },
+    {
+      "id": "NATIVE-SUBDUB-EXTENSION-COPY-R1-1",
+      "file": "static/portal/portal.js",
+      "old": "    const extensionBannerHtml = `<section class=\"portal-card portal-card-pad portal-subdub-extension-card\" style=\"margin-top: 24px; border: 1px solid rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.03);\">\n      <div class=\"portal-card-header\" style=\"display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;\">\n        <div>\n          <div style=\"display:flex; align-items:center; gap:8px; margin-bottom:4px;\">\n            <span class=\"portal-section-kicker\" style=\"color: #10b981; margin:0;\">TIỆN ÍCH MỞ RỘNG TRÌNH DUYỆT</span>\n            <span style=\"font-size:11px; padding:2px 8px; border-radius:999px; background:rgba(16,185,129,0.15); color:#10b981; font-weight:600;\">⚡ Cài đặt nhanh</span>\n          </div>\n          <h2 class=\"portal-card-title\">TOAN AAS Live Translate & Dub (Chrome Extension)</h2>\n          <p class=\"portal-card-subtitle\">Dịch và lồng tiếng thời gian thực trực tiếp trên mọi tab video trình duyệt (YouTube, Facebook, Twitter, Meet...).</p>\n        </div>\n        <div style=\"display:flex; flex-wrap:wrap; gap:10px; align-items:center;\">\n          <a class=\"portal-btn portal-btn--primary\" href=\"https://chromewebstore.google.com/detail/toan-aas-live-translate\" target=\"_blank\" rel=\"noopener\" style=\"text-decoration:none; display:inline-flex; align-items:center; gap:8px; background:#10b981; border-color:#10b981;\">\n            <span>Thêm vào Chrome (Web Store)</span>\n            <b aria-hidden=\"true\">↗</b>\n          </a>\n          <a class=\"portal-btn portal-btn--secondary\" href=\"/api/v1/live-translate/extension-download\" download=\"toan-aas-chrome-live-translate.zip\" style=\"text-decoration:none; display:inline-flex; align-items:center; gap:8px;\">\n            <span>Tải bản ZIP (.zip)</span>\n            <b aria-hidden=\"true\">↓</b>\n          </a>\n        </div>\n      </div>\n      <div style=\"margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;\">\n        <div style=\"padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);\">\n          <strong style=\"display:block; margin-bottom: 6px; color: #f8fafc;\">1. Cài đặt 1-Click hoặc ZIP</strong>\n          <span style=\"font-size: 13px; color: #94a3b8; line-height: 1.5;\">Bấm <b>Thêm vào Chrome</b> để cài trực tiếp từ Store. Hoặc tải file ZIP, mở trang <code style=\"user-select:all;\">chrome://extensions</code> (bật <i>Developer mode</i> → <i>Load unpacked</i>).</span>\n        </div>\n        <div style=\"padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);\">\n          <strong style=\"display:block; margin-bottom: 6px; color: #f8fafc;\">2. Đăng nhập tài khoản</strong>\n          <span style=\"font-size: 13px; color: #94a3b8; line-height: 1.5;\">Mở tiện ích, đăng nhập bằng tài khoản <code>app.toanaas.vn</code> của bạn. Tiện ích tự động liên kết số dư Xu với tài khoản.</span>\n        </div>\n        <div style=\"padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);\">\n          <strong style=\"display:block; margin-bottom: 6px; color: #f8fafc;\">3. Cước phí & Số dư Xu</strong>\n          <span style=\"font-size: 13px; color: #94a3b8; line-height: 1.5;\">Yêu cầu tài khoản có nạp Xu (> 0 Xu). Cước phí dịch trực tiếp thời gian thực tính gấp đôi SubDub thông thường (2x SubDub rate).</span>\n        </div>\n      </div>\n    </section>`;",
+      "new": "    const extensionBannerHtml = `<section class=\"portal-card portal-card-pad portal-subdub-extension-card\">\n      <div class=\"portal-card-header\">\n        <div class=\"portal-subdub-extension-copy\">\n          <div class=\"portal-subdub-extension-eyebrow\"><span class=\"portal-section-kicker\">${safeText(uiText(\"subdubExtensionUi.kicker\", \"Dịch trực tiếp\"))}</span><span class=\"portal-subdub-extension-badge\">${safeText(uiText(\"subdubExtensionUi.badge\", \"Tiện ích Chrome\"))}</span></div>\n          <h2 class=\"portal-card-title\">${safeText(uiText(\"subdubExtensionUi.title\", \"Dịch và lồng tiếng khi xem video\"))}</h2>\n          <p class=\"portal-card-subtitle\">${safeText(uiText(\"subdubExtensionUi.body\", \"Sử dụng tiện ích TOAN AAS trên Chrome với video YouTube, Facebook, Twitter hoặc Meet.\"))}</p>\n        </div>\n        <a class=\"portal-button portal-button--primary\" href=\"/api/v1/live-translate/extension-download\" download=\"toan-aas-chrome-live-translate.zip\">${safeText(uiText(\"subdubExtensionUi.download\", \"Tải tiện ích (.zip)\"))}<b aria-hidden=\"true\">↓</b></a>\n      </div>\n      <div class=\"portal-subdub-extension-steps\">\n        <div class=\"portal-subdub-extension-step\"><strong>${safeText(uiText(\"subdubExtensionUi.installTitle\", \"1. Cài tiện ích\"))}</strong><span>${safeText(uiText(\"subdubExtensionUi.installBody\", \"Tải gói tiện ích, giải nén rồi thêm vào Chrome.\"))}</span><details class=\"portal-subdub-extension-guide\"><summary>${safeText(uiText(\"subdubExtensionUi.installGuide\", \"Hướng dẫn cài đặt\"))}</summary><p>${safeText(uiText(\"subdubExtensionUi.installSteps\", \"Mở chrome://extensions, bật Chế độ dành cho nhà phát triển rồi chọn Tải tiện ích đã giải nén và mở thư mục vừa giải nén.\"))}</p></details></div>\n        <div class=\"portal-subdub-extension-step\"><strong>${safeText(uiText(\"subdubExtensionUi.accountTitle\", \"2. Đăng nhập tài khoản\"))}</strong><span>${safeText(uiText(\"subdubExtensionUi.accountBody\", \"Mở tiện ích và đăng nhập bằng tài khoản app.toanaas.vn của bạn.\"))}</span></div>\n        <div class=\"portal-subdub-extension-step\"><strong>${safeText(uiText(\"subdubExtensionUi.balanceTitle\", \"3. Kiểm tra số dư\"))}</strong><span>${safeText(uiText(\"subdubExtensionUi.balanceBody\", \"Cần tài khoản đã nạp Xu. Cước dịch trực tiếp bằng hai lần cước Phụ đề & Lồng tiếng thông thường.\"))}</span></div>\n      </div>\n    </section>`;"
+    },
+    {
+      "id": "NATIVE-SUBDUB-EXTENSION-COPY-R1-2",
+      "file": "static/portal/portal-i18n.js",
+      "old": "  const IMAGE_COMPOSER_UI_COPY_ROWS = [",
+      "new": "  const SUBDUB_EXTENSION_UI_COPY_ROWS = [\n    [\n      \"kicker\",\n      \"Dịch trực tiếp\",\n      \"Live translation\",\n      \"实时翻译\"\n    ],\n    [\n      \"badge\",\n      \"Tiện ích Chrome\",\n      \"Chrome extension\",\n      \"Chrome 扩展\"\n    ],\n    [\n      \"title\",\n      \"Dịch và lồng tiếng khi xem video\",\n      \"Translate and dub while watching videos\",\n      \"观看视频时翻译和配音\"\n    ],\n    [\n      \"body\",\n      \"Sử dụng tiện ích TOAN AAS trên Chrome với video YouTube, Facebook, Twitter hoặc Meet.\",\n      \"Use the TOAN AAS Chrome extension with videos on YouTube, Facebook, Twitter or Meet.\",\n      \"使用 TOAN AAS Chrome 扩展处理 YouTube、Facebook、Twitter 或 Meet 中的视频。\"\n    ],\n    [\n      \"download\",\n      \"Tải tiện ích (.zip)\",\n      \"Download extension (.zip)\",\n      \"下载扩展（.zip）\"\n    ],\n    [\n      \"installTitle\",\n      \"1. Cài tiện ích\",\n      \"1. Install the extension\",\n      \"1. 安装扩展\"\n    ],\n    [\n      \"installBody\",\n      \"Tải gói tiện ích, giải nén rồi thêm vào Chrome.\",\n      \"Download the extension package, extract it and add it to Chrome.\",\n      \"下载并解压扩展包，然后将其添加到 Chrome。\"\n    ],\n    [\n      \"installGuide\",\n      \"Hướng dẫn cài đặt\",\n      \"Installation instructions\",\n      \"安装说明\"\n    ],\n    [\n      \"installSteps\",\n      \"Mở chrome://extensions, bật Chế độ dành cho nhà phát triển rồi chọn Tải tiện ích đã giải nén và mở thư mục vừa giải nén.\",\n      \"Open chrome://extensions, turn on Developer mode, select Load unpacked and open the extracted folder.\",\n      \"打开 chrome://extensions，启用开发者模式，选择加载已解压的扩展程序，然后打开已解压的文件夹。\"\n    ],\n    [\n      \"accountTitle\",\n      \"2. Đăng nhập tài khoản\",\n      \"2. Sign in\",\n      \"2. 登录账户\"\n    ],\n    [\n      \"accountBody\",\n      \"Mở tiện ích và đăng nhập bằng tài khoản app.toanaas.vn của bạn.\",\n      \"Open the extension and sign in with your app.toanaas.vn account.\",\n      \"打开扩展并使用您的 app.toanaas.vn 账户登录。\"\n    ],\n    [\n      \"balanceTitle\",\n      \"3. Kiểm tra số dư\",\n      \"3. Check your balance\",\n      \"3. 查看余额\"\n    ],\n    [\n      \"balanceBody\",\n      \"Cần tài khoản đã nạp Xu. Cước dịch trực tiếp bằng hai lần cước Phụ đề & Lồng tiếng thông thường.\",\n      \"An account topped up with Xu is required. Live translation costs twice the standard Subtitles & Dubbing rate.\",\n      \"需要已充值 Xu 的账户。实时翻译费用为常规字幕与配音费用的两倍。\"\n    ]\n  ];\n  [\"vi\", \"en\", \"zh\"].forEach((locale, index) => {\n    SUBDUB_EXTENSION_UI_COPY_ROWS.forEach((row) => { MESSAGES[locale][`subdubExtensionUi.${row[0]}`] = row[index + 1]; });\n  });\n\n  const IMAGE_COMPOSER_UI_COPY_ROWS = ["
+    },
+    {
+      "id": "NATIVE-SUBDUB-EXTENSION-READABLE-R1-1",
+      "file": "static/portal/portal-theme.css",
+      "old": "/* Canonical teal–cyan Portal system.",
+      "new": "/* Keep only the SubDub extension banner native, readable and touchable. */\n:root .portal-subdub-hub .portal-subdub-extension-card {\n  margin-top: 24px;\n  background: var(--portal-surface);\n  border-color: var(--portal-border);\n  color: var(--portal-ink);\n}\n.portal-subdub-extension-card .portal-card-header { gap: 16px; align-items: center; }\n.portal-subdub-extension-copy { flex: 1 1 280px; min-width: 0; }\n.portal-subdub-extension-eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; }\n.portal-subdub-extension-eyebrow .portal-section-kicker { margin: 0; }\n.portal-subdub-extension-badge { padding: 2px 8px; border-radius: 999px; background: var(--portal-surface-strong); font-size: 12px; font-weight: 600; }\n.portal-subdub-extension-steps { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }\n.portal-subdub-extension-step { min-width: 0; padding: 12px; background: var(--portal-surface-strong); border: 1px solid var(--portal-border); border-radius: 8px; overflow-wrap: anywhere; }\n.portal-subdub-extension-step > strong { display: block; margin-bottom: 6px; }\n.portal-subdub-extension-step > span, .portal-subdub-extension-guide p { font-size: 14px; line-height: 1.6; }\n:root .portal-subdub-extension-card :is(.portal-section-kicker, .portal-card-title, .portal-card-subtitle, .portal-subdub-extension-badge, .portal-subdub-extension-step strong, .portal-subdub-extension-step span, .portal-subdub-extension-guide summary, .portal-subdub-extension-guide p) { color: var(--portal-ink); }\n.portal-subdub-extension-guide summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; font-size: 14px; text-decoration: underline; }\n:root .portal-subdub-extension-card .portal-button--primary { min-height: 44px; background: var(--portal-action) !important; color: var(--portal-on-action) !important; }\nhtml[data-portal-theme=\"dark\"] .portal-subdub-extension-card .portal-button--primary { background: var(--portal-rail) !important; color: var(--portal-rail-text) !important; }\n:root .portal-subdub-extension-card :is(a, summary):focus-visible { outline-color: var(--portal-focus) !important; }\n\n/* Canonical teal–cyan Portal system."
+    }
+  ],
+  "dictionaryRows": [
+    [
+      "dashboard.summary.guest",
+      "bạn",
+      "there",
+      "您"
+    ],
+    [
+      "subdubExtensionUi.kicker",
+      "Dịch trực tiếp",
+      "Live translation",
+      "实时翻译"
+    ],
+    [
+      "subdubExtensionUi.badge",
+      "Tiện ích Chrome",
+      "Chrome extension",
+      "Chrome 扩展"
+    ],
+    [
+      "subdubExtensionUi.title",
+      "Dịch và lồng tiếng khi xem video",
+      "Translate and dub while watching videos",
+      "观看视频时翻译和配音"
+    ],
+    [
+      "subdubExtensionUi.body",
+      "Sử dụng tiện ích TOAN AAS trên Chrome với video YouTube, Facebook, Twitter hoặc Meet.",
+      "Use the TOAN AAS Chrome extension with videos on YouTube, Facebook, Twitter or Meet.",
+      "使用 TOAN AAS Chrome 扩展处理 YouTube、Facebook、Twitter 或 Meet 中的视频。"
+    ],
+    [
+      "subdubExtensionUi.download",
+      "Tải tiện ích (.zip)",
+      "Download extension (.zip)",
+      "下载扩展（.zip）"
+    ],
+    [
+      "subdubExtensionUi.installTitle",
+      "1. Cài tiện ích",
+      "1. Install the extension",
+      "1. 安装扩展"
+    ],
+    [
+      "subdubExtensionUi.installBody",
+      "Tải gói tiện ích, giải nén rồi thêm vào Chrome.",
+      "Download the extension package, extract it and add it to Chrome.",
+      "下载并解压扩展包，然后将其添加到 Chrome。"
+    ],
+    [
+      "subdubExtensionUi.installGuide",
+      "Hướng dẫn cài đặt",
+      "Installation instructions",
+      "安装说明"
+    ],
+    [
+      "subdubExtensionUi.installSteps",
+      "Mở chrome://extensions, bật Chế độ dành cho nhà phát triển rồi chọn Tải tiện ích đã giải nén và mở thư mục vừa giải nén.",
+      "Open chrome://extensions, turn on Developer mode, select Load unpacked and open the extracted folder.",
+      "打开 chrome://extensions，启用开发者模式，选择加载已解压的扩展程序，然后打开已解压的文件夹。"
+    ],
+    [
+      "subdubExtensionUi.accountTitle",
+      "2. Đăng nhập tài khoản",
+      "2. Sign in",
+      "2. 登录账户"
+    ],
+    [
+      "subdubExtensionUi.accountBody",
+      "Mở tiện ích và đăng nhập bằng tài khoản app.toanaas.vn của bạn.",
+      "Open the extension and sign in with your app.toanaas.vn account.",
+      "打开扩展并使用您的 app.toanaas.vn 账户登录。"
+    ],
+    [
+      "subdubExtensionUi.balanceTitle",
+      "3. Kiểm tra số dư",
+      "3. Check your balance",
+      "3. 查看余额"
+    ],
+    [
+      "subdubExtensionUi.balanceBody",
+      "Cần tài khoản đã nạp Xu. Cước dịch trực tiếp bằng hai lần cước Phụ đề & Lồng tiếng thông thường.",
+      "An account topped up with Xu is required. Live translation costs twice the standard Subtitles & Dubbing rate.",
+      "需要已充值 Xu 的账户。实时翻译费用为常规字幕与配音费用的两倍。"
+    ]
+  ],
+  "applicationSources": [
+    {
+      "file": "static/portal/portal-i18n.js",
+      "beforeLfSha256": "e680ec8e3d3abc58bc6e18b46639923bf59520e158eb045686b269f4f55cd2fa",
+      "afterLfSha256": "a342ad1156e277bb3a529b6cda7b396fde528d19bae098a8662c392fb197ae1c"
+    },
+    {
+      "file": "static/portal/portal-theme.css",
+      "beforeLfSha256": "e749a513f4ea1a1b9ac8a2272f2627d0ef136db45608f2a7786a83f3f3a9c17b",
+      "afterLfSha256": "948584665487d78fd5d49070d54f1303ffe5f9ac0c331564cef677a54f7a8994"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "beforeLfSha256": "a45876fa3e3674e7bf01ad165df5080450164da5f548bda27e9fe3ef843a719e",
+      "afterLfSha256": "1d375a8be795db698b43aa3b7ca6a7a5e725390faa3abf0d8b7a3fbcf164eb06"
+    }
+  ],
+  "amendments": [
+    {
+      "id": "NATIVE-LABEL-IDENTITY-CALL-R1",
+      "file": "static/portal/portal.js",
+      "old": "    const name = displayName(context) || dashboardText(\"summary.guest\", \"bạn\");",
+      "new": "    const name = displayName(context) || uiText(\"dashboard.summary.guest\", \"bạn\");"
+    },
+    {
+      "id": "NATIVE-SUBDUB-GUIDE-COLOR-R1",
+      "file": "static/portal/portal-theme.css",
+      "old": "/* Canonical teal–cyan Portal system.",
+      "new": "/* The guide paragraph must outrank the later generic dark paragraph rule. */\n:root .portal-page.portal-subdub-hub .portal-subdub-extension-card .portal-subdub-extension-guide p {\n  color: var(--portal-ink);\n}\n\n/* Canonical teal–cyan Portal system."
+    }
+  ],
+  "corrections": {
+    "coordinatorSpecOmissions": 2,
+    "workerCodeFailures": 0,
+    "priorPhysicalTests": 46,
+    "priorPassed": 44,
+    "priorFailed": 2,
+    "priorDarkGuideColorObservations": 6
+  }
+}

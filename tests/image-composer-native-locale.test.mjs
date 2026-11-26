@@ -8,6 +8,7 @@ import {pageMetaRenderer, pageMetaSources} from "./helpers/chat-page-meta-runtim
 const root = new URL("../", import.meta.url);
 const read = file => fs.readFileSync(new URL(file, root), "utf8").replace(/\r\n/g, "\n");
 const contract = JSON.parse(read("tests/fixtures/image-composer-native-locale-contract.json"));
+const nativeLabels = JSON.parse(read("tests/fixtures/native-label-recovery-contract.json"));
 const hash = value => createHash("sha256").update(value).digest("hex");
 const escape = text => text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 
@@ -25,6 +26,15 @@ for (const pin of contract.applicationSources) {
       expected = expected.replace(row.old, () => row.new);
     }
     assert.equal(hash(expected), pin.afterLfSha256);
+    const downstreamPin = nativeLabels.applicationSources.find(row => row.file === pin.file);
+    if (downstreamPin) {
+      assert.equal(hash(expected), downstreamPin.beforeLfSha256);
+      for (const row of [...nativeLabels.records, ...(nativeLabels.amendments || [])].filter(row => row.file === pin.file)) {
+        assert.equal(expected.split(row.old).length - 1, 1, "Unique downstream native label record");
+        expected = expected.replace(row.old, () => row.new);
+      }
+      assert.equal(hash(expected), downstreamPin.afterLfSha256);
+    }
     assert.equal(hash(read(pin.file)), hash(expected), "Current application must contain exactly the accepted worker changes");
   });
 }

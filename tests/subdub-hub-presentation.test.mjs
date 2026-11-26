@@ -20,7 +20,7 @@ const helperSource = portalSource.slice(helperStart, helperEnd);
 const companionStart = portalSource.indexOf("  function subDubVoiceCompanionUrl(");
 assert.notEqual(companionStart, -1, "SubDub companion URL helper is present");
 const companionSource = portalSource.slice(companionStart, portalSource.indexOf("\n  }", companionStart) + 4);
-const rendererSource = companionSource + "\n" + portalSource.slice(rendererStart, rendererEnd);
+const rendererSource = "const uiText = (_key, fallback) => fallback;\n" + companionSource + "\n" + portalSource.slice(rendererStart, rendererEnd);
 const escapeHtml = (value) => String(value ?? "")
   .replaceAll("&", "&amp;")
   .replaceAll("<", "&lt;")

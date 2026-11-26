@@ -713,7 +713,7 @@ def test_public_landing_uses_a_bounded_editorial_hero_scale() -> None:
 def test_primary_actions_use_the_accessible_dark_teal_and_readable_on_action_text() -> None:
     theme_source = PORTAL_THEME.read_text(encoding="utf-8")
     root = re.search(r":root\s*\{(?P<declarations>.*?)\n\}", theme_source, flags=re.DOTALL)
-    primary = re.search(r"\.portal-button--primary\s*\{(?P<declarations>.*?)\n\}", theme_source, flags=re.DOTALL)
+    primary = re.search(r"^\.portal-button--primary\s*\{(?P<declarations>.*?)\n\}", theme_source, flags=re.DOTALL | re.MULTILINE)
 
     assert root is not None
     assert primary is not None
