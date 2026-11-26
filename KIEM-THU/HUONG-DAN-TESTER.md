@@ -1,6 +1,21 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
-## Danh mục video — 26/11/2026
+## Mô tả danh mục108mục — 26/11/2026
+
+Dùng phiên `PHIEN-CATALOGUE-DESCRIPTIONS108-20261126.md`,chíncaseD108.
+PR813 đã giao/receiptreadback;BASE mới de870867. Chỉkiểmroot
+`/features`,không lấy kết quả này để đóng family/workspace khác.
+Đủ135thẻ;mọitên và27Video giữ;108mô tả theoVI/EN/ZH ngắn,dễ hiểu,
+không thuật ngữ triển khai hoặc hứa khả năng chưa có bằng chứng.
+
+Searchchữ hiển thị/từ gốc/key→Xóa về135→Tabthấyfocus. Kiểm375/1440
+sáng/tối,đúngbodyclass/customerShell/normalizer. Chữ≥4,5:1,focus≥3:1,
+vùng bấm44px;không tràn/lỗi/requestngoài. Không gọi chức năng tạo/
+xửlý/nạp tiền hoặc dùng dữ liệu khách. Browserfixture/CI không thay
+signedproduction/device/Safari. Không chạy lại nhóm đã đạt nếu
+sourceứng dụng không đổi;2lỗiQAcủa điều phối đã phục hồi riêng.
+
+## Danh mục video — mốc nghiệm thu trước phát hành PR813
 
 Dùng phiên `PHIEN-CATALOGUE-VIDEO-NATIVE-20261126.md` vàtámcaseCVN.
 Chỉ kiểm root `/features`; đây làbộ chữ nhẹ riêng,không lấy bằng chứng

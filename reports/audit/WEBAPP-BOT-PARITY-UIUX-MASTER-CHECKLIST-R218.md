@@ -1,6 +1,28 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
-## 26/11/2026 — PR812 đã giao; root danh mục video
+## 26/11/2026 — PR813 đã giao; CD108 local đang hoàn tất
+
+- [x] CVNPR813CI45817536627haiSUCCESS;merge/runtimede870867,
+  treeab32b6a7 bằngtested89c28809;deploy45821431028SUCCESS.
+  VPSsạch/3dịchvụ/health/7direct+7versionedassetskhớp;receipt689/
+  7192334539 vàPR813/7192334547readbackexact. KhônglàmlạiCVN.
+- [x] CD108baR1/baR2Gemini4ExtraHigh,324reviewedvalues/32R2delta/
+  292held;322appchanges/2held;405titles/81Videoentries/135cardsheld.
+- [x] RendererRED329=323fail/6pass;historyRED8=7fail/1pass.
+  PrimaryGREEN449/451;2coordinatorQAfaultphụlục7192590237/
+  readbackexact→failed-only2/2pass,affectedhistory112/source233pass.
+  Apphash6ca65ab5 giữ;rawCD108/CVNhistorical/151pins/fixturesheld.
+- [x] Browsermộtgroup12view/5220samples,min5,0856/focus5,8601/
+  target44,0unknown/finding/error/external/overflow;375sángtốiđãmở.
+- [x] ReviewgộpcodeQA C0/I0/M0,khôngdịchlại324values/rerunsuites;
+  docsvậnhành/featurecomparison/TesterđãREADY.
+- [ ] Metadata/manifest/provenance/exactCI/
+  merge/Webdeploy/runtime/7+7assets/2receiptreadback.
+- [ ] Full-bundle/family/workspacecopy,Gallery/Admin/actionBlockReason
+  vàfullauth/draft/AX/device/Safari/signedproductionvẫnmở.
+  MotionM-FINAL01..06cuối;toàngoalACTIVE/chưahoànthành.
+
+## 26/11/2026 — lưu mốc trước khi PR813 được phát hành
 
 - [x] PR812CI45801754797haijobSUCCESS;merge/runtimeccf824a1,
   treeaa65173f bằngtested01b7,deploy45805852583SUCCESS,VPSsạch/

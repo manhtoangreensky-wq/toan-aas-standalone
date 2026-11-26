@@ -1,5 +1,24 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 26/11/2026 — giản lược mô tả, không đổi khả năng của công cụ
+
+Nguồn đối chiếu là bộ chữ nhẹ135mục/renderer/registry trênBASE
+`de870867a27edb02a0d944b3539c0623f1cde3eb`,đã phát hành quaPR813.
+Các câu diễn giải kỹ thuật không phải bằng chứng chức năng đang chạy.
+
+| Trước CD108 | Ứng viên hiện tại | Bảo vệ |
+|---|---|---|
+| 108mục cũ có nhiều diễn giải cách triển khai | 324mô tả đã rà;322đổi/2giữ | 405title/135key/route/thứtự giữ |
+| 27mụcVideo vừa bổ sung quaPR813 | Giữ nguyên81entry theo3locale | Không làm lại hoặc thay nghĩa |
+| Công cụ lập kế hoạch/chỉ xem/có điều kiện giao kết quả | Câu ngắn theo việc khách làm được | Không tự hứa tạo/tải/khả dụng |
+| Root dùng bộ chữ nhẹ,nhóm vàworkspace dùng bundlekhác | Chỉ root `/features` được sửa ở đây | Full-bundle/family vẫn là gap riêng |
+| CVN từng là newest raw acceptance | Giữ fixture/kỳ vọng CVN qua finite CD108 inverse | CD108 mới kiểm nguồn vật lý thô |
+
+Bản ghi322old/new vàfixture đóng trước appedit,afterhash6ca65ab5…c74b1a6.
+Chỉ thêmPNG là tên định dạng vàoallowlistZH;không nới purity/regex
+hoặc sửa151pins/fixtures cũ. Tài liệu gốc không được dùng để suy ra
+khả năng provider,giá,vốn dư hoặc số lượng dữ liệu khách chưa đo.
+
 ## 26/11/2026 — root danh mục video, không thêm khả năng xử lý
 
 BASE `ccf824a1482ef3ae7fd2d4187932902e36ddbc14` là PR812 đã giao.

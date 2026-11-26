@@ -2127,4 +2127,18 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | CVN-READABLE | nặng | Xem375/1440 sáng/tối ba locale | Text≥4,5/focus≥3,target44;đúngbodyclass/normalizer/customerShell | 12view5220samples,min5,0856;0error/overflow/external/unknown |
 | CVN-PROTECTED | nặng | So fullsource vớiBASE và9records | Mộtappfile,renderer/CSS/auth/API/Bot/tiền/data/motion giữ | Sourcehash8680e808;97+31Node/9Python;không cộng lượt trùng |
 | CVN-HISTORY | nặng | Đảo exact9records qua QA entry; thử thiếu/sai/lặp/tách/đảo vàbyte lạ | Giữ151pins/fixture cũ/rawacceptance;OLDpass,unknownbytesgiữ,malformedfail | RED8=6fail/2pass;GREEN34direct+216consumer,finalpressure8pass không cộng trùng;Issue689/7191526718 |
-| CVN-DELIVERY | nặng | CI→merge/tree→Webdeploy/runtime/assets/receipt | Từng gate độc lập,kiểm thêmbundlecopy nhẹ;không nhận signedUI từassets | PR813 đãpush;CI45812122469fail1sourcepin/signedQAskip;QA-onlycorrectionlocalđạt,CI mới/merge/deploycònchờ |
+| CVN-DELIVERY | nặng | CI→merge/tree→Webdeploy/runtime/assets/receipt | Từng gate độc lập,kiểm thêmbundlecopy nhẹ;không nhận signedUI từassets | PR813CI45817536627haiSUCCESS;deploy45821431028/runtime de870867/tree/14assetskhớp;receipt689/7192334539 vàPR813/7192334547readbackexact;signedUI chưa kiểm |
+
+## CATALOGUE-DESCRIPTIONS108-20261126 — Issue #689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| D108-COPY-A | nặng | Đọc36mục nhómA bằngVI/EN/ZH | Câu khách hàng đúngnghĩa/khôngnarrativekỹthuật | 3R1/3R2/324reviewedvalues,rawrenderer |
+| D108-COPY-B | nặng | Đọc36mục nhómB | Khôngtựhứaoutput/khảdụng/tảitệp | Fixtuređóngtrướcappedit;32exactR2delta |
+| D108-COPY-C | nặng | Đọc36mục nhómC | Giữgiớihạnthực;khôngđổi title/key/route | 322changed/2held |
+| D108-STATE | nặng | Baengine/readinessstatesmỗithẻ,tìmchữmới/từgốc | Input/href/key/route/state/searchgiữ | 329newrawcases/unknownfallback |
+| D108-INVENTORY | nặng | So135thẻ/3locale | 405title và81Videoentries giữ | Rawfixture/record comparison |
+| D108-HISTORY | nặng | Thiếu/sai/lặp/tách/đảorecord,OLD/unknownbytes | Finite322inverse/boundlocale;151pins/fixturesgiữ | RED8=7fail/1pass;recovery112/source233 |
+| D108-READABLE | nặng | 12viewVIENZH/sángtối375/1440 | Text≥4,5/focus≥3,target44,0overflow/error/external | Browser5220samples,min5,0856/focus5,8601 |
+| D108-PROTECTED | nặng | SoBASE+exactrecords,source/provenance | Mộtappfile;auth/API/Bot/tiền/data/CSS/motionheld | Afterhash6ca65ab5…c74b1a6;QA2/2recovery |
+| D108-DELIVERY | nặng | ExactCI→merge/tree→Webdeploy→runtime/assets/receipt | Từnggateđộc lập;khôngclaimsignedUI từassets | CHƯA PUSH/PHÁT HÀNH |
