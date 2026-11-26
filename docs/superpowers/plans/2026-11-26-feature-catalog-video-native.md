@@ -47,9 +47,12 @@ Giữ10stateuntracked,khôngđọc/canthiệpstatecampaign.
 
 ## Task4 — deliver one complete batch
 
-- [ ] Reviewgộpmộtlượt;docsvậnhành/featurecomparison/Tester/readiness.
-- [ ] Explicitmanifest/secret/protectedgate→sourcecommit→Web-only
+- [x] Reviewgộpmộtlượt;docsvậnhành/featurecomparison/Tester/readiness.
+- [x] Explicitmanifest/secret/protectedgate→sourcecommit→Web-only
   provenancerefresh/evidencecommit/verify→pushmộtbranch/mộtPR.
+- [ ] PR813/CI45812122469: một source-pin fail; bổ sung finite QA leaf,
+  pressure RED 6 fail/2 pass, giữ app/pins/fixture cũ; kiểm nhóm ảnh hưởng,
+  refresh metadata/provenance và push lại cùng PR.
 - [ ] Exact-headCI2jobsSUCCESS→pinnedmerge/treeexact→exclusiveWeb
   deploy→runtime+assetsnhẹ/cũ→Issue689+PRreceiptsreadback.
 - [ ] CậpnhậtchecklistNLRđãgiao/CVNthậttế;toàngoal/motionvẫnmở.

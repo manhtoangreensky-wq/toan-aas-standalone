@@ -47,3 +47,23 @@ Khôngmerge/deploytrướccổngđạt;khôngnhậnsignedUI từassets.
 Whole-appplaincopy/family/workspace/Admin/Gallery/auth/draft/device/
 Safari/AX vàmotionLAST vẫn mở. PROVIDER_CALLS=0product;
 WALLET_MUTATIONS=0;PRODUCTION_DATA_WRITES=0;WHOLE_GOAL_COMPLETE=NO.
+
+## PR813 — sửa bộ so sánh nguồn lịch sử
+
+HEAD đã công bố `1f696647c3db759293d0c359ba0c4332091df430`.
+CI `45812122469` thất bại một pin lịch sử; job đăng nhập bị bỏ qua.
+Bản sửa này không thay mã ứng dụng. Phụ lục công khai
+Issue689/7191526718 đã được đọc lại nguyên văn.
+
+Helper QA mới chỉ đảo chín insertion đã được review, khóa hash LF
+của fixture,27key,mỗi key ba khai báo và vị trí/thứ tự chín records.
+Byte không thuộc scope được giữ nguyên.151pins/fixtures/assertions
+cũ giữ nguyên;acceptance CVN hiện tại vẫn đọc nguồn vật lý thô.
+
+Pressure RED:8ca,6fail/2pass/0error. Sau sửa:nhóm trực tiếp34pass
+và14suite consumer216pass,0fail/error/skip. Pressure cuối8pass đã
+thêm assertion;nhóm này trùng nhóm34,không cộng thành sốcase mới.
+Các kết quả97/31/9 vàbrowser12 trước đó không bị chạy lại.
+Cần refresh metadata/provenance,push cùng PR813 và đạt CI mới đúng
+HEAD trước merge/deploy. Không rerun run thất bại hoặc tạo PR khác
+cho omission QA này.

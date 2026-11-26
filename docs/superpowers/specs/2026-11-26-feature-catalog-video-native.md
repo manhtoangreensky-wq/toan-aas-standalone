@@ -85,3 +85,24 @@ SAME_DEFECT_FAILURES: giữA/CmộtlầnfindingchữR1,Bspecclarification;
 R2trảđúng;rootchỉtíchhợpmechanicalkhôngtựviếtlạicodeứngdụng.
 PROVIDER_CALLS=0product;WALLET_MUTATIONS=0;PRODUCTION_DATA_WRITES=0.
 Mọi gatechưađạt vẫn mở;motionLAST.
+
+## Phụ lục CI45812122469 — historical151pins
+
+CIHEAD1f696647 dừng1/33DocumentSource,signedQAskip. Localđúngpin
+REDexit1;BASEccf/mainCI45805679819SUCCESS. Thiếumắt xíchQAcho
+filebộchữnhẹ;khôngsửaapp/dịchvụ/9workerrecords đểné.
+MởhelperQAriêng `tests/helpers/feature-catalog-video-native-historical.mjs`,
+thêmcallởNLRhistoricalentry,chữkýkhôngđổi. Ba consumers/sáu chỗ
+đãsoi;thêmpressuretest `tests/feature-catalog-video-native-history.test.mjs`
+vàCIregistration. Giữ151pins/fixturescũvàrawCVNcurrentacceptance.
+BindfixtureLFhash;OLDpass,unknownbytesgiữ,partial/changed/duplicate/
+detachedfail. Chỉruncácsourcepinconsumersảnhhưởng;khônglặpbrowser.
+
+Phụ lục công khai Issue689/7191526718 đã đọc lại nguyên văn.
+Đầu tiên cổng đăng chặn vì chưa xác định payload; đối chiếu repo
+PUBLIC, PR/contract và scan 2.149 byte không credential/dữ liệu khách
+đã mở lại đúng thao tác. Không đổi đích hoặc lách cổng bằng công cụ khác.
+Pressure RED tám ca: sáu fail, hai pass, không lỗi khởi tạo. Helper mới
+chỉ đảo đúng chín records; fixture LF hash khóa cứng, kiểm đủ 27 key,
+mỗi key ba lần, vị trí và thứ tự record. Byte ngoài scope vẫn nguyên.
+Current acceptance không gọi inverse, after-hash ứng dụng giữ nguyên.

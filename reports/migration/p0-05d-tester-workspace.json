@@ -45,7 +45,7 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-26",
-  "local_files_refresh_scope": "CATALOGUE-VIDEO-NATIVE-20261126: reviewed9datarecords/1appfile,97+31Node/9Python,12physicalrouteviews; exactCI/releasepending; PR812priorreceiptclosed.",
+  "local_files_refresh_scope": "CATALOGUE-VIDEO-NATIVE-20261126 PR813: first CI failed one historical pin; finite QA correction local34/216/final8passed; app unchanged; new exact-headCI/release pending.",
   "current_verification_session": {
     "id": "CATALOGUE-VIDEO-NATIVE-20261126",
     "base_sha": "ccf824a1482ef3ae7fd2d4187932902e36ddbc14",
@@ -63,9 +63,10 @@
       "CVN-STATE",
       "CVN-READABLE",
       "CVN-PROTECTED",
+      "CVN-HISTORY",
       "CVN-DELIVERY"
     ],
-    "status": "LOCAL_SCOPED_PASS_REVIEW_C0_I0_M0_EXACT_CI_RELEASE_PENDING",
+    "status": "LOCAL_QA_RECOVERED_NEW_EXACT_HEAD_CI_PENDING",
     "model": "gemini-4-hydrogen-xhigh",
     "original_sessions": 3,
     "correction_sessions": 3,
@@ -124,12 +125,37 @@
     "auth_draft_full_lifecycle": "NOT_TESTED",
     "device_safari": "NOT_TESTED",
     "motion": "LAST_STEP_OPEN",
-    "ci": "NOT_RUN",
+    "ci": 45812122469,
     "deploy": "NOT_DEPLOYED",
     "provider_calls": 0,
     "wallet_mutations": 0,
     "production_data_writes": 0,
-    "whole_goal_complete": false
+    "whole_goal_complete": false,
+    "pr": 813,
+    "ci_status": "FAIL_ONE_HISTORICAL_PIN_AUTHENTICATED_SKIPPED",
+    "historical_qa_amendment": {
+      "tracker_comment": 7191526718,
+      "exact_readback": true,
+      "application_changes": 0,
+      "red_cases": 8,
+      "red_failed": 6,
+      "red_passed": 2,
+      "red_errors": 0,
+      "direct_green_cases": 34,
+      "consumer_files": 14,
+      "consumer_green_cases": 216,
+      "final_pressure_cases": 8,
+      "final_pressure_overlaps_direct": true,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "original_151_pins_unchanged": true,
+      "raw_current_acceptance_preserved": true,
+      "coordinator_qa_omission": true,
+      "worker_failure_increment": 0,
+      "new_exact_head_ci": "PENDING",
+      "prior_renderer_browser_rerun": false
+    }
   },
   "image_studio_validation_verification_session": {
     "id": "IMAGE-STUDIO-VALIDATION-COPY-20261123",
@@ -833,9 +859,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 2129,
-      "bytes": 220460,
-      "sha256": "1304160decf933f2bbfe5a9250e62662fd55694f3f6560dbf9c9effc6e11a85c"
+      "lines": 2130,
+      "bytes": 220851,
+      "sha256": "9206cf780f6e906bcf29dcbe73f179841775d8599f0d6a2bbb3c336cf143a2a2"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
@@ -845,33 +871,33 @@
     },
     {
       "path": "KIEM-THU/PHIEN-CATALOGUE-VIDEO-NATIVE-20261126.md",
-      "lines": 66,
-      "bytes": 3549,
-      "sha256": "61412f0179b1f00965e2e52f228143fc9c4da95fa5035251e4ba0b9acfa9728c"
+      "lines": 82,
+      "bytes": 4489,
+      "sha256": "2f7ce428bef7d41c1d1f49b08635ca291ed9e24c11a68ea0323b6744a490426d"
     },
     {
       "path": "docs/reports/feature-catalog-video-native-prepush-20261126.md",
-      "lines": 49,
-      "bytes": 2697,
-      "sha256": "9d2da21bf7ebb49d5f5542e30bae36bd506394d30fe7a50493a00020cf4a87f0"
+      "lines": 69,
+      "bytes": 3840,
+      "sha256": "c32429c7d6a217a4c59cfb5397b0484bedbc1c5452f23cceddb68d20ff0505ea"
     },
     {
       "path": "docs/superpowers/plans/2026-11-26-feature-catalog-video-native.md",
-      "lines": 55,
-      "bytes": 2870,
-      "sha256": "fe9a7f0b077908e0c0813f2d7f08d94c925d00a6bee75236e9241849485c4be0"
+      "lines": 58,
+      "bytes": 3088,
+      "sha256": "99d4d618a236ecff2cf74a869df1ba9d4619fd744b295943be2dac9139594581"
     },
     {
       "path": "docs/superpowers/specs/2026-11-26-feature-catalog-video-native.md",
-      "lines": 87,
-      "bytes": 5054,
-      "sha256": "3ea109557d33b1e0daa03447989cdbf5c62440f9da8b121db2f7a1e8fd541600"
+      "lines": 108,
+      "bytes": 6444,
+      "sha256": "f7316540b46b1fb5a7c40315dde0d52371c45142312b0d7bd41d976314d97d4c"
     },
     {
       "path": "reports/tester/CATALOGUE-VIDEO-NATIVE-20261126.md",
-      "lines": 24,
-      "bytes": 1351,
-      "sha256": "7c41761689fcba3adfd4710314c024b75b56e3b4d725ec316a496b3c6c980030"
+      "lines": 38,
+      "bytes": 2153,
+      "sha256": "dccd3c59a39ca720a7d56c5401ee3da6aed5ac3e26383d3fe0c950fb454b6994"
     },
     {
       "path": "scripts/tester_case_sync.py",

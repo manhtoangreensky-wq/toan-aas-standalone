@@ -64,3 +64,19 @@ suite/browser hoặc dịchlại162values. Docs/metadata/prepush/provenance/exac
 runtime/copybundle+5oldassets/receipts làgate riêng chưađóng ởphiênnày.
 Signedproduction/full-appplaincopy/AX/auth/drafts/device/Safari/motionLAST
 cònmở. PROVIDER_CALLS=0product;WALLET_MUTATIONS=0;PRODUCTION_DATA_WRITES=0.
+
+## CVN-HISTORY — QA-only amendment sau PR813
+
+CI45812122469/HEAD1f696647 thất bại một pin nguồn lịch sử; signedQA
+SKIPPED. Issue689/7191526718 ghi nguyên nhân vàallowlist,đãreadback.
+Không thay mã ứng dụng,151pins,fixture cũ hoặc raw acceptance.
+PressureRED8:6fail/2pass/0error;GREEN trực tiếp34 và14consumerfiles
+216pass,0fail/error/skip. Finalpressure8pass có thêm record-order/
+detached-anchor checks;không cộng sốtrùng. Những suite/browser đãđạt
+của ứng dụng giữ nguyên,không được gọi là fresh fullsuite.
+
+Tệp QA mới `tests/helpers/feature-catalog-video-native-historical.mjs`,
+`tests/feature-catalog-video-native-history.test.mjs`;hook đúng2dòng
+ởNLRhelper,thêmtest trongnodegroupCI. Chỉđảo9exactrecords/27keys;
+giữunknownbytes đểgoldenpinbắt lỗi. Trạng thái phát hành vẫn
+`LOCAL_QA_RECOVERED_NEW_EXACT_CI_PENDING`;chưa merge/deployCVN.

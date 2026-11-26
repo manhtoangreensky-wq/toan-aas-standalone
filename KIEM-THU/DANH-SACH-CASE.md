@@ -2126,4 +2126,5 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | CVN-STATE | nặng | Tìm bằng chữ native/từ gốc,key;clear;Tab;đối chiếu trạng thái | href/key/route/input/states giữ;khóa lạ giữ chữ nguồn | 3statesmỗi thẻ,3unknowncases;browser12view |
 | CVN-READABLE | nặng | Xem375/1440 sáng/tối ba locale | Text≥4,5/focus≥3,target44;đúngbodyclass/normalizer/customerShell | 12view5220samples,min5,0856;0error/overflow/external/unknown |
 | CVN-PROTECTED | nặng | So fullsource vớiBASE và9records | Mộtappfile,renderer/CSS/auth/API/Bot/tiền/data/motion giữ | Sourcehash8680e808;97+31Node/9Python;không cộng lượt trùng |
-| CVN-DELIVERY | nặng | CI→merge/tree→Webdeploy/runtime/assets/receipt | Từng gate độc lập,kiểm thêmbundlecopy nhẹ;không nhận signedUI từassets | CHƯA PUSH/PHÁT HÀNH |
+| CVN-HISTORY | nặng | Đảo exact9records qua QA entry; thử thiếu/sai/lặp/tách/đảo vàbyte lạ | Giữ151pins/fixture cũ/rawacceptance;OLDpass,unknownbytesgiữ,malformedfail | RED8=6fail/2pass;GREEN34direct+216consumer,finalpressure8pass không cộng trùng;Issue689/7191526718 |
+| CVN-DELIVERY | nặng | CI→merge/tree→Webdeploy/runtime/assets/receipt | Từng gate độc lập,kiểm thêmbundlecopy nhẹ;không nhận signedUI từassets | PR813 đãpush;CI45812122469fail1sourcepin/signedQAskip;QA-onlycorrectionlocalđạt,CI mới/merge/deploycònchờ |

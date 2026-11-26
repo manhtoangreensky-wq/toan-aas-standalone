@@ -15,6 +15,10 @@
   Ảnh375sáng/tốiđãmở;QAthiếukhungtrướckhôngdùnglàmfinalevidence.
 - [x] Reviewcode/QAđộc lập gộpC0/I0/M0;khôngchạylạisuite/browser
   hoặc dịchlại162values;docs/featurecomparison/TesterđãREADY.
+- [x] PR813CI45812122469fail1historicalpin/signedQAskip được cô lập
+  vào QA leaf;Issue689/7191526718readbackexact. RED8=6fail/2pass,
+  GREEN34direct/216consumer;finalpressure8passkhôngcộngtrùng.
+  Giữapphash8680e808/151pins/fixtures/rawacceptance;khôngrerunbrowser.
 - [ ] CodeReviewgộp/docs/metadata/manifest/provenance/exactCI/
   merge/Webdeploy/runtime/copybundle+oldassets/receipt.
 - [ ] Rootcatalogueplaincopycònkỹthuậtởmộtsố108mụcđãcó;
