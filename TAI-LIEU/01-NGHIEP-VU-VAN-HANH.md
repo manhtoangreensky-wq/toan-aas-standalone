@@ -1,5 +1,28 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 26/11/2026 — nhãn đã giao và danh mục video đang nghiệm thu
+
+PR812 đang chạy trên VPS tại `ccf824a1482ef3ae7fd2d4187932902e36ddbc14`.
+CI45801754797 hai nhóm đạt;deploy45805852583 thành công. Mã/tree/
+dịch vụ/health và5tệp trực tiếp+5tệp có phiên bản khớp bản đã kiểm.
+Biên nhận Issue689/7190141777 vàPR812/7190142542 đọc lại đúng.
+Phần tên dự phòng,nhãn âm lượng vàbanner Phụ đề & Lồng tiếng đã giao;
+không thay tên thật,auth,dữ liệu hoặcgiá. SignedproductionUI vẫn chưa kiểm.
+
+Ứng viên `CATALOGUE-VIDEO-NATIVE-20261126` bổ sung chữ cho27mụcVideo
+còn thiếu trong bộ chữ nhẹ của trang `/features`. Tổng135thẻ giữ nguyên:
+108mục cũ và27mụcVideo; mỗi mục có tên/mô tả Việt-Anh-Trung. Đường dẫn,
+thứ tự,nhóm,tìm kiếm,quyền vàtrạng thái không đổi;không mở chức năng mới.
+Mô tả không hứa tạo/xuất/tải video khi chưa có bằng chứng.
+
+Đã có97kiểm tra mục tiêu,31kiểm tra liên quan và9Pythonstatic đạt.
+12màn cô lập đúngkhung trang có5.220mẫu chữ đo được,min5,0856:1,
+focusmin5,8601:1,vùng bấm≥44px;không lỗi/tràn/requestngoài.
+Không sửa màu/font/CSS; các lượt QAthiếukhung trang giữ riêng,
+không dùng để kết luận lỗi ứng dụng. Ứng viên chưa đẩy/triển khai.
+Chữ ở family/workspace khác,các mô tả kỹ thuật còn lại vànghiệm thu
+signedproduction/auth/device/Safari vẫn theo checklist;motion cuối.
+
 ## 22/11/2026 — chi tiết bảng thiết kế ảnh
 
 PR794 đã phát hành tại `f6aee803a72a80bf70cd0a4ce786858f94f9d7cc`;

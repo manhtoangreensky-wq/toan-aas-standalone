@@ -55,18 +55,18 @@ const features = visibleRegistryFeatures();
 const customerNonVideo = features.filter((feature) => feature.group !== "video");
 const copy = copySource ? loadCopy() : null;
 
-test("registry inventory is exactly 135 visible cards and keeps Video as a separate later wave", () => {
+test("registry inventory is exactly 135 visible cards including all 27 Video cards", () => {
   assert.equal(features.length, 135);
   assert.equal(customerNonVideo.length, 108);
   assert.equal(features.filter((feature) => feature.group === "video").length, 27);
 });
 
-test("standalone catalogue has reviewed title and description for every non-Video card in vi/en/zh", () => {
+test("standalone catalogue has reviewed title and description for every card in vi/en/zh", () => {
   assert.ok(copy, "standalone feature-card locale copy bundle must exist");
-  const expected = customerNonVideo.map((feature) => feature.key).sort();
+  const expected = features.map((feature) => feature.key).sort();
   for (const locale of ["vi", "en", "zh"]) {
     const rows = copy[locale] || {};
-    assert.deepEqual(Object.keys(rows).sort(), expected, `${locale} must cover all 108 non-Video cards, without hidden or duplicate keys`);
+    assert.deepEqual(Object.keys(rows).sort(), expected, `${locale} must cover all 135 cards, without hidden or duplicate keys`);
     for (const key of expected) {
       assert.ok(rows[key].title?.trim(), `${locale}.${key}.title must be nonempty`);
       assert.ok(rows[key].description?.trim(), `${locale}.${key}.description must be nonempty`);
@@ -90,7 +90,7 @@ test("Chinese card copy translates generic English while preserving approved pro
   const approved = new Set([
     "TOAN", "AAS", "BOT", "TELEGRAM", "PAYOS", "META", "FACEBOOK", "TIKTOK", "YOUTUBE",
     "ID", "CSRF", "PDF", "XU", "URL", "API", "SFX", "TTS", "ASR", "SRT", "VTT", "OCR",
-    "USD", "VND", "QR", "AI", "MP3", "M4A", "CSV", "CRM", "SLA", "OTP", "MIME",
+    "USD", "VND", "QR", "AI", "MP3", "M4A", "MP4", "WEBM", "CSV", "CRM", "SLA", "OTP", "MIME",
   ]);
   for (const [key, row] of Object.entries(copy.zh)) {
     const words = `${row.title} ${row.description}`.match(/[A-Za-z][A-Za-z0-9]*/g) || [];

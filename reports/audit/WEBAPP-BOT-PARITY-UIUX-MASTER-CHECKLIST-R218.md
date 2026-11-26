@@ -1,5 +1,32 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 26/11/2026 — PR812 đã giao; root danh mục video
+
+- [x] PR812CI45801754797haijobSUCCESS;merge/runtimeccf824a1,
+  treeaa65173f bằngtested01b7,deploy45805852583SUCCESS,VPSsạch/
+  3dịchvụ/health/5+5assetskhớp;receipt689/7190141777 vàPR812/
+  7190142542 đọc lạiđúng. Khônglàmlại NLR.
+- [x] CVNA/B/C:3AGYR1+3R2,9exactdatarecords/1appfile/27keys
+  ×3locale/162values;R2exact35,127giữ;108oldentriesgiữnguyên.
+- [x] ActualrendererRED87case83fail/4pass;GREENnew+inventory+
+  taxonomy97pass,relatedNode31,Pythonstatic9;syntax/compile/diff0.
+- [x] Browser12viewđúngrootroutecontext,5220samplesmin5,0856,
+  focusmin5,8601,target44,0unknown/finding/error/external/overflow.
+  Ảnh375sáng/tốiđãmở;QAthiếukhungtrướckhôngdùnglàmfinalevidence.
+- [x] Reviewcode/QAđộc lập gộpC0/I0/M0;khôngchạylạisuite/browser
+  hoặc dịchlại162values;docs/featurecomparison/TesterđãREADY.
+- [x] PR813CI45812122469fail1historicalpin/signedQAskip được cô lập
+  vào QA leaf;Issue689/7191526718readbackexact. RED8=6fail/2pass,
+  GREEN34direct/216consumer;finalpressure8passkhôngcộngtrùng.
+  Giữapphash8680e808/151pins/fixtures/rawacceptance;khôngrerunbrowser.
+- [ ] CodeReviewgộp/docs/metadata/manifest/provenance/exactCI/
+  merge/Webdeploy/runtime/copybundle+oldassets/receipt.
+- [ ] Rootcatalogueplaincopycònkỹthuậtởmộtsố108mụcđãcó;
+  family/workspacekhác,Gallery/Admin/videoactionBlockReason vẫnđúng
+  backlog;khônggọitoàncatalogue/toànappđãsạch từ27mụcVideo.
+- [ ] Signedproduction/fullauth/draft/AX/device/Safari vàmotion
+  M-FINAL01..06 vẫn mở,motioncuối.
+
 ## 26/11/2026 — PR811 đã giao; nhãn native và SubDub kế tiếp
 
 - [x] PR811 CI45762823823 hai job SUCCESS; UbuntuAPI10pass/0fail,

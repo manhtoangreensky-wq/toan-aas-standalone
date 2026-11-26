@@ -10382,6 +10382,7 @@
       "files": [
         "KIEM-THU/DANH-SACH-CASE.md",
         "KIEM-THU/HUONG-DAN-TESTER.md",
+        "KIEM-THU/PHIEN-CATALOGUE-VIDEO-NATIVE-20261126.md",
         "KIEM-THU/PHIEN-IMAGE-COMPOSER-NATIVE-LOCALE-20261126.md",
         "KIEM-THU/PHIEN-IMAGE-RESIZE-POLISH-20261117.md",
         "KIEM-THU/PHIEN-MEDIA-COLLECTION-LOCALE-20261120.md",
@@ -10418,10 +10419,9 @@
         "copyfast_db.py",
         "copyfast_document_operations.py",
         "copyfast_finance_planning.py",
-        "copyfast_finance_policy.py",
-        "copyfast_governance.py"
+        "copyfast_finance_policy.py"
       ],
-      "occurrences": 1245,
+      "occurrences": 1247,
       "provider": "PayOS"
     },
     {
@@ -18825,9 +18825,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 717,
-  "source_files_scanned": 717,
-  "source_fingerprint_sha256": "a1fda940d8aaf8351e9da15073d7d92ec3afc0091699c716667238a339845fc3",
+  "source_files_discovered": 720,
+  "source_files_scanned": 720,
+  "source_fingerprint_sha256": "264d3d4b4463adab63b1941628beb82c2f8ecaaaa2eceedf58de6e52e9a4235b",
   "source_root": "repository-root",
   "ui_path_references": [
     {

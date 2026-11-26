@@ -2113,4 +2113,18 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | NLR-READABLE | nặng | Xem375/1440 sáng/tối ba locale | Chữ≥4,5:1,focus≥3:1,vùng bấm≥44px;không tràn/lỗi/requestngoài | 12view/168samples,min5,4733 |
 | NLR-GUIDE | vừa | Tab đến Hướng dẫn cài đặt rồi Enter | Details đóng ban đầu,mở bằng phím,focus rõ;không submit/download | Browser12view,native details |
 | NLR-PROTECTED | nặng | So nguồn và các test guard/draft/ARIA SubDub | Đúng8+2record/3source,oldpins/assertions/unknownbytes giữ | Raw/history9;affected83/recovery56;Python16 |
-| NLR-DELIVERY | nặng | CI exactHEAD→merge/tree→deploy/runtime/assets/receipt | Từng bằng chứng riêng;không nhận signed UI từHTTP/asset | CHƯA PHÁT HÀNH |
+| NLR-DELIVERY | nặng | CI exactHEAD→merge/tree→deploy/runtime/assets/receipt | Từng bằng chứng riêng;không nhận signed UI từHTTP/asset | PR812;CI45801754797/deploy45805852583;runtimeccf824a1;receipt689/7190141777 vàPR812/7190142542 đọc lại; signedUI chưa kiểm |
+
+## CATALOGUE-VIDEO-NATIVE-20261126 — Issue #689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| CVN-A | nặng | Mở chín mục quy trình/kịch bản bằngVI/EN/ZH | Đúng tên/mô tả đã duyệt,không thuật ngữ triển khai | [Phiên kiểm tra](PHIEN-CATALOGUE-VIDEO-NATIVE-20261126.md),87rendererchecks |
+| CVN-B | nặng | Mở chín mục ý tưởng/tham khảo/tạo video | Không cam kết từ gợi ý mơ hồ;giữ giới hạn tham khảo | Frozen162values/R2delta35 |
+| CVN-C | nặng | Mở chín mục công cụ/điều phối | Không gán planning-only khi chưa được chứng minh;MP4/WebM đúng nghĩa | Actualrenderer vàreview gộp |
+| CVN-INVENTORY | nặng | Kiểm danh sách vàchuyển ngôn ngữ | Đúng135=108+27,108oldcopy/3locale giữ nguyên,không keythừa/lặp | Strictinventorytest+rawsourcepin |
+| CVN-STATE | nặng | Tìm bằng chữ native/từ gốc,key;clear;Tab;đối chiếu trạng thái | href/key/route/input/states giữ;khóa lạ giữ chữ nguồn | 3statesmỗi thẻ,3unknowncases;browser12view |
+| CVN-READABLE | nặng | Xem375/1440 sáng/tối ba locale | Text≥4,5/focus≥3,target44;đúngbodyclass/normalizer/customerShell | 12view5220samples,min5,0856;0error/overflow/external/unknown |
+| CVN-PROTECTED | nặng | So fullsource vớiBASE và9records | Mộtappfile,renderer/CSS/auth/API/Bot/tiền/data/motion giữ | Sourcehash8680e808;97+31Node/9Python;không cộng lượt trùng |
+| CVN-HISTORY | nặng | Đảo exact9records qua QA entry; thử thiếu/sai/lặp/tách/đảo vàbyte lạ | Giữ151pins/fixture cũ/rawacceptance;OLDpass,unknownbytesgiữ,malformedfail | RED8=6fail/2pass;GREEN34direct+216consumer,finalpressure8pass không cộng trùng;Issue689/7191526718 |
+| CVN-DELIVERY | nặng | CI→merge/tree→Webdeploy/runtime/assets/receipt | Từng gate độc lập,kiểm thêmbundlecopy nhẹ;không nhận signedUI từassets | PR813 đãpush;CI45812122469fail1sourcepin/signedQAskip;QA-onlycorrectionlocalđạt,CI mới/merge/deploycònchờ |

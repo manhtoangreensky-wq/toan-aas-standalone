@@ -1,5 +1,26 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 26/11/2026 — root danh mục video, không thêm khả năng xử lý
+
+BASE `ccf824a1482ef3ae7fd2d4187932902e36ddbc14` là PR812 đã giao.
+Nguồn gốc đối chiếu:135customerentries trong`copyfast_registry.py`,
+nhánh `/features` của`copyfast_pages.py`,renderer nhẹ`portal-features.js`
+vàbộ chữ108mục có sẵn. Không suy diễn khả năng từ tên công cụ.
+
+| Chức năng/chữ gốc | Ứng viên CVN | Ranh giới giữ |
+|---|---|---|
+| 135thẻ=108nonVideo+27Video | Vẫn đúng135thẻ | Key/route/order/group/state/quyền |
+| 27Video thiếu bản dịch,giữ tênAnh/mô tảViệt nguồn | Đủ27×3locale×2trường=162giá trị | 108mục cũ nguyên vẹn |
+| Renderer giữ chữ nguồn nếu thiếu bản dịch | Không đổi renderer/fallback | Khóa mới chưa biết vẫn giữ nội dung nguồn |
+| Tìm bằng tên/mô tả gốc/key/route | Thêm chữ hiển thịnative,từ gốc vẫn tìm được | Không đổi bộ lọc hoặc API |
+| Công cụ kế hoạch/tham khảo/xem tệp | Chỉ đổi cách diễn đạt ngắn,đúng nghĩa | Không hứa tạo video/phân tích nội dung/tải kết quả |
+
+Nineworkerrecords có before/afterhash vàfixture đóng trước sửa.
+Chỉ thêm dữ liệu vào một tệp ứng dụng; không đổi backend,auth,engine,
+tiền hoặc dữ liệu. Kiểm kê test từexact108sangexact135 giữ kiểm tra
+108/27,purity/duplicate;chỉ thêmhai định dạng MP4/WEBM cho nhãnZH.
+Đây không là chứng nhận toànbộVideoUI/đầu ra provider đã hoạt động.
+
 ## 22/11/2026 — đối chiếu chi tiết thiết kế ảnh
 
 BASE `f6aee803a72a80bf70cd0a4ce786858f94f9d7cc` đã có bảng thiết kế,

@@ -179,6 +179,42 @@
       "title": "Thư viện âm thanh & mô tả",
       "description": "Sắp xếp bộ sưu tập âm thanh, mô tả nhạc và hiệu ứng; không tạo tệp âm thanh tại đây."
     },
+    "video_factory_workflow": {
+      "title": "Quy trình sản xuất video 7 bước",
+      "description": "Xem bản đồ quy trình 7 bước kết nối các khu vực lập kế hoạch video. Chỉ dùng để tham khảo và điều hướng, không tạo hay xuất bản video."
+    },
+    "story_video_plan": {
+      "title": "Lập kế hoạch video kể chuyện",
+      "description": "Sắp xếp quy trình kể chuyện và chỉ dẫn chuyển động cho video bằng văn bản gợi ý. Chỉ lập kế hoạch nội dung, không tạo hay xuất bản video."
+    },
+    "video_studio": {
+      "title": "Không gian lập kế hoạch video",
+      "description": "Sắp xếp kế hoạch, chia cảnh, chỉnh thứ tự cảnh, tự rà soát và lưu phiên bản; chỉ lập kế hoạch, không tạo video tại đây."
+    },
+    "video_prompt_planner": {
+      "title": "Lập câu lệnh tạo video",
+      "description": "Tạo chỉ dẫn video bằng văn bản từ tóm tắt yêu cầu, cảnh quay, tính liền mạch và danh sách kiểm tra. Chỉ lập văn bản, không nhận tệp gốc hay tạo, xem trước hoặc xuất bản video."
+    },
+    "video_idea_planner": {
+      "title": "Lập kế hoạch ý tưởng video",
+      "description": "Phát triển ý tưởng thành ba hướng tiếp cận, bảng phân cảnh sáu cảnh, gợi ý hình ảnh, video và bản nháp kế hoạch. Chỉ lập kế hoạch, không tạo, xem trước hay xuất bản video."
+    },
+    "creative_motion_guide": {
+      "title": "Hướng dẫn chuyển động sáng tạo",
+      "description": "Chọn nhóm chủ đề, nhận ba gợi ý có thể làm mới và tạo hướng dẫn phong cách, chuyển động bằng văn bản. Chỉ lập kế hoạch nội dung, không tạo ảnh, xem trước hay xuất video."
+    },
+    "long_form_roadmap": {
+      "title": "Lộ trình video thời lượng dài",
+      "description": "Chuẩn bị dàn ý, hồ sơ nhân vật, kế hoạch từng phần và gợi ý sáng tạo để rà soát rồi lưu; chỉ lập kế hoạch, không tạo hay đăng video."
+    },
+    "self_shot_scene_planner": {
+      "title": "Lập kế hoạch cảnh tự quay",
+      "description": "Soạn chỉ dẫn cảnh quay, gợi ý video, khung hình chính, chuyển động và ghi chú âm thanh, yêu cầu có quyền sử dụng nguồn. Chỉ lập và lưu kế hoạch chữ, không mở tệp phương tiện hay tạo video."
+    },
+    "script_to_screen_planner": {
+      "title": "Lập kế hoạch từ kịch bản lên hình",
+      "description": "Soạn kịch bản, bảng phân cảnh, gợi ý ảnh và video, chuyển động và bộ rà soát cho luồng từ kịch bản sang ảnh rồi video hoặc phim dài tập. Chỉ lưu kế hoạch, không nhận tệp, xem trước hay tạo video."
+    },
     "audio_hub": {
       "title": "Trung tâm sản xuất âm thanh",
       "description": "Điều phối yêu cầu âm thanh, tài liệu tham khảo trong thư viện và các bước rà soát."
@@ -359,6 +395,42 @@
       "title": "Dịch phụ đề",
       "description": "Chuẩn bị yêu cầu dịch từ SRT/VTT hoặc văn bản; xem lại ngôn ngữ đích trước khi gửi."
     },
+    "cinematic_ad_concept": {
+      "title": "Soạn ý tưởng quảng cáo điện ảnh",
+      "description": "Soạn ý tưởng quảng cáo, ba hướng sáng tạo, bảng phân cảnh và mô tả dựng cảnh tạm thời từ tóm tắt yêu cầu; chỉ lưu thành bản nháp kế hoạch video khi bạn xác nhận lưu. Chỉ hỗ trợ lập kế hoạch, không tạo hay phát hành video."
+    },
+    "image_motion_planner": {
+      "title": "Lập kế hoạch chuyển động ảnh",
+      "description": "Chuyển định hướng tạo ảnh kèm ảnh tham chiếu trong kho tệp thành kế hoạch chuyển động 3 cảnh và bản nháp kế hoạch video riêng tư. Chỉ xác minh thông tin tệp, không mở ảnh; chỉ lập kế hoạch, không tạo hay phát hành video."
+    },
+    "reference_format_planner": {
+      "title": "Lập kế hoạch định dạng tham chiếu",
+      "description": "Chuyển cấu trúc tham chiếu thành kế hoạch 3 cảnh nguyên bản từ video riêng tư trong kho tệp. Chỉ kiểm tra thông tin tệp, không mở hay phân tích video, không tải liên kết; chỉ lập kế hoạch, không tạo hay phát hành video."
+    },
+    "storyboard_composer": {
+      "title": "Soạn bộ mô tả bảng phân cảnh",
+      "description": "Soạn ba hướng phân cảnh, định hướng hình ảnh nhất quán, danh sách cảnh quay và mô tả văn bản cho ảnh, video kèm yếu tố loại trừ. Chỉ lập kế hoạch dạng chữ, không nhận tệp tải lên, không tạo video hay phát hành."
+    },
+    "video_single": {
+      "title": "Video nhanh",
+      "description": "Mở công cụ tạo video nhanh để nhập mô tả hoặc tóm tắt yêu cầu và kiểm tra các bước được hỗ trợ trước khi thực hiện."
+    },
+    "video_image_to_video": {
+      "title": "Ảnh thành video",
+      "description": "Mở công cụ chuyển ảnh thành video để chọn ảnh nguồn, mô tả chuyển động mong muốn và kiểm tra các bước được hỗ trợ."
+    },
+    "video_product": {
+      "title": "Video sản phẩm",
+      "description": "Mở công cụ video sản phẩm để chuẩn bị thông tin, hình ảnh sản phẩm và kiểm tra các bước được hỗ trợ trước khi thực hiện."
+    },
+    "video_trend": {
+      "title": "Video theo xu hướng",
+      "description": "Mở công cụ video theo xu hướng để chọn chủ đề thịnh hành hoặc tham chiếu an toàn và kiểm tra các bước được hỗ trợ."
+    },
+    "video_text_to_video": {
+      "title": "Văn bản thành video",
+      "description": "Mở công cụ chuyển văn bản thành video để nhập mô tả và xem các lựa chọn, bước được hỗ trợ trước khi tiếp tục."
+    },
     "video_dub": {
       "title": "Lồng tiếng video",
       "description": "Chọn nội dung nguồn, ngôn ngữ đích và giọng đọc; kết quả chỉ hiện sau khi hệ thống xác nhận."
@@ -434,6 +506,42 @@
     "pricing": {
       "title": "Bảng giá",
       "description": "Xem giá bán do nguồn chính thức công bố; trang này không suy đoán tỷ lệ, ưu đãi hay hạn mức Xu."
+    },
+    "video_quick": {
+      "title": "Video nhanh",
+      "description": "Chuẩn bị yêu cầu cho video ngắn. Mở công cụ để xem các bước được hỗ trợ."
+    },
+    "video_multiscene": {
+      "title": "Video nhiều cảnh",
+      "description": "Chuẩn bị nội dung, các cảnh và giọng đọc cho video nhiều cảnh; mở công cụ để xem các bước được hỗ trợ."
+    },
+    "video_long": {
+      "title": "Video dài",
+      "description": "Chuẩn bị yêu cầu cho dự án video dài và xem các bước được hỗ trợ trong công cụ."
+    },
+    "video_progress": {
+      "title": "Tiến độ video",
+      "description": "Mở trang tiến độ video để xem thông tin và các bước được hỗ trợ."
+    },
+    "video_preview": {
+      "title": "Xem trước video",
+      "description": "Xem lại tệp MP4/WebM riêng tư đã có sẵn trong kho tệp cá nhân; chỉ dùng để xem tệp hiện có, không phải kết quả AI mới tạo."
+    },
+    "video_export": {
+      "title": "Xuất video",
+      "description": "Mở công cụ xuất video để xem các bước và lựa chọn được hỗ trợ."
+    },
+    "video_addons": {
+      "title": "Tiện ích bổ sung video",
+      "description": "Mở tiện ích bổ sung video để xem các lựa chọn và các bước được hỗ trợ."
+    },
+    "video_mux": {
+      "title": "Ghép âm thanh và video",
+      "description": "Mở công cụ ghép âm thanh với video và xem các bước được hỗ trợ."
+    },
+    "media_studio": {
+      "title": "Không gian đa phương tiện",
+      "description": "Lập kế hoạch và mở công cụ phù hợp cho dự án đa phương tiện; không tạo tệp tại đây."
     },
     "tool_directory": {
       "title": "Danh mục công cụ",
@@ -612,6 +720,42 @@
     "media_workspace": {
       "title": "Audio library & briefs",
       "description": "Organize private audio collections and music/effect briefs; no audio is generated here."
+    },
+    "video_factory_workflow": {
+      "title": "Video production workflow",
+      "description": "View the 7-step workflow map connecting video planning workspaces. Read-only guidance only; does not generate or publish video."
+    },
+    "story_video_plan": {
+      "title": "Story video planner",
+      "description": "Outline a story video workflow and text motion directions in one place. Prompt and planning only; does not generate or publish video."
+    },
+    "video_studio": {
+      "title": "Video production studio",
+      "description": "Organize video plans, scenes, self-checks and saved versions. This workspace is for planning, not creating video."
+    },
+    "video_prompt_planner": {
+      "title": "Video prompt planner",
+      "description": "Draft structured text video directions from your brief, shot details, continuity notes, and review checklist. Text planning only; does not accept media, generate, preview, or publish video."
+    },
+    "video_idea_planner": {
+      "title": "Video idea planner",
+      "description": "Turn a video idea into three concepts, a six-scene storyboard, image and video directions, and a draft video plan. Planning only; does not generate, preview, or publish media."
+    },
+    "creative_motion_guide": {
+      "title": "Creative motion guide",
+      "description": "Choose a topic group, explore three refreshable ideas, and build a structured text style and motion guide. Planning only; does not generate images, previews, or video."
+    },
+    "long_form_roadmap": {
+      "title": "Long-form video roadmap",
+      "description": "Build an outline, character profiles, chapter plan and creative prompts to review, then save your video plan. This tool is for planning, not creating or publishing video."
+    },
+    "self_shot_scene_planner": {
+      "title": "Self-shot scene planner",
+      "description": "Plan scene directions, keyframe and video prompts, motion, and audio notes with required permission to use your source, then save a plan. Text planning only; does not open media or generate video."
+    },
+    "script_to_screen_planner": {
+      "title": "Script-to-screen planner",
+      "description": "Plan script-to-image-to-video and episodic series into a script, storyboard, image and video prompts, motion notes, and review pack. Saves a plan only; does not accept media, preview, or generate video."
     },
     "audio_hub": {
       "title": "Audio production hub",
@@ -793,6 +937,42 @@
       "title": "Translate subtitles",
       "description": "Prepare a translation request from SRT/VTT or text; review the target language before submitting."
     },
+    "cinematic_ad_concept": {
+      "title": "Cinematic Ad Concept Composer",
+      "description": "Drafts an ad concept, three creative directions, a storyboard, and scene prompts from your brief; saves a video plan draft only when you confirm. For planning only; this tool does not generate or publish video."
+    },
+    "image_motion_planner": {
+      "title": "Image Motion Planner",
+      "description": "Turns an image direction with a vault image reference into a 3-scene motion plan and private video plan draft. Verifies file ownership without opening the image; planning only, and does not generate or publish video."
+    },
+    "reference_format_planner": {
+      "title": "Reference Format Planner",
+      "description": "Converts a reference layout into an original 3-scene plan from a private vault video. Checks file details only without opening or analyzing the video or fetching links; planning only, and does not generate or publish video."
+    },
+    "storyboard_composer": {
+      "title": "Storyboard Prompt Pack Composer",
+      "description": "Creates three storyboard directions, a visual style guide, a shot list, and text prompts for images, video, and exclusions. Text-only planning tool; does not accept media uploads, generate video, save files, or publish."
+    },
+    "video_single": {
+      "title": "Quick Video",
+      "description": "Open the quick video tool to enter a video prompt or brief and review the supported steps before starting."
+    },
+    "video_image_to_video": {
+      "title": "Image to Video",
+      "description": "Open the image-to-video tool to provide a source image and desired motion, and review the supported steps before starting."
+    },
+    "video_product": {
+      "title": "Product Video",
+      "description": "Open the product video tool to prepare your product details and images, and review the supported steps before starting."
+    },
+    "video_trend": {
+      "title": "Trend Video",
+      "description": "Open the trend video tool to enter a trend or safe reference and review the supported steps before starting."
+    },
+    "video_text_to_video": {
+      "title": "Text to Video",
+      "description": "Open the text-to-video tool to enter a video description and review the supported options and steps before continuing."
+    },
     "video_dub": {
       "title": "Dub a video",
       "description": "Choose source media, target language and voice; a result appears only after system confirmation."
@@ -868,6 +1048,42 @@
     "pricing": {
       "title": "Pricing",
       "description": "Review sale prices published by the authoritative source. This page does not infer rates, promotions or Xu limits."
+    },
+    "video_quick": {
+      "title": "Quick video",
+      "description": "Prepare a request for a short video. Open the tool to review the supported steps."
+    },
+    "video_multiscene": {
+      "title": "Multi-scene video",
+      "description": "Prepare the content, scenes and voiceover for a multi-scene video, then review the supported steps in the tool."
+    },
+    "video_long": {
+      "title": "Long video",
+      "description": "Prepare a long-form video project request and review the supported steps in the tool."
+    },
+    "video_progress": {
+      "title": "Video progress",
+      "description": "Open the video progress page to review the information and supported steps."
+    },
+    "video_preview": {
+      "title": "Video preview",
+      "description": "View an existing private MP4/WebM file already saved in your file library; this displays an existing file, not a newly generated AI result."
+    },
+    "video_export": {
+      "title": "Export video",
+      "description": "Open the video export tool to review the supported steps and options."
+    },
+    "video_addons": {
+      "title": "Video add-ons",
+      "description": "Explore the video add-ons and review the supported options and steps."
+    },
+    "video_mux": {
+      "title": "Combine audio and video",
+      "description": "Open the audio and video combining tool to review the supported steps."
+    },
+    "media_studio": {
+      "title": "Media Studio",
+      "description": "Plan a media project and open the tools you need; no media files are created here."
     },
     "tool_directory": {
       "title": "Tool directory",
@@ -1046,6 +1262,42 @@
     "media_workspace": {
       "title": "音频库与需求说明",
       "description": "整理私人音频合集、音乐和音效说明；此处不会生成音频。"
+    },
+    "video_factory_workflow": {
+      "title": "视频制作七步流程",
+      "description": "查看连接各视频规划工作区的七步流程导览。仅供查看与规划导航，不生成或发布视频。"
+    },
+    "story_video_plan": {
+      "title": "故事视频规划",
+      "description": "以纯文本方式整理故事视频流程与画面动作指导。仅用于规划与提示词准备，不生成或发布视频。"
+    },
+    "video_studio": {
+      "title": "视频制作规划工作台",
+      "description": "整理视频方案、分镜、场景顺序、自查清单与版本记录；此工作区仅用于规划，不会生成视频。"
+    },
+    "video_prompt_planner": {
+      "title": "视频提示词规划",
+      "description": "根据创作简报、镜头安排、连贯性要求与检查清单生成结构化文本视频指导。仅支持文本规划，不接收素材文件，也不生成、预览或发布视频。"
+    },
+    "video_idea_planner": {
+      "title": "视频创意规划",
+      "description": "将视频创意整理为三个方案、六个场景的分镜表、画面与视频指导及视频方案草稿；仅用于前期规划，不会生成、预览或发布媒体内容。"
+    },
+    "creative_motion_guide": {
+      "title": "创意动态指南",
+      "description": "按分组与主题选择方向，获取三组可刷新的灵感建议，并生成结构化文字风格与动态指导。仅用于文字规划，不生成图片、预览或视频。"
+    },
+    "long_form_roadmap": {
+      "title": "长视频规划路线图",
+      "description": "整理内容大纲、角色设定、分章计划和创作提示词，检查后保存视频方案；仅用于规划，不会生成或发布视频。"
+    },
+    "self_shot_scene_planner": {
+      "title": "自拍分镜规划",
+      "description": "规划分镜指导、视频与关键帧提示词、动作及音频备注，并须具备合法素材使用授权。仅支持文本规划与方案保存，不读取或打开媒体文件，也不生成视频。"
+    },
+    "script_to_screen_planner": {
+      "title": "从剧本到画面规划",
+      "description": "围绕剧本转图片再转视频与长剧集两条路线，整理脚本、分镜表、图片与视频提示词、动态说明与审阅包。仅用于保存规划方案，不接收媒体，也不预览或生成视频。"
     },
     "audio_hub": {
       "title": "音频制作中心",
@@ -1227,6 +1479,42 @@
       "title": "翻译字幕",
       "description": "准备从 SRT/VTT 或文本进行翻译的请求；提交前请确认目标语言。"
     },
+    "cinematic_ad_concept": {
+      "title": "电影感广告创意策划",
+      "description": "根据简述整理临时广告创意、三个创作方向、分镜脚本与画面提示词；仅在您确认保存后才保存为视频方案草稿。本工具仅用于策划，不会制作或发布视频。"
+    },
+    "image_motion_planner": {
+      "title": "图像动态规划",
+      "description": "将关联个人文件库参考图的画面方向整理为3个场景的动态规划与私密视频方案草稿。仅核验文件归属而不打开原图，仅作规划用途，不会生成或发布视频。"
+    },
+    "reference_format_planner": {
+      "title": "参考格式规划",
+      "description": "基于个人文件库中的私密视频将参考方案整理为3个场景的原创规划。仅核验文件信息，不打开或分析视频内容，也不读取外部链接；仅用于规划，不会生成或发布视频。"
+    },
+    "storyboard_composer": {
+      "title": "分镜提示词包编排",
+      "description": "拟定三个方向的分镜方案、统一视觉规范、镜头清单以及图片、视频与排除项的文本提示词。仅限文字策划，不接收媒体文件，也不会生成视频、保存文件或发布内容。"
+    },
+    "video_single": {
+      "title": "快速视频",
+      "description": "打开快速视频工具，输入视频提示词或简述，并查看当前支持的步骤后再继续操作。"
+    },
+    "video_image_to_video": {
+      "title": "图生视频",
+      "description": "打开图生视频工具，提供源图片与期望的动态效果，并查看当前支持的步骤后再继续。"
+    },
+    "video_product": {
+      "title": "产品视频",
+      "description": "打开产品视频工具，准备产品信息与图片，并查看当前支持的步骤后再继续。"
+    },
+    "video_trend": {
+      "title": "热门趋势视频",
+      "description": "打开热门趋势视频工具，输入趋势主题或安全参考内容，并查看当前支持的步骤后再继续。"
+    },
+    "video_text_to_video": {
+      "title": "文生视频",
+      "description": "打开文生视频工具，输入视频描述，并在继续操作前查看支持的选项和步骤。"
+    },
     "video_dub": {
       "title": "视频配音",
       "description": "选择源内容、目标语言和声音；系统确认后才会显示结果。"
@@ -1302,6 +1590,42 @@
     "pricing": {
       "title": "价格",
       "description": "查看官方来源发布的销售价格。本页不会推测汇率、优惠或 Xu 限额。"
+    },
+    "video_quick": {
+      "title": "快速视频",
+      "description": "准备短视频需求，并打开工具查看支持的步骤。"
+    },
+    "video_multiscene": {
+      "title": "多场景视频",
+      "description": "准备多场景视频的内容、场景和配音安排，并在工具中查看支持的步骤。"
+    },
+    "video_long": {
+      "title": "长视频",
+      "description": "准备长视频项目需求，并在工具中查看支持的步骤。"
+    },
+    "video_progress": {
+      "title": "视频进度",
+      "description": "打开视频进度页面，查看相关信息和支持的步骤。"
+    },
+    "video_preview": {
+      "title": "视频预览",
+      "description": "播放个人文件库中已有的私有 MP4/WebM 视频文件；此处仅用于查看现有文件，并非新生成的 AI 视频结果。"
+    },
+    "video_export": {
+      "title": "导出视频",
+      "description": "打开视频导出工具，查看支持的步骤和选项。"
+    },
+    "video_addons": {
+      "title": "视频附加功能",
+      "description": "打开视频附加功能，查看支持的选项和步骤。"
+    },
+    "video_mux": {
+      "title": "音视频合成",
+      "description": "打开音视频合成工具，查看支持的合并步骤。"
+    },
+    "media_studio": {
+      "title": "媒体策划中心",
+      "description": "规划媒体项目并打开所需工具；此处不会生成媒体文件。"
     },
     "tool_directory": {
       "title": "工具目录",
