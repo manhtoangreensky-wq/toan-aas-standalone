@@ -1,5 +1,36 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 27/11/2026 — đồng bộ tên và mô tả sang bộ chữ đầy đủ
+
+Nguồn gốc đối chiếu: full i18n và consumer tại BASE PR814
+`fdfe2f753e641c5a5ecc7d6a19305fa3c42b7b30`; canonical root đã giao,
+không suy chức năng đang hoạt động từ bản dịch.
+
+| BASE | Ứng viên FBC135 | Ranh giới giữ |
+|---|---|---|
+| Full bundle chỉ có 96 mục, thiếu 39 mục | Đủ 135 mục/810 giá trị VI/EN/ZH | 135 key/route/order/group giữ |
+| 286 mô tả đang khác bản root đã duyệt | Đồng bộ đúng canonical đã khóa | 288 title cũ + hai mô tả giữ |
+| Thẻ dùng entry-copy hoặc page fallback hiện có | Khóa mới nhận entry-copy đã duyệt | Renderer/escape/route guard không sửa |
+| `/documents` dùng entry-key làm mô tả trang | Mô tả Tài liệu cũng đổi theo ba locale | Ngoại lệ chữ cố định có chủ đích, không đổi chức năng |
+| `workspace_menu` có nhánh page-copy riêng | Giữ nguyên nhánh và chữ trang này | Không ép mọi thẻ vào cùng nhánh |
+| NLR/dynamic-card tests kiểm mốc lịch sử | Dùng finite inverse đã khóa | Không sửa fixture, 151 pin hoặc kỳ vọng cũ; FBC đọc raw current |
+
+Đúng 289 record dữ liệu = ba block thêm + 286 dòng mô tả thay thế.
+Tổng 520 giá trị thay đổi và 290 giữ nguyên. 810 giá trị được ba worker
+trả đúng canonical trong một lượt R1; không dịch lại hoặc sửa logic ứng dụng.
+Tài liệu từng nói giữ tuyệt đối destination-pagecopy thiếu ngoại lệ Tài liệu;
+đã sửa phạm vi và thêm kiểm actual consumer, không chấm thành lỗi worker.
+
+CI đầu phát hiện raw historical Composer pin chưa đi qua finiteFBCinverse.
+Expected hash trước đồng bộ giữ nguyên; chỉ chiếu đầu vào phép so về mốc
+lịch sử, acceptance FBC vẫn rawcurrent. RED1→19relatedPASS; không đổi
+bản dịch, khả năng công cụ hoặc pin/fixture để làm xanh.
+
+Python historical chain cũng dùng finite FBCleaf từ cùng fixture289records;
+không thêm vào runtime. Các expected sources/fixtures cũ giữ nguyên và
+unknown bytes ngoài record không bị xóa.164ca liên quan đạt bằng receipt
+hợp nhất sau một lỗi vị trí sentinel của root,không thay app để né kiểm.
+
 ## 26/11/2026 — giản lược mô tả, không đổi khả năng của công cụ
 
 Nguồn đối chiếu là bộ chữ nhẹ135mục/renderer/registry trênBASE

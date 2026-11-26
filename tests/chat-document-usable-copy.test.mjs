@@ -8,6 +8,7 @@ import {usableCopyHistoricalSnapshot,usableCopyHistoricalPortalSource} from './h
 import {documentRefreshHistoricalSnapshot} from './helpers/document-refresh-copy-snapshot.mjs';
 import {chatCardsHistoricalSnapshot,chatCardsHistoricalPortalSource} from './helpers/chat-cards-customer-snapshot.mjs';
 import {contextSectionHistoricalPortalSource} from './helpers/chat-context-section-snapshot.mjs';
+import {featureCatalogFullBundle135HistoricalSource} from './helpers/feature-catalog-full-bundle135-historical.mjs';
 
 // Exercise actual renderers: wrong language, lost fields/data/rights, fabricated
 // tool readiness/counts/download, or an empty replacement must fail.
@@ -24,6 +25,10 @@ async function load(base=false){
     const old="const portal=fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8');";
     assert.equal(source.split(old).length-1,1);
     source=source.replace(old,'const portal='+JSON.stringify(chatCardsHistoricalPortalSource(fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8')))+';');
+    // This comparator keeps its historical contract; current FBC acceptance is separate.
+    const i18nAnchor="const i18n=fs.readFileSync(path.join(root,'static/portal/portal-i18n.js'),'utf8');";
+    assert.equal(source.split(i18nAnchor).length-1,1);
+    source=source.replace(i18nAnchor,'const i18n='+JSON.stringify(featureCatalogFullBundle135HistoricalSource(fs.readFileSync(path.join(root,'static/portal/portal-i18n.js'),'utf8'),'static/portal/portal-i18n.js'))+';');
   }
   const old='normalizePublishReviewPackResult,customerMobileNavGroupForPath};';assert.equal(source.split(old).length-1,1);
   source=source.replace(old,'normalizePublishReviewPackResult,customerMobileNavGroupForPath,chatThreadFields};');

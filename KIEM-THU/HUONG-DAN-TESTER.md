@@ -1,5 +1,21 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Bộ chữ danh mục đầy đủ — 27/11/2026
+
+Dùng phiên `PHIEN-CATALOGUE-FULL-BUNDLE135-20261126.md`, mười case FBC.
+PR814 root danh mục đã giao. Đợt này kiểm full bundle/API dịch và
+`moduleCard` thật, không lấy lại light bundle để nhận full bundle đã đạt.
+135 mục có đủ tên/mô tả VI/EN/ZH; giữ tên khách, route và các thao tác.
+Trang Tài liệu dùng cùng mô tả danh mục nên có ngoại lệ đổi chữ đã ghi rõ.
+Thẻ workspace_menu vẫn dùng nhánh chữ riêng có sẵn.
+
+Kiểm đúng khung khách/body class của template, 375/1440 sáng/tối và Tab.
+Đo vùng chữ thẻ, không gọi kết quả component là toàn bộ header/family chrome.
+Không chạy chức năng tạo/xử lý nội dung, thanh toán hoặc dùng dữ liệu khách.
+Source/snapshot history giữ fixture/pin/kỳ vọng cũ; acceptance FBC đọc nguồn
+vật lý mới. Chỉ chạy lại đúng phần lỗi hoặc phụ thuộc đã thay, không lặp suite.
+Signed production, thiết bị/Safari và motion cuối vẫn là gate riêng.
+
 ## Mô tả danh mục108mục — 26/11/2026
 
 Dùng phiên `PHIEN-CATALOGUE-DESCRIPTIONS108-20261126.md`,chíncaseD108.

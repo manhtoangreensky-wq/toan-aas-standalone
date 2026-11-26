@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {documentRefreshHistoricalSnapshot} from './document-refresh-copy-snapshot.mjs';
 import {chatCardsHistoricalSnapshot,chatCardsHistoricalPortalSource} from './chat-cards-customer-snapshot.mjs';
+import {featureCatalogFullBundle135HistoricalSource} from './feature-catalog-full-bundle135-historical.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const reviewed=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/chat-document-usable-copy-reviewed.json'),'utf8'));
@@ -50,6 +51,10 @@ helper=helper.replace("const root=path.resolve(path.dirname(fileURLToPath(import
 const anchor="const portal=fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8');";
 assert.equal(helper.split(anchor).length-1,1);
 helper=helper.replace(anchor,'const portal='+JSON.stringify(usableCopyHistoricalPortalSource(fs.readFileSync(path.join(root,'static/portal/portal.js'),'utf8')))+';');
+// Historical HTML and its dictionary must use the same pre-FBC copy epoch.
+const i18nAnchor="const i18n=fs.readFileSync(path.join(root,'static/portal/portal-i18n.js'),'utf8');";
+assert.equal(helper.split(i18nAnchor).length-1,1);
+helper=helper.replace(i18nAnchor,'const i18n='+JSON.stringify(featureCatalogFullBundle135HistoricalSource(fs.readFileSync(path.join(root,'static/portal/portal-i18n.js'),'utf8'),'static/portal/portal-i18n.js'))+';');
 const {renderChild}=await import('data:text/javascript;base64,'+Buffer.from(helper).toString('base64'));
 export function renderUsableHistoricalChild(locale,route,raw={}){
   const result=renderChild(locale,route,raw);

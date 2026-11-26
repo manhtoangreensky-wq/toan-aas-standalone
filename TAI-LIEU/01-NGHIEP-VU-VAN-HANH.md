@@ -1,5 +1,45 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 27/11/2026 — root danh mục đã giao; đồng bộ bộ chữ đầy đủ
+
+VPS đã đối chiếu tại `fdfe2f753e641c5a5ecc7d6a19305fa3c42b7b30`
+từ PR814. CI45826768615 hai job SUCCESS; deploy45830982258 SUCCESS,
+nguồn/tree sạch, ba dịch vụ/health và 7 tệp trực tiếp + 7 URL có phiên bản
+khớp. Receipt Issue689/7193742593 và PR814/7193743263 đọc lại đúng.
+Các mục CD108 “chưa phát hành” bên dưới là lịch sử trước giao hàng.
+
+Ứng viên FBC135 đưa cùng bộ chữ đã duyệt sang từ điển đầy đủ cho các thẻ
+danh mục ở nhóm công cụ và không gian làm việc: từ 96 lên 135 mục, đủ
+810 tên/mô tả Việt-Anh-Trung. Có 520 giá trị mới/đổi, 290 giá trị giữ;
+chỉ một tệp dữ liệu chữ thay đổi, không sửa renderer, CSS hoặc chức năng.
+Mô tả trang Tài liệu dùng chung một khóa nên cũng nhận bản chữ mới có
+chủ đích. Tên khách, nội dung đã lưu, đường dẫn, quyền và dữ liệu giữ.
+
+Một nhóm 458 ca Node đạt; ba ca mô tả trang Tài liệu được bổ sung riêng
+với BASE RED 3/3 và current GREEN 3/3. Browser 12 view VI/EN/ZH,
+sáng/tối, 375/1440 đo 4.860 mẫu chữ, tối thiểu 5,5225:1; focus 5,8601:1,
+vùng liên kết cao tối thiểu 165,09375px, không lỗi/tràn/kết nối ngoài.
+Đây là kiểm tra component thực, không phải toàn bộ khung trang theo nhóm.
+Nhóm hồi quy110tệp có2481ca đạt và51ca lỗi bộ đọc lịch sử; chỉ sửa hai
+bộ đọc kiểm tra, giữ kỳ vọng và ứng dụng. Chạy lại ba tệp215ca đều đạt,
+khép đủ51ca lỗi. Đây là ledger2532ca phân biệt từ hai receipt, không
+phải một lượt chạy lại toàn bộ. CI và phát hành vẫn chốt riêng trước giao hàng.
+
+CI đầu của PR815 phát hiện một phép so toàn từ điển tại mốc Composer cũ.
+Chỉ sửa đầu vào kiểm tra lịch sử, giữ ứng dụng và mọi kỳ vọng; nhóm19ca
+liên quan đã đạt sau RED1ca. CI mới cần đạt trước merge/triển khai;
+VPS vẫn giữ bản PR814 đã đối chiếu, không tự phát hành khi CI lỗi.
+
+CI tiếp theo qua phép so Composer và chỉ ra ba bộ đọc lịch sử Python
+cũng cần phần đảo chữ hữu hạn. Đã thêm đúng bộ đọc kiểm tra và kiểm
+tra chống sửa ngoài phạm vi;164ca phân biệt đạt qua163ca đầu và một
+ca sửa vị trí dữ liệu kiểm tra. Mọi mã chức năng/dữ liệu/bản dịch giữ.
+Chưa dùng các kết quả cục bộ này để nhận đã đưa bản mới lên VPS.
+
+Không dùng đối chiếu tài nguyên công khai để nhận giao diện production
+sau đăng nhập đã đạt. Full-family chrome, Gallery/Admin, auth/draft,
+accessibility toàn phần, thiết bị/Safari và motion cuối vẫn mở.
+
 ## 26/11/2026 — danh mục video đã giao; ứng viên giản lược108mô tả
 
 VPS đang chạy `de870867a27edb02a0d944b3539c0623f1cde3eb` từPR813.
