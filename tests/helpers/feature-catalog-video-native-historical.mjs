@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
+import {featureCatalogDescriptions108HistoricalSource} from "./feature-catalog-descriptions108-historical.mjs";
 
 const raw = fs.readFileSync(new URL("../fixtures/feature-catalog-video-native.json", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 assert.equal(createHash("sha256").update(raw).digest("hex"), "779bcfefeb30412268baf725b334af65f8e6922e7d748f2f40c0c10e11ed4f42");
@@ -18,6 +19,7 @@ const failure = "Unreviewed catalogue video historical source";
 
 // Only older source-pin consumers use this inverse; current acceptance reads raw bytes.
 export function featureCatalogVideoNativeHistoricalSource(source, target) {
+  source = featureCatalogDescriptions108HistoricalSource(source, target);
   if (target !== file) return source;
   const declarations = keys.map(key => [...source.matchAll(new RegExp('^    "' + key + '": \\{', "gm"))].length);
   if (!declarations.some(Boolean)) return source;

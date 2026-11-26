@@ -1,6 +1,30 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
-## 26/11/2026 — nhãn đã giao và danh mục video đang nghiệm thu
+## 26/11/2026 — danh mục video đã giao; ứng viên giản lược108mô tả
+
+VPS đang chạy `de870867a27edb02a0d944b3539c0623f1cde3eb` từPR813.
+CI45817536627 hai job vàdeploy45821431028 đạt;runtime/tree/mãtracked/
+WebBotnginx/health cùng7tệp trực tiếp+7URLcóphiênbản đã đối chiếu.
+ReceiptIssue689/7192334539 vàPR813/7192334547 đọc lại đúng.
+27mụcVideo đã có đủ tên/mô tả Việt-Anh-Trung;không bổ sung năng lực
+tạo hoặc xử lý nội dung. SignedproductionUI vẫn chưa quan sát.
+
+Ứng viên CD108 chỉ giản lược mô tả108mục cũ của root `/features`.
+322giá trị thay đổi,2giá trị đã đúng giữ nguyên trong324giá trị được rà.
+Giữ nguyên135thẻ,405tên mục và81entryVideo (27×3ngôn ngữ),mọi
+đường dẫn/tìm kiếm/quyền/trạng thái. Không đổi màu/CSS/renderer,
+giá/ví/provider/backend hoặc dữ liệu khách.
+
+Renderer thật329ca đã đạt sau tích hợp. Nhóm đầu451ca có hai thiếu
+sót QA,đã phục hồi đúng2ca;nhóm lịch sử ảnh hưởng112ca và15bộ
+so nguồn233ca đạt. Những con số chồng nhau không cộng thành tổng riêng.
+Browser12view mới có5.220mẫu chữ,min5,0856:1,focus5,8601:1,target44px;
+không lỗi/tràn/requestngoài/chưađo. Ảnh375sáng/tối đã mở xem.
+Đây là ứng viên local,chưa được xem là đã lên VPS.
+Full-bundle/family,Gallery/Admin,auth/draft/device/Safari vàmotioncuối
+vẫn theo checklist riêng.
+
+## 26/11/2026 — mốc trước khi PR813 được phát hành
 
 PR812 đang chạy trên VPS tại `ccf824a1482ef3ae7fd2d4187932902e36ddbc14`.
 CI45801754797 hai nhóm đạt;deploy45805852583 thành công. Mã/tree/

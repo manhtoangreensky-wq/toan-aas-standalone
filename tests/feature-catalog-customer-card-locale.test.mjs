@@ -90,7 +90,7 @@ test("Chinese card copy translates generic English while preserving approved pro
   const approved = new Set([
     "TOAN", "AAS", "BOT", "TELEGRAM", "PAYOS", "META", "FACEBOOK", "TIKTOK", "YOUTUBE",
     "ID", "CSRF", "PDF", "XU", "URL", "API", "SFX", "TTS", "ASR", "SRT", "VTT", "OCR",
-    "USD", "VND", "QR", "AI", "MP3", "M4A", "MP4", "WEBM", "CSV", "CRM", "SLA", "OTP", "MIME",
+    "USD", "VND", "QR", "AI", "MP3", "M4A", "MP4", "WEBM", "PNG", "CSV", "CRM", "SLA", "OTP", "MIME",
   ]);
   for (const [key, row] of Object.entries(copy.zh)) {
     const words = `${row.title} ${row.description}`.match(/[A-Za-z][A-Za-z0-9]*/g) || [];

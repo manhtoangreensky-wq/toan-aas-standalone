@@ -6,11 +6,12 @@ import {fileURLToPath} from "node:url";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {nativeLabelRecoveryHistoricalSource as project} from "./helpers/native-label-recovery-historical.mjs";
+import {featureCatalogDescriptions108HistoricalSource} from "./helpers/feature-catalog-descriptions108-historical.mjs";
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const file="static/portal/portal-feature-catalog-copy.js";
 const fixture=JSON.parse(fs.readFileSync(path.join(root,"tests/fixtures/feature-catalog-video-native.json"),"utf8"));
-const current=fs.readFileSync(path.join(root,file),"utf8").replace(/\r\n/g,"\n");
+const current=featureCatalogDescriptions108HistoricalSource(fs.readFileSync(path.join(root,file),"utf8").replace(/\r\n/g,"\n"),file);
 const before=execFileSync("git",["show",fixture.base_sha+":"+file],{cwd:root,encoding:"utf8",maxBuffer:5e6}).replace(/\r\n/g,"\n");
 const rows=fixture.records,fail=/Unreviewed catalogue video historical source/;
 assert.equal(rows.length,9);
@@ -57,7 +58,7 @@ test("detached or reordered row blocks do not satisfy the exact record boundary"
   const row=rows[0],prefix=row.new.slice(0,-row.old.length);
   assert.throws(()=>project(current.replace(row.new,()=>prefix+"\n/* detached anchor */\n"+row.old),file),fail);
 });
-test("historical reads do not write or replace the physical current acceptance input",()=>{
+test("historical reads leave physical bytes unchanged and restore the original CVN candidate",()=>{
   const original=fs.readFileSync(path.join(root,file));
   project(current,file);
   assert.deepEqual(fs.readFileSync(path.join(root,file)),original);

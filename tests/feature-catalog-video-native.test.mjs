@@ -5,11 +5,13 @@ import test from "node:test";
 import vm from "node:vm";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import {featureCatalogDescriptions108HistoricalSource} from "./helpers/feature-catalog-descriptions108-historical.mjs";
 
 const root = process.env.CVN_TEST_ROOT || path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixturePath = process.env.CVN_TEST_FIXTURE || path.join(root, "tests/fixtures/feature-catalog-video-native.json");
 const fixture = JSON.parse(fs.readFileSync(fixturePath, "utf8"));
-const copySource = fs.readFileSync(path.join(root, "static/portal/portal-feature-catalog-copy.js"), "utf8").replace(/\r\n/g, "\n");
+// CVN is now historical; newest CD108 acceptance separately verifies raw physical bytes.
+const copySource = featureCatalogDescriptions108HistoricalSource(fs.readFileSync(path.join(root, "static/portal/portal-feature-catalog-copy.js"), "utf8").replace(/\r\n/g, "\n"), "static/portal/portal-feature-catalog-copy.js");
 const source = fs.readFileSync(path.join(root, "static/portal/portal-features.js"), "utf8");
 
 // Keep the real card renderer; this tree only records its text and attributes.
@@ -80,6 +82,6 @@ test("the existing 108 card translations in each locale remain unchanged", () =>
   }
 });
 
-test("the physical lightweight bundle contains only the reviewed data insertions", () => {
+test("the historical CVN bundle contains only its original reviewed data insertions", () => {
   assert.equal(createHash("sha256").update(copySource).digest("hex"), fixture.afterLfSha256);
 });

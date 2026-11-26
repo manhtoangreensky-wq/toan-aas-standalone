@@ -10382,6 +10382,7 @@
       "files": [
         "KIEM-THU/DANH-SACH-CASE.md",
         "KIEM-THU/HUONG-DAN-TESTER.md",
+        "KIEM-THU/PHIEN-CATALOGUE-DESCRIPTIONS108-20261126.md",
         "KIEM-THU/PHIEN-CATALOGUE-VIDEO-NATIVE-20261126.md",
         "KIEM-THU/PHIEN-IMAGE-COMPOSER-NATIVE-LOCALE-20261126.md",
         "KIEM-THU/PHIEN-IMAGE-RESIZE-POLISH-20261117.md",
@@ -10418,10 +10419,9 @@
         "copyfast_data_controls.py",
         "copyfast_db.py",
         "copyfast_document_operations.py",
-        "copyfast_finance_planning.py",
-        "copyfast_finance_policy.py"
+        "copyfast_finance_planning.py"
       ],
-      "occurrences": 1247,
+      "occurrences": 1246,
       "provider": "PayOS"
     },
     {
@@ -10673,7 +10673,7 @@
         "copyfast_music_media.py",
         "copyfast_music_sfx_library_bridge.py"
       ],
-      "occurrences": 2124,
+      "occurrences": 2121,
       "provider": "Telegram"
     }
   ],
@@ -18825,9 +18825,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 720,
-  "source_files_scanned": 720,
-  "source_fingerprint_sha256": "264d3d4b4463adab63b1941628beb82c2f8ecaaaa2eceedf58de6e52e9a4235b",
+  "source_files_discovered": 723,
+  "source_files_scanned": 723,
+  "source_fingerprint_sha256": "dab428e8d5225887da8d84d3a430886262cf30a42f948347af054a0926204ed7",
   "source_root": "repository-root",
   "ui_path_references": [
     {
