@@ -1,0 +1,1336 @@
+{
+  "schema": "composer-native-text-qa-v1",
+  "base": "6ec003dbf8f80739f5fb93ff7bd1d7cc703c6792",
+  "rows": [
+    {
+      "source": {
+        "goal_code": "product",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "auto",
+        "style": "",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "product",
+          "goal_label": "Ảnh sản phẩm",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "auto",
+          "style": "phông nền gọn đẹp",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Ảnh sản phẩm, phong cách phông nền gọn đẹp, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Ảnh sản phẩm. Phong cách: phông nền gọn đẹp. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách phông nền gọn đẹp, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "product",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_1",
+        "style": "",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "product",
+          "goal_label": "Ảnh sản phẩm",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_1",
+          "style": "Phông nền gọn đẹp",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Ảnh sản phẩm, phong cách Phông nền gọn đẹp, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Ảnh sản phẩm. Phong cách: Phông nền gọn đẹp. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách Phông nền gọn đẹp, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "product",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_2",
+        "style": "",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "product",
+          "goal_label": "Ảnh sản phẩm",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_2",
+          "style": "Không gian trưng bày sang trọng",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Ảnh sản phẩm, phong cách Không gian trưng bày sang trọng, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Ảnh sản phẩm. Phong cách: Không gian trưng bày sang trọng. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách Không gian trưng bày sang trọng, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "product",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_3",
+        "style": "",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "product",
+          "goal_label": "Ảnh sản phẩm",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_3",
+          "style": "Khung cảnh đời thường",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Ảnh sản phẩm, phong cách Khung cảnh đời thường, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Ảnh sản phẩm. Phong cách: Khung cảnh đời thường. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách Khung cảnh đời thường, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "ad",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "auto",
+        "style": "",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "ad",
+          "goal_label": "Ảnh quảng cáo",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "auto",
+          "style": "thương hiệu rõ lợi ích",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Ảnh quảng cáo, phong cách thương hiệu rõ lợi ích, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Ảnh quảng cáo. Phong cách: thương hiệu rõ lợi ích. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách thương hiệu rõ lợi ích, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "ad",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_1",
+        "style": "",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "ad",
+          "goal_label": "Ảnh quảng cáo",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_1",
+          "style": "Bán hàng trực tiếp",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Ảnh quảng cáo, phong cách Bán hàng trực tiếp, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Ảnh quảng cáo. Phong cách: Bán hàng trực tiếp. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách Bán hàng trực tiếp, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "ad",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_2",
+        "style": "",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "ad",
+          "goal_label": "Ảnh quảng cáo",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_2",
+          "style": "Thương hiệu cao cấp",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Ảnh quảng cáo, phong cách Thương hiệu cao cấp, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Ảnh quảng cáo. Phong cách: Thương hiệu cao cấp. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách Thương hiệu cao cấp, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "ad",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_3",
+        "style": "",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "ad",
+          "goal_label": "Ảnh quảng cáo",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_3",
+          "style": "Lan tỏa trên TikTok",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Ảnh quảng cáo, phong cách Lan tỏa trên TikTok, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Ảnh quảng cáo. Phong cách: Lan tỏa trên TikTok. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách Lan tỏa trên TikTok, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "cinematic",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "auto",
+        "style": "",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "cinematic",
+          "goal_label": "Ảnh điện ảnh / hình ảnh chủ đạo",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "auto",
+          "style": "phong cách điện ảnh với ánh sáng mạnh",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Ảnh điện ảnh / hình ảnh chủ đạo, phong cách phong cách điện ảnh với ánh sáng mạnh, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Ảnh điện ảnh / hình ảnh chủ đạo. Phong cách: phong cách điện ảnh với ánh sáng mạnh. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách phong cách điện ảnh với ánh sáng mạnh, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "cinematic",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_1",
+        "style": "",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "cinematic",
+          "goal_label": "Ảnh điện ảnh / hình ảnh chủ đạo",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_1",
+          "style": "Phong cách điện ảnh với ánh sáng mạnh",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Ảnh điện ảnh / hình ảnh chủ đạo, phong cách Phong cách điện ảnh với ánh sáng mạnh, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Ảnh điện ảnh / hình ảnh chủ đạo. Phong cách: Phong cách điện ảnh với ánh sáng mạnh. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách Phong cách điện ảnh với ánh sáng mạnh, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "cinematic",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_2",
+        "style": "",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "cinematic",
+          "goal_label": "Ảnh điện ảnh / hình ảnh chủ đạo",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_2",
+          "style": "Khoa học viễn tưởng / công nghệ tương lai",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Ảnh điện ảnh / hình ảnh chủ đạo, phong cách Khoa học viễn tưởng / công nghệ tương lai, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Ảnh điện ảnh / hình ảnh chủ đạo. Phong cách: Khoa học viễn tưởng / công nghệ tương lai. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách Khoa học viễn tưởng / công nghệ tương lai, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "cinematic",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_3",
+        "style": "",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "cinematic",
+          "goal_label": "Ảnh điện ảnh / hình ảnh chủ đạo",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_3",
+          "style": "Kỳ ảo / đô thị công nghệ đen tối",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Ảnh điện ảnh / hình ảnh chủ đạo, phong cách Kỳ ảo / đô thị công nghệ đen tối, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Ảnh điện ảnh / hình ảnh chủ đạo. Phong cách: Kỳ ảo / đô thị công nghệ đen tối. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách Kỳ ảo / đô thị công nghệ đen tối, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "custom",
+        "custom_goal": "Mục tiêu khách Facebook TikTok media studio",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "custom",
+        "style": "Phong cách khách Facebook TikTok media studio",
+        "ratio": "9:16",
+        "language": "vi"
+      },
+      "result": {
+        "composer": {
+          "title": "Mô tả ảnh: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "custom",
+          "goal_label": "Mục tiêu khách Facebook TikTok media studio",
+          "custom_goal": "Mục tiêu khách Facebook TikTok media studio",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "custom",
+          "style": "Phong cách khách Facebook TikTok media studio",
+          "ratio": "9:16",
+          "language": "vi",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, mục tiêu Mục tiêu khách Facebook TikTok media studio, phong cách Phong cách khách Facebook TikTok media studio, tỷ lệ 9:16, chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu",
+          "detailed_prompt": "Chủ thể: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Mục tiêu hình ảnh: Mục tiêu khách Facebook TikTok media studio. Phong cách: Phong cách khách Facebook TikTok media studio. Tỷ lệ: 9:16. Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.",
+          "negative_prompt": "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách Phong cách khách Facebook TikTok media studio, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm"
+          ],
+          "review_before_use": [
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "product",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "auto",
+        "style": "",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "product",
+          "goal_label": "Product image",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "auto",
+          "style": "clean studio",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Product image, style clean studio, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Product image. Style: clean studio. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, clean studio, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "product",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_1",
+        "style": "",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "product",
+          "goal_label": "Product image",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_1",
+          "style": "Clean studio",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Product image, style Clean studio, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Product image. Style: Clean studio. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, Clean studio, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "product",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_2",
+        "style": "",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "product",
+          "goal_label": "Product image",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_2",
+          "style": "Luxury showroom",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Product image, style Luxury showroom, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Product image. Style: Luxury showroom. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, Luxury showroom, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "product",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_3",
+        "style": "",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "product",
+          "goal_label": "Product image",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_3",
+          "style": "Lifestyle everyday scene",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Product image, style Lifestyle everyday scene, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Product image. Style: Lifestyle everyday scene. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, Lifestyle everyday scene, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "ad",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "auto",
+        "style": "",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "ad",
+          "goal_label": "Advertising image",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "auto",
+          "style": "benefit-led brand",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Advertising image, style benefit-led brand, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Advertising image. Style: benefit-led brand. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, benefit-led brand, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "ad",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_1",
+        "style": "",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "ad",
+          "goal_label": "Advertising image",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_1",
+          "style": "Direct sales",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Advertising image, style Direct sales, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Advertising image. Style: Direct sales. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, Direct sales, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "ad",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_2",
+        "style": "",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "ad",
+          "goal_label": "Advertising image",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_2",
+          "style": "Premium brand",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Advertising image, style Premium brand, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Advertising image. Style: Premium brand. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, Premium brand, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "ad",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_3",
+        "style": "",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "ad",
+          "goal_label": "Advertising image",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_3",
+          "style": "Viral/TikTok",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Advertising image, style Viral/TikTok, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Advertising image. Style: Viral/TikTok. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, Viral/TikTok, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "cinematic",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "auto",
+        "style": "",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "cinematic",
+          "goal_label": "Cinematic / video key visual",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "auto",
+          "style": "strong cinematic lighting",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Cinematic / video key visual, style strong cinematic lighting, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Cinematic / video key visual. Style: strong cinematic lighting. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, strong cinematic lighting, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "cinematic",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_1",
+        "style": "",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "cinematic",
+          "goal_label": "Cinematic / video key visual",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_1",
+          "style": "Strong cinematic lighting",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Cinematic / video key visual, style Strong cinematic lighting, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Cinematic / video key visual. Style: Strong cinematic lighting. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, Strong cinematic lighting, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "cinematic",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_2",
+        "style": "",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "cinematic",
+          "goal_label": "Cinematic / video key visual",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_2",
+          "style": "Sci-fi/future tech",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Cinematic / video key visual, style Sci-fi/future tech, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Cinematic / video key visual. Style: Sci-fi/future tech. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, Sci-fi/future tech, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "cinematic",
+        "custom_goal": "",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "suggestion_3",
+        "style": "",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "cinematic",
+          "goal_label": "Cinematic / video key visual",
+          "custom_goal": "",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "suggestion_3",
+          "style": "Fantasy/cyberpunk",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Cinematic / video key visual, style Fantasy/cyberpunk, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Cinematic / video key visual. Style: Fantasy/cyberpunk. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, Fantasy/cyberpunk, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    },
+    {
+      "source": {
+        "goal_code": "custom",
+        "custom_goal": "Mục tiêu khách Facebook TikTok media studio",
+        "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+        "style_preset": "custom",
+        "style": "Phong cách khách Facebook TikTok media studio",
+        "ratio": "9:16",
+        "language": "en"
+      },
+      "result": {
+        "composer": {
+          "title": "Image prompt draft: Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "goal_code": "custom",
+          "goal_label": "Mục tiêu khách Facebook TikTok media studio",
+          "custom_goal": "Mục tiêu khách Facebook TikTok media studio",
+          "subject": "Nội dung khách Facebook TikTok media studio & chi tiết riêng",
+          "style_preset": "custom",
+          "style": "Phong cách khách Facebook TikTok media studio",
+          "ratio": "9:16",
+          "language": "en",
+          "short_prompt": "Nội dung khách Facebook TikTok media studio & chi tiết riêng, goal Mục tiêu khách Facebook TikTok media studio, style Phong cách khách Facebook TikTok media studio, ratio 9:16, clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text",
+          "detailed_prompt": "Subject: Nội dung khách Facebook TikTok media studio & chi tiết riêng. Visual goal: Mục tiêu khách Facebook TikTok media studio. Style: Phong cách khách Facebook TikTok media studio. Ratio: 9:16. Place the primary subject at a clear focal point with suitable negative space for the intended channel, consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request.",
+          "negative_prompt": "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, messy background, overexposure, underexposure",
+          "variants": [
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, product-led sales hero image, clear benefit, clean studio, 9:16, premium lighting, high detail, no watermark",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, premium brand key visual, Phong cách khách Facebook TikTok media studio, refined composition, 9:16, luxury lighting, high quality, no extra text",
+            "Nội dung khách Facebook TikTok media studio & chi tiết riêng, viral social media visual, bold focal point, energetic composition, 9:16, scroll-stopping, clean subject, no watermark"
+          ],
+          "review_before_use": [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified."
+          ]
+        },
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": false,
+        "source_image_inspected": false,
+        "provider_called": false,
+        "image_created": false,
+        "output_created": false,
+        "job_created": false,
+        "payment_started": false,
+        "wallet_mutated": false,
+        "asset_saved": false,
+        "publish_action_created": false,
+        "fact_checked": false,
+        "rights_verified": false
+      }
+    }
+  ],
+  "source": "Actual Web builders and real Pydantic models; not HTTP/auth or persistence acceptance",
+  "database_operations": 0,
+  "external_network_calls": 0,
+  "source_lf_sha256": "fb835ffcfcfbc1bf4adc0677def462eea71b17bc0a1dc36e490657f232ced730"
+}

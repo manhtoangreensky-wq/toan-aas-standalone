@@ -1,0 +1,878 @@
+{
+  "id": "IMAGE-COMPOSER-NATIVE-LOCALE-20261126",
+  "base": "6ec003dbf8f80739f5fb93ff7bd1d7cc703c6792",
+  "model": "gemini-4-hydrogen-xhigh",
+  "proposalSessions": 11,
+  "uiRecords": 20,
+  "webFixedTextRecords": 19,
+  "records": [
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "  const IMAGE_STUDIO_VALIDATION_COPY_ROWS = [",
+      "new": "  const IMAGE_COMPOSER_UI_COPY_ROWS = [\n    [\"goal.product\", \"Ảnh sản phẩm\", \"Product image\", \"产品图\"],\n    [\"goal.ad\", \"Ảnh quảng cáo\", \"Advertising image\", \"广告图\"],\n    [\"goal.cinematic\", \"Ảnh điện ảnh / hình ảnh chủ đạo\", \"Cinematic / key visual\", \"电影感 / 主视觉\"],\n    [\"goal.custom\", \"Mục tiêu riêng\", \"Custom goal\", \"自定义目标\"],\n    [\"ratio.square\", \"1:1 · Vuông\", \"1:1 · Square\", \"1:1 · 正方形\"],\n    [\"ratio.vertical\", \"9:16 · Dọc / Reels\", \"9:16 · Vertical / Reels\", \"9:16 · 竖屏 / Reels\"],\n    [\"ratio.horizontal\", \"16:9 · Ngang / YouTube\", \"16:9 · Horizontal / YouTube\", \"16:9 · 横屏 / YouTube\"],\n    [\"ratio.post\", \"4:5 · Bài đăng\", \"4:5 · Post\", \"4:5 · 帖子\"],\n    [\"ratio.portrait\", \"3:4 · Chân dung\", \"3:4 · Portrait\", \"3:4 · 肖像\"],\n    [\"ratio.slide\", \"4:3 · Trang trình chiếu\", \"4:3 · Slide\", \"4:3 · 幻灯片\"],\n    [\"ratio.productWide\", \"3:2 · Ngang sản phẩm\", \"3:2 · Horizontal product\", \"3:2 · 横版产品\"],\n    [\"ratio.productTall\", \"2:3 · Dọc sản phẩm\", \"2:3 · Vertical product\", \"2:3 · 竖版产品\"],\n    [\"ratio.ultrawide\", \"21:9 · Siêu rộng\", \"21:9 · Ultra-wide\", \"21:9 · 超宽屏\"],\n    [\"language.vi\", \"Tiếng Việt\", \"Vietnamese\", \"越南语\"],\n    [\"language.en\", \"Tiếng Anh\", \"English\", \"英语\"],\n    [\"preset.auto\", \"Tự chọn theo mục tiêu\", \"Auto-select by goal\", \"按目标自动选择\"],\n    [\"preset.first\", \"Gợi ý 1 · Rõ chủ thể\", \"Preset 1 · Clear subject\", \"预设 1 · 主体清晰\"],\n    [\"preset.second\", \"Gợi ý 2 · Cao cấp và có chiều sâu\", \"Preset 2 · Premium with depth\", \"预设 2 · 高端且有深度\"],\n    [\"preset.third\", \"Gợi ý 3 · Biên tập / mạng xã hội\", \"Preset 3 · Editorial / social\", \"预设 3 · 编辑风格 / 社交媒体\"],\n    [\"preset.custom\", \"Tự nhập phong cách\", \"Enter custom style\", \"自行输入风格\"],\n    [\"field.goal\", \"Mục tiêu ảnh\", \"Image goal\", \"图像目标\"],\n    [\"field.ratio\", \"Tỷ lệ khung hình\", \"Aspect ratio\", \"宽高比\"],\n    [\"field.language\", \"Ngôn ngữ mô tả\", \"Description language\", \"描述语言\"],\n    [\"field.customGoal\", \"Mục tiêu riêng\", \"Custom goal\", \"自定义目标\"],\n    [\"field.subject\", \"Chủ thể / chủ đề\", \"Subject / topic\", \"主体 / 主题\"],\n    [\"field.preset\", \"Định hướng phong cách\", \"Style direction\", \"风格方向\"],\n    [\"field.customStyle\", \"Phong cách riêng\", \"Custom style\", \"自定义风格\"],\n    [\"help.goal\", \"Chọn mục tiêu để có gợi ý mô tả phù hợp.\", \"Select a goal to get appropriate description suggestions.\", \"选择目标以获取相符的描述建议。\"],\n    [\"help.customGoal\", \"Chỉ điền khi chọn Mục tiêu riêng.\", \"Only fill in when selecting Custom goal.\", \"仅在选择自定义目标时填写。\"],\n    [\"help.subject\", \"Mô tả nội dung bạn có quyền sử dụng. Không đưa đường dẫn, thông tin bảo mật hoặc thanh toán vào đây.\", \"Describe content you have the right to use. Do not include links, sensitive information, or payment details here.\", \"描述您有权使用的内容。请勿在此输入链接、保密信息或支付信息。\"],\n    [\"help.preset\", \"Chọn một gợi ý hoặc Tự nhập để dùng phong cách riêng.\", \"Choose a preset or enter your own to use a custom style.\", \"选择一个预设或自行输入以使用自定义风格。\"],\n    [\"help.customStyle\", \"Mô tả phong cách nguyên bản bạn muốn sử dụng.\", \"Describe the original style you want to use.\", \"描述您想要使用的原创风格。\"],\n    [\"placeholder.customGoal\", \"Ví dụ: hình ảnh chủ đạo giới thiệu tính năng mới trên trang giới thiệu\", \"Example: key visual introducing a new feature on a landing page\", \"例如：在介绍页上展示新功能的主视觉\"],\n    [\"placeholder.subject\", \"Ví dụ: máy pha cà phê nhỏ màu đen mờ trên quầy bếp sáng\", \"Example: compact matte black coffee maker on a bright kitchen counter\", \"例如：明亮厨房台面上的一台哑光黑小型咖啡机\"],\n    [\"placeholder.customStyle\", \"Ví dụ: phông nền gọn, ánh sáng dịu, chủ thể ở giữa, chừa chỗ cho lời mời hành động\", \"Example: clean backdrop, soft lighting, centered subject, space for call-to-action\", \"例如：简洁背景、柔和光线、主体居中、留出行动呼吁空间\"],\n    [\"status.custom\", \"Đang dùng phong cách riêng của bạn.\", \"Using your custom style.\", \"正在使用您的自定义风格。\"],\n    [\"status.auto\", \"Đang dùng phong cách gợi ý theo mục tiêu và ngôn ngữ.\", \"Using suggested style based on goal and language.\", \"正在使用根据目标与语言推荐的风格。\"],\n    [\"variant.sales\", \"Bán hàng trực tiếp\", \"Direct sales\", \"直接销售\"],\n    [\"variant.premium\", \"Thương hiệu cao cấp\", \"Premium brand\", \"高端品牌\"],\n    [\"variant.social\", \"Lan tỏa trên mạng xã hội\", \"Social media reach\", \"社交媒体传播\"],\n    [\"fallback.goal\", \"Mô tả ảnh\", \"Image description\", \"图像描述\"],\n    [\"fallback.preset\", \"Định hướng phong cách\", \"Style direction\", \"风格方向\"],\n    [\"empty.kicker\", \"Bản mô tả của bạn\", \"Your description\", \"您的描述\"],\n    [\"empty.title\", \"Chưa có bản mô tả\", \"No description yet\", \"暂无描述\"],\n    [\"empty.body\", \"Chọn mục tiêu, mô tả chủ thể và phong cách để bắt đầu.\", \"Select a goal, describe the subject, and choose a style to get started.\", \"选择目标、描述主体并设定风格以开始。\"],\n    [\"prompt.short\", \"Mô tả ngắn\", \"Short description\", \"简短描述\"],\n    [\"prompt.detailed\", \"Mô tả chi tiết\", \"Detailed description\", \"详细描述\"],\n    [\"prompt.negative\", \"Điều cần tránh\", \"What to avoid\", \"需要避免的内容\"],\n    [\"selection.original\", \"Bản gốc\", \"Original\", \"原版\"],\n    [\"selection.variant\", \"Phương án {number} · {label}\", \"Option {number} · {label}\", \"方案 {number} · {label}\"],\n    [\"selection.fallback\", \"Mô tả\", \"Description\", \"描述\"],\n    [\"meta.customGoal\", \"Mục tiêu riêng: {value}\", \"Custom goal: {value}\", \"自定义目标: {value}\"],\n    [\"save.confirm\", \"Lưu {label} vào Ghi chú của bạn?\", \"Save {label} to your Notes?\", \"将 {label} 保存到您的笔记？\"],\n    [\"save.button\", \"Lưu vào Ghi chú\", \"Save to Notes\", \"保存到笔记\"],\n    [\"ordinal.original\", \"Gốc\", \"Original\", \"原版\"],\n    [\"selection.selected\", \"Đang chọn\", \"Selected\", \"已选择\"],\n    [\"selection.choose\", \"Chọn {label}\", \"Select {label}\", \"选择 {label}\"],\n    [\"result.kicker\", \"Bản mô tả đã soạn\", \"Prepared description\", \"已生成的描述\"],\n    [\"result.titleFallback\", \"Soạn mô tả ảnh\", \"Compose image description\", \"编写图像描述\"],\n    [\"result.note\", \"Rà soát mô tả trước khi dùng để tạo ảnh.\", \"Review the description before using it to create an image.\", \"请在使用描述创建图像之前先进行核对。\"],\n    [\"meta.subject\", \"Chủ thể: {value}\", \"Subject: {value}\", \"主体: {value}\"],\n    [\"meta.preset\", \"Định hướng: {value}\", \"Direction: {value}\", \"方向: {value}\"],\n    [\"meta.style\", \"Phong cách: {value}\", \"Style: {value}\", \"风格: {value}\"],\n    [\"variants.kicker\", \"Lựa chọn để lưu\", \"Options to save\", \"可保存的选项\"],\n    [\"variants.title\", \"Bản gốc và ba phương án\", \"Original and three options\", \"原版及三个方案\"],\n    [\"variants.selected\", \"Đang chọn: {label}. Lưu vào Ghi chú nếu muốn giữ lại.\", \"Selected: {label}. Save to Notes if you want to keep it.\", \"当前选择: {label}。如需保留，请保存到笔记。\"],\n    [\"review.title\", \"Rà soát trước khi sử dụng\", \"Review before using\", \"使用前核对\"],\n    [\"result.footer\", \"Lưu lựa chọn bạn muốn giữ vào Ghi chú.\", \"Save the option you want to keep to Notes.\", \"将您想要保留的选项保存到笔记。\"],\n    [\"result.openStudio\", \"Mở Thiết kế ảnh\", \"Open Image Design\", \"打开图像设计\"],\n    [\"page.title\", \"Soạn mô tả ảnh\", \"Compose image description\", \"编写图像描述\"],\n    [\"intro.kicker\", \"Soạn ý tưởng hình ảnh\", \"Draft visual ideas\", \"构思视觉创意\"],\n    [\"intro.title\", \"Biến ý tưởng thành mô tả ảnh rõ ràng\", \"Turn ideas into clear image descriptions\", \"将创意转化为清晰的图像描述\"],\n    [\"intro.body\", \"Soạn mô tả ảnh, điều cần tránh và ba phương án để bạn lựa chọn. Bước này tạo bản mô tả, chưa tạo ảnh.\", \"Draft image descriptions, things to avoid, and three options to choose from. This step creates descriptions, not images.\", \"编写图像描述、需避开的内容以及三个备选方案供您选择。此步骤仅创建描述，不生成图像。\"],\n    [\"form.kicker\", \"Mô tả ý tưởng\", \"Describe your idea\", \"创意描述\"],\n    [\"form.title\", \"Soạn bản mô tả ảnh\", \"Draft image description\", \"起草图像描述\"],\n    [\"form.description\", \"Chọn mục tiêu và mô tả hình ảnh bạn muốn tạo.\", \"Choose a goal and describe the image you want to create.\", \"选择目标并描述您想要创建的图像。\"],\n    [\"form.note\", \"Bước này chỉ soạn mô tả, chưa tạo hoặc chỉnh sửa ảnh.\", \"This step only drafts descriptions and does not create or edit images.\", \"此步骤仅编写描述，不会创建或编辑图像。\"],\n    [\"form.submit\", \"Soạn mô tả\", \"Draft description\", \"编写描述\"],\n    [\"receipt.kicker\", \"Ghi chú của bạn\", \"Your Notes\", \"您的笔记\"],\n    [\"receipt.title\", \"Đã lưu {label}\", \"Saved {label}\", \"已保存 {label}\"],\n    [\"receipt.categoryFallback\", \"Mô tả ảnh\", \"Image description\", \"图像描述\"],\n    [\"receipt.version\", \"Phiên bản {number}\", \"Version {number}\", \"版本 {number}\"],\n    [\"receipt.description\", \"Mở Ghi chú để xem nội dung đã lưu.\", \"Open Notes to view saved content.\", \"打开笔记查看已保存内容。\"],\n    [\"receipt.note\", \"Bản mô tả đã được lưu riêng trong Ghi chú của bạn.\", \"The description has been saved privately in your Notes.\", \"描述已私密保存在您的笔记中。\"],\n    [\"receipt.open\", \"Mở Ghi chú\", \"Open Notes\", \"打开笔记\"],\n  ];\n  [\"vi\", \"en\", \"zh\"].forEach((locale, index) => {\n    IMAGE_COMPOSER_UI_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageComposerUi.${row[0]}`] = row[index + 1]; });\n  });\n\n  const IMAGE_STUDIO_VALIDATION_COPY_ROWS = ["
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  const IMAGE_PROMPT_COMPOSER_GOAL_OPTIONS = Object.freeze([",
+      "new": "  function imageComposerText(key, fallback, params) {\n    return uiText(`imageComposerUi.${key}`, fallback, params);\n  }\n  function imageComposerOptions(options, entries) {\n    return options.map(([value], index) => [value, imageComposerText(entries[index][0], entries[index][1])]);\n  }\n\n  const IMAGE_PROMPT_COMPOSER_GOAL_OPTIONS = Object.freeze(["
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function imagePromptComposerFields() {\n    return [\n      { name: \"goal_code\", label: \"Mục tiêu ảnh\", control: \"select\", required: true, options: IMAGE_PROMPT_COMPOSER_GOAL_OPTIONS, help: \"Dùng để chọn template deterministic. Đây không phải model, provider hay lệnh tạo ảnh.\" },\n      { name: \"ratio\", label: \"Tỷ lệ khung hình\", control: \"select\", required: true, options: IMAGE_PROMPT_COMPOSER_RATIO_OPTIONS },\n      { name: \"language\", label: \"Ngôn ngữ prompt\", control: \"select\", required: true, options: IMAGE_PROMPT_COMPOSER_LANGUAGE_OPTIONS },\n      { name: \"custom_goal\", label: \"Mục đích riêng (nếu chọn Mục đích riêng)\", control: \"textarea\", placeholder: \"Ví dụ: key visual giới thiệu tính năng mới cho landing page\", minLength: 2, maxLength: 180, wide: true, help: \"Bỏ trống nếu bạn chọn Ảnh sản phẩm, Ảnh quảng cáo hoặc Cinematic / key visual.\" },\n      { name: \"subject\", label: \"Chủ thể / chủ đề\", control: \"textarea\", placeholder: \"Ví dụ: máy pha cà phê mini màu đen mờ trên quầy bếp sáng\", required: true, minLength: 2, maxLength: 260, wide: true, help: \"Chỉ mô tả nội dung bạn có quyền sử dụng. Không nhập ảnh, URL, token, OTP, chứng từ thanh toán hoặc yêu cầu mô phỏng thương hiệu/nghệ sĩ.\" },\n      { name: \"style_preset\", label: \"Hướng phong cách\", control: \"select\", required: true, options: IMAGE_PROMPT_COMPOSER_STYLE_PRESET_OPTIONS, controlData: { \"image-prompt-composer-style-preset\": \"\" }, help: \"Server tự chọn direction gốc theo mục tiêu và ngôn ngữ. Chỉ chọn Tự nhập khi cần mô tả riêng.\" },\n      { name: \"style\", label: \"Phong cách riêng (chỉ khi chọn Tự nhập)\", control: \"textarea\", placeholder: \"Ví dụ: studio sạch, ánh sáng mềm, chủ thể trung tâm, khoảng trống cho CTA\", minLength: 2, maxLength: 180, wide: true, dynamicRequired: true, controlData: { \"image-prompt-composer-custom-style\": \"\" }, wrapperData: { \"image-prompt-composer-custom-style-field\": \"\" }, help: \"Mô tả direction nguyên bản của bạn. Tool không phân tích ảnh, không nhận upload và không tạo preview.\" }\n    ];\n  }\n\n",
+      "new": "  function imagePromptComposerFields() {\n    return [\n      { name: \"goal_code\", label: imageComposerText(\"field.goal\", \"Mục tiêu ảnh\"), control: \"select\", required: true, options: imageComposerOptions(IMAGE_PROMPT_COMPOSER_GOAL_OPTIONS, [[\"goal.product\",\"Ảnh sản phẩm\"],[\"goal.ad\",\"Ảnh quảng cáo\"],[\"goal.cinematic\",\"Ảnh điện ảnh / hình ảnh chủ đạo\"],[\"goal.custom\",\"Mục tiêu riêng\"]]), help: imageComposerText(\"help.goal\", \"Chọn mục tiêu để có gợi ý mô tả phù hợp.\") },\n      { name: \"ratio\", label: imageComposerText(\"field.ratio\", \"Tỷ lệ khung hình\"), control: \"select\", required: true, options: imageComposerOptions(IMAGE_PROMPT_COMPOSER_RATIO_OPTIONS, [[\"ratio.square\",\"1:1 · Vuông\"],[\"ratio.vertical\",\"9:16 · Dọc / Reels\"],[\"ratio.horizontal\",\"16:9 · Ngang / YouTube\"],[\"ratio.post\",\"4:5 · Bài đăng\"],[\"ratio.portrait\",\"3:4 · Chân dung\"],[\"ratio.slide\",\"4:3 · Trang trình chiếu\"],[\"ratio.productWide\",\"3:2 · Ngang sản phẩm\"],[\"ratio.productTall\",\"2:3 · Dọc sản phẩm\"],[\"ratio.ultrawide\",\"21:9 · Siêu rộng\"]]) },\n      { name: \"language\", label: imageComposerText(\"field.language\", \"Ngôn ngữ mô tả\"), control: \"select\", required: true, options: imageComposerOptions(IMAGE_PROMPT_COMPOSER_LANGUAGE_OPTIONS, [[\"language.vi\",\"Tiếng Việt\"],[\"language.en\",\"Tiếng Anh\"]]) },\n      { name: \"custom_goal\", label: imageComposerText(\"field.customGoal\", \"Mục tiêu riêng\"), control: \"textarea\", placeholder: imageComposerText(\"placeholder.customGoal\", \"Ví dụ: hình ảnh chủ đạo giới thiệu tính năng mới trên trang giới thiệu\"), minLength: 2, maxLength: 180, wide: true, help: imageComposerText(\"help.customGoal\", \"Chỉ điền khi chọn Mục tiêu riêng.\") },\n      { name: \"subject\", label: imageComposerText(\"field.subject\", \"Chủ thể / chủ đề\"), control: \"textarea\", placeholder: imageComposerText(\"placeholder.subject\", \"Ví dụ: máy pha cà phê nhỏ màu đen mờ trên quầy bếp sáng\"), required: true, minLength: 2, maxLength: 260, wide: true, help: imageComposerText(\"help.subject\", \"Mô tả nội dung bạn có quyền sử dụng. Không đưa đường dẫn, thông tin bảo mật hoặc thanh toán vào đây.\") },\n      { name: \"style_preset\", label: imageComposerText(\"field.preset\", \"Định hướng phong cách\"), control: \"select\", required: true, options: imageComposerOptions(IMAGE_PROMPT_COMPOSER_STYLE_PRESET_OPTIONS, [[\"preset.auto\",\"Tự chọn theo mục tiêu\"],[\"preset.first\",\"Gợi ý 1 · Rõ chủ thể\"],[\"preset.second\",\"Gợi ý 2 · Cao cấp và có chiều sâu\"],[\"preset.third\",\"Gợi ý 3 · Biên tập / mạng xã hội\"],[\"preset.custom\",\"Tự nhập phong cách\"]]), controlData: { \"image-prompt-composer-style-preset\": \"\" }, help: imageComposerText(\"help.preset\", \"Chọn một gợi ý hoặc Tự nhập để dùng phong cách riêng.\") },\n      { name: \"style\", label: imageComposerText(\"field.customStyle\", \"Phong cách riêng\"), control: \"textarea\", placeholder: imageComposerText(\"placeholder.customStyle\", \"Ví dụ: phông nền gọn, ánh sáng dịu, chủ thể ở giữa, chừa chỗ cho lời mời hành động\"), minLength: 2, maxLength: 180, wide: true, dynamicRequired: true, controlData: { \"image-prompt-composer-custom-style\": \"\" }, wrapperData: { \"image-prompt-composer-custom-style-field\": \"\" }, help: imageComposerText(\"help.customStyle\", \"Mô tả phong cách nguyên bản bạn muốn sử dụng.\") }\n    ];\n  }\n\n"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function imagePromptComposerGoalLabel(value) {\n    const found = IMAGE_PROMPT_COMPOSER_GOAL_OPTIONS.find(([key]) => key === String(value || \"\"));\n    return found ? found[1] : \"Image prompt\";\n  }\n\n",
+      "new": "  function imagePromptComposerGoalLabel(value) {\n    const found = imageComposerOptions(IMAGE_PROMPT_COMPOSER_GOAL_OPTIONS, [[\"goal.product\",\"Ảnh sản phẩm\"],[\"goal.ad\",\"Ảnh quảng cáo\"],[\"goal.cinematic\",\"Ảnh điện ảnh / hình ảnh chủ đạo\"],[\"goal.custom\",\"Mục tiêu riêng\"]]).find(([key]) => key === String(value || \"\"));\n    return found ? found[1] : imageComposerText(\"fallback.goal\", \"Mô tả ảnh\");\n  }\n\n"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function imagePromptComposerStylePresetLabel(value) {\n    const found = IMAGE_PROMPT_COMPOSER_STYLE_PRESET_OPTIONS.find(([key]) => key === String(value || \"\"));\n    return found ? found[1] : \"Hướng phong cách\";\n  }\n\n",
+      "new": "  function imagePromptComposerStylePresetLabel(value) {\n    const found = imageComposerOptions(IMAGE_PROMPT_COMPOSER_STYLE_PRESET_OPTIONS, [[\"preset.auto\",\"Tự chọn theo mục tiêu\"],[\"preset.first\",\"Gợi ý 1 · Rõ chủ thể\"],[\"preset.second\",\"Gợi ý 2 · Cao cấp và có chiều sâu\"],[\"preset.third\",\"Gợi ý 3 · Biên tập / mạng xã hội\"],[\"preset.custom\",\"Tự nhập phong cách\"]]).find(([key]) => key === String(value || \"\"));\n    return found ? found[1] : imageComposerText(\"fallback.preset\", \"Định hướng phong cách\");\n  }\n\n"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "\"Đang dùng direction tự nhập. Chỉ mô tả phong cách nguyên bản mà bạn có quyền sử dụng.\"",
+      "new": "imageComposerText(\"status.custom\", \"Đang dùng phong cách riêng của bạn.\")"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "\"Đang dùng hướng phong cách do server chọn theo mục tiêu và ngôn ngữ; text tự nhập không đi vào request.\"",
+      "new": "imageComposerText(\"status.auto\", \"Đang dùng phong cách gợi ý theo mục tiêu và ngôn ngữ.\")"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function renderImagePromptComposerResult(raw, rawSaveSource, rawSelectedVariantIndex, canSaveToMemory) {\n    const result = raw && typeof raw === \"object\" ? raw : {};\n    const composer = result.composer && typeof result.composer === \"object\" ? result.composer : null;\n    if (!composer) {\n      return `<section class=\"portal-card portal-card-pad portal-image-prompt-composer-result\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">Editable prompt draft</span><h2 class=\"portal-card-title\">Chưa có prompt nháp</h2><p class=\"portal-card-subtitle\">Nhập mục tiêu, chủ thể, style và tỷ lệ để tạo một prompt deterministic. Browser không tự viết prompt hoặc hiển thị ảnh trước khi server trả contract hợp lệ.</p></div>${badge(\"empty\")}</div></section>`;\n    }\n    const promptCards = [\n      [\"Prompt ngắn\", composer.short_prompt], [\"Prompt chi tiết\", composer.detailed_prompt], [\"Negative prompt\", composer.negative_prompt]\n    ].map(([label, value]) => `<article class=\"portal-image-prompt-composer-prompt\"><span>${safeText(label)}</span><pre>${safeText(String(value || \"\"))}</pre></article>`).join(\"\");\n    const variants = Array.isArray(composer.variants) ? composer.variants : [];\n    const selectionOptions = [\n      { index: 0, label: \"Bản gốc\", prompt: composer.detailed_prompt },\n      ...variants.map((item, index) => ({\n        index: index + 1,\n        label: `Variant ${index + 1} · ${IMAGE_PROMPT_COMPOSER_VARIANT_LABELS[index] || \"Prompt\"}`,\n        prompt: item\n      }))\n    ].filter((item) => Number.isInteger(item.index) && item.index >= 0 && item.index <= 3 && typeof item.prompt === \"string\");\n    const selectedVariantIndex = normalizeImagePromptComposerSelectedVariantIndex(rawSelectedVariantIndex);\n    const selectedOption = selectionOptions.find((item) => item.index === selectedVariantIndex) || selectionOptions[0];\n    const review = Array.isArray(composer.review_before_use) ? composer.review_before_use : [];\n    const customGoal = composer.custom_goal\n      ? `<span>Mục đích riêng: ${safeText(String(composer.custom_goal))}</span>`\n      : \"\";\n    const saveSource = normalizeImagePromptComposerSaveSource(rawSaveSource);\n    const sourceMatchesComposer = Boolean(\n      saveSource.goal_code && saveSource.goal_code === composer.goal_code\n      && saveSource.custom_goal === composer.custom_goal\n      && saveSource.subject === composer.subject\n      && saveSource.style_preset === composer.style_preset\n      && saveSource.ratio === composer.ratio\n      && saveSource.language === composer.language\n      && (saveSource.style_preset !== \"custom\" || saveSource.style === composer.style)\n    );\n    const saveControl = sourceMatchesComposer && selectedOption\n      ? `<button class=\"portal-button portal-button--primary\" type=\"button\" data-portal-action=\"image-prompt-composer-save-memory\" data-portal-route=\"/image/prompt-composer\" data-portal-confirm=\"Lưu ${safeText(selectedOption.label)} vào Memory Center? Máy chủ sẽ tự tạo lại prompt từ lựa chọn chỉ số đã xác nhận; không tạo pending Telegram, không gọi Bot/provider, không tạo ảnh, job, không đổi ví Xu, PayOS, asset hoặc publish.\"${canSaveToMemory ? \"\" : \" disabled\"}>Lưu vào Memory Center</button>`\n      : \"\";\n    const selectionCards = selectionOptions.map((item) => {\n      const selected = item.index === selectedVariantIndex;\n      const ordinal = item.index === 0 ? \"Gốc\" : String(item.index).padStart(2, \"0\");\n      return `<li${selected ? ' data-selected=\"true\"' : \"\"}><span>${safeText(ordinal)}</span><div><strong>${safeText(item.label)}</strong><pre>${safeText(String(item.prompt || \"\"))}</pre><button class=\"portal-button portal-button--quiet portal-image-prompt-composer-variant-select\" type=\"button\" data-portal-action=\"image-prompt-composer-select-variant\" data-portal-route=\"/image/prompt-composer\" data-image-prompt-variant-index=\"${safeText(String(item.index))}\" aria-pressed=\"${selected ? \"true\" : \"false\"}\">${selected ? \"Đang chọn\" : `Chọn ${safeText(item.label)}`}</button></div></li>`;\n    }).join(\"\");\n    return `<section class=\"portal-card portal-card-pad portal-image-prompt-composer-result\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">Web-native deterministic draft</span><h2 class=\"portal-card-title\">${safeText(String(composer.title || \"Image Prompt Composer\"))}</h2><p class=\"portal-card-subtitle\">${safeText(String(composer.goal_label || imagePromptComposerGoalLabel(composer.goal_code)))} · ${safeText(String(composer.ratio || \"\"))} · ${safeText(String(composer.language || \"\").toUpperCase())}. Đây là prompt để bạn review và biên tập, không phải ảnh, preview, output hay kết quả provider.</p></div>${badge(\"read_only\")}</div><div class=\"portal-image-prompt-composer-meta\"><span>Chủ thể: ${safeText(String(composer.subject || \"\"))}</span><span>Hướng: ${safeText(imagePromptComposerStylePresetLabel(composer.style_preset))}</span><span>Style: ${safeText(String(composer.style || \"\"))}</span>${customGoal}</div><div class=\"portal-image-prompt-composer-prompts\">${promptCards}</div><section class=\"portal-image-prompt-composer-variants\"><div><span class=\"portal-section-kicker\">Lựa chọn để lưu</span><h3>Bản gốc hoặc ba variants</h3><p>Đang chọn: <strong>${safeText(selectedOption ? selectedOption.label : \"Bản gốc\")}</strong>. Lựa chọn chỉ tồn tại trong phiên Web này.</p></div><ol>${selectionCards}</ol></section><section class=\"portal-image-prompt-composer-review\"><strong>Rà soát trước khi dùng ở nơi khác</strong><ul>${review.map((item) => `<li>${safeText(String(item))}</li>`).join(\"\")}</ul></section><div class=\"portal-form-footer\"><span class=\"portal-form-note\">Bạn có thể chủ động lưu đúng lựa chọn này vào Memory Center để giữ bản nháp Web-owned. Browser chỉ gửi index 0..3, không gửi phần text đã sinh; máy chủ tự tạo lại prompt và không tạo Bot pending-save hay image execution.</span><div class=\"portal-inline-actions\"><a class=\"portal-button portal-button--quiet\" href=\"/image-studio\">Mở Image Studio</a>${saveControl}</div></div></section>`;\n  }\n\n",
+      "new": "  function renderImagePromptComposerResult(raw, rawSaveSource, rawSelectedVariantIndex, canSaveToMemory) {\n    const result = raw && typeof raw === \"object\" ? raw : {};\n    const composer = result.composer && typeof result.composer === \"object\" ? result.composer : null;\n    if (!composer) {\n      return `<section class=\"portal-card portal-card-pad portal-image-prompt-composer-result\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(imageComposerText(\"empty.kicker\", \"Bản mô tả của bạn\"))}</span><h2 class=\"portal-card-title\">${safeText(imageComposerText(\"empty.title\", \"Chưa có bản mô tả\"))}</h2><p class=\"portal-card-subtitle\">${safeText(imageComposerText(\"empty.body\", \"Chọn mục tiêu, mô tả chủ thể và phong cách để bắt đầu.\"))}</p></div>${badge(\"empty\")}</div></section>`;\n    }\n    const promptCards = [\n      [imageComposerText(\"prompt.short\", \"Mô tả ngắn\"), composer.short_prompt], [imageComposerText(\"prompt.detailed\", \"Mô tả chi tiết\"), composer.detailed_prompt], [imageComposerText(\"prompt.negative\", \"Điều cần tránh\"), composer.negative_prompt]\n    ].map(([label, value]) => `<article class=\"portal-image-prompt-composer-prompt\"><span>${safeText(label)}</span><pre>${safeText(String(value || \"\"))}</pre></article>`).join(\"\");\n    const variants = Array.isArray(composer.variants) ? composer.variants : [];\n    const variantLabels = [imageComposerText(\"variant.sales\", \"Bán hàng trực tiếp\"), imageComposerText(\"variant.premium\", \"Thương hiệu cao cấp\"), imageComposerText(\"variant.social\", \"Lan tỏa trên mạng xã hội\")];\n    const selectionOptions = [\n      { index: 0, label: imageComposerText(\"selection.original\", \"Bản gốc\"), prompt: composer.detailed_prompt },\n      ...variants.map((item, index) => ({\n        index: index + 1,\n        label: imageComposerText(\"selection.variant\", \"Phương án {number} · {label}\", { number: String(index + 1), label: variantLabels[index] || imageComposerText(\"selection.fallback\", \"Mô tả\") }),\n        prompt: item\n      }))\n    ].filter((item) => Number.isInteger(item.index) && item.index >= 0 && item.index <= 3 && typeof item.prompt === \"string\");\n    const selectedVariantIndex = normalizeImagePromptComposerSelectedVariantIndex(rawSelectedVariantIndex);\n    const selectedOption = selectionOptions.find((item) => item.index === selectedVariantIndex) || selectionOptions[0];\n    const review = Array.isArray(composer.review_before_use) ? composer.review_before_use : [];\n    const customGoal = composer.custom_goal\n      ? `<span>${safeText(imageComposerText(\"meta.customGoal\", \"Mục tiêu riêng: {value}\", { value: String(composer.custom_goal) }))}</span>`\n      : \"\";\n    const saveSource = normalizeImagePromptComposerSaveSource(rawSaveSource);\n    const sourceMatchesComposer = Boolean(\n      saveSource.goal_code && saveSource.goal_code === composer.goal_code\n      && saveSource.custom_goal === composer.custom_goal\n      && saveSource.subject === composer.subject\n      && saveSource.style_preset === composer.style_preset\n      && saveSource.ratio === composer.ratio\n      && saveSource.language === composer.language\n      && (saveSource.style_preset !== \"custom\" || saveSource.style === composer.style)\n    );\n    const saveControl = sourceMatchesComposer && selectedOption\n      ? `<button class=\"portal-button portal-button--primary\" type=\"button\" data-portal-action=\"image-prompt-composer-save-memory\" data-portal-route=\"/image/prompt-composer\" data-portal-confirm=\"${safeText(imageComposerText(\"save.confirm\", \"Lưu {label} vào Ghi chú của bạn?\", { label: selectedOption.label }))}\"${canSaveToMemory ? \"\" : \" disabled\"}>${safeText(imageComposerText(\"save.button\", \"Lưu vào Ghi chú\"))}</button>`\n      : \"\";\n    const selectionCards = selectionOptions.map((item) => {\n      const selected = item.index === selectedVariantIndex;\n      const ordinal = item.index === 0 ? imageComposerText(\"ordinal.original\", \"Gốc\") : String(item.index).padStart(2, \"0\");\n      return `<li${selected ? ' data-selected=\"true\"' : \"\"}><span>${safeText(ordinal)}</span><div><strong>${safeText(item.label)}</strong><pre>${safeText(String(item.prompt || \"\"))}</pre><button class=\"portal-button portal-button--quiet portal-image-prompt-composer-variant-select\" type=\"button\" data-portal-action=\"image-prompt-composer-select-variant\" data-portal-route=\"/image/prompt-composer\" data-image-prompt-variant-index=\"${safeText(String(item.index))}\" aria-pressed=\"${selected ? \"true\" : \"false\"}\">${safeText(selected ? imageComposerText(\"selection.selected\", \"Đang chọn\") : imageComposerText(\"selection.choose\", \"Chọn {label}\", { label: item.label }))}</button></div></li>`;\n    }).join(\"\");\n    return `<section class=\"portal-card portal-card-pad portal-image-prompt-composer-result\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(imageComposerText(\"result.kicker\", \"Bản mô tả đã soạn\"))}</span><h2 class=\"portal-card-title\">${safeText(String(composer.title || imageComposerText(\"result.titleFallback\", \"Soạn mô tả ảnh\")))}</h2><p class=\"portal-card-subtitle\">${safeText(String(composer.goal_label || imagePromptComposerGoalLabel(composer.goal_code)))} · ${safeText(String(composer.ratio || \"\"))} · ${safeText(String(composer.language || \"\").toUpperCase())}. ${safeText(imageComposerText(\"result.note\", \"Rà soát mô tả trước khi dùng để tạo ảnh.\"))}</p></div>${badge(\"read_only\")}</div><div class=\"portal-image-prompt-composer-meta\"><span>${safeText(imageComposerText(\"meta.subject\", \"Chủ thể: {value}\", { value: String(composer.subject || \"\") }))}</span><span>${safeText(imageComposerText(\"meta.preset\", \"Định hướng: {value}\", { value: imagePromptComposerStylePresetLabel(composer.style_preset) }))}</span><span>${safeText(imageComposerText(\"meta.style\", \"Phong cách: {value}\", { value: String(composer.style || \"\") }))}</span>${customGoal}</div><div class=\"portal-image-prompt-composer-prompts\">${promptCards}</div><section class=\"portal-image-prompt-composer-variants\"><div><span class=\"portal-section-kicker\">${safeText(imageComposerText(\"variants.kicker\", \"Lựa chọn để lưu\"))}</span><h3>${safeText(imageComposerText(\"variants.title\", \"Bản gốc và ba phương án\"))}</h3><p>${safeText(imageComposerText(\"variants.selected\", \"Đang chọn: {label}. Lưu vào Ghi chú nếu muốn giữ lại.\", { label: selectedOption ? selectedOption.label : imageComposerText(\"selection.original\", \"Bản gốc\") }))}</p></div><ol>${selectionCards}</ol></section><section class=\"portal-image-prompt-composer-review\"><strong>${safeText(imageComposerText(\"review.title\", \"Rà soát trước khi sử dụng\"))}</strong><ul>${review.map((item) => `<li>${safeText(String(item))}</li>`).join(\"\")}</ul></section><div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(imageComposerText(\"result.footer\", \"Lưu lựa chọn bạn muốn giữ vào Ghi chú.\"))}</span><div class=\"portal-inline-actions\"><a class=\"portal-button portal-button--quiet\" href=\"/image-studio\">${safeText(imageComposerText(\"result.openStudio\", \"Mở Thiết kế ảnh\"))}</a>${saveControl}</div></div></section>`;\n  }\n\n"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function renderImagePromptComposerSaveReceipt(raw) {\n    const receipt = normalizeImagePromptComposerSaveReceipt(raw);\n    const note = receipt.note && typeof receipt.note === \"object\" ? receipt.note : null;\n    if (!note) return \"\";\n    const selectedVariantIndex = normalizeImagePromptComposerSelectedVariantIndex(receipt.selected_variant_index);\n    const selectedLabel = selectedVariantIndex === 0 ? \"Bản gốc\" : `Variant ${selectedVariantIndex}`;\n    return `<section class=\"portal-card portal-card-pad portal-image-prompt-composer-result\" aria-live=\"polite\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">Memory Center riêng tư</span><h2 class=\"portal-card-title\">Đã lưu ${safeText(selectedLabel)}</h2><p class=\"portal-card-subtitle\">${safeText(String(note.category || \"Image Prompt Composer\"))} · revision ${safeText(String(note.revision || 1))}. Receipt này không giữ lại nội dung ghi chú trong browser.</p></div>${badge(\"completed\")}</div><div class=\"portal-form-footer\"><span class=\"portal-form-note\">Đã tạo ghi chú owner-only trong Memory Center. Không có pending Telegram, Bot/provider call, source image, ảnh, job, ví Xu, PayOS, asset, publish hoặc delivery.</span><a class=\"portal-button portal-button--primary\" href=\"/notes\">Mở Memory Center</a></div></section>`;\n  }\n\n",
+      "new": "  function renderImagePromptComposerSaveReceipt(raw) {\n    const receipt = normalizeImagePromptComposerSaveReceipt(raw);\n    const note = receipt.note && typeof receipt.note === \"object\" ? receipt.note : null;\n    if (!note) return \"\";\n    const selectedVariantIndex = normalizeImagePromptComposerSelectedVariantIndex(receipt.selected_variant_index);\n    const selectedLabel = selectedVariantIndex === 0 ? imageComposerText(\"selection.original\", \"Bản gốc\") : imageComposerText(\"selection.variant\", \"Phương án {number} · {label}\", { number: String(selectedVariantIndex), label: [imageComposerText(\"variant.sales\", \"Bán hàng trực tiếp\"), imageComposerText(\"variant.premium\", \"Thương hiệu cao cấp\"), imageComposerText(\"variant.social\", \"Lan tỏa trên mạng xã hội\")][selectedVariantIndex - 1] });\n    const category = String(note.category || \"\");\n    const categoryLabel = !category || category === \"Image Prompt Composer\" ? imageComposerText(\"receipt.categoryFallback\", \"Mô tả ảnh\") : category;\n    return `<section class=\"portal-card portal-card-pad portal-image-prompt-composer-result\" aria-live=\"polite\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(imageComposerText(\"receipt.kicker\", \"Ghi chú của bạn\"))}</span><h2 class=\"portal-card-title\">${safeText(imageComposerText(\"receipt.title\", \"Đã lưu {label}\", { label: selectedLabel }))}</h2><p class=\"portal-card-subtitle\">${safeText(categoryLabel)} · ${safeText(imageComposerText(\"receipt.version\", \"Phiên bản {number}\", { number: String(note.revision || 1) }))}. ${safeText(imageComposerText(\"receipt.description\", \"Mở Ghi chú để xem nội dung đã lưu.\"))}</p></div>${badge(\"completed\")}</div><div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(imageComposerText(\"receipt.note\", \"Bản mô tả đã được lưu riêng trong Ghi chú của bạn.\"))}</span><a class=\"portal-button portal-button--primary\" href=\"/notes\">${safeText(imageComposerText(\"receipt.open\", \"Mở Ghi chú\"))}</a></div></section>`;\n  }\n\n"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "  function renderImagePromptComposer(page, context) {\n    const canCompose = Boolean(context.capabilities && context.capabilities[\"image-prompt-compose\"] === true);\n    const canSaveToMemory = Boolean(context.capabilities && context.capabilities[\"image-prompt-composer-save-memory\"] === true);\n    const values = { goal_code: \"product\", custom_goal: \"\", subject: \"\", style_preset: \"auto\", style: \"\", ratio: \"1:1\", language: \"vi\" };\n    return `<article class=\"portal-page portal-image-prompt-composer\">${renderHero(page, context)}\n      <section class=\"portal-image-prompt-composer-intro\"><div><span class=\"portal-section-kicker\">Web-native prompt planning</span><h2>Từ creative brief đến prompt ảnh có cấu trúc — không hề tạo ảnh.</h2><p>Composer chuyển trình tự prompt của Bot thành một công cụ Web text-only rõ ràng. Bạn kiểm soát toàn bộ bản nháp, có negative prompt và ba biến thể để review trước khi dùng trong workflow khác.</p></div><dl><div><dt>0</dt><dd>Ảnh / preview</dd></div><div><dt>0</dt><dd>Provider / job</dd></div><div><dt>3</dt><dd>Prompt variants</dd></div></dl></section>\n      <div class=\"portal-image-prompt-composer-layout\"><section class=\"portal-card portal-card-pad portal-image-prompt-composer-form\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">Brief composer</span><h2 class=\"portal-card-title\">Tạo prompt ảnh để review</h2><p class=\"portal-card-subtitle\">Server xác minh signed session và CSRF rồi áp dụng template deterministic. Brief và kết quả không được lưu thành artboard, asset, project, audit detail hoặc browser draft.</p></div>${badge(canCompose ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-no-transient data-portal-action=\"image-prompt-compose\" data-portal-route=\"${safeText(page.routePath || page.path)}\" novalidate>${renderFields(imagePromptComposerFields(), canCompose, context, values, \"image-prompt-composer\")}<p class=\"portal-image-prompt-composer-style-status\" data-image-prompt-composer-style-status role=\"status\" aria-live=\"polite\"></p><div class=\"portal-form-footer\"><span class=\"portal-form-note\">Nút này chỉ tạo prompt text editable; không gửi lệnh tạo, sửa, upscale, upload hoặc phân tích ảnh.</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canCompose ? \"\" : \" disabled\"}>Tạo prompt nháp</button></div></form></section><aside class=\"portal-card portal-card-pad portal-image-prompt-composer-boundary\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">Execution boundary</span><h2 class=\"portal-card-title\">Soạn prompt, không chạy image engine</h2><p class=\"portal-card-subtitle\">Không có source image, upload, phân tích ảnh, model, provider, Bot, job, Xu, PayOS, asset, publish hay delivery trong tool này.</p></div>${badge(\"guarded\")}</div><div class=\"portal-image-prompt-composer-guard-list\"><span><strong>Source image / upload</strong><em>off</em></span><span><strong>Model / provider</strong><em>off</em></span><span><strong>Image / output</strong><em>off</em></span><span><strong>Job / wallet</strong><em>off</em></span><span><strong>Asset / publish</strong><em>off</em></span><span><strong>Bot / bridge</strong><em>off</em></span></div></aside></div>\n      ${renderImagePromptComposerResult(context.imagePromptComposerResult, context.imagePromptComposerSaveSource, context.imagePromptComposerSelectedVariantIndex, canSaveToMemory)}\n      ${renderImagePromptComposerSaveReceipt(context.imagePromptComposerSaveReceipt)}\n      <section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">Scope rõ ràng</span><h2 class=\"portal-card-title\">Bản nháp visual trước, engine sau</h2><p class=\"portal-card-subtitle\">Dùng kết quả như một starting point có thể chỉnh sửa. Khi cần lưu direction có version history, hãy tạo Artboard riêng; việc đó vẫn không tạo ảnh hoặc tự gửi prompt đến provider.</p></div></div>${renderNotes(page)}</section>\n    </article>`;\n  }\n\n",
+      "new": "  function renderImagePromptComposer(page, context) {\n    const canCompose = Boolean(context.capabilities && context.capabilities[\"image-prompt-compose\"] === true);\n    const canSaveToMemory = Boolean(context.capabilities && context.capabilities[\"image-prompt-composer-save-memory\"] === true);\n    const values = { goal_code: \"product\", custom_goal: \"\", subject: \"\", style_preset: \"auto\", style: \"\", ratio: \"1:1\", language: \"vi\" };\n    return `<article class=\"portal-page portal-image-prompt-composer portal-image-composer-customer\">${renderHero(page, context)}\n      <section class=\"portal-image-prompt-composer-intro\"><div><span class=\"portal-section-kicker\">${safeText(imageComposerText(\"intro.kicker\", \"Soạn ý tưởng hình ảnh\"))}</span><h2>${safeText(imageComposerText(\"intro.title\", \"Biến ý tưởng thành mô tả ảnh rõ ràng\"))}</h2><p>${safeText(imageComposerText(\"intro.body\", \"Soạn mô tả ảnh, điều cần tránh và ba phương án để bạn lựa chọn. Bước này tạo bản mô tả, chưa tạo ảnh.\"))}</p></div></section>\n      <div class=\"portal-image-prompt-composer-layout\"><section class=\"portal-card portal-card-pad portal-image-prompt-composer-form\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(imageComposerText(\"form.kicker\", \"Mô tả ý tưởng\"))}</span><h2 class=\"portal-card-title\">${safeText(imageComposerText(\"form.title\", \"Soạn bản mô tả ảnh\"))}</h2><p class=\"portal-card-subtitle\">${safeText(imageComposerText(\"form.description\", \"Chọn mục tiêu và mô tả hình ảnh bạn muốn tạo.\"))}</p></div>${badge(canCompose ? \"ready\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-no-transient data-portal-action=\"image-prompt-compose\" data-portal-route=\"${safeText(page.routePath || page.path)}\" novalidate>${renderFields(imagePromptComposerFields(), canCompose, context, values, \"image-prompt-composer\")}<p class=\"portal-image-prompt-composer-style-status\" data-image-prompt-composer-style-status role=\"status\" aria-live=\"polite\"></p><div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(imageComposerText(\"form.note\", \"Bước này chỉ soạn mô tả, chưa tạo hoặc chỉnh sửa ảnh.\"))}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canCompose ? \"\" : \" disabled\"}>${safeText(imageComposerText(\"form.submit\", \"Soạn mô tả\"))}</button></div></form></section></div>\n      ${renderImagePromptComposerResult(context.imagePromptComposerResult, context.imagePromptComposerSaveSource, context.imagePromptComposerSelectedVariantIndex, canSaveToMemory)}\n      ${renderImagePromptComposerSaveReceipt(context.imagePromptComposerSaveReceipt)}\n\n    </article>`;\n  }\n\n"
+    },
+    {
+      "file": "static/portal/portal-theme.css",
+      "old": "/* These legacy studios authored their intro metrics for dark gradient panels.",
+      "new": "/* The customer Composer has no static side panels or empty metric columns. */\n.portal-page.portal-image-composer-customer :is(\n  .portal-image-prompt-composer-intro,\n  .portal-image-prompt-composer-layout\n) {\n  grid-template-columns: minmax(0, 1fr);\n}\n\n/* These legacy studios authored their intro metrics for dark gradient panels."
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    if (path === \"/image-studio\") return imageStudioText(\"page.title\", \"Thiết kế ảnh\");",
+      "new": "    if (path === \"/image/prompt-composer\") return imageComposerText(\"page.title\", \"Soạn mô tả ảnh\");\n    if (path === \"/image-studio\") return imageStudioText(\"page.title\", \"Thiết kế ảnh\");"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    if (path === \"/image-studio\") return imageStudioText(\"page.description\", \"Lưu ý tưởng, ảnh tham khảo và các phương án thiết kế tại một nơi.\");",
+      "new": "    if (path === \"/image/prompt-composer\") return imageComposerText(\"intro.body\", \"Soạn mô tả ảnh, điều cần tránh và ba phương án để bạn lựa chọn. Bước này tạo bản mô tả, chưa tạo ảnh.\");\n    if (path === \"/image-studio\") return imageStudioText(\"page.description\", \"Lưu ý tưởng, ảnh tham khảo và các phương án thiết kế tại một nơi.\");"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "      \"workspaceMenu.card.image_prompt_composer.title\": \"Soạn yêu cầu tạo ảnh\",",
+      "new": "      \"workspaceMenu.card.image_prompt_composer.title\": \"Soạn mô tả ảnh\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "      \"workspaceMenu.card.image_prompt_composer.title\": \"Image Prompt Composer\",",
+      "new": "      \"workspaceMenu.card.image_prompt_composer.title\": \"Compose image description\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "      \"workspaceMenu.card.image_prompt_composer.title\": \"图像提示词编辑器\",",
+      "new": "      \"workspaceMenu.card.image_prompt_composer.title\": \"编写图像描述\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "      \"shellNav.imagePromptComposer\": \"Soạn prompt hình ảnh\",",
+      "new": "      \"shellNav.imagePromptComposer\": \"Soạn mô tả ảnh\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "      \"shellNav.imagePromptComposer\": \"Image Prompt Composer\",",
+      "new": "      \"shellNav.imagePromptComposer\": \"Compose image description\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "old": "      \"shellNav.imagePromptComposer\": \"图像提示词编辑器\",",
+      "new": "      \"shellNav.imagePromptComposer\": \"编写图像描述\","
+    },
+    {
+      "file": "static/portal/portal.js",
+      "old": "    return {\n      note: { id: String(note.id), revision, state: \"active\", category: \"Image Prompt Composer\", priority: \"normal\" },\n      destination: \"memory_note\",\n      selected_variant_index: selectedVariantIndex\n    };",
+      "new": "    return {\n      note: { id: String(note.id), revision, state: \"active\", category: \"Image Prompt Composer\", priority: \"normal\" },\n      destination: \"memory_note\",\n      selected_variant_index: selectedVariantIndex,\n      execution: \"web_native_memory_note_server_recomputed\",\n      draft_recomputed_on_server: true,\n      web_note_persisted: true,\n      ...Object.fromEntries(IMAGE_PROMPT_COMPOSER_MEMORY_FALSE_BOUNDARY_FIELDS.map((field) => [field, false]))\n    };"
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "\"Ảnh cinematic / key visual video\"",
+      "new": "\"Ảnh điện ảnh / hình ảnh chủ đạo\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "\"studio sạch đẹp\"",
+      "new": "\"phông nền gọn đẹp\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "\"cinematic ánh sáng mạnh\"",
+      "new": "\"phong cách điện ảnh với ánh sáng mạnh\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "f\"{subject}, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, studio sạch, {ratio}, ánh sáng premium, chi tiết cao, không watermark\"",
+      "new": "f\"{subject}, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, {ratio}, ánh sáng cao cấp, chi tiết cao, không dấu chìm\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "f\"{subject}, key visual thương hiệu cao cấp, phong cách {style}, bố cục tinh tế, {ratio}, ánh sáng luxury, chất lượng cao, không chữ thừa\"",
+      "new": "f\"{subject}, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách {style}, bố cục tinh tế, {ratio}, ánh sáng sang trọng, chất lượng cao, không chữ thừa\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "f\"{subject}, ảnh viral nổi bật mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, {ratio}, dễ dừng lướt, chủ thể sạch, không watermark\"",
+      "new": "f\"{subject}, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, {ratio}, dễ dừng lướt, chủ thể rõ, không dấu chìm\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "\"Đây là bản nháp text có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.\"",
+      "new": "\"Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "\"Kiểm chứng mọi claim, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.\"",
+      "new": "\"Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "\"Xác nhận quyền sử dụng thương hiệu, logo, người, địa điểm và mọi reference trước khi dùng.\"",
+      "new": "\"Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "\"Rà soát lại prompt theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh.\"",
+      "new": "\"Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh.\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "\"chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không watermark, không thêm chữ không được yêu cầu\"",
+      "new": "\"chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "f\"Chủ thể: {subject}. Mục tiêu visual: {goal_label}. Phong cách: {style}. Tỷ lệ: {ratio}. \"",
+      "new": "f\"Chủ thể: {subject}. Mục tiêu hình ảnh: {goal_label}. Phong cách: {style}. Tỷ lệ: {ratio}. \""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "\"ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ logo hoặc chữ quan trọng \"",
+      "new": "\"ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng \""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "\"nếu đã được cấp quyền; không tự thêm claim, logo hoặc chữ thừa. Đây là hướng prompt để biên tập, không phải yêu cầu thực thi ảnh.\"",
+      "new": "\"nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh.\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "\"chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, logo hỏng, chữ sai hoặc thừa, \"",
+      "new": "\"chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, \""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "\"watermark, nền rối, phơi sáng quá mức hoặc thiếu sáng\"",
+      "new": "\"dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "f\"Bản nháp prompt ảnh: {subject}\"",
+      "new": "f\"Mô tả ảnh: {subject}\""
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "PROMPT_COMPOSER_VARIANT_LABELS = {\n    \"vi\": (\n        \"Bản gốc\",\n        \"Biến thể 1 · Bán hàng trực tiếp\",\n        \"Biến thể 2 · Premium brand\",\n        \"Biến thể 3 · Viral / social\",\n    ),\n",
+      "new": "PROMPT_COMPOSER_VARIANT_LABELS = {\n    \"vi\": (\n        \"Bản gốc\",\n        \"Biến thể 1 · Bán hàng trực tiếp\",\n        \"Biến thể 2 · Thương hiệu cao cấp\",\n        \"Biến thể 3 · Lan tỏa trên mạng xã hội\",\n    ),\n"
+    },
+    {
+      "file": "copyfast_image_studio.py",
+      "old": "PROMPT_COMPOSER_STYLE_SUGGESTION_CATALOG = {\n    \"vi\": {\n        \"product\": {\n            \"suggestion_1\": \"Studio sạch đẹp\",\n            \"suggestion_2\": \"Luxury showroom\",\n            \"suggestion_3\": \"Lifestyle đời thường\",\n        },\n        \"ad\": {\n            \"suggestion_1\": \"Bán hàng trực tiếp\",\n            \"suggestion_2\": \"Premium brand\",\n            \"suggestion_3\": \"Viral/TikTok\",\n        },\n        \"cinematic\": {\n            \"suggestion_1\": \"Cinematic ánh sáng mạnh\",\n            \"suggestion_2\": \"Sci-fi/công nghệ tương lai\",\n            \"suggestion_3\": \"Fantasy/cyberpunk\",\n        },\n    },\n",
+      "new": "PROMPT_COMPOSER_STYLE_SUGGESTION_CATALOG = {\n    \"vi\": {\n        \"product\": {\n            \"suggestion_1\": \"Phông nền gọn đẹp\",\n            \"suggestion_2\": \"Không gian trưng bày sang trọng\",\n            \"suggestion_3\": \"Khung cảnh đời thường\",\n        },\n        \"ad\": {\n            \"suggestion_1\": \"Bán hàng trực tiếp\",\n            \"suggestion_2\": \"Thương hiệu cao cấp\",\n            \"suggestion_3\": \"Lan tỏa trên TikTok\",\n        },\n        \"cinematic\": {\n            \"suggestion_1\": \"Phong cách điện ảnh với ánh sáng mạnh\",\n            \"suggestion_2\": \"Khoa học viễn tưởng / công nghệ tương lai\",\n            \"suggestion_3\": \"Kỳ ảo / đô thị công nghệ đen tối\",\n        },\n    },\n"
+    }
+  ],
+  "copyRows": [
+    [
+      "goal.product",
+      "Ảnh sản phẩm",
+      "Product image",
+      "产品图"
+    ],
+    [
+      "goal.ad",
+      "Ảnh quảng cáo",
+      "Advertising image",
+      "广告图"
+    ],
+    [
+      "goal.cinematic",
+      "Ảnh điện ảnh / hình ảnh chủ đạo",
+      "Cinematic / key visual",
+      "电影感 / 主视觉"
+    ],
+    [
+      "goal.custom",
+      "Mục tiêu riêng",
+      "Custom goal",
+      "自定义目标"
+    ],
+    [
+      "ratio.square",
+      "1:1 · Vuông",
+      "1:1 · Square",
+      "1:1 · 正方形"
+    ],
+    [
+      "ratio.vertical",
+      "9:16 · Dọc / Reels",
+      "9:16 · Vertical / Reels",
+      "9:16 · 竖屏 / Reels"
+    ],
+    [
+      "ratio.horizontal",
+      "16:9 · Ngang / YouTube",
+      "16:9 · Horizontal / YouTube",
+      "16:9 · 横屏 / YouTube"
+    ],
+    [
+      "ratio.post",
+      "4:5 · Bài đăng",
+      "4:5 · Post",
+      "4:5 · 帖子"
+    ],
+    [
+      "ratio.portrait",
+      "3:4 · Chân dung",
+      "3:4 · Portrait",
+      "3:4 · 肖像"
+    ],
+    [
+      "ratio.slide",
+      "4:3 · Trang trình chiếu",
+      "4:3 · Slide",
+      "4:3 · 幻灯片"
+    ],
+    [
+      "ratio.productWide",
+      "3:2 · Ngang sản phẩm",
+      "3:2 · Horizontal product",
+      "3:2 · 横版产品"
+    ],
+    [
+      "ratio.productTall",
+      "2:3 · Dọc sản phẩm",
+      "2:3 · Vertical product",
+      "2:3 · 竖版产品"
+    ],
+    [
+      "ratio.ultrawide",
+      "21:9 · Siêu rộng",
+      "21:9 · Ultra-wide",
+      "21:9 · 超宽屏"
+    ],
+    [
+      "language.vi",
+      "Tiếng Việt",
+      "Vietnamese",
+      "越南语"
+    ],
+    [
+      "language.en",
+      "Tiếng Anh",
+      "English",
+      "英语"
+    ],
+    [
+      "preset.auto",
+      "Tự chọn theo mục tiêu",
+      "Auto-select by goal",
+      "按目标自动选择"
+    ],
+    [
+      "preset.first",
+      "Gợi ý 1 · Rõ chủ thể",
+      "Preset 1 · Clear subject",
+      "预设 1 · 主体清晰"
+    ],
+    [
+      "preset.second",
+      "Gợi ý 2 · Cao cấp và có chiều sâu",
+      "Preset 2 · Premium with depth",
+      "预设 2 · 高端且有深度"
+    ],
+    [
+      "preset.third",
+      "Gợi ý 3 · Biên tập / mạng xã hội",
+      "Preset 3 · Editorial / social",
+      "预设 3 · 编辑风格 / 社交媒体"
+    ],
+    [
+      "preset.custom",
+      "Tự nhập phong cách",
+      "Enter custom style",
+      "自行输入风格"
+    ],
+    [
+      "field.goal",
+      "Mục tiêu ảnh",
+      "Image goal",
+      "图像目标"
+    ],
+    [
+      "field.ratio",
+      "Tỷ lệ khung hình",
+      "Aspect ratio",
+      "宽高比"
+    ],
+    [
+      "field.language",
+      "Ngôn ngữ mô tả",
+      "Description language",
+      "描述语言"
+    ],
+    [
+      "field.customGoal",
+      "Mục tiêu riêng",
+      "Custom goal",
+      "自定义目标"
+    ],
+    [
+      "field.subject",
+      "Chủ thể / chủ đề",
+      "Subject / topic",
+      "主体 / 主题"
+    ],
+    [
+      "field.preset",
+      "Định hướng phong cách",
+      "Style direction",
+      "风格方向"
+    ],
+    [
+      "field.customStyle",
+      "Phong cách riêng",
+      "Custom style",
+      "自定义风格"
+    ],
+    [
+      "help.goal",
+      "Chọn mục tiêu để có gợi ý mô tả phù hợp.",
+      "Select a goal to get appropriate description suggestions.",
+      "选择目标以获取相符的描述建议。"
+    ],
+    [
+      "help.customGoal",
+      "Chỉ điền khi chọn Mục tiêu riêng.",
+      "Only fill in when selecting Custom goal.",
+      "仅在选择自定义目标时填写。"
+    ],
+    [
+      "help.subject",
+      "Mô tả nội dung bạn có quyền sử dụng. Không đưa đường dẫn, thông tin bảo mật hoặc thanh toán vào đây.",
+      "Describe content you have the right to use. Do not include links, sensitive information, or payment details here.",
+      "描述您有权使用的内容。请勿在此输入链接、保密信息或支付信息。"
+    ],
+    [
+      "help.preset",
+      "Chọn một gợi ý hoặc Tự nhập để dùng phong cách riêng.",
+      "Choose a preset or enter your own to use a custom style.",
+      "选择一个预设或自行输入以使用自定义风格。"
+    ],
+    [
+      "help.customStyle",
+      "Mô tả phong cách nguyên bản bạn muốn sử dụng.",
+      "Describe the original style you want to use.",
+      "描述您想要使用的原创风格。"
+    ],
+    [
+      "placeholder.customGoal",
+      "Ví dụ: hình ảnh chủ đạo giới thiệu tính năng mới trên trang giới thiệu",
+      "Example: key visual introducing a new feature on a landing page",
+      "例如：在介绍页上展示新功能的主视觉"
+    ],
+    [
+      "placeholder.subject",
+      "Ví dụ: máy pha cà phê nhỏ màu đen mờ trên quầy bếp sáng",
+      "Example: compact matte black coffee maker on a bright kitchen counter",
+      "例如：明亮厨房台面上的一台哑光黑小型咖啡机"
+    ],
+    [
+      "placeholder.customStyle",
+      "Ví dụ: phông nền gọn, ánh sáng dịu, chủ thể ở giữa, chừa chỗ cho lời mời hành động",
+      "Example: clean backdrop, soft lighting, centered subject, space for call-to-action",
+      "例如：简洁背景、柔和光线、主体居中、留出行动呼吁空间"
+    ],
+    [
+      "status.custom",
+      "Đang dùng phong cách riêng của bạn.",
+      "Using your custom style.",
+      "正在使用您的自定义风格。"
+    ],
+    [
+      "status.auto",
+      "Đang dùng phong cách gợi ý theo mục tiêu và ngôn ngữ.",
+      "Using suggested style based on goal and language.",
+      "正在使用根据目标与语言推荐的风格。"
+    ],
+    [
+      "variant.sales",
+      "Bán hàng trực tiếp",
+      "Direct sales",
+      "直接销售"
+    ],
+    [
+      "variant.premium",
+      "Thương hiệu cao cấp",
+      "Premium brand",
+      "高端品牌"
+    ],
+    [
+      "variant.social",
+      "Lan tỏa trên mạng xã hội",
+      "Social media reach",
+      "社交媒体传播"
+    ],
+    [
+      "fallback.goal",
+      "Mô tả ảnh",
+      "Image description",
+      "图像描述"
+    ],
+    [
+      "fallback.preset",
+      "Định hướng phong cách",
+      "Style direction",
+      "风格方向"
+    ],
+    [
+      "empty.kicker",
+      "Bản mô tả của bạn",
+      "Your description",
+      "您的描述"
+    ],
+    [
+      "empty.title",
+      "Chưa có bản mô tả",
+      "No description yet",
+      "暂无描述"
+    ],
+    [
+      "empty.body",
+      "Chọn mục tiêu, mô tả chủ thể và phong cách để bắt đầu.",
+      "Select a goal, describe the subject, and choose a style to get started.",
+      "选择目标、描述主体并设定风格以开始。"
+    ],
+    [
+      "prompt.short",
+      "Mô tả ngắn",
+      "Short description",
+      "简短描述"
+    ],
+    [
+      "prompt.detailed",
+      "Mô tả chi tiết",
+      "Detailed description",
+      "详细描述"
+    ],
+    [
+      "prompt.negative",
+      "Điều cần tránh",
+      "What to avoid",
+      "需要避免的内容"
+    ],
+    [
+      "selection.original",
+      "Bản gốc",
+      "Original",
+      "原版"
+    ],
+    [
+      "selection.variant",
+      "Phương án {number} · {label}",
+      "Option {number} · {label}",
+      "方案 {number} · {label}"
+    ],
+    [
+      "selection.fallback",
+      "Mô tả",
+      "Description",
+      "描述"
+    ],
+    [
+      "meta.customGoal",
+      "Mục tiêu riêng: {value}",
+      "Custom goal: {value}",
+      "自定义目标: {value}"
+    ],
+    [
+      "save.confirm",
+      "Lưu {label} vào Ghi chú của bạn?",
+      "Save {label} to your Notes?",
+      "将 {label} 保存到您的笔记？"
+    ],
+    [
+      "save.button",
+      "Lưu vào Ghi chú",
+      "Save to Notes",
+      "保存到笔记"
+    ],
+    [
+      "ordinal.original",
+      "Gốc",
+      "Original",
+      "原版"
+    ],
+    [
+      "selection.selected",
+      "Đang chọn",
+      "Selected",
+      "已选择"
+    ],
+    [
+      "selection.choose",
+      "Chọn {label}",
+      "Select {label}",
+      "选择 {label}"
+    ],
+    [
+      "result.kicker",
+      "Bản mô tả đã soạn",
+      "Prepared description",
+      "已生成的描述"
+    ],
+    [
+      "result.titleFallback",
+      "Soạn mô tả ảnh",
+      "Compose image description",
+      "编写图像描述"
+    ],
+    [
+      "result.note",
+      "Rà soát mô tả trước khi dùng để tạo ảnh.",
+      "Review the description before using it to create an image.",
+      "请在使用描述创建图像之前先进行核对。"
+    ],
+    [
+      "meta.subject",
+      "Chủ thể: {value}",
+      "Subject: {value}",
+      "主体: {value}"
+    ],
+    [
+      "meta.preset",
+      "Định hướng: {value}",
+      "Direction: {value}",
+      "方向: {value}"
+    ],
+    [
+      "meta.style",
+      "Phong cách: {value}",
+      "Style: {value}",
+      "风格: {value}"
+    ],
+    [
+      "variants.kicker",
+      "Lựa chọn để lưu",
+      "Options to save",
+      "可保存的选项"
+    ],
+    [
+      "variants.title",
+      "Bản gốc và ba phương án",
+      "Original and three options",
+      "原版及三个方案"
+    ],
+    [
+      "variants.selected",
+      "Đang chọn: {label}. Lưu vào Ghi chú nếu muốn giữ lại.",
+      "Selected: {label}. Save to Notes if you want to keep it.",
+      "当前选择: {label}。如需保留，请保存到笔记。"
+    ],
+    [
+      "review.title",
+      "Rà soát trước khi sử dụng",
+      "Review before using",
+      "使用前核对"
+    ],
+    [
+      "result.footer",
+      "Lưu lựa chọn bạn muốn giữ vào Ghi chú.",
+      "Save the option you want to keep to Notes.",
+      "将您想要保留的选项保存到笔记。"
+    ],
+    [
+      "result.openStudio",
+      "Mở Thiết kế ảnh",
+      "Open Image Design",
+      "打开图像设计"
+    ],
+    [
+      "page.title",
+      "Soạn mô tả ảnh",
+      "Compose image description",
+      "编写图像描述"
+    ],
+    [
+      "intro.kicker",
+      "Soạn ý tưởng hình ảnh",
+      "Draft visual ideas",
+      "构思视觉创意"
+    ],
+    [
+      "intro.title",
+      "Biến ý tưởng thành mô tả ảnh rõ ràng",
+      "Turn ideas into clear image descriptions",
+      "将创意转化为清晰的图像描述"
+    ],
+    [
+      "intro.body",
+      "Soạn mô tả ảnh, điều cần tránh và ba phương án để bạn lựa chọn. Bước này tạo bản mô tả, chưa tạo ảnh.",
+      "Draft image descriptions, things to avoid, and three options to choose from. This step creates descriptions, not images.",
+      "编写图像描述、需避开的内容以及三个备选方案供您选择。此步骤仅创建描述，不生成图像。"
+    ],
+    [
+      "form.kicker",
+      "Mô tả ý tưởng",
+      "Describe your idea",
+      "创意描述"
+    ],
+    [
+      "form.title",
+      "Soạn bản mô tả ảnh",
+      "Draft image description",
+      "起草图像描述"
+    ],
+    [
+      "form.description",
+      "Chọn mục tiêu và mô tả hình ảnh bạn muốn tạo.",
+      "Choose a goal and describe the image you want to create.",
+      "选择目标并描述您想要创建的图像。"
+    ],
+    [
+      "form.note",
+      "Bước này chỉ soạn mô tả, chưa tạo hoặc chỉnh sửa ảnh.",
+      "This step only drafts descriptions and does not create or edit images.",
+      "此步骤仅编写描述，不会创建或编辑图像。"
+    ],
+    [
+      "form.submit",
+      "Soạn mô tả",
+      "Draft description",
+      "编写描述"
+    ],
+    [
+      "receipt.kicker",
+      "Ghi chú của bạn",
+      "Your Notes",
+      "您的笔记"
+    ],
+    [
+      "receipt.title",
+      "Đã lưu {label}",
+      "Saved {label}",
+      "已保存 {label}"
+    ],
+    [
+      "receipt.categoryFallback",
+      "Mô tả ảnh",
+      "Image description",
+      "图像描述"
+    ],
+    [
+      "receipt.version",
+      "Phiên bản {number}",
+      "Version {number}",
+      "版本 {number}"
+    ],
+    [
+      "receipt.description",
+      "Mở Ghi chú để xem nội dung đã lưu.",
+      "Open Notes to view saved content.",
+      "打开笔记查看已保存内容。"
+    ],
+    [
+      "receipt.note",
+      "Bản mô tả đã được lưu riêng trong Ghi chú của bạn.",
+      "The description has been saved privately in your Notes.",
+      "描述已私密保存在您的笔记中。"
+    ],
+    [
+      "receipt.open",
+      "Mở Ghi chú",
+      "Open Notes",
+      "打开笔记"
+    ]
+  ],
+  "applicationSources": [
+    {
+      "file": "copyfast_image_studio.py",
+      "beforeLfSha256": "b6181e9b527bb729d79ad744e41fca299082674af06c33f3d343a7a123074f9c",
+      "afterLfSha256": "fb835ffcfcfbc1bf4adc0677def462eea71b17bc0a1dc36e490657f232ced730"
+    },
+    {
+      "file": "static/portal/integration.js",
+      "beforeLfSha256": "49d34c1b16e43fc4580467814a0ac121ee9999a6d1111209d4db4fe6f12762ea",
+      "afterLfSha256": "9b08a7f0421c0f27232b19bd006176cb5f6566b183c543e2f8d68ef5f4ba8945"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "beforeLfSha256": "42a4f58047a2979a1452f22525eac5bd309189dda03721139a576ae17bf0c750",
+      "afterLfSha256": "e680ec8e3d3abc58bc6e18b46639923bf59520e158eb045686b269f4f55cd2fa"
+    },
+    {
+      "file": "static/portal/portal-theme.css",
+      "beforeLfSha256": "f30272a735a5126290e46c2d5ff9ab72b192155eb56a7db2dd93a32b02e012da",
+      "afterLfSha256": "e749a513f4ea1a1b9ac8a2272f2627d0ef136db45608f2a7786a83f3f3a9c17b"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "beforeLfSha256": "3412e23b6e1350c3f99b5692987d211aa84723cbd7bf75a140594fb685a6235b",
+      "afterLfSha256": "a45876fa3e3674e7bf01ad165df5080450164da5f548bda27e9fe3ef843a719e"
+    }
+  ],
+  "workerCodeFailures": {
+    "frameOldAnchor": 2,
+    "others": 0
+  },
+  "rootRepair": "Frame OLD anchor extra backslash only, worker NEW unchanged after two failures",
+  "priorColorDelivery": {
+    "pr": 809,
+    "ci": 45662670051,
+    "deploy": 45667062174,
+    "runtime": "6ec003dbf8f80739f5fb93ff7bd1d7cc703c6792",
+    "receipt": 7169893110
+  },
+  "acceptance": "PHYSICAL_RED_GREEN_AND_FULL_SCOPED_VERIFICATION_REQUIRED",
+  "providerCalls": 0,
+  "walletMutations": 0,
+  "amendments": [
+    {
+      "id": "COMP-RECEIPT-INTEGRATION-R1",
+      "file": "static/portal/integration.js",
+      "old": "    return {\n      note: { id: String(note.id), revision, state: \"active\", category: \"Image Prompt Composer\", priority: \"normal\" },\n      destination: \"memory_note\",\n      selected_variant_index: selectedVariantIndex\n    };",
+      "new": "    return {\n      note: { id: String(note.id), revision, state: \"active\", category: \"Image Prompt Composer\", priority: \"normal\" },\n      destination: \"memory_note\",\n      selected_variant_index: selectedVariantIndex,\n      execution: \"web_native_memory_note_server_recomputed\",\n      draft_recomputed_on_server: true,\n      web_note_persisted: true,\n      ...Object.fromEntries(IMAGE_PROMPT_COMPOSER_MEMORY_SAVE_FALSE_BOUNDARY_FIELDS.map((field) => [field, false]))\n    };"
+    },
+    {
+      "id": "COMP-FEEDBACK-R1",
+      "file": "static/portal/integration.js",
+      "old": "  const IMAGE_PROMPT_COMPOSER_MEMORY_SAVE_FALSE_BOUNDARY_FIELDS = Object.freeze([",
+      "new": "  function imageComposerFeedbackText(key, fallback, params) {\n    const i18n = window.TOANAASI18n;\n    const fullKey = `imageComposerFeedbackUi.${key}`;\n    const value = i18n && typeof i18n.t === \"function\" ? i18n.t(fullKey, params) : \"\";\n    if (typeof value === \"string\" && value && value !== fullKey) return value;\n    const values = params && typeof params === \"object\" ? params : {};\n    return String(fallback || \"\").replace(/\\{([A-Za-z]+)\\}/g, (match, name) => Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : match);\n  }\n\n  const IMAGE_PROMPT_COMPOSER_MEMORY_SAVE_FALSE_BOUNDARY_FIELDS = Object.freeze(["
+    },
+    {
+      "id": "COMP-FEEDBACK-R1",
+      "file": "static/portal/integration.js",
+      "old": "      if (action === \"image-prompt-composer-select-variant\") {\n        const capabilities = base().capabilities && typeof base().capabilities === \"object\" ? base().capabilities : {};\n        if (!(capabilities[\"image-prompt-compose\"] === true)) {\n          throw new Error(\"Cần signed Web session, CSRF và Image Studio đang sẵn sàng để chọn variant prompt.\");\n        }\n        const selectedVariantIndex = imagePromptComposerVariantIndex(fields.__imagePromptComposerSelectedVariantIndex);\n        const currentResult = base().imagePromptComposerResult;\n        if (selectedVariantIndex === null || !imagePromptComposerResultIsSafe(currentResult)) {\n          throw new Error(\"Variant prompt không còn thuộc bản nháp Web hiện tại. Hãy tạo lại prompt trước khi chọn.\");\n        }\n        merge({\n          imagePromptComposerSelectedVariantIndex: selectedVariantIndex,\n          // A prior receipt describes a different explicit selection, so do\n          // not leave it visible after the session-local choice changes.\n          imagePromptComposerSaveReceipt: {}\n        });\n        toast(selectedVariantIndex === 0 ? \"Đã chọn Bản gốc để review hoặc lưu.\" : `Đã chọn Variant ${selectedVariantIndex} để review hoặc lưu.`);\n        return;\n      }\n      if (action === \"image-prompt-compose\") {\n        const payload = imagePromptComposerPayload(fields);\n        // The Composer is a stateless template recipe: do not create a\n        // project, asset, durable receipt or browser-persistent draft.\n        // Starting a new composition drops the prior selection and Memory\n        // receipt, so a later write can only use this exact tab's source.\n        merge({\n          imagePromptComposerResult: {},\n          imagePromptComposerSaveSource: {},\n          imagePromptComposerSelectedVariantIndex: 0,\n          imagePromptComposerSaveReceipt: {}\n        });\n        setActionBusy(action, route, true);\n        try {\n          const result = await api(\"/image-studio/tools/prompt-composer\", {\n            method: \"POST\",\n            headers: { \"Content-Type\": \"application/json\" },\n            body: JSON.stringify(payload)\n          });\n          const data = result.data && typeof result.data === \"object\" ? result.data : {};\n          if (!imagePromptComposerResultIsSafe(data)) {\n            throw new Error(\"Máy chủ chưa trả Image Prompt Composer Web-native an toàn.\");\n          }\n          const saveSource = imagePromptComposerMemorySaveSource(payload);\n          if (!saveSource || !imagePromptComposerMemorySaveSourceMatchesResult(saveSource, data)) {\n            throw new Error(\"Bản nháp trả về không còn khớp lựa chọn Web hiện tại để lưu an toàn.\");\n          }\n          merge({\n            imagePromptComposerResult: data,\n            imagePromptComposerSaveSource: saveSource,\n            imagePromptComposerSelectedVariantIndex: 0,\n            imagePromptComposerSaveReceipt: {},\n            pageStates: { ...(base().pageStates || {}), \"/image/prompt-composer\": \"ready\" }\n          });\n          toast(result.message || \"Đã tạo prompt để review. Không có ảnh, output, job, tài sản, thanh toán hoặc publish action.\");\n        } finally {\n          setActionBusy(action, route, false);\n        }\n        return;\n      }\n      if (action === \"image-prompt-composer-save-memory\") {\n        const capabilities = base().capabilities && typeof base().capabilities === \"object\" ? base().capabilities : {};\n        if (!(capabilities[\"image-prompt-compose\"] === true && capabilities[\"image-prompt-composer-save-memory\"] === true)) {\n          throw new Error(\"Chỉ signed Web session có CSRF, Image Studio và Memory Center đang sẵn sàng mới có thể lưu Prompt Composer.\");\n        }\n        const source = imagePromptComposerMemorySaveSource(base().imagePromptComposerSaveSource);\n        const currentResult = base().imagePromptComposerResult;\n        const selectedVariantIndex = imagePromptComposerVariantIndex(base().imagePromptComposerSelectedVariantIndex);\n        if (!source || !imagePromptComposerMemorySaveSourceMatchesResult(source, currentResult)) {\n          throw new Error(\"Bản nháp hiện tại không còn khớp lựa chọn Web trong phiên này. Hãy tạo lại Image Prompt Composer trước khi lưu.\");\n        }\n        if (selectedVariantIndex === null) {\n          throw new Error(\"Hãy chọn Bản gốc hoặc một Variant hợp lệ trước khi lưu vào Memory Center.\");\n        }\n        const payload = { ...source, destination: \"memory_note\", selected_variant_index: selectedVariantIndex };\n        const scope = \"image-studio:prompt-composer:save-memory\";\n        const submission = acquireSubmission(scope, JSON.stringify(payload));\n        if (!submission) {\n          toast(\"Bản nháp đang được Memory Center xác nhận. Vui lòng chờ.\", \"error\");\n          return;\n        }\n        let acknowledged = false;\n        setActionBusy(action, route, true);\n        try {\n          // Send only the bounded source selection, destination and retry\n          // key. The server recomputes the draft; no browser result, image\n          // source, asset reference or external execution input is accepted.\n          const result = await api(\"/image-studio/tools/prompt-composer/save\", {\n            method: \"POST\",\n            headers: { \"Content-Type\": \"application/json\" },\n            body: JSON.stringify({ ...payload, idempotency_key: submission.key })\n          });\n          acknowledged = true;\n          if (result.status !== \"completed\") throw new Error(\"Máy chủ chưa xác nhận lưu Image Prompt Composer vào Memory Center.\");\n          const receipt = imagePromptComposerMemorySaveReceipt(result.data);\n          if (!receipt) throw new Error(\"Máy chủ chưa trả receipt Memory Center content-free và đúng ranh giới an toàn.\");\n          if (receipt.selected_variant_index !== selectedVariantIndex) throw new Error(\"Receipt Memory Center không khớp variant đã chọn trong phiên này.\");\n          merge({ imagePromptComposerSaveReceipt: receipt });\n          toast(result.message || \"Đã lưu bản nháp Web vào Memory Center riêng tư.\");\n        } catch (error) {\n          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);\n          merge({ imagePromptComposerSaveReceipt: {} });\n          throw error;\n        } finally {\n          releaseSubmission(submission);\n          if (acknowledged) discardSubmission(scope, submission);\n          setActionBusy(action, route, false);\n        }\n        return;\n      }\n",
+      "new": "      if (action === \"image-prompt-composer-select-variant\") {\n        const capabilities = base().capabilities && typeof base().capabilities === \"object\" ? base().capabilities : {};\n        if (!(capabilities[\"image-prompt-compose\"] === true)) {\n          throw new Error(imageComposerFeedbackText(\"chooseUnavailable\", \"Hiện chưa thể chọn phương án này. Vui lòng tải lại trang rồi thử lại.\"));\n        }\n        const selectedVariantIndex = imagePromptComposerVariantIndex(fields.__imagePromptComposerSelectedVariantIndex);\n        const currentResult = base().imagePromptComposerResult;\n        if (selectedVariantIndex === null || !imagePromptComposerResultIsSafe(currentResult)) {\n          throw new Error(imageComposerFeedbackText(\"chooseStale\", \"Mô tả hiện tại đã thay đổi. Hãy tạo lại trước khi chọn.\"));\n        }\n        merge({\n          imagePromptComposerSelectedVariantIndex: selectedVariantIndex,\n          // A prior receipt describes a different explicit selection, so do\n          // not leave it visible after the session-local choice changes.\n          imagePromptComposerSaveReceipt: {}\n        });\n        toast(selectedVariantIndex === 0 ? imageComposerFeedbackText(\"selectedOriginal\", \"Đã chọn bản gốc để xem lại hoặc lưu.\") : imageComposerFeedbackText(\"selectedVariant\", \"Đã chọn phương án {number} để xem lại hoặc lưu.\", { number: String(selectedVariantIndex) }));\n        return;\n      }\n      if (action === \"image-prompt-compose\") {\n        const payload = imagePromptComposerPayload(fields);\n        // The Composer is a stateless template recipe: do not create a\n        // project, asset, durable receipt or browser-persistent draft.\n        // Starting a new composition drops the prior selection and Memory\n        // receipt, so a later write can only use this exact tab's source.\n        merge({\n          imagePromptComposerResult: {},\n          imagePromptComposerSaveSource: {},\n          imagePromptComposerSelectedVariantIndex: 0,\n          imagePromptComposerSaveReceipt: {}\n        });\n        setActionBusy(action, route, true);\n        try {\n          const result = await api(\"/image-studio/tools/prompt-composer\", {\n            method: \"POST\",\n            headers: { \"Content-Type\": \"application/json\" },\n            body: JSON.stringify(payload)\n          });\n          const data = result.data && typeof result.data === \"object\" ? result.data : {};\n          if (!imagePromptComposerResultIsSafe(data)) {\n            throw new Error(imageComposerFeedbackText(\"composeInvalidResult\", \"Chưa thể xác nhận kết quả mô tả. Vui lòng tạo lại.\"));\n          }\n          const saveSource = imagePromptComposerMemorySaveSource(payload);\n          if (!saveSource || !imagePromptComposerMemorySaveSourceMatchesResult(saveSource, data)) {\n            throw new Error(imageComposerFeedbackText(\"composeStaleSource\", \"Kết quả không còn khớp với các lựa chọn hiện tại. Hãy tạo lại trước khi lưu.\"));\n          }\n          merge({\n            imagePromptComposerResult: data,\n            imagePromptComposerSaveSource: saveSource,\n            imagePromptComposerSelectedVariantIndex: 0,\n            imagePromptComposerSaveReceipt: {},\n            pageStates: { ...(base().pageStates || {}), \"/image/prompt-composer\": \"ready\" }\n          });\n          toast(imageComposerFeedbackText(\"composeSuccess\", \"Mô tả đã sẵn sàng để xem lại.\"));\n        } finally {\n          setActionBusy(action, route, false);\n        }\n        return;\n      }\n      if (action === \"image-prompt-composer-save-memory\") {\n        const capabilities = base().capabilities && typeof base().capabilities === \"object\" ? base().capabilities : {};\n        if (!(capabilities[\"image-prompt-compose\"] === true && capabilities[\"image-prompt-composer-save-memory\"] === true)) {\n          throw new Error(imageComposerFeedbackText(\"saveUnavailable\", \"Hiện chưa thể lưu. Vui lòng tải lại trang rồi thử lại.\"));\n        }\n        const source = imagePromptComposerMemorySaveSource(base().imagePromptComposerSaveSource);\n        const currentResult = base().imagePromptComposerResult;\n        const selectedVariantIndex = imagePromptComposerVariantIndex(base().imagePromptComposerSelectedVariantIndex);\n        if (!source || !imagePromptComposerMemorySaveSourceMatchesResult(source, currentResult)) {\n          throw new Error(imageComposerFeedbackText(\"saveStaleSource\", \"Các lựa chọn đã thay đổi. Hãy tạo lại mô tả trước khi lưu.\"));\n        }\n        if (selectedVariantIndex === null) {\n          throw new Error(imageComposerFeedbackText(\"saveInvalidSelection\", \"Hãy chọn bản gốc hoặc một phương án trước khi lưu vào Ghi chú.\"));\n        }\n        const payload = { ...source, destination: \"memory_note\", selected_variant_index: selectedVariantIndex };\n        const scope = \"image-studio:prompt-composer:save-memory\";\n        const submission = acquireSubmission(scope, JSON.stringify(payload));\n        if (!submission) {\n          toast(imageComposerFeedbackText(\"saveBusy\", \"Đang lưu. Vui lòng chờ và không gửi lại.\"), \"error\");\n          return;\n        }\n        let acknowledged = false;\n        setActionBusy(action, route, true);\n        try {\n          // Send only the bounded source selection, destination and retry\n          // key. The server recomputes the draft; no browser result, image\n          // source, asset reference or external execution input is accepted.\n          const result = await api(\"/image-studio/tools/prompt-composer/save\", {\n            method: \"POST\",\n            headers: { \"Content-Type\": \"application/json\" },\n            body: JSON.stringify({ ...payload, idempotency_key: submission.key })\n          });\n          acknowledged = true;\n          if (result.status !== \"completed\") throw new Error(imageComposerFeedbackText(\"saveNotCompleted\", \"Chưa xác nhận được việc lưu. Hãy kiểm tra Ghi chú trước khi thử lại.\"));\n          const receipt = imagePromptComposerMemorySaveReceipt(result.data);\n          if (!receipt) throw new Error(imageComposerFeedbackText(\"saveInvalidReceipt\", \"Không thể xác minh kết quả lưu. Hãy kiểm tra Ghi chú trước khi thực hiện lại.\"));\n          if (receipt.selected_variant_index !== selectedVariantIndex) throw new Error(imageComposerFeedbackText(\"saveMismatchedSelection\", \"Không thể xác nhận nội dung đã lưu khớp với lựa chọn của bạn. Hãy kiểm tra Ghi chú trước.\"));\n          merge({ imagePromptComposerSaveReceipt: receipt });\n          toast(imageComposerFeedbackText(\"saveSuccess\", \"Đã lưu vào Ghi chú của bạn.\"));\n        } catch (error) {\n          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);\n          merge({ imagePromptComposerSaveReceipt: {} });\n          throw error;\n        } finally {\n          releaseSubmission(submission);\n          if (acknowledged) discardSubmission(scope, submission);\n          setActionBusy(action, route, false);\n        }\n        return;\n      }\n"
+    },
+    {
+      "id": "COMP-FEEDBACK-R1",
+      "file": "static/portal/portal-i18n.js",
+      "old": "  const IMAGE_STUDIO_VALIDATION_COPY_ROWS = [",
+      "new": "  const IMAGE_COMPOSER_FEEDBACK_COPY_ROWS = [\n    [\"chooseUnavailable\",\"Hiện chưa thể chọn phương án này. Vui lòng tải lại trang rồi thử lại.\",\"This option cannot be selected right now. Reload the page and try again.\",\"当前无法选择此选项，请刷新页面后重试。\"],\n    [\"chooseStale\",\"Mô tả hiện tại đã thay đổi. Hãy tạo lại trước khi chọn.\",\"The current description has changed. Compose it again before selecting.\",\"当前描述已变更，请重新生成后再选择。\"],\n    [\"selectedOriginal\",\"Đã chọn bản gốc để xem lại hoặc lưu.\",\"Original selected to review or save.\",\"已选择原版，可查看或保存。\"],\n    [\"selectedVariant\",\"Đã chọn phương án {number} để xem lại hoặc lưu.\",\"Option {number} selected to review or save.\",\"已选中选项 {number}，可查看或保存。\"],\n    [\"composeInvalidResult\",\"Chưa thể xác nhận kết quả mô tả. Vui lòng tạo lại.\",\"Cannot confirm the description result. Please compose it again.\",\"无法确认描述结果，请重新生成。\"],\n    [\"composeStaleSource\",\"Kết quả không còn khớp với các lựa chọn hiện tại. Hãy tạo lại trước khi lưu.\",\"The result no longer matches your current choices. Compose it again before saving.\",\"结果与当前选择不再匹配，请重新生成后再保存。\"],\n    [\"composeSuccess\",\"Mô tả đã sẵn sàng để xem lại.\",\"Description is ready to review.\",\"描述已就绪，可供查看。\"],\n    [\"saveUnavailable\",\"Hiện chưa thể lưu. Vui lòng tải lại trang rồi thử lại.\",\"Cannot save right now. Reload the page and try again.\",\"当前无法保存，请刷新页面后重试。\"],\n    [\"saveStaleSource\",\"Các lựa chọn đã thay đổi. Hãy tạo lại mô tả trước khi lưu.\",\"Your choices changed. Compose the description again before saving.\",\"选择已更改，请重新生成描述后再保存。\"],\n    [\"saveInvalidSelection\",\"Hãy chọn bản gốc hoặc một phương án trước khi lưu vào Ghi chú.\",\"Choose the original or an option before saving to Notes.\",\"请在保存到笔记前选择原版或任一选项。\"],\n    [\"saveBusy\",\"Đang lưu. Vui lòng chờ và không gửi lại.\",\"Saving in progress. Please wait and do not send again.\",\"正在保存，请稍候，勿重复提交。\"],\n    [\"saveNotCompleted\",\"Chưa xác nhận được việc lưu. Hãy kiểm tra Ghi chú trước khi thử lại.\",\"Save could not be confirmed. Check Notes before trying again.\",\"尚未确认保存结果，请先查看笔记后再重试。\"],\n    [\"saveInvalidReceipt\",\"Không thể xác minh kết quả lưu. Hãy kiểm tra Ghi chú trước khi thực hiện lại.\",\"Saving could not be verified. Check Notes before repeating.\",\"无法核实保存结果，请先查看笔记后再重试。\"],\n    [\"saveMismatchedSelection\",\"Không thể xác nhận nội dung đã lưu khớp với lựa chọn của bạn. Hãy kiểm tra Ghi chú trước.\",\"Cannot confirm that the saved result matches your selection. Check Notes first.\",\"无法确认已保存的内容与您的选择一致，请先查看笔记。\"],\n    [\"saveSuccess\",\"Đã lưu vào Ghi chú của bạn.\",\"Saved in your Notes.\",\"已保存到您的笔记。\"],\n  ];\n  [\"vi\", \"en\", \"zh\"].forEach((locale, index) => {\n    IMAGE_COMPOSER_FEEDBACK_COPY_ROWS.forEach((row) => { MESSAGES[locale][`imageComposerFeedbackUi.${row[0]}`] = row[index + 1]; });\n  });\n\n  const IMAGE_STUDIO_VALIDATION_COPY_ROWS = ["
+    },
+    {
+      "id": "COMP-NOTE-R1",
+      "file": "copyfast_image_studio.py",
+      "old": "def _image_prompt_composer_memory_note(\n    composer: dict[str, Any],\n    *,\n    selected_variant_index: int,\n) -> tuple[str, str, list[str]]:\n    \"\"\"Serialize a fresh deterministic composer result as one Web note.\n\n    This is deliberately not a generic browser-authored note endpoint.  The\n    full text and selected prompt are derived again from bounded composer\n    inputs and a finite index inside the write transaction, so a caller cannot\n    substitute a different title, prompt, result object or private payload\n    while reusing the visible save control.\n    \"\"\"\n\n    try:\n        result = ImagePromptComposerResult.model_validate(composer).model_dump()\n        if isinstance(selected_variant_index, bool) or not isinstance(selected_variant_index, int) or selected_variant_index < 0 or selected_variant_index > 3:\n            raise ValueError(\"Lựa chọn prompt cần là chỉ số nguyên từ 0 đến 3\")\n        labels = PROMPT_COMPOSER_VARIANT_LABELS.get(result[\"language\"], PROMPT_COMPOSER_VARIANT_LABELS[\"vi\"])\n        selected_label = labels[selected_variant_index]\n        selected_prompt = result[\"detailed_prompt\"] if selected_variant_index == 0 else result[\"variants\"][selected_variant_index - 1]\n        title = _line(\n            \"Image Prompt Composer\",\n            label=\"Tiêu đề ghi chú\",\n            minimum=3,\n            maximum=MAX_MEMORY_NOTE_TITLE,\n        )\n        lines = [\n            \"Image Prompt Composer — bản nháp Web đã được dựng lại trên máy chủ.\",\n            f\"Tiêu đề bản nháp: {result['title']}\",\n            f\"Mục tiêu: {result['goal_label']}\",\n            f\"Chủ thể: {result['subject']}\",\n            f\"Preset phong cách: {result['style_preset']}\",\n            f\"Phong cách: {result['style']}\",\n            f\"Tỷ lệ: {result['ratio']}\",\n            f\"Ngôn ngữ: {result['language']}\",\n            \"\",\n            \"## Lựa chọn lưu\",\n            f\"selected_variant_index: {selected_variant_index}\",\n            f\"Lựa chọn: {selected_label}\",\n            selected_prompt,\n            \"\",\n            \"## Prompt ngắn\",\n            result[\"short_prompt\"],\n            \"\",\n            \"## Prompt chi tiết\",\n            result[\"detailed_prompt\"],\n            \"\",\n            \"## Negative prompt\",\n            result[\"negative_prompt\"],\n            \"\",\n            \"## Ba biến thể\",\n        ]\n        for ordinal, variant in enumerate(result[\"variants\"], start=1):\n            lines.append(f\"### Biến thể {ordinal}\")\n            lines.append(str(variant))\n        lines.extend((\"\", \"## Kiểm tra trước khi sử dụng\"))\n        lines.extend(f\"- {item}\" for item in result[\"review_before_use\"])\n        lines.extend(\n            (\n                \"\",\n                \"Ghi chú này không tạo ảnh, output, job, tài sản, thanh toán, publish hay gửi Telegram.\",\n            )\n        )\n        content = _body(\n            \"\\n\".join(lines),\n            label=\"Nội dung ghi chú Image Prompt Composer\",\n            maximum=MAX_MEMORY_NOTE_CONTENT,\n        )\n    except ValueError as exc:\n        raise HTTPException(status_code=422, detail=str(exc)) from exc\n    return title, content, [\n        \"image-prompt-composer\",\n        f\"image-goal-{result['goal_code']}\",\n        f\"image-prompt-variant-{selected_variant_index}\",\n    ]\n\n\n",
+      "new": "def _image_prompt_composer_memory_note(\n    composer: dict[str, Any],\n    *,\n    selected_variant_index: int,\n) -> tuple[str, str, list[str]]:\n    \"\"\"Serialize a fresh deterministic composer result as one Web note.\n\n    This is deliberately not a generic browser-authored note endpoint.  The\n    full text and selected prompt are derived again from bounded composer\n    inputs and a finite index inside the write transaction, so a caller cannot\n    substitute a different title, prompt, result object or private payload\n    while reusing the visible save control.\n    \"\"\"\n\n    try:\n        result = ImagePromptComposerResult.model_validate(composer).model_dump()\n        if isinstance(selected_variant_index, bool) or not isinstance(selected_variant_index, int) or selected_variant_index < 0 or selected_variant_index > 3:\n            raise ValueError(\"Lựa chọn prompt cần là chỉ số nguyên từ 0 đến 3\")\n        labels = PROMPT_COMPOSER_VARIANT_LABELS.get(result[\"language\"], PROMPT_COMPOSER_VARIANT_LABELS[\"vi\"])\n        selected_label = labels[selected_variant_index]\n        selected_prompt = result[\"detailed_prompt\"] if selected_variant_index == 0 else result[\"variants\"][selected_variant_index - 1]\n        copy_rows = {\n            \"title\": (\"Ghi chú mô tả ảnh\", \"Image description note\"),\n            \"summary\": (\"Mô tả ảnh đã lưu để xem lại và sử dụng khi cần.\", \"Saved image description for review and reuse.\"),\n            \"sourceTitle\": (\"Tiêu đề mô tả\", \"Description title\"),\n            \"goal\": (\"Mục tiêu\", \"Goal\"),\n            \"subject\": (\"Chủ thể\", \"Subject\"),\n            \"stylePreset\": (\"Định hướng phong cách\", \"Style direction\"),\n            \"style\": (\"Phong cách\", \"Style\"),\n            \"ratio\": (\"Tỷ lệ khung hình\", \"Aspect ratio\"),\n            \"language\": (\"Ngôn ngữ đầu ra\", \"Output language\"),\n            \"selectionHeading\": (\"Mô tả đã chọn\", \"Selected description\"),\n            \"selection\": (\"Phương án đã chọn\", \"Selected option\"),\n            \"short\": (\"Mô tả ngắn\", \"Short description\"),\n            \"detailed\": (\"Mô tả chi tiết\", \"Detailed description\"),\n            \"avoid\": (\"Điểm cần tránh\", \"Things to avoid\"),\n            \"variants\": (\"Ba phương án thay thế\", \"Three alternatives\"),\n            \"variant\": (\"Phương án {number}\", \"Option {number}\"),\n            \"review\": (\"Kiểm tra trước khi sử dụng\", \"Review before use\"),\n            \"preset.auto\": (\"Tự chọn theo mục tiêu\", \"Auto-select by goal\"),\n            \"preset.first\": (\"Gợi ý 1\", \"Suggestion 1\"),\n            \"preset.second\": (\"Gợi ý 2\", \"Suggestion 2\"),\n            \"preset.third\": (\"Gợi ý 3\", \"Suggestion 3\"),\n            \"preset.custom\": (\"Phong cách tùy chỉnh\", \"Custom style\"),\n            \"language.vi\": (\"Tiếng Việt\", \"Vietnamese\"),\n            \"language.en\": (\"Tiếng Anh\", \"English\"),\n        }\n        language_index = 0 if result[\"language\"] == \"vi\" else 1\n        copy = {key: values[language_index] for key, values in copy_rows.items()}\n        preset_label = copy[{\n            \"auto\": \"preset.auto\", \"suggestion_1\": \"preset.first\", \"suggestion_2\": \"preset.second\",\n            \"suggestion_3\": \"preset.third\", \"custom\": \"preset.custom\",\n        }[result[\"style_preset\"]]]\n        language_label = copy[\"language.\" + result[\"language\"]]\n        title = _line(\n            copy[\"title\"],\n            label=\"Tiêu đề ghi chú\",\n            minimum=3,\n            maximum=MAX_MEMORY_NOTE_TITLE,\n        )\n        lines = [\n            copy[\"summary\"],\n            f\"{copy['sourceTitle']}: {result['title']}\",\n            f\"{copy['goal']}: {result['goal_label']}\",\n            f\"{copy['subject']}: {result['subject']}\",\n            f\"{copy['stylePreset']}: {preset_label}\",\n            f\"{copy['style']}: {result['style']}\",\n            f\"{copy['ratio']}: {result['ratio']}\",\n            f\"{copy['language']}: {language_label}\",\n            \"\",\n            f\"## {copy['selectionHeading']}\",\n            f\"{copy['selection']}: {selected_label}\",\n            selected_prompt,\n            \"\",\n            f\"## {copy['short']}\",\n            result[\"short_prompt\"],\n            \"\",\n            f\"## {copy['detailed']}\",\n            result[\"detailed_prompt\"],\n            \"\",\n            f\"## {copy['avoid']}\",\n            result[\"negative_prompt\"],\n            \"\",\n            f\"## {copy['variants']}\",\n        ]\n        for ordinal, variant in enumerate(result[\"variants\"], start=1):\n            lines.append(\"### \" + copy[\"variant\"].replace(\"{number}\", str(ordinal)))\n            lines.append(str(variant))\n        lines.extend((\"\", \"## \" + copy[\"review\"]))\n        lines.extend(f\"- {item}\" for item in result[\"review_before_use\"])\n        content = _body(\n            \"\\n\".join(lines),\n            label=\"Nội dung ghi chú Image Prompt Composer\",\n            maximum=MAX_MEMORY_NOTE_CONTENT,\n        )\n    except ValueError as exc:\n        raise HTTPException(status_code=422, detail=str(exc)) from exc\n    return title, content, [\n        \"image-prompt-composer\",\n        f\"image-goal-{result['goal_code']}\",\n        f\"image-prompt-variant-{selected_variant_index}\",\n    ]\n\n\n"
+    },
+    {
+      "id": "COMP-COLOR-R1",
+      "file": "static/portal/portal-theme.css",
+      "old": "/* The customer Composer has no static side panels or empty metric columns. */",
+      "new": "/* Pair only customer Composer text with the active theme surfaces. */\n:root .portal-page.portal-image-composer-customer :is(\n  .portal-image-prompt-composer-intro, .portal-image-prompt-composer-form,\n  .portal-image-prompt-composer-result, .portal-image-prompt-composer-prompt,\n  .portal-image-prompt-composer-variants, .portal-image-prompt-composer-variants li,\n  .portal-image-prompt-composer-review, .portal-image-prompt-composer-meta span,\n  .portal-image-prompt-composer-variants li > span\n) {\n  background: var(--portal-surface);\n  color: var(--portal-ink);\n}\n:root .portal-page.portal-image-composer-customer :is(\n  h1, h2, h3, p, pre, strong, li, .portal-card-title, .portal-card-subtitle,\n  .portal-section-kicker, .portal-eyebrow, .portal-field-help, .portal-form-note,\n  .portal-image-prompt-composer-meta span, .portal-image-prompt-composer-prompt > span,\n  .portal-image-prompt-composer-variants li > span\n) {\n  color: var(--portal-ink);\n}\n:root .portal-page.portal-image-composer-customer .portal-button--primary:not(:disabled) {\n  background: var(--portal-action) !important;\n  color: var(--portal-on-action) !important;\n}\nhtml[data-portal-theme=\"dark\"] .portal-page.portal-image-composer-customer .portal-button--primary:not(:disabled) {\n  background: var(--portal-rail) !important;\n  color: var(--portal-rail-text) !important;\n}\n\n/* The customer Composer has no static side panels or empty metric columns. */"
+    },
+    {
+      "id": "COMP-FONT-R1",
+      "file": "static/portal/portal-theme.css",
+      "old": "/* These legacy studios authored their intro metrics for dark gradient panels.",
+      "new": "/* Readable text sizes are isolated from the shared planner family. */\n:root .portal-page.portal-image-composer-customer :is(.portal-input, .portal-select, .portal-textarea) {\n  font-size: 16px;\n}\n:root .portal-page.portal-image-composer-customer :is(.portal-image-prompt-composer-prompt pre, .portal-image-prompt-composer-variants pre) {\n  font-size: 14px;\n  line-height: 1.65;\n}\n:root .portal-page.portal-image-composer-customer :is(\n  .portal-image-prompt-composer-meta span, .portal-image-prompt-composer-prompt > span,\n  .portal-image-prompt-composer-variants li strong, .portal-image-prompt-composer-review li,\n  .portal-image-prompt-composer-review strong\n) {\n  font-size: 14px;\n}\n:root .portal-page.portal-image-composer-customer :is(.portal-section-kicker, .portal-eyebrow, .portal-image-prompt-composer-variants li > span) {\n  font-size: 12px;\n}\n\n/* These legacy studios authored their intro metrics for dark gradient panels."
+    },
+    {
+      "id": "COMP-GOAL-R1",
+      "file": "static/portal/portal.js",
+      "old": "placeholder: imageComposerText(\"placeholder.customGoal\", \"Ví dụ: hình ảnh chủ đạo giới thiệu tính năng mới trên trang giới thiệu\"), minLength: 2, maxLength: 180, wide: true, help:",
+      "new": "placeholder: imageComposerText(\"placeholder.customGoal\", \"Ví dụ: hình ảnh chủ đạo giới thiệu tính năng mới trên trang giới thiệu\"), minLength: 2, maxLength: 180, wide: true, dynamicRequired: true, help:"
+    },
+    {
+      "id": "COMP-GOAL-R1",
+      "file": "static/portal/portal.js",
+      "old": "  function synchronizeImagePromptComposerStylePreset(form) {",
+      "new": "  function synchronizeImagePromptComposerGoal(form) {\n    if (!form || form.getAttribute(\"data-portal-action\") !== \"image-prompt-compose\") return;\n    const goal = form.querySelector('select[name=\"goal_code\"]');\n    const custom = form.querySelector('textarea[name=\"custom_goal\"]');\n    const field = custom && custom.closest(\".portal-field\");\n    if (!goal || !custom || !field) return;\n    const customMode = String(goal.value || \"product\") === \"custom\";\n    const disabled = Boolean(goal.disabled) || !customMode;\n    custom.disabled = disabled;\n    custom.required = customMode;\n    custom.setAttribute(\"aria-disabled\", String(disabled));\n    custom.setAttribute(\"aria-required\", String(customMode));\n    field.hidden = !customMode;\n    field.classList.toggle(\"is-muted\", !customMode);\n    const mark = field.querySelector(\"[data-portal-required-mark]\");\n    const message = field.querySelector(\"[data-portal-required-message]\");\n    if (mark) mark.hidden = !customMode;\n    if (message) message.hidden = !customMode;\n  }\n\n  function synchronizeImagePromptComposerStylePreset(form) {"
+    },
+    {
+      "id": "COMP-GOAL-R1",
+      "file": "static/portal/portal.js",
+      "old": "        if (form.getAttribute(\"data-portal-action\") === \"image-prompt-compose\"\n          && event.target && event.target.name === \"style_preset\") {\n          synchronizeImagePromptComposerStylePreset(form);\n        }",
+      "new": "        if (form.getAttribute(\"data-portal-action\") === \"image-prompt-compose\"\n          && event.target && event.target.name === \"style_preset\") {\n          synchronizeImagePromptComposerStylePreset(form);\n        }\n        if (form.getAttribute(\"data-portal-action\") === \"image-prompt-compose\"\n          && event.target && event.target.name === \"goal_code\") {\n          synchronizeImagePromptComposerGoal(form);\n        }"
+    },
+    {
+      "id": "COMP-GOAL-R1",
+      "file": "static/portal/portal.js",
+      "old": "      main.querySelectorAll('[data-portal-action=\"image-prompt-compose\"]').forEach((form) => synchronizeImagePromptComposerStylePreset(form));",
+      "new": "      main.querySelectorAll('[data-portal-action=\"image-prompt-compose\"]').forEach((form) => {\n        synchronizeImagePromptComposerStylePreset(form);\n        synchronizeImagePromptComposerGoal(form);\n      });"
+    },
+    {
+      "id": "COMP-COLOR-FIELD-LABELS-R1",
+      "file": "static/portal/portal-theme.css",
+      "old": "/* Pair only customer Composer text with the active theme surfaces. */",
+      "new": "/* Field labels had their own legacy dark-ink override. */\n:root .portal-page.portal-image-composer-customer .portal-field label {\n  color: var(--portal-ink);\n}\n\n/* Pair only customer Composer text with the active theme surfaces. */"
+    },
+    {
+      "id": "COMP-PLACEHOLDER-FOCUS-R1",
+      "file": "static/portal/portal-theme.css",
+      "old": "/* Readable text sizes are isolated from the shared planner family. */",
+      "new": "/* Keep input examples and keyboard location readable in both themes. */\n:root .portal-page.portal-image-composer-customer :is(.portal-input, .portal-textarea):not(:disabled)::placeholder {\n  color: var(--portal-muted);\n  opacity: 1;\n}\n:root .portal-page.portal-image-composer-customer :is(.portal-input, .portal-select, .portal-textarea):focus-visible {\n  outline-color: var(--portal-focus);\n}\n\n/* Readable text sizes are isolated from the shared planner family. */"
+    },
+    {
+      "id": "COMP-FOCUS-PRIORITY-R1",
+      "file": "static/portal/portal-theme.css",
+      "old": ":root .portal-page.portal-image-composer-customer :is(.portal-input, .portal-select, .portal-textarea):focus-visible {\n  outline-color: var(--portal-focus);\n}",
+      "new": ":root .portal-page.portal-image-composer-customer :is(.portal-input, .portal-select, .portal-textarea):focus-visible {\n  outline-color: var(--portal-focus) !important;\n}"
+    }
+  ],
+  "receiptIntegrationAmendment": {
+    "trackerComment": 7170804673,
+    "workerModel": "gemini-4-hydrogen-xhigh",
+    "workerCodeFailures": 0,
+    "coordinatorMissingSpec": true,
+    "redCases": 13,
+    "redFailed": 12,
+    "redPassed": 1,
+    "oldPredicatesChanged": false
+  },
+  "feedbackNoteAmendment": {
+    "trackerComment": 7171342911,
+    "model": "gemini-4-hydrogen-xhigh",
+    "codeRecords": 4,
+    "feedbackKeys": 15,
+    "noteLabels": 24,
+    "workerCodeFailures": 0
+  },
+  "readabilityDisclosureAmendment": {
+    "trackerComment": 7174154546,
+    "colorRecords": 1,
+    "fontRecords": 1,
+    "goalRecords": 4,
+    "model": "gemini-4-hydrogen-xhigh",
+    "workerCodeFailures": 0,
+    "baselineViews": 48,
+    "baselineFindingObservations": 624,
+    "labelSelectorOmission": "Coordinator QA/spec omission; worker code failures0",
+    "totalRecordsAfterLabels": 51,
+    "totalRecordsAfterPseudoAndFocus": 52,
+    "totalRecordsAfterFocusPriority": 53,
+    "focusPriorityCoordinatorOmission": true
+  }
+}

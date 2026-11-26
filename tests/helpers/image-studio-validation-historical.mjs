@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {freeToolsReadableColorsHistoricalSource, upstreamCatalogHistoricalSource, upstreamRealtimeBannerHistoricalSource, upstreamRealtimeProtectedHistoricalSource} from "./free-tools-readable-colors-historical.mjs";
+import {imageComposerNativeLocaleHistoricalSource, imageComposerNativeLocaleHistoricalSnapshot} from "./image-composer-native-locale-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/image-studio-validation-contract.json", import.meta.url), "utf8"));
 assert.equal(contract.records.length, 30);
@@ -10,6 +11,7 @@ const scopes = new Map([
 ]);
 
 export function imageStudioValidationHistoricalSource(source, file) {
+  source = imageComposerNativeLocaleHistoricalSource(source, file);
   source = upstreamRealtimeProtectedHistoricalSource(source, file);
   source = freeToolsReadableColorsHistoricalSource(source, file);
   source = upstreamCatalogHistoricalSource(source, file);
@@ -39,6 +41,7 @@ assert.equal(rows.length, 51);
 const additions = new Map(rows.map(row => ["imageStudioValidationUi." + row[0], row]));
 
 export function imageStudioValidationHistoricalSnapshot(entries, locale) {
+  entries = imageComposerNativeLocaleHistoricalSnapshot(entries, locale);
   const index = ["vi", "en", "zh"].indexOf(locale) + 1;
   assert.ok(index > 0 && Array.isArray(entries));
   const recognized = entries.filter(([key]) => additions.has(key));

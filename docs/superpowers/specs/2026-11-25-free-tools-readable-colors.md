@@ -102,8 +102,10 @@ sau đăng nhập hoặc tuân thủ tương phản toàn ứng dụng.
 - [x] Nhóm ảnh hưởng 398/398, hai nhóm Python 9/142, review gộp một lượt.
 - [x] Hồi quy còn lại R2 và metadata đạt; số đo và nguồn đếm ghi trên.
 - [x] Vận hành/đối chiếu/Tester/cases trước push.
-- [ ] Provenance Web-only cập nhật cho nguồn sau hòa nhập PR810.
-- [ ] MộtPR/exactCI/merge/tree/exactdeploy/runtime/health/5+5assets/receipt.
+- [x] Provenance Web-only source8ea14c43/fingerprinte605bb3e refresh/verify.
+- [x] PR809/CI45662670051 hai job đạt; merge6ec003db,treeexact,
+  deploy45667062174/runtimeclean/3services/health/5+5assets;
+  receipt689/7169893110 và PR809/7169894142 đọc lại đúng.
 - [ ] Wholeappcontrast/AX,device/Safari vàsignedUI giữmở;motioncuối.
 
 Lệnh nguồn: `node --test tests/free-tools-readable-colors.test.mjs`.
@@ -172,3 +174,14 @@ sửa giao diện/assertion để che lỗi cũ.
 CI45652044355 hai job đạt trên63ad906a, artefact browser15043310897
 và authenticated15042896999; chỉ chứng minh SHA cũ, không thay CI bản
 ghép mới. Tiếp tục cùngPR809, không mở PR/checklist cạnh tranh.
+
+## Biên nhận cuối
+
+PR809 đã phát hành tại `6ec003dbf8f80739f5fb93ff7bd1d7cc703c6792`.
+CI45662670051 kiểm đúng713e145e, artefactbrowser15046558420 và
+authenticated15047009235. Cây merge bằng cây đã kiểm
+fd9d1fc5e8f056596929b1a2e2adf8da27244ff6. Deploy45667062174 thành công;
+SSH xác minh đúng SHA/nguồn sạch/ba dịch vụ active/health. Năm tệp trực
+tiếp+năm URL có phiên bản khớp hash. Receipt689/7169893110 và
+PR809/7169894142 đã đọc lại đúng. Không nhận signed-production
+interaction hoặc toàn-app conformance; goal vẫn ACTIVE.

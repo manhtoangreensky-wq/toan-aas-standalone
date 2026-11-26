@@ -657,3 +657,23 @@ kiểm tra đúng hai yêu cầu hiển thị, không thay chức năng.
 5. Candidate local hiện có `7/7` renderer, `89/89` nhóm locale liên quan, `373/373` test locale rộng trên `67` file và `19/19` Python locale/title.
    Chưa có browser/live evidence cho candidate này; không đánh dấu case production đạt trước khi xem build SHA.
 6. Repo hiện đã có `22` nhãn và `2` issue template kiểm thử. Danh sách GitHub Projects không đọc được do thiếu scope `read:project`; không refresh auth và không sửa board.
+
+## Phiên Soạn mô tả ảnh — 26/11/2026
+
+Nguồn ca là nhóm `ICNL-*` trong `DANH-SACH-CASE.md`; phiên độc lập
+`IMAGE-COMPOSER-NATIVE-LOCALE-20261126`, BASE `6ec003db`, Issue #689.
+Mở `/image/prompt-composer`, chọn Việt/Anh/Trung và sáng/tối; kiểm ở
+360/375/768/1440. Chỉ dùng nội dung giả, không lưu dữ liệu production
+hoặc bấm chức năng tạo ảnh/gọi dịch vụ.
+
+Kiểm nhãn, lựa chọn, trợ giúp, kết quả và phản hồi; tên riêng hoặc chữ
+khách tự nhập không phải câu cố định để dịch. Ngôn ngữ mô tả VI/EN
+khác ngôn ngữ giao diện và phải được giữ. Bật Mục tiêu riêng, gõ chữ,
+đổi mục tiêu rồi mở lại: không mất chữ; trường ẩn không được gửi.
+Đi Tab để thấy viền chọn rõ; ô nhập đọc được trên nền sáng và tối.
+
+Component Chrome đã kiểm48 view, không tràn/lỗi/request ngoài;
+không dùng đó để nhận full bootstrap, auth, ghi dữ liệu thật hoặc
+giao diện production đã đạt. API cục bộ hết300giây ở ca đầu,0ca xong;
+CI Ubuntu phải đạt trước merge. Sau phát hành cần ghi riêng revision,
+dịch vụ, asset và kết quả quan sát sau đăng nhập; motion vẫn xếp cuối.

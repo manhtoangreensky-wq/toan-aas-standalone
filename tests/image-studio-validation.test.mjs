@@ -5,12 +5,13 @@ import path from "node:path";
 import vm from "node:vm";
 import {execFileSync} from "node:child_process";
 import {imageStudioValidationHistoricalSource, imageStudioValidationHistoricalSnapshot} from "./helpers/image-studio-validation-historical.mjs";
+import {imageComposerNativeLocaleHistoricalSource} from "./helpers/image-composer-native-locale-historical.mjs";
 
 const root = new URL("../", import.meta.url), read = file => fs.readFileSync(new URL(file, root), "utf8").replace(/\r\n/g, "\n");
 const contract = JSON.parse(read("tests/fixtures/image-studio-validation-contract.json"));
 const before = Object.fromEntries(["integration", "portal-i18n"].map(name => [name,
   execFileSync("git", ["show", `${contract.base}:static/portal/${name}.js`], {encoding: "utf8", maxBuffer: 30e6}).replace(/\r\n/g, "\n")]));
-const current = {"integration": read("static/portal/integration.js"), "portal-i18n": read("static/portal/portal-i18n.js")};
+const current = {"integration": imageComposerNativeLocaleHistoricalSource(read("static/portal/integration.js"), "static/portal/integration.js"), "portal-i18n": imageComposerNativeLocaleHistoricalSource(read("static/portal/portal-i18n.js"), "static/portal/portal-i18n.js")};
 const catalogue = contract.records.find(row => row.file.endsWith("portal-i18n.js")).new;
 const rows = catalogue.split("  const IMAGE_STUDIO_VALIDATION_COPY_ROWS = [\n")[1].split("\n  ];")[0]
   .split("\n").map(line => JSON.parse(line.trim().replace(/,$/, "")));

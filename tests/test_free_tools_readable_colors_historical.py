@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 from tests.helpers import image_studio_locale_copy_historical as historical
+from tests.helpers.image_composer_native_locale_historical import image_composer_native_locale_historical_source
 from tests.helpers.image_studio_locale_copy_historical import (
     free_tools_readable_colors_historical_source,
     image_studio_validation_historical_source,
@@ -40,7 +41,9 @@ def test_catalog_projection_accepts_only_fixed_upstream_and_keeps_mutations(file
     assert project(upstream, "unrelated.js") == upstream
     other = next(row["file"] for row in CONTRACT["catalog_sync"]["source_pins"] if row["file"] != file)
     assert project(upstream, other) == upstream
-    physical = (ROOT / file).read_bytes().decode("utf-8").replace("\r\n", "\n")
+    physical = image_composer_native_locale_historical_source(
+        (ROOT / file).read_bytes().decode("utf-8").replace("\r\n", "\n"), file
+    )
     assert project(free_tools_readable_colors_historical_source(physical, file), file) == before
 
 

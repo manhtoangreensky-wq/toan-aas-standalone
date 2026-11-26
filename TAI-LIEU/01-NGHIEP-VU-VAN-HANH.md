@@ -3994,3 +3994,46 @@ khối cài tiện ích. Nhánh màu giữ nguyên phần này, không thay ch�
 27tệp JavaScript/538lượt và Python98/98 đạt sau ghép; ba record QA riêng
 giữ mọi thay đổi lạ, không chiếu nguồn dùng để hiển thị. CI45652044355
 đạt cho bản63ad906a trước ghép; bản ghép vẫn cần CI và triển khai riêng.
+
+Biên nhận cuối của đợt màu: PR #809 đã được triển khai tại
+`6ec003dbf8f80739f5fb93ff7bd1d7cc703c6792`; CI `45662670051`,
+deploy `45667062174`, nguồn VPS sạch, ba dịch vụ hoạt động, health và
+5+5 tệp công khai đúng bản. Receipt Issue #689 `7169893110` và PR
+`7169894142` đã đọc lại. Các câu chờ ở trên là lịch sử trước phát hành;
+giao diện production sau đăng nhập vẫn chưa được chứng minh.
+
+## Soạn mô tả ảnh — đợt nội dung và khả năng đọc, 26/11/2026
+
+Ứng viên trên nền PR809 dùng nhãn Việt/Anh/Trung theo ngôn ngữ giao diện.
+Ngôn ngữ của bản mô tả vẫn do người dùng chọn riêng; nội dung tự nhập,
+tên riêng và chuỗi do khách cung cấp không bị dịch lại. Bảy trường,
+20 giá trị lựa chọn, thứ tự, giới hạn và các quyền hiện có được giữ.
+Các ô chỉ số không có dữ liệu và khối giải thích kỹ thuật riêng đã bỏ,
+không để lại cột trống. Trường Mục tiêu riêng chỉ hiện khi được chọn,
+không gửi khi ẩn; nội dung còn trong ô khi chuyển qua lại.
+
+Thông báo của ba thao tác dùng 15 câu cố định theo đúng ngôn ngữ,
+giữ phân biệt đang chờ, lỗi, phản hồi cũ, chưa xác nhận và thành công.
+Điểm nối biên nhận giữ các thông tin đã được xác minh, không nới điều
+kiện chấp nhận. Ghi chú mới dùng ngôn ngữ của mô tả, tiêu đề và các mục
+dễ hiểu; không sửa ghi chú khách đã lưu. Nội dung mô tả, lựa chọn, mã,
+quyền sở hữu và cơ chế chống lưu lặp giữ nguyên.
+
+Đúng 39 record gốc và 14 phụ lục đã được đối chiếu, trong năm tệp ứng
+dụng. Màu và cỡ chữ chỉ áp dụng riêng màn hình này. Chrome qua HTTP
+localhost đã kiểm 48 view: ba ngôn ngữ × sáng/tối × 360/375/768/1440 ×
+trống/có kết quả. Có 2.112 mẫu chữ đang bật đo được, thấp nhất 5,4733:1;
+placeholder thấp nhất 5,5225:1; 24 quan sát focus bàn phím thấp nhất
+5,8601:1, viền 2px. Không lỗi trang, yêu cầu ngoài hoặc tràn ngang.
+24 mẫu vô hiệu được báo riêng, không suy thành toàn ứng dụng đạt chuẩn.
+
+Các nhóm đã đo riêng: receipt 150, renderer 258, phản hồi thực 45,
+formatter ghi chú 110, nguồn/lịch sử cuối 19, route lân cận 18; không
+cộng những nhóm trùng thành tổng ca duy nhất. Builder thật kiểm 26 tổ
+hợp, bằng một pytest item; lần kiểm lại fixture/source cuối đạt.
+Test HTTP cục bộ hết 300 giây ở ca đầu, 0 ca hoàn tất. Không coi đó
+là PASS; CI Ubuntu có cổng API giới hạn tám phút trước khi merge.
+
+Đây là ứng viên, chưa có CI/merge/deploy riêng tại thời điểm ghi mục
+này. Full-app auth/draft, giao diện production sau đăng nhập, Safari,
+thiết bị thật và motion vẫn là các mục riêng trong checklist.

@@ -3036,3 +3036,28 @@ Nhánh màu đã giữ thêm UI danh mục/tiện ích của PR810 tại0a9022ce
 đòi main cố định+đúng9record; QA ba record catalog chỉ phục vụ so lịch sử,
 không bỏ byte lạ hoặc đổi assertion. Bằng chứng sau ghép538Node/98Python;
 không mở rộng kết luận tới Bot/API/provider hoặc production interaction.
+
+PR #809 đã phát hành tại `6ec003dbf8f80739f5fb93ff7bd1d7cc703c6792`;
+CI45662670051, deploy45667062174 và hai receipt689/7169893110,
+PR809/7169894142 là bằng chứng cuối của đợt màu, thay trạng thái chờ
+lịch sử phía trên; chưa thay bằng chứng signed production UI.
+
+## Soạn mô tả ảnh — đối chiếu với BASE PR809, 26/11/2026
+
+| Hành vi trên BASE | Ứng viên đã kiểm | Ranh giới giữ |
+|---|---|---|
+| Nhãn, trợ giúp và khung dùng Việt pha Anh hoặc chữ Việt ở locale khác | 85 khóa giao diện và 15 khóa phản hồi VI/EN/ZH; sáu nhãn điều hướng cập nhật | Bảy trường, 20 option values, route, quyền và giới hạn giữ |
+| Câu mẫu tiếng Việt do Web dựng có từ Anh cố định | 19 record câu cố định được dịch; builder thật kiểm 26 tổ hợp | Tiếng Anh bằng BASE và nội dung khách nguyên vẹn |
+| Biên nhận bị mất facts đã xác minh giữa integration và renderer | Một return-object giữ lại đúng các facts đã được kiểm | Predicate, whitelist, CSRF, quyền và luồng ghi không đổi |
+| Ghi chú mới có tiêu đề/heading và đuôi kỹ thuật | 24 nhãn VI/EN, chọn theo ngôn ngữ mô tả; 110 ca formatter đạt | Category/tags/index/idempotency/ownership giữ, không sửa note cũ |
+| Ô Mục tiêu riêng vẫn hiện khi không sử dụng | Chỉ hiện và bắt buộc ở lựa chọn riêng, ẩn thì không vào FormData | Giữ giá trị DOM khi mở lại; không thêm lưu trữ hoặc bản nháp |
+| Nhãn tối, ví dụ ô nhập và viền sáng thiếu tương phản | 48 view nguồn vật lý đạt; chữ min5,4733, placeholder min5,5225, focus min5,8601 | Chỉ scope Composer; viền 2px, không đổi CSS chung hoặc motion |
+| Ô chỉ số/giải thích dư làm trang có cột trống | Khung một cột, không còn các ô dư đã liệt kê | Tính năng, trạng thái thật và output mô tả không bị ẩn |
+
+Nguồn nghiệm thu so raw BASE cộng đúng 53 record, không dùng inverse
+để che lỗi hiện tại. Inverse hữu hạn chỉ phục vụ assertions lịch sử,
+giữ byte/key lạ và từ chối bản ghi thiếu/lặp/đã sửa. So 18 trường hợp
+ở sáu route khác, ba ngôn ngữ, giữ title/attributes/control markup.
+Không thêm khả năng tạo ảnh, gọi engine/provider hay ghi dữ liệu thật.
+HTTP/CI/merge/deploy/runtime và signed production vẫn là bằng chứng
+riêng; không dùng unit/component PASS thay cho các cổng này.

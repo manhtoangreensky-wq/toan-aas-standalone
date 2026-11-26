@@ -1,0 +1,126 @@
+{
+  "model": "gemini-4-hydrogen-xhigh",
+  "copyReview": "Coordinator accepted exact keys/placeholders/native wording; code and physical verification separate",
+  "rows": [
+    {
+      "en": "Image description note",
+      "key": "title",
+      "vi": "Ghi chú mô tả ảnh"
+    },
+    {
+      "en": "Saved image description for review and reuse.",
+      "key": "summary",
+      "vi": "Mô tả ảnh đã lưu để xem lại và sử dụng khi cần."
+    },
+    {
+      "en": "Description title",
+      "key": "sourceTitle",
+      "vi": "Tiêu đề mô tả"
+    },
+    {
+      "en": "Goal",
+      "key": "goal",
+      "vi": "Mục tiêu"
+    },
+    {
+      "en": "Subject",
+      "key": "subject",
+      "vi": "Chủ thể"
+    },
+    {
+      "en": "Style direction",
+      "key": "stylePreset",
+      "vi": "Định hướng phong cách"
+    },
+    {
+      "en": "Style",
+      "key": "style",
+      "vi": "Phong cách"
+    },
+    {
+      "en": "Aspect ratio",
+      "key": "ratio",
+      "vi": "Tỷ lệ khung hình"
+    },
+    {
+      "en": "Output language",
+      "key": "language",
+      "vi": "Ngôn ngữ đầu ra"
+    },
+    {
+      "en": "Selected description",
+      "key": "selectionHeading",
+      "vi": "Mô tả đã chọn"
+    },
+    {
+      "en": "Selected option",
+      "key": "selection",
+      "vi": "Phương án đã chọn"
+    },
+    {
+      "en": "Short description",
+      "key": "short",
+      "vi": "Mô tả ngắn"
+    },
+    {
+      "en": "Detailed description",
+      "key": "detailed",
+      "vi": "Mô tả chi tiết"
+    },
+    {
+      "en": "Things to avoid",
+      "key": "avoid",
+      "vi": "Điểm cần tránh"
+    },
+    {
+      "en": "Three alternatives",
+      "key": "variants",
+      "vi": "Ba phương án thay thế"
+    },
+    {
+      "en": "Option {number}",
+      "key": "variant",
+      "vi": "Phương án {number}"
+    },
+    {
+      "en": "Review before use",
+      "key": "review",
+      "vi": "Kiểm tra trước khi sử dụng"
+    },
+    {
+      "en": "Auto-select by goal",
+      "key": "preset.auto",
+      "vi": "Tự chọn theo mục tiêu"
+    },
+    {
+      "en": "Suggestion 1",
+      "key": "preset.first",
+      "vi": "Gợi ý 1"
+    },
+    {
+      "en": "Suggestion 2",
+      "key": "preset.second",
+      "vi": "Gợi ý 2"
+    },
+    {
+      "en": "Suggestion 3",
+      "key": "preset.third",
+      "vi": "Gợi ý 3"
+    },
+    {
+      "en": "Custom style",
+      "key": "preset.custom",
+      "vi": "Phong cách tùy chỉnh"
+    },
+    {
+      "en": "Vietnamese",
+      "key": "language.vi",
+      "vi": "Tiếng Việt"
+    },
+    {
+      "en": "English",
+      "key": "language.en",
+      "vi": "Tiếng Anh"
+    }
+  ]
+}

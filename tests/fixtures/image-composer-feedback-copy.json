@@ -1,0 +1,96 @@
+{
+  "model": "gemini-4-hydrogen-xhigh",
+  "copyReview": "Coordinator accepted exact keys/placeholders/native wording; code and physical verification separate",
+  "rows": [
+    {
+      "en": "This option cannot be selected right now. Reload the page and try again.",
+      "key": "chooseUnavailable",
+      "vi": "Hiện chưa thể chọn phương án này. Vui lòng tải lại trang rồi thử lại.",
+      "zh": "当前无法选择此选项，请刷新页面后重试。"
+    },
+    {
+      "en": "The current description has changed. Compose it again before selecting.",
+      "key": "chooseStale",
+      "vi": "Mô tả hiện tại đã thay đổi. Hãy tạo lại trước khi chọn.",
+      "zh": "当前描述已变更，请重新生成后再选择。"
+    },
+    {
+      "en": "Original selected to review or save.",
+      "key": "selectedOriginal",
+      "vi": "Đã chọn bản gốc để xem lại hoặc lưu.",
+      "zh": "已选择原版，可查看或保存。"
+    },
+    {
+      "en": "Option {number} selected to review or save.",
+      "key": "selectedVariant",
+      "vi": "Đã chọn phương án {number} để xem lại hoặc lưu.",
+      "zh": "已选中选项 {number}，可查看或保存。"
+    },
+    {
+      "en": "Cannot confirm the description result. Please compose it again.",
+      "key": "composeInvalidResult",
+      "vi": "Chưa thể xác nhận kết quả mô tả. Vui lòng tạo lại.",
+      "zh": "无法确认描述结果，请重新生成。"
+    },
+    {
+      "en": "The result no longer matches your current choices. Compose it again before saving.",
+      "key": "composeStaleSource",
+      "vi": "Kết quả không còn khớp với các lựa chọn hiện tại. Hãy tạo lại trước khi lưu.",
+      "zh": "结果与当前选择不再匹配，请重新生成后再保存。"
+    },
+    {
+      "en": "Description is ready to review.",
+      "key": "composeSuccess",
+      "vi": "Mô tả đã sẵn sàng để xem lại.",
+      "zh": "描述已就绪，可供查看。"
+    },
+    {
+      "en": "Cannot save right now. Reload the page and try again.",
+      "key": "saveUnavailable",
+      "vi": "Hiện chưa thể lưu. Vui lòng tải lại trang rồi thử lại.",
+      "zh": "当前无法保存，请刷新页面后重试。"
+    },
+    {
+      "en": "Your choices changed. Compose the description again before saving.",
+      "key": "saveStaleSource",
+      "vi": "Các lựa chọn đã thay đổi. Hãy tạo lại mô tả trước khi lưu.",
+      "zh": "选择已更改，请重新生成描述后再保存。"
+    },
+    {
+      "en": "Choose the original or an option before saving to Notes.",
+      "key": "saveInvalidSelection",
+      "vi": "Hãy chọn bản gốc hoặc một phương án trước khi lưu vào Ghi chú.",
+      "zh": "请在保存到笔记前选择原版或任一选项。"
+    },
+    {
+      "en": "Saving in progress. Please wait and do not send again.",
+      "key": "saveBusy",
+      "vi": "Đang lưu. Vui lòng chờ và không gửi lại.",
+      "zh": "正在保存，请稍候，勿重复提交。"
+    },
+    {
+      "en": "Save could not be confirmed. Check Notes before trying again.",
+      "key": "saveNotCompleted",
+      "vi": "Chưa xác nhận được việc lưu. Hãy kiểm tra Ghi chú trước khi thử lại.",
+      "zh": "尚未确认保存结果，请先查看笔记后再重试。"
+    },
+    {
+      "en": "Saving could not be verified. Check Notes before repeating.",
+      "key": "saveInvalidReceipt",
+      "vi": "Không thể xác minh kết quả lưu. Hãy kiểm tra Ghi chú trước khi thực hiện lại.",
+      "zh": "无法核实保存结果，请先查看笔记后再重试。"
+    },
+    {
+      "en": "Cannot confirm that the saved result matches your selection. Check Notes first.",
+      "key": "saveMismatchedSelection",
+      "vi": "Không thể xác nhận nội dung đã lưu khớp với lựa chọn của bạn. Hãy kiểm tra Ghi chú trước.",
+      "zh": "无法确认已保存的内容与您的选择一致，请先查看笔记。"
+    },
+    {
+      "en": "Saved in your Notes.",
+      "key": "saveSuccess",
+      "vi": "Đã lưu vào Ghi chú của bạn.",
+      "zh": "已保存到您的笔记。"
+    }
+  ]
+}
