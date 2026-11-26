@@ -6,10 +6,14 @@ Asset Vault writes, jobs, payments, publishing, and PWA persistence.
 """
 
 from pathlib import Path
+from tests.helpers.image_composer_native_locale_historical import image_composer_native_locale_historical_source
 
 
 ROOT = Path(__file__).parents[1]
-PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+PORTAL = image_composer_native_locale_historical_source(
+    (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8"),
+    "static/portal/portal.js",
+)
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")

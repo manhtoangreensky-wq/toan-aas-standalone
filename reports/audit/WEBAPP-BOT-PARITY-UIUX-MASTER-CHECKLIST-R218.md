@@ -3424,8 +3424,10 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   4.925ca duy nhất. Python tĩnh42/42,metadata1/1,py_compile exit0.
   Native auth cục bộ đứng, đã dừng đúng QA; exact-head authCI vẫn giữ.
   Tài liệu vận hành/đối chiếu/Tester/8case và12nhãn/2mẫu đã đủ.
-- [ ] Nhãn Composer còn prompt/keyvisual/landingpage; thông báo hành động/
-  lỗi động, draft qua lỗi/revision/route, whole-app locale/AX/auth/device
+- [x] Nhãn/recipe/phản hồi/ghi chú mới Composer được xử lý trong đợt
+  IMAGE-COMPOSER-NATIVE-LOCALE-20261126 bên dưới; không đóng draft/auth
+  hoặc production từ unit/component evidence.
+- [ ] Draft qua lỗi/revision/route, whole-app locale/AX/auth/device
   và motion cuối vẫn mở. GoalACTIVE, không nhận hoàn tất.
 
 ### Công cụ miễn phí — màu chữ và nền, 25/11/2026
@@ -3466,5 +3468,52 @@ Issue/PRrỗng,khôngdùngGitHublàkholưutạmđềxuấtchưakiểm.
   98Python đạt,reviewC0I0M0. Ca Python câu lịch sử lỗi cùngmain/ứngviên.
 - [x] CI45652044355 trên63ad906a đạt hai job, artefact15043310897/
   15042896999; bằng chứng bản trước ghép, không dùng thay finalHEADCI.
-- [ ] Bản ghép PR810: provenance mới → CI đúngHEAD → merge/tree →
-  deploy/runtime/health/5+5assets/receipt. Chưa nhận màu đã live.
+- [x] Bản ghép PR810: Webprovenance8ea14c43/e605bb3e,CI45662670051
+  hai job đạt trên713e145e → PR809merge6ec003db/treeexact →
+  deploy45667062174/runtimeclean/3servicesactive/health/5+5assets.
+  Receipt689/7169893110 và PR809/7169894142 đọc lại đúng. Chỉ xác
+  nhận triển khai/nguồn công khai, signedproductionUI vẫn mở.
+
+### Composer — nội dung đúng ngôn ngữ, 26/11/2026
+
+- [x] Nền là bản6ec003db đã phát hành; nhánh
+  codex/image-composer-locale-20261126; contract689/7170035286 đọc lại.
+- [x]20recordUI từ7session và19recordcâuVIWeb từ4session
+  gemini-4-hydrogen-xhigh; fixture39record/bốn source,85key.
+  Hai lỗi workerFrame chỉ ởOLDanchor đã sửa đúng phạm vi;0lỗi ở phần khác.
+- [x] PhysicalRED7/7fail đúng yêu cầu; inverse7/7case giữ byte lạ/
+  dictionary/nav/asertion. Chỉ áp39record; physicalGREEN7/7,
+  pycompile/JSsyntax/diffcheckexit0. Chưa nhận acceptance toàn Composer.
+- [x] Receipt150, pipeline13, realWeb26 tổ hợp, renderer258 giữ
+  VI/EN output/customer/guard/selection; draft/session toàn app kiểm riêng.
+- [ ] Review/hồi quy gộp, tài liệu/Tester/readiness/provenance/CI/PR/
+  deploy/runtime/assets/receipt. Chưa push hoặc mở PR Composer.
+- [x] Phụ lục689/7171342911:15key feedbackVI/EN/ZH và24nhãn noteVI/EN,
+  exact4record. Feedback45nhánh và formatter110ca đạt, giữ nội dung
+  khách/category/tags/IDs/index/luồng ghi/ghi chú cũ.
+- [ ] Whole-app locale/AX/auth lifecycle, signedUI/thiết bị thật/Safari
+  chưa đóng. Motion tiếp tục xếp cuối.
+- [x] Receiptportal150/150; builderPydantic26tổhợp+EnglishBASE/customer
+  held; renderer258/258. Python source/model11/11. Không cộng các số
+  tổ hợp và testcase thành ca duy nhất; HTTP cục bộ300stimeout0completed,
+  đã dừng đúng QA, không nhậnPASS/cùngbaseline. Ubuntu API gate bắt buộc.
+- [x] Phụ lụcCOMP-RECEIPT689/7170804673: thiếufacts ởintegration
+  acceptor→bootstrap,RED12fail/1pass. AGYR1đúng1record, giữpredicate;
+  fixture39recordgốc+1amendment riêng/năm source,29casepipeline/source/
+  history đạt. Không chấm lỗi worker39record vì spec trước thiếu.
+- [x] Phụ lục689/7174154546: scope màu/font/goal disclosure/labels/
+  placeholder/focus. Tổng39gốc+14amendment=53record/năm app files,
+  Gemini4ExtraHigh. Những thiếu sót selector/priority của spec/QA
+  được giữ lịch sử, không tính lỗi code worker.
+- [x] Physical-r8-final48view:2112mẫu chữ đang bật đo được,min5,4733;
+  placeholdermin5,5225;24focusmin5,8601và2px.0finding/error/external/
+  overflow,24disabledsamples báo riêng. Đã mở ảnh375sáng/tối.
+- [x] Finalraw/history19,other-route18 và freshbuilderfixture1 đạt;
+  functional488 trước baCSS-onlyrecord cuối. Nhóm nguồn557observations
+  có2QAfail, phục hồi224/224; Pythonhistorical18/18. Không cộng lặp.
+- [x] Review gộpC0/I2/M0, sau sửa đúng hai deltaC0/I0/M0. CI đã
+  đăng ký feedback-locale/actions/note/other-routes; suite không chạy lặp
+  bởi reviewer. Tài liệu vận hành/đối chiếu/phiên Tester/10case đã cập nhật.
+- [ ] Exact-head UbuntuAPI/authenticatedCI → PR/merge/tree →
+  Webdeploy/runtime/health/5+5assets/receipt. LocalHTTP300s/0completed
+  khôngPASS. SignedproductionUI và fullauth/draft/device/Safari vẫn mở.

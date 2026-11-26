@@ -10865,6 +10865,15 @@
   // handoff. Every execution boundary must match the server exactly before a
   // note link can render; a response can never imply image/provider/job/
   // wallet/payment work merely because a planning draft was saved.
+  function imageComposerFeedbackText(key, fallback, params) {
+    const i18n = window.TOANAASI18n;
+    const fullKey = `imageComposerFeedbackUi.${key}`;
+    const value = i18n && typeof i18n.t === "function" ? i18n.t(fullKey, params) : "";
+    if (typeof value === "string" && value && value !== fullKey) return value;
+    const values = params && typeof params === "object" ? params : {};
+    return String(fallback || "").replace(/\{([A-Za-z]+)\}/g, (match, name) => Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : match);
+  }
+
   const IMAGE_PROMPT_COMPOSER_MEMORY_SAVE_FALSE_BOUNDARY_FIELDS = Object.freeze([
     "browser_result_persisted", "pending_bot_save_created", "telegram_state_changed", "bot_called", "bridge_called",
     "source_image_inspected", "provider_called", "image_created", "output_created", "job_created",
@@ -10899,7 +10908,11 @@
     return {
       note: { id: String(note.id), revision, state: "active", category: "Image Prompt Composer", priority: "normal" },
       destination: "memory_note",
-      selected_variant_index: selectedVariantIndex
+      selected_variant_index: selectedVariantIndex,
+      execution: "web_native_memory_note_server_recomputed",
+      draft_recomputed_on_server: true,
+      web_note_persisted: true,
+      ...Object.fromEntries(IMAGE_PROMPT_COMPOSER_MEMORY_SAVE_FALSE_BOUNDARY_FIELDS.map((field) => [field, false]))
     };
   }
 
@@ -33184,12 +33197,12 @@
       if (action === "image-prompt-composer-select-variant") {
         const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
         if (!(capabilities["image-prompt-compose"] === true)) {
-          throw new Error("Cần signed Web session, CSRF và Image Studio đang sẵn sàng để chọn variant prompt.");
+          throw new Error(imageComposerFeedbackText("chooseUnavailable", "Hiện chưa thể chọn phương án này. Vui lòng tải lại trang rồi thử lại."));
         }
         const selectedVariantIndex = imagePromptComposerVariantIndex(fields.__imagePromptComposerSelectedVariantIndex);
         const currentResult = base().imagePromptComposerResult;
         if (selectedVariantIndex === null || !imagePromptComposerResultIsSafe(currentResult)) {
-          throw new Error("Variant prompt không còn thuộc bản nháp Web hiện tại. Hãy tạo lại prompt trước khi chọn.");
+          throw new Error(imageComposerFeedbackText("chooseStale", "Mô tả hiện tại đã thay đổi. Hãy tạo lại trước khi chọn."));
         }
         merge({
           imagePromptComposerSelectedVariantIndex: selectedVariantIndex,
@@ -33197,7 +33210,7 @@
           // not leave it visible after the session-local choice changes.
           imagePromptComposerSaveReceipt: {}
         });
-        toast(selectedVariantIndex === 0 ? "Đã chọn Bản gốc để review hoặc lưu." : `Đã chọn Variant ${selectedVariantIndex} để review hoặc lưu.`);
+        toast(selectedVariantIndex === 0 ? imageComposerFeedbackText("selectedOriginal", "Đã chọn bản gốc để xem lại hoặc lưu.") : imageComposerFeedbackText("selectedVariant", "Đã chọn phương án {number} để xem lại hoặc lưu.", { number: String(selectedVariantIndex) }));
         return;
       }
       if (action === "image-prompt-compose") {
@@ -33221,11 +33234,11 @@
           });
           const data = result.data && typeof result.data === "object" ? result.data : {};
           if (!imagePromptComposerResultIsSafe(data)) {
-            throw new Error("Máy chủ chưa trả Image Prompt Composer Web-native an toàn.");
+            throw new Error(imageComposerFeedbackText("composeInvalidResult", "Chưa thể xác nhận kết quả mô tả. Vui lòng tạo lại."));
           }
           const saveSource = imagePromptComposerMemorySaveSource(payload);
           if (!saveSource || !imagePromptComposerMemorySaveSourceMatchesResult(saveSource, data)) {
-            throw new Error("Bản nháp trả về không còn khớp lựa chọn Web hiện tại để lưu an toàn.");
+            throw new Error(imageComposerFeedbackText("composeStaleSource", "Kết quả không còn khớp với các lựa chọn hiện tại. Hãy tạo lại trước khi lưu."));
           }
           merge({
             imagePromptComposerResult: data,
@@ -33234,7 +33247,7 @@
             imagePromptComposerSaveReceipt: {},
             pageStates: { ...(base().pageStates || {}), "/image/prompt-composer": "ready" }
           });
-          toast(result.message || "Đã tạo prompt để review. Không có ảnh, output, job, tài sản, thanh toán hoặc publish action.");
+          toast(imageComposerFeedbackText("composeSuccess", "Mô tả đã sẵn sàng để xem lại."));
         } finally {
           setActionBusy(action, route, false);
         }
@@ -33243,22 +33256,22 @@
       if (action === "image-prompt-composer-save-memory") {
         const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
         if (!(capabilities["image-prompt-compose"] === true && capabilities["image-prompt-composer-save-memory"] === true)) {
-          throw new Error("Chỉ signed Web session có CSRF, Image Studio và Memory Center đang sẵn sàng mới có thể lưu Prompt Composer.");
+          throw new Error(imageComposerFeedbackText("saveUnavailable", "Hiện chưa thể lưu. Vui lòng tải lại trang rồi thử lại."));
         }
         const source = imagePromptComposerMemorySaveSource(base().imagePromptComposerSaveSource);
         const currentResult = base().imagePromptComposerResult;
         const selectedVariantIndex = imagePromptComposerVariantIndex(base().imagePromptComposerSelectedVariantIndex);
         if (!source || !imagePromptComposerMemorySaveSourceMatchesResult(source, currentResult)) {
-          throw new Error("Bản nháp hiện tại không còn khớp lựa chọn Web trong phiên này. Hãy tạo lại Image Prompt Composer trước khi lưu.");
+          throw new Error(imageComposerFeedbackText("saveStaleSource", "Các lựa chọn đã thay đổi. Hãy tạo lại mô tả trước khi lưu."));
         }
         if (selectedVariantIndex === null) {
-          throw new Error("Hãy chọn Bản gốc hoặc một Variant hợp lệ trước khi lưu vào Memory Center.");
+          throw new Error(imageComposerFeedbackText("saveInvalidSelection", "Hãy chọn bản gốc hoặc một phương án trước khi lưu vào Ghi chú."));
         }
         const payload = { ...source, destination: "memory_note", selected_variant_index: selectedVariantIndex };
         const scope = "image-studio:prompt-composer:save-memory";
         const submission = acquireSubmission(scope, JSON.stringify(payload));
         if (!submission) {
-          toast("Bản nháp đang được Memory Center xác nhận. Vui lòng chờ.", "error");
+          toast(imageComposerFeedbackText("saveBusy", "Đang lưu. Vui lòng chờ và không gửi lại."), "error");
           return;
         }
         let acknowledged = false;
@@ -33273,12 +33286,12 @@
             body: JSON.stringify({ ...payload, idempotency_key: submission.key })
           });
           acknowledged = true;
-          if (result.status !== "completed") throw new Error("Máy chủ chưa xác nhận lưu Image Prompt Composer vào Memory Center.");
+          if (result.status !== "completed") throw new Error(imageComposerFeedbackText("saveNotCompleted", "Chưa xác nhận được việc lưu. Hãy kiểm tra Ghi chú trước khi thử lại."));
           const receipt = imagePromptComposerMemorySaveReceipt(result.data);
-          if (!receipt) throw new Error("Máy chủ chưa trả receipt Memory Center content-free và đúng ranh giới an toàn.");
-          if (receipt.selected_variant_index !== selectedVariantIndex) throw new Error("Receipt Memory Center không khớp variant đã chọn trong phiên này.");
+          if (!receipt) throw new Error(imageComposerFeedbackText("saveInvalidReceipt", "Không thể xác minh kết quả lưu. Hãy kiểm tra Ghi chú trước khi thực hiện lại."));
+          if (receipt.selected_variant_index !== selectedVariantIndex) throw new Error(imageComposerFeedbackText("saveMismatchedSelection", "Không thể xác nhận nội dung đã lưu khớp với lựa chọn của bạn. Hãy kiểm tra Ghi chú trước."));
           merge({ imagePromptComposerSaveReceipt: receipt });
-          toast(result.message || "Đã lưu bản nháp Web vào Memory Center riêng tư.");
+          toast(imageComposerFeedbackText("saveSuccess", "Đã lưu vào Ghi chú của bạn."));
         } catch (error) {
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
           merge({ imagePromptComposerSaveReceipt: {} });

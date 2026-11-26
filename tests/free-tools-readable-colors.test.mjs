@@ -5,9 +5,10 @@ import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {freeToolsReadableColorsHistoricalSource, upstreamRealtimeBannerHistoricalSource, upstreamRealtimeProtectedHistoricalSource} from "./helpers/free-tools-readable-colors-historical.mjs";
 import * as historical from "./helpers/free-tools-readable-colors-historical.mjs";
+import {imageComposerNativeLocaleHistoricalSource} from "./helpers/image-composer-native-locale-historical.mjs";
 
 const root = new URL("../", import.meta.url);
-const read = file => fs.readFileSync(new URL(file, root), "utf8").replace(/\r\n/g, "\n");
+const read = file => imageComposerNativeLocaleHistoricalSource(fs.readFileSync(new URL(file, root), "utf8").replace(/\r\n/g, "\n"), file);
 const contract = JSON.parse(read("tests/fixtures/free-tools-readable-colors-contract.json"));
 const revisionSource = (revision, file) => execFileSync("git", ["show", revision + ":" + file], {encoding: "utf8", maxBuffer: 30e6}).replace(/\r\n/g, "\n");
 const prior = file => revisionSource(contract.base, file);

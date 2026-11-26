@@ -2085,4 +2085,19 @@ Phiên: [MEMBERSHIP-PLAIN-LANGUAGE-20261111](PHIEN-MEMBERSHIP-PLAIN-LANGUAGE-202
 | FT-RC-CONTROLS | nặng | Đối chiếu input, lựa chọn và điều khiển bị vô hiệu | IDs/giá trị/chữ/hình học/độ mờ và hành động giữ nguyên | So baseline cùng ngữ cảnh và test nguồn |
 | FT-RC-SOURCE | nặng | So nguồn với BASE và gây thiếu/lặp/thay đổi lạ trong dữ liệu kiểm | Đúng chín record/hai app files; inverse không che bytes lạ | Source/inverse pressure; nhóm ảnh hưởng 398 đạt |
 | FT-RC-REGRESSION | nặng | Chạy các nhóm hồi quy đã khai báo | Không có lỗi mới; báo riêng quan sát và ca duy nhất, không cộng lặp | Node gộp 176 tệp/5.146 lượt/4.936 khóa duy nhất, 0 lỗi/bỏ qua; Python hai nhóm 9/142 đạt |
-| FT-RC-DELIVERY | nặng | CI/merge/deploy/runtime/health/assets/receipt | Mỗi cổng có bằng chứng riêng; không nhận signed UI từ HTTP/asset | CHƯA PHÁT HÀNH |
+| FT-RC-DELIVERY | nặng | CI/merge/deploy/runtime/health/assets/receipt | Mỗi cổng có bằng chứng riêng; không nhận signed UI từ HTTP/asset | PR809; CI45662670051; deploy45667062174; runtime6ec003db; receipt689/7169893110 và PR809/7169894142 đọc lại; signed UI chưa kiểm |
+
+## IMAGE-COMPOSER-NATIVE-LOCALE-20261126 — Issue #689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| ICNL-UI | nặng | Mở trang và kết quả bằng Việt/Anh/Trung | Chữ cố định đúng ngôn ngữ, không ô/cột dư; giữ bảy trường và 20 giá trị lựa chọn | [Phiên kiểm tra](PHIEN-IMAGE-COMPOSER-NATIVE-LOCALE-20261126.md), raw acceptance và renderer258 |
+| ICNL-TEXT | nặng | Soạn ba mục tiêu, phong cách gợi ý/riêng, đầu ra VI/EN | Câu Việt được dịch; EN bằng BASE; nội dung khách/tên riêng giữ nguyên | Builder thật26 tổ hợp, fixture gắn source hash |
+| ICNL-RECEIPT | nặng | Chạy biên nhận qua integration, bootstrap và renderer | Biên nhận hợp lệ còn hiển thị; sai whitelist/facts vẫn bị từ chối | Portal150, pipeline13; không ghi production |
+| ICNL-FEEDBACK | nặng | Chạy các nhánh chờ/lỗi/cũ/chưa xác nhận/thành công | 15 nhánh × ba locale đúng phản hồi; không báo thành công nhầm | 45 nhánh hành động thực |
+| ICNL-NOTE | nặng | Dựng ghi chú mới từ 26 kết quả và bốn lựa chọn | Nhãn theo ngôn ngữ mô tả; giữ nội dung, tags/index; không sửa note cũ | 110 ca formatter, không DB/mạng |
+| ICNL-GOAL | nặng | Chọn Mục tiêu riêng, gõ, đổi mục tiêu rồi mở lại | Ẩn thì disabled/not required/không FormData; mở lại giữ giá trị và required | 24 view trống của matrix48, helper thật |
+| ICNL-READABLE | nặng | Xem 360/375/768/1440 sáng/tối ba ngôn ngữ; đi Tab | Chữ/placeholder ≥4,5:1; focus ≥3:1, dày2px; ô nhập16px và cao≥44px | Matrix48: 2.112 mẫu đang bật; 0 lỗi/request ngoài/tràn |
+| ICNL-PROTECTED | nặng | So source/inverse và sáu route khác ở ba locale | Đúng39+14record/năm source; giữ byte/key lạ và controls ngoài Composer | Raw/history19; other-routes18; nhóm Python lịch sử18 |
+| ICNL-HTTP | nặng | Chạy API contracts trên SQLite QA tạm tại CI Ubuntu | Auth/CSRF/ownership/idempotency/không persistence ngoài hợp đồng đạt | Local300s/0completed chưa PASS; gate Ubuntu tám phút bắt buộc |
+| ICNL-DELIVERY | nặng | CI đúng HEAD → merge/tree → deploy/runtime/health/assets/receipt | Mỗi cổng có bằng chứng riêng, không nhận signed UI từ asset | CHƯA PHÁT HÀNH |

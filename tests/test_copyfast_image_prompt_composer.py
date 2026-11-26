@@ -216,7 +216,7 @@ def test_image_prompt_composer_resolves_only_web_native_style_presets(tmp_path, 
     with make_client(tmp_path, monkeypatch) as client:
         csrf = login(client, "image-prompt-preset@example.com")
         auto_styles = {}
-        for language, expected_default in (("vi", "studio sạch đẹp"), ("en", "clean studio")):
+        for language, expected_default in (("vi", "phông nền gọn đẹp"), ("en", "clean studio")):
             auto = client.post(
                 path,
                 headers={"X-CSRF-Token": csrf},
@@ -310,13 +310,13 @@ def test_image_prompt_composer_style_catalog_covers_every_goal_and_legacy_auto_r
 
 
 def test_image_prompt_composer_bot_style_catalog_uses_visible_directions_without_callback_transport(tmp_path, monkeypatch):
-    """Web suggestions follow Bot-visible copy, never its callback protocol."""
+    """Web keeps the same directions with native copy, never callback transport."""
 
     expected = {
         "vi": {
-            "product": ["Studio sạch đẹp", "Luxury showroom", "Lifestyle đời thường"],
-            "ad": ["Bán hàng trực tiếp", "Premium brand", "Viral/TikTok"],
-            "cinematic": ["Cinematic ánh sáng mạnh", "Sci-fi/công nghệ tương lai", "Fantasy/cyberpunk"],
+            "product": ["Phông nền gọn đẹp", "Không gian trưng bày sang trọng", "Khung cảnh đời thường"],
+            "ad": ["Bán hàng trực tiếp", "Thương hiệu cao cấp", "Lan tỏa trên TikTok"],
+            "cinematic": ["Phong cách điện ảnh với ánh sáng mạnh", "Khoa học viễn tưởng / công nghệ tương lai", "Kỳ ảo / đô thị công nghệ đen tối"],
         },
         "en": {
             "product": ["Clean studio", "Luxury showroom", "Lifestyle everyday scene"],
@@ -362,7 +362,7 @@ def test_image_prompt_composer_bot_style_catalog_uses_visible_directions_without
 
 
 def test_image_prompt_composer_bot_variant_catalog_is_exact_and_request_only(tmp_path, monkeypatch):
-    """The Web mirrors Bot-visible variants without importing Bot state."""
+    """Web retains the variant purposes with localized copy and no Bot state."""
 
     path = "/api/v1/image-studio/tools/prompt-composer"
     subject = "Bình nước giữ nhiệt cho người đi làm"
@@ -387,9 +387,9 @@ def test_image_prompt_composer_bot_variant_catalog_is_exact_and_request_only(tmp
             style = composer["style"]
             if language == "vi":
                 expected = [
-                    f"{subject}, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, studio sạch, 9:16, ánh sáng premium, chi tiết cao, không watermark",
-                    f"{subject}, key visual thương hiệu cao cấp, phong cách {style}, bố cục tinh tế, 9:16, ánh sáng luxury, chất lượng cao, không chữ thừa",
-                    f"{subject}, ảnh viral nổi bật mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể sạch, không watermark",
+                    f"{subject}, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, 9:16, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+                    f"{subject}, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách {style}, bố cục tinh tế, 9:16, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+                    f"{subject}, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, 9:16, dễ dừng lướt, chủ thể rõ, không dấu chìm",
                 ]
             else:
                 expected = [
@@ -606,9 +606,9 @@ def test_image_prompt_composer_memory_save_is_signed_recomputed_and_owner_scoped
         detail = client.get(f"/api/v1/memory/notes/{note_id}")
         assert detail.status_code == 200
         saved_note = detail.json()["data"]["note"]
-        assert saved_note["title"] == "Image Prompt Composer"
+        assert saved_note["title"] == "Ghi chú mô tả ảnh"
         assert saved_note["category"] == "Image Prompt Composer"
-        assert saved_note["content"].startswith("Image Prompt Composer — bản nháp Web đã được dựng lại trên máy chủ.")
+        assert saved_note["content"].startswith("Mô tả ảnh đã lưu để xem lại và sử dụng khi cần.")
         assert f"Chủ thể: {subject}" in saved_note["content"]
         assert expected["short_prompt"] in saved_note["content"]
         assert expected["detailed_prompt"] in saved_note["content"]
@@ -759,7 +759,8 @@ def test_image_prompt_composer_memory_save_selected_variant_is_server_recomputed
             f"/api/v1/memory/notes/{body['data']['note']['id']}"
         ).text
         note_text = client.get(f"/api/v1/memory/notes/{body['data']['note']['id']}").json()["data"]["note"]["content"]
-        assert "selected_variant_index: 2" in note_text
+        assert "Phương án đã chọn: Biến thể 2 · Thương hiệu cao cấp" in note_text
+        assert "selected_variant_index:" not in note_text
         assert expected["variants"][1] in note_text
         assert expected["variants"][0] in note_text
 

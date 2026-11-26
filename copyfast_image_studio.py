@@ -42,8 +42,8 @@ PROMPT_COMPOSER_VARIANT_LABELS = {
     "vi": (
         "Bản gốc",
         "Biến thể 1 · Bán hàng trực tiếp",
-        "Biến thể 2 · Premium brand",
-        "Biến thể 3 · Viral / social",
+        "Biến thể 2 · Thương hiệu cao cấp",
+        "Biến thể 3 · Lan tỏa trên mạng xã hội",
     ),
     "en": (
         "Original",
@@ -56,19 +56,19 @@ PROMPT_COMPOSER_STYLE_SUGGESTION_GOAL_CODES = frozenset({"product", "ad", "cinem
 PROMPT_COMPOSER_STYLE_SUGGESTION_CATALOG = {
     "vi": {
         "product": {
-            "suggestion_1": "Studio sạch đẹp",
-            "suggestion_2": "Luxury showroom",
-            "suggestion_3": "Lifestyle đời thường",
+            "suggestion_1": "Phông nền gọn đẹp",
+            "suggestion_2": "Không gian trưng bày sang trọng",
+            "suggestion_3": "Khung cảnh đời thường",
         },
         "ad": {
             "suggestion_1": "Bán hàng trực tiếp",
-            "suggestion_2": "Premium brand",
-            "suggestion_3": "Viral/TikTok",
+            "suggestion_2": "Thương hiệu cao cấp",
+            "suggestion_3": "Lan tỏa trên TikTok",
         },
         "cinematic": {
-            "suggestion_1": "Cinematic ánh sáng mạnh",
-            "suggestion_2": "Sci-fi/công nghệ tương lai",
-            "suggestion_3": "Fantasy/cyberpunk",
+            "suggestion_1": "Phong cách điện ảnh với ánh sáng mạnh",
+            "suggestion_2": "Khoa học viễn tưởng / công nghệ tương lai",
+            "suggestion_3": "Kỳ ảo / đô thị công nghệ đen tối",
         },
     },
     "en": {
@@ -780,7 +780,7 @@ def _prompt_composer_goal_label(goal_code: str, custom_goal: str, language: str)
         "vi": {
             "product": "Ảnh sản phẩm",
             "ad": "Ảnh quảng cáo",
-            "cinematic": "Ảnh cinematic / key visual video",
+            "cinematic": "Ảnh điện ảnh / hình ảnh chủ đạo",
         },
         "en": {
             "product": "Product image",
@@ -794,9 +794,9 @@ def _prompt_composer_goal_label(goal_code: str, custom_goal: str, language: str)
 def _prompt_composer_default_style(goal_code: str, language: str) -> str:
     catalog = {
         "vi": {
-            "product": "studio sạch đẹp",
+            "product": "phông nền gọn đẹp",
             "ad": "thương hiệu rõ lợi ích",
-            "cinematic": "cinematic ánh sáng mạnh",
+            "cinematic": "phong cách điện ảnh với ánh sáng mạnh",
             "custom": "tối giản, hiện đại",
         },
         "en": {
@@ -839,9 +839,9 @@ def _prompt_composer_variants(*, subject: str, style: str, ratio: str, language:
 
     if language == "vi":
         return [
-            f"{subject}, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, studio sạch, {ratio}, ánh sáng premium, chi tiết cao, không watermark",
-            f"{subject}, key visual thương hiệu cao cấp, phong cách {style}, bố cục tinh tế, {ratio}, ánh sáng luxury, chất lượng cao, không chữ thừa",
-            f"{subject}, ảnh viral nổi bật mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, {ratio}, dễ dừng lướt, chủ thể sạch, không watermark",
+            f"{subject}, ảnh bán hàng làm rõ sản phẩm và lợi ích chính, phông nền gọn, {ratio}, ánh sáng cao cấp, chi tiết cao, không dấu chìm",
+            f"{subject}, hình ảnh chủ đạo của thương hiệu cao cấp, phong cách {style}, bố cục tinh tế, {ratio}, ánh sáng sang trọng, chất lượng cao, không chữ thừa",
+            f"{subject}, ảnh nổi bật dễ lan tỏa trên mạng xã hội, điểm nhìn mạnh, bố cục giàu năng lượng, {ratio}, dễ dừng lướt, chủ thể rõ, không dấu chìm",
         ]
     return [
         f"{subject}, product-led sales hero image, clear benefit, clean studio, {ratio}, premium lighting, high detail, no watermark",
@@ -868,10 +868,10 @@ def _compose_image_prompt(payload: ImagePromptComposerRequest) -> dict[str, Any]
     variants = _prompt_composer_variants(subject=subject, style=style, ratio=ratio, language=language)
     review = (
         [
-            "Đây là bản nháp text có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
-            "Kiểm chứng mọi claim, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
-            "Xác nhận quyền sử dụng thương hiệu, logo, người, địa điểm và mọi reference trước khi dùng.",
-            "Rà soát lại prompt theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh.",
+            "Đây là bản mô tả có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi tuyên bố, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, biểu trưng, người, địa điểm và mọi nội dung tham khảo trước khi dùng.",
+            "Rà soát lại bản mô tả theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh.",
         ]
         if language == "vi"
         else [
@@ -885,19 +885,19 @@ def _compose_image_prompt(payload: ImagePromptComposerRequest) -> dict[str, Any]
     if language == "vi":
         short_prompt = (
             f"{subject}, mục tiêu {goal_label}, phong cách {style}, tỷ lệ {ratio}, "
-            "chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không watermark, không thêm chữ không được yêu cầu"
+            "chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không dấu chìm, không thêm chữ không được yêu cầu"
         )
         detailed_prompt = (
-            f"Chủ thể: {subject}. Mục tiêu visual: {goal_label}. Phong cách: {style}. Tỷ lệ: {ratio}. "
+            f"Chủ thể: {subject}. Mục tiêu hình ảnh: {goal_label}. Phong cách: {style}. Tỷ lệ: {ratio}. "
             "Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, "
-            "ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ logo hoặc chữ quan trọng "
-            "nếu đã được cấp quyền; không tự thêm claim, logo hoặc chữ thừa. Đây là hướng prompt để biên tập, không phải yêu cầu thực thi ảnh."
+            "ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ biểu trưng hoặc chữ quan trọng "
+            "nếu đã được cấp quyền; không tự thêm tuyên bố, biểu trưng hoặc chữ thừa. Đây là bản mô tả để biên tập, chưa tạo ảnh."
         )
         negative_prompt = (
-            "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, logo hỏng, chữ sai hoặc thừa, "
-            "watermark, nền rối, phơi sáng quá mức hoặc thiếu sáng"
+            "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, biểu trưng hỏng, chữ sai hoặc thừa, "
+            "dấu chìm, nền rối, phơi sáng quá mức hoặc thiếu sáng"
         )
-        title = f"Bản nháp prompt ảnh: {subject}"
+        title = f"Mô tả ảnh: {subject}"
     else:
         short_prompt = (
             f"{subject}, goal {goal_label}, style {style}, ratio {ratio}, "
@@ -956,49 +956,75 @@ def _image_prompt_composer_memory_note(
         labels = PROMPT_COMPOSER_VARIANT_LABELS.get(result["language"], PROMPT_COMPOSER_VARIANT_LABELS["vi"])
         selected_label = labels[selected_variant_index]
         selected_prompt = result["detailed_prompt"] if selected_variant_index == 0 else result["variants"][selected_variant_index - 1]
+        copy_rows = {
+            "title": ("Ghi chú mô tả ảnh", "Image description note"),
+            "summary": ("Mô tả ảnh đã lưu để xem lại và sử dụng khi cần.", "Saved image description for review and reuse."),
+            "sourceTitle": ("Tiêu đề mô tả", "Description title"),
+            "goal": ("Mục tiêu", "Goal"),
+            "subject": ("Chủ thể", "Subject"),
+            "stylePreset": ("Định hướng phong cách", "Style direction"),
+            "style": ("Phong cách", "Style"),
+            "ratio": ("Tỷ lệ khung hình", "Aspect ratio"),
+            "language": ("Ngôn ngữ đầu ra", "Output language"),
+            "selectionHeading": ("Mô tả đã chọn", "Selected description"),
+            "selection": ("Phương án đã chọn", "Selected option"),
+            "short": ("Mô tả ngắn", "Short description"),
+            "detailed": ("Mô tả chi tiết", "Detailed description"),
+            "avoid": ("Điểm cần tránh", "Things to avoid"),
+            "variants": ("Ba phương án thay thế", "Three alternatives"),
+            "variant": ("Phương án {number}", "Option {number}"),
+            "review": ("Kiểm tra trước khi sử dụng", "Review before use"),
+            "preset.auto": ("Tự chọn theo mục tiêu", "Auto-select by goal"),
+            "preset.first": ("Gợi ý 1", "Suggestion 1"),
+            "preset.second": ("Gợi ý 2", "Suggestion 2"),
+            "preset.third": ("Gợi ý 3", "Suggestion 3"),
+            "preset.custom": ("Phong cách tùy chỉnh", "Custom style"),
+            "language.vi": ("Tiếng Việt", "Vietnamese"),
+            "language.en": ("Tiếng Anh", "English"),
+        }
+        language_index = 0 if result["language"] == "vi" else 1
+        copy = {key: values[language_index] for key, values in copy_rows.items()}
+        preset_label = copy[{
+            "auto": "preset.auto", "suggestion_1": "preset.first", "suggestion_2": "preset.second",
+            "suggestion_3": "preset.third", "custom": "preset.custom",
+        }[result["style_preset"]]]
+        language_label = copy["language." + result["language"]]
         title = _line(
-            "Image Prompt Composer",
+            copy["title"],
             label="Tiêu đề ghi chú",
             minimum=3,
             maximum=MAX_MEMORY_NOTE_TITLE,
         )
         lines = [
-            "Image Prompt Composer — bản nháp Web đã được dựng lại trên máy chủ.",
-            f"Tiêu đề bản nháp: {result['title']}",
-            f"Mục tiêu: {result['goal_label']}",
-            f"Chủ thể: {result['subject']}",
-            f"Preset phong cách: {result['style_preset']}",
-            f"Phong cách: {result['style']}",
-            f"Tỷ lệ: {result['ratio']}",
-            f"Ngôn ngữ: {result['language']}",
+            copy["summary"],
+            f"{copy['sourceTitle']}: {result['title']}",
+            f"{copy['goal']}: {result['goal_label']}",
+            f"{copy['subject']}: {result['subject']}",
+            f"{copy['stylePreset']}: {preset_label}",
+            f"{copy['style']}: {result['style']}",
+            f"{copy['ratio']}: {result['ratio']}",
+            f"{copy['language']}: {language_label}",
             "",
-            "## Lựa chọn lưu",
-            f"selected_variant_index: {selected_variant_index}",
-            f"Lựa chọn: {selected_label}",
+            f"## {copy['selectionHeading']}",
+            f"{copy['selection']}: {selected_label}",
             selected_prompt,
             "",
-            "## Prompt ngắn",
+            f"## {copy['short']}",
             result["short_prompt"],
             "",
-            "## Prompt chi tiết",
+            f"## {copy['detailed']}",
             result["detailed_prompt"],
             "",
-            "## Negative prompt",
+            f"## {copy['avoid']}",
             result["negative_prompt"],
             "",
-            "## Ba biến thể",
+            f"## {copy['variants']}",
         ]
         for ordinal, variant in enumerate(result["variants"], start=1):
-            lines.append(f"### Biến thể {ordinal}")
+            lines.append("### " + copy["variant"].replace("{number}", str(ordinal)))
             lines.append(str(variant))
-        lines.extend(("", "## Kiểm tra trước khi sử dụng"))
+        lines.extend(("", "## " + copy["review"]))
         lines.extend(f"- {item}" for item in result["review_before_use"])
-        lines.extend(
-            (
-                "",
-                "Ghi chú này không tạo ảnh, output, job, tài sản, thanh toán, publish hay gửi Telegram.",
-            )
-        )
         content = _body(
             "\n".join(lines),
             label="Nội dung ghi chú Image Prompt Composer",

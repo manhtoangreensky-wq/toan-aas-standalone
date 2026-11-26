@@ -4741,6 +4741,75 @@ body {
   .portal-header-actions .portal-theme-toggle-label { display: none; }
 }
 
+/* Field labels had their own legacy dark-ink override. */
+:root .portal-page.portal-image-composer-customer .portal-field label {
+  color: var(--portal-ink);
+}
+
+/* Pair only customer Composer text with the active theme surfaces. */
+:root .portal-page.portal-image-composer-customer :is(
+  .portal-image-prompt-composer-intro, .portal-image-prompt-composer-form,
+  .portal-image-prompt-composer-result, .portal-image-prompt-composer-prompt,
+  .portal-image-prompt-composer-variants, .portal-image-prompt-composer-variants li,
+  .portal-image-prompt-composer-review, .portal-image-prompt-composer-meta span,
+  .portal-image-prompt-composer-variants li > span
+) {
+  background: var(--portal-surface);
+  color: var(--portal-ink);
+}
+:root .portal-page.portal-image-composer-customer :is(
+  h1, h2, h3, p, pre, strong, li, .portal-card-title, .portal-card-subtitle,
+  .portal-section-kicker, .portal-eyebrow, .portal-field-help, .portal-form-note,
+  .portal-image-prompt-composer-meta span, .portal-image-prompt-composer-prompt > span,
+  .portal-image-prompt-composer-variants li > span
+) {
+  color: var(--portal-ink);
+}
+:root .portal-page.portal-image-composer-customer .portal-button--primary:not(:disabled) {
+  background: var(--portal-action) !important;
+  color: var(--portal-on-action) !important;
+}
+html[data-portal-theme="dark"] .portal-page.portal-image-composer-customer .portal-button--primary:not(:disabled) {
+  background: var(--portal-rail) !important;
+  color: var(--portal-rail-text) !important;
+}
+
+/* The customer Composer has no static side panels or empty metric columns. */
+.portal-page.portal-image-composer-customer :is(
+  .portal-image-prompt-composer-intro,
+  .portal-image-prompt-composer-layout
+) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Keep input examples and keyboard location readable in both themes. */
+:root .portal-page.portal-image-composer-customer :is(.portal-input, .portal-textarea):not(:disabled)::placeholder {
+  color: var(--portal-muted);
+  opacity: 1;
+}
+:root .portal-page.portal-image-composer-customer :is(.portal-input, .portal-select, .portal-textarea):focus-visible {
+  outline-color: var(--portal-focus) !important;
+}
+
+/* Readable text sizes are isolated from the shared planner family. */
+:root .portal-page.portal-image-composer-customer :is(.portal-input, .portal-select, .portal-textarea) {
+  font-size: 16px;
+}
+:root .portal-page.portal-image-composer-customer :is(.portal-image-prompt-composer-prompt pre, .portal-image-prompt-composer-variants pre) {
+  font-size: 14px;
+  line-height: 1.65;
+}
+:root .portal-page.portal-image-composer-customer :is(
+  .portal-image-prompt-composer-meta span, .portal-image-prompt-composer-prompt > span,
+  .portal-image-prompt-composer-variants li strong, .portal-image-prompt-composer-review li,
+  .portal-image-prompt-composer-review strong
+) {
+  font-size: 14px;
+}
+:root .portal-page.portal-image-composer-customer :is(.portal-section-kicker, .portal-eyebrow, .portal-image-prompt-composer-variants li > span) {
+  font-size: 12px;
+}
+
 /* These legacy studios authored their intro metrics for dark gradient panels.
    The shared light-surface rule now owns their outer panel, so their nested
    metric cards and text must move to the same semantic light palette instead

@@ -3709,7 +3709,11 @@
     return {
       note: { id: String(note.id), revision, state: "active", category: "Image Prompt Composer", priority: "normal" },
       destination: "memory_note",
-      selected_variant_index: selectedVariantIndex
+      selected_variant_index: selectedVariantIndex,
+      execution: "web_native_memory_note_server_recomputed",
+      draft_recomputed_on_server: true,
+      web_note_persisted: true,
+      ...Object.fromEntries(IMAGE_PROMPT_COMPOSER_MEMORY_FALSE_BOUNDARY_FIELDS.map((field) => [field, false]))
     };
   }
 
@@ -10141,6 +10145,7 @@
     if (path === "/audio-hub/new") return audioWorkspaceText("hub.newTitle", fallback);
     if (["media-workspace-detail", "audio-hub-detail"].includes(page && page.layout)) return audioWorkspaceText("detail.pageTitle", fallback);
     if (["image-studio-detail", "image-hub-detail"].includes(page && page.layout)) return imageStudioDetailText("page.detailTitle", "Chi tiết bảng thiết kế");
+    if (path === "/image/prompt-composer") return imageComposerText("page.title", "Soạn mô tả ảnh");
     if (path === "/image-studio") return imageStudioText("page.title", "Thiết kế ảnh");
     if (path === "/image-hub") return imageStudioLibraryText("page.title", fallback);
     if (path === "/image-hub/new") return imageStudioDetailText("page.newTitle", fallback);
@@ -10288,6 +10293,7 @@
     if (path === "/audio-hub/new") return audioWorkspaceText("hub.newDescription", fallback);
     if (["media-workspace-detail", "audio-hub-detail"].includes(page && page.layout)) return audioWorkspaceText("detail.pageDescription", fallback);
     if (["image-studio-detail", "image-hub-detail"].includes(page && page.layout)) return imageStudioDetailText("page.detailDescription", "Xem và chỉnh sửa ý tưởng, ảnh tham khảo và các phương án.");
+    if (path === "/image/prompt-composer") return imageComposerText("intro.body", "Soạn mô tả ảnh, điều cần tránh và ba phương án để bạn lựa chọn. Bước này tạo bản mô tả, chưa tạo ảnh.");
     if (path === "/image-studio") return imageStudioText("page.description", "Lưu ý tưởng, ảnh tham khảo và các phương án thiết kế tại một nơi.");
     if (path === "/image-hub") return imageStudioLibraryText("page.description", fallback);
     if (path === "/image-hub/new") return imageStudioDetailText("page.newDescription", fallback);
@@ -16852,6 +16858,13 @@ function renderAutoPostHub(page, context) {
     return `<article class="portal-page portal-source-rights-guide">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">Bot-derived · rights-aware guidance</span><h2>Giữ nguồn hợp lệ trước khi bắt đầu sáng tạo.</h2><p>Guide này chuyển hai lệnh public của Bot — nguồn tư liệu và dịch/lồng tiếng hợp lệ — thành một bề mặt Web dễ dùng. Nó là khung kiểm tra, không phải tư vấn pháp lý hay bằng chứng quyền sử dụng.</p></div><dl><div><dt>5</dt><dd>Nguồn nên dùng</dd></div><div><dt>4</dt><dd>Hành vi chặn</dd></div><div><dt>0</dt><dd>Provider / publish</dd></div></dl></section><div class="portal-content-prompt-pack-layout"><section class="portal-card portal-card-pad portal-content-prompt-pack-checks"><div class="portal-card-header"><div><span class="portal-section-kicker">Có thể dùng</span><h2 class="portal-card-title">Nguồn tư liệu hợp lệ</h2><p class="portal-card-subtitle">Lưu lại license, bằng chứng cho phép và phạm vi quyền dùng của bạn. Web không tự xác minh chúng.</p></div>${badge("read_only")}</div>${guideList(SOURCE_RIGHTS_ALLOWED)}</section><section class="portal-card portal-card-pad portal-content-prompt-pack-checks"><div class="portal-card-header"><div><span class="portal-section-kicker">Không hỗ trợ</span><h2 class="portal-card-title">Hành vi cần tránh</h2><p class="portal-card-subtitle">Không có workflow Web nào được dùng để đi vòng các giới hạn này.</p></div>${badge("guarded")}</div>${guideList(SOURCE_RIGHTS_NOT_SUPPORTED)}</section></div><div class="portal-content-prompt-pack-layout"><section class="portal-card portal-card-pad portal-content-prompt-pack-checks"><div class="portal-card-header"><div><span class="portal-section-kicker">Dịch & voice-over</span><h2 class="portal-card-title">Nguyên tắc dubbing</h2><p class="portal-card-subtitle">Tạo nội dung mới có quyền, không thay âm thanh để ngụy trang một video không có license.</p></div>${badge("read_only")}</div>${guideList(DUBBING_RIGHTS_RULES)}</section><section class="portal-card portal-card-pad portal-content-prompt-pack-checks"><div class="portal-card-header"><div><span class="portal-section-kicker">Bước tiếp theo</span><h2 class="portal-card-title">Chọn đúng workspace</h2><p class="portal-card-subtitle">Liên kết mở công cụ riêng; nó không cấp quyền engine, không chuyển nguồn và không tạo output.</p></div></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/trend-research">Trend Research</a><a class="portal-button portal-button--quiet" href="/media-factory">Media Factory</a><a class="portal-button portal-button--quiet" href="/subtitle-studio">Subtitle Studio</a><a class="portal-button portal-button--quiet" href="/voice-studio/direction-composer">Voice Direction</a></div></section></div><section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Giữ bằng chứng ngoài guide</strong><p>Danh sách này không fact-check hay rights-verify nguồn của bạn. Khi rủi ro cao, hãy xin quyền rõ ràng và tham vấn chuyên môn phù hợp trước khi render hoặc publish.</p></div></div>${renderNotes(page)}</section></article>`;
   }
 
+  function imageComposerText(key, fallback, params) {
+    return uiText(`imageComposerUi.${key}`, fallback, params);
+  }
+  function imageComposerOptions(options, entries) {
+    return options.map(([value], index) => [value, imageComposerText(entries[index][0], entries[index][1])]);
+  }
+
   const IMAGE_PROMPT_COMPOSER_GOAL_OPTIONS = Object.freeze([
     ["product", "Ảnh sản phẩm"], ["ad", "Ảnh quảng cáo"], ["cinematic", "Cinematic / key visual"], ["custom", "Mục đích riêng"]
   ]);
@@ -16872,41 +16885,42 @@ function renderAutoPostHub(page, context) {
 
   function imagePromptComposerFields() {
     return [
-      { name: "goal_code", label: "Mục tiêu ảnh", control: "select", required: true, options: IMAGE_PROMPT_COMPOSER_GOAL_OPTIONS, help: "Dùng để chọn template deterministic. Đây không phải model, provider hay lệnh tạo ảnh." },
-      { name: "ratio", label: "Tỷ lệ khung hình", control: "select", required: true, options: IMAGE_PROMPT_COMPOSER_RATIO_OPTIONS },
-      { name: "language", label: "Ngôn ngữ prompt", control: "select", required: true, options: IMAGE_PROMPT_COMPOSER_LANGUAGE_OPTIONS },
-      { name: "custom_goal", label: "Mục đích riêng (nếu chọn Mục đích riêng)", control: "textarea", placeholder: "Ví dụ: key visual giới thiệu tính năng mới cho landing page", minLength: 2, maxLength: 180, wide: true, help: "Bỏ trống nếu bạn chọn Ảnh sản phẩm, Ảnh quảng cáo hoặc Cinematic / key visual." },
-      { name: "subject", label: "Chủ thể / chủ đề", control: "textarea", placeholder: "Ví dụ: máy pha cà phê mini màu đen mờ trên quầy bếp sáng", required: true, minLength: 2, maxLength: 260, wide: true, help: "Chỉ mô tả nội dung bạn có quyền sử dụng. Không nhập ảnh, URL, token, OTP, chứng từ thanh toán hoặc yêu cầu mô phỏng thương hiệu/nghệ sĩ." },
-      { name: "style_preset", label: "Hướng phong cách", control: "select", required: true, options: IMAGE_PROMPT_COMPOSER_STYLE_PRESET_OPTIONS, controlData: { "image-prompt-composer-style-preset": "" }, help: "Server tự chọn direction gốc theo mục tiêu và ngôn ngữ. Chỉ chọn Tự nhập khi cần mô tả riêng." },
-      { name: "style", label: "Phong cách riêng (chỉ khi chọn Tự nhập)", control: "textarea", placeholder: "Ví dụ: studio sạch, ánh sáng mềm, chủ thể trung tâm, khoảng trống cho CTA", minLength: 2, maxLength: 180, wide: true, dynamicRequired: true, controlData: { "image-prompt-composer-custom-style": "" }, wrapperData: { "image-prompt-composer-custom-style-field": "" }, help: "Mô tả direction nguyên bản của bạn. Tool không phân tích ảnh, không nhận upload và không tạo preview." }
+      { name: "goal_code", label: imageComposerText("field.goal", "Mục tiêu ảnh"), control: "select", required: true, options: imageComposerOptions(IMAGE_PROMPT_COMPOSER_GOAL_OPTIONS, [["goal.product","Ảnh sản phẩm"],["goal.ad","Ảnh quảng cáo"],["goal.cinematic","Ảnh điện ảnh / hình ảnh chủ đạo"],["goal.custom","Mục tiêu riêng"]]), help: imageComposerText("help.goal", "Chọn mục tiêu để có gợi ý mô tả phù hợp.") },
+      { name: "ratio", label: imageComposerText("field.ratio", "Tỷ lệ khung hình"), control: "select", required: true, options: imageComposerOptions(IMAGE_PROMPT_COMPOSER_RATIO_OPTIONS, [["ratio.square","1:1 · Vuông"],["ratio.vertical","9:16 · Dọc / Reels"],["ratio.horizontal","16:9 · Ngang / YouTube"],["ratio.post","4:5 · Bài đăng"],["ratio.portrait","3:4 · Chân dung"],["ratio.slide","4:3 · Trang trình chiếu"],["ratio.productWide","3:2 · Ngang sản phẩm"],["ratio.productTall","2:3 · Dọc sản phẩm"],["ratio.ultrawide","21:9 · Siêu rộng"]]) },
+      { name: "language", label: imageComposerText("field.language", "Ngôn ngữ mô tả"), control: "select", required: true, options: imageComposerOptions(IMAGE_PROMPT_COMPOSER_LANGUAGE_OPTIONS, [["language.vi","Tiếng Việt"],["language.en","Tiếng Anh"]]) },
+      { name: "custom_goal", label: imageComposerText("field.customGoal", "Mục tiêu riêng"), control: "textarea", placeholder: imageComposerText("placeholder.customGoal", "Ví dụ: hình ảnh chủ đạo giới thiệu tính năng mới trên trang giới thiệu"), minLength: 2, maxLength: 180, wide: true, dynamicRequired: true, help: imageComposerText("help.customGoal", "Chỉ điền khi chọn Mục tiêu riêng.") },
+      { name: "subject", label: imageComposerText("field.subject", "Chủ thể / chủ đề"), control: "textarea", placeholder: imageComposerText("placeholder.subject", "Ví dụ: máy pha cà phê nhỏ màu đen mờ trên quầy bếp sáng"), required: true, minLength: 2, maxLength: 260, wide: true, help: imageComposerText("help.subject", "Mô tả nội dung bạn có quyền sử dụng. Không đưa đường dẫn, thông tin bảo mật hoặc thanh toán vào đây.") },
+      { name: "style_preset", label: imageComposerText("field.preset", "Định hướng phong cách"), control: "select", required: true, options: imageComposerOptions(IMAGE_PROMPT_COMPOSER_STYLE_PRESET_OPTIONS, [["preset.auto","Tự chọn theo mục tiêu"],["preset.first","Gợi ý 1 · Rõ chủ thể"],["preset.second","Gợi ý 2 · Cao cấp và có chiều sâu"],["preset.third","Gợi ý 3 · Biên tập / mạng xã hội"],["preset.custom","Tự nhập phong cách"]]), controlData: { "image-prompt-composer-style-preset": "" }, help: imageComposerText("help.preset", "Chọn một gợi ý hoặc Tự nhập để dùng phong cách riêng.") },
+      { name: "style", label: imageComposerText("field.customStyle", "Phong cách riêng"), control: "textarea", placeholder: imageComposerText("placeholder.customStyle", "Ví dụ: phông nền gọn, ánh sáng dịu, chủ thể ở giữa, chừa chỗ cho lời mời hành động"), minLength: 2, maxLength: 180, wide: true, dynamicRequired: true, controlData: { "image-prompt-composer-custom-style": "" }, wrapperData: { "image-prompt-composer-custom-style-field": "" }, help: imageComposerText("help.customStyle", "Mô tả phong cách nguyên bản bạn muốn sử dụng.") }
     ];
   }
 
   function imagePromptComposerGoalLabel(value) {
-    const found = IMAGE_PROMPT_COMPOSER_GOAL_OPTIONS.find(([key]) => key === String(value || ""));
-    return found ? found[1] : "Image prompt";
+    const found = imageComposerOptions(IMAGE_PROMPT_COMPOSER_GOAL_OPTIONS, [["goal.product","Ảnh sản phẩm"],["goal.ad","Ảnh quảng cáo"],["goal.cinematic","Ảnh điện ảnh / hình ảnh chủ đạo"],["goal.custom","Mục tiêu riêng"]]).find(([key]) => key === String(value || ""));
+    return found ? found[1] : imageComposerText("fallback.goal", "Mô tả ảnh");
   }
 
   function imagePromptComposerStylePresetLabel(value) {
-    const found = IMAGE_PROMPT_COMPOSER_STYLE_PRESET_OPTIONS.find(([key]) => key === String(value || ""));
-    return found ? found[1] : "Hướng phong cách";
+    const found = imageComposerOptions(IMAGE_PROMPT_COMPOSER_STYLE_PRESET_OPTIONS, [["preset.auto","Tự chọn theo mục tiêu"],["preset.first","Gợi ý 1 · Rõ chủ thể"],["preset.second","Gợi ý 2 · Cao cấp và có chiều sâu"],["preset.third","Gợi ý 3 · Biên tập / mạng xã hội"],["preset.custom","Tự nhập phong cách"]]).find(([key]) => key === String(value || ""));
+    return found ? found[1] : imageComposerText("fallback.preset", "Định hướng phong cách");
   }
 
   function renderImagePromptComposerResult(raw, rawSaveSource, rawSelectedVariantIndex, canSaveToMemory) {
     const result = raw && typeof raw === "object" ? raw : {};
     const composer = result.composer && typeof result.composer === "object" ? result.composer : null;
     if (!composer) {
-      return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Editable prompt draft</span><h2 class="portal-card-title">Chưa có prompt nháp</h2><p class="portal-card-subtitle">Nhập mục tiêu, chủ thể, style và tỷ lệ để tạo một prompt deterministic. Browser không tự viết prompt hoặc hiển thị ảnh trước khi server trả contract hợp lệ.</p></div>${badge("empty")}</div></section>`;
+      return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageComposerText("empty.kicker", "Bản mô tả của bạn"))}</span><h2 class="portal-card-title">${safeText(imageComposerText("empty.title", "Chưa có bản mô tả"))}</h2><p class="portal-card-subtitle">${safeText(imageComposerText("empty.body", "Chọn mục tiêu, mô tả chủ thể và phong cách để bắt đầu."))}</p></div>${badge("empty")}</div></section>`;
     }
     const promptCards = [
-      ["Prompt ngắn", composer.short_prompt], ["Prompt chi tiết", composer.detailed_prompt], ["Negative prompt", composer.negative_prompt]
+      [imageComposerText("prompt.short", "Mô tả ngắn"), composer.short_prompt], [imageComposerText("prompt.detailed", "Mô tả chi tiết"), composer.detailed_prompt], [imageComposerText("prompt.negative", "Điều cần tránh"), composer.negative_prompt]
     ].map(([label, value]) => `<article class="portal-image-prompt-composer-prompt"><span>${safeText(label)}</span><pre>${safeText(String(value || ""))}</pre></article>`).join("");
     const variants = Array.isArray(composer.variants) ? composer.variants : [];
+    const variantLabels = [imageComposerText("variant.sales", "Bán hàng trực tiếp"), imageComposerText("variant.premium", "Thương hiệu cao cấp"), imageComposerText("variant.social", "Lan tỏa trên mạng xã hội")];
     const selectionOptions = [
-      { index: 0, label: "Bản gốc", prompt: composer.detailed_prompt },
+      { index: 0, label: imageComposerText("selection.original", "Bản gốc"), prompt: composer.detailed_prompt },
       ...variants.map((item, index) => ({
         index: index + 1,
-        label: `Variant ${index + 1} · ${IMAGE_PROMPT_COMPOSER_VARIANT_LABELS[index] || "Prompt"}`,
+        label: imageComposerText("selection.variant", "Phương án {number} · {label}", { number: String(index + 1), label: variantLabels[index] || imageComposerText("selection.fallback", "Mô tả") }),
         prompt: item
       }))
     ].filter((item) => Number.isInteger(item.index) && item.index >= 0 && item.index <= 3 && typeof item.prompt === "string");
@@ -16914,7 +16928,7 @@ function renderAutoPostHub(page, context) {
     const selectedOption = selectionOptions.find((item) => item.index === selectedVariantIndex) || selectionOptions[0];
     const review = Array.isArray(composer.review_before_use) ? composer.review_before_use : [];
     const customGoal = composer.custom_goal
-      ? `<span>Mục đích riêng: ${safeText(String(composer.custom_goal))}</span>`
+      ? `<span>${safeText(imageComposerText("meta.customGoal", "Mục tiêu riêng: {value}", { value: String(composer.custom_goal) }))}</span>`
       : "";
     const saveSource = normalizeImagePromptComposerSaveSource(rawSaveSource);
     const sourceMatchesComposer = Boolean(
@@ -16927,14 +16941,14 @@ function renderAutoPostHub(page, context) {
       && (saveSource.style_preset !== "custom" || saveSource.style === composer.style)
     );
     const saveControl = sourceMatchesComposer && selectedOption
-      ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="image-prompt-composer-save-memory" data-portal-route="/image/prompt-composer" data-portal-confirm="Lưu ${safeText(selectedOption.label)} vào Memory Center? Máy chủ sẽ tự tạo lại prompt từ lựa chọn chỉ số đã xác nhận; không tạo pending Telegram, không gọi Bot/provider, không tạo ảnh, job, không đổi ví Xu, PayOS, asset hoặc publish."${canSaveToMemory ? "" : " disabled"}>Lưu vào Memory Center</button>`
+      ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="image-prompt-composer-save-memory" data-portal-route="/image/prompt-composer" data-portal-confirm="${safeText(imageComposerText("save.confirm", "Lưu {label} vào Ghi chú của bạn?", { label: selectedOption.label }))}"${canSaveToMemory ? "" : " disabled"}>${safeText(imageComposerText("save.button", "Lưu vào Ghi chú"))}</button>`
       : "";
     const selectionCards = selectionOptions.map((item) => {
       const selected = item.index === selectedVariantIndex;
-      const ordinal = item.index === 0 ? "Gốc" : String(item.index).padStart(2, "0");
-      return `<li${selected ? ' data-selected="true"' : ""}><span>${safeText(ordinal)}</span><div><strong>${safeText(item.label)}</strong><pre>${safeText(String(item.prompt || ""))}</pre><button class="portal-button portal-button--quiet portal-image-prompt-composer-variant-select" type="button" data-portal-action="image-prompt-composer-select-variant" data-portal-route="/image/prompt-composer" data-image-prompt-variant-index="${safeText(String(item.index))}" aria-pressed="${selected ? "true" : "false"}">${selected ? "Đang chọn" : `Chọn ${safeText(item.label)}`}</button></div></li>`;
+      const ordinal = item.index === 0 ? imageComposerText("ordinal.original", "Gốc") : String(item.index).padStart(2, "0");
+      return `<li${selected ? ' data-selected="true"' : ""}><span>${safeText(ordinal)}</span><div><strong>${safeText(item.label)}</strong><pre>${safeText(String(item.prompt || ""))}</pre><button class="portal-button portal-button--quiet portal-image-prompt-composer-variant-select" type="button" data-portal-action="image-prompt-composer-select-variant" data-portal-route="/image/prompt-composer" data-image-prompt-variant-index="${safeText(String(item.index))}" aria-pressed="${selected ? "true" : "false"}">${safeText(selected ? imageComposerText("selection.selected", "Đang chọn") : imageComposerText("selection.choose", "Chọn {label}", { label: item.label }))}</button></div></li>`;
     }).join("");
-    return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic draft</span><h2 class="portal-card-title">${safeText(String(composer.title || "Image Prompt Composer"))}</h2><p class="portal-card-subtitle">${safeText(String(composer.goal_label || imagePromptComposerGoalLabel(composer.goal_code)))} · ${safeText(String(composer.ratio || ""))} · ${safeText(String(composer.language || "").toUpperCase())}. Đây là prompt để bạn review và biên tập, không phải ảnh, preview, output hay kết quả provider.</p></div>${badge("read_only")}</div><div class="portal-image-prompt-composer-meta"><span>Chủ thể: ${safeText(String(composer.subject || ""))}</span><span>Hướng: ${safeText(imagePromptComposerStylePresetLabel(composer.style_preset))}</span><span>Style: ${safeText(String(composer.style || ""))}</span>${customGoal}</div><div class="portal-image-prompt-composer-prompts">${promptCards}</div><section class="portal-image-prompt-composer-variants"><div><span class="portal-section-kicker">Lựa chọn để lưu</span><h3>Bản gốc hoặc ba variants</h3><p>Đang chọn: <strong>${safeText(selectedOption ? selectedOption.label : "Bản gốc")}</strong>. Lựa chọn chỉ tồn tại trong phiên Web này.</p></div><ol>${selectionCards}</ol></section><section class="portal-image-prompt-composer-review"><strong>Rà soát trước khi dùng ở nơi khác</strong><ul>${review.map((item) => `<li>${safeText(String(item))}</li>`).join("")}</ul></section><div class="portal-form-footer"><span class="portal-form-note">Bạn có thể chủ động lưu đúng lựa chọn này vào Memory Center để giữ bản nháp Web-owned. Browser chỉ gửi index 0..3, không gửi phần text đã sinh; máy chủ tự tạo lại prompt và không tạo Bot pending-save hay image execution.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/image-studio">Mở Image Studio</a>${saveControl}</div></div></section>`;
+    return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageComposerText("result.kicker", "Bản mô tả đã soạn"))}</span><h2 class="portal-card-title">${safeText(String(composer.title || imageComposerText("result.titleFallback", "Soạn mô tả ảnh")))}</h2><p class="portal-card-subtitle">${safeText(String(composer.goal_label || imagePromptComposerGoalLabel(composer.goal_code)))} · ${safeText(String(composer.ratio || ""))} · ${safeText(String(composer.language || "").toUpperCase())}. ${safeText(imageComposerText("result.note", "Rà soát mô tả trước khi dùng để tạo ảnh."))}</p></div>${badge("read_only")}</div><div class="portal-image-prompt-composer-meta"><span>${safeText(imageComposerText("meta.subject", "Chủ thể: {value}", { value: String(composer.subject || "") }))}</span><span>${safeText(imageComposerText("meta.preset", "Định hướng: {value}", { value: imagePromptComposerStylePresetLabel(composer.style_preset) }))}</span><span>${safeText(imageComposerText("meta.style", "Phong cách: {value}", { value: String(composer.style || "") }))}</span>${customGoal}</div><div class="portal-image-prompt-composer-prompts">${promptCards}</div><section class="portal-image-prompt-composer-variants"><div><span class="portal-section-kicker">${safeText(imageComposerText("variants.kicker", "Lựa chọn để lưu"))}</span><h3>${safeText(imageComposerText("variants.title", "Bản gốc và ba phương án"))}</h3><p>${safeText(imageComposerText("variants.selected", "Đang chọn: {label}. Lưu vào Ghi chú nếu muốn giữ lại.", { label: selectedOption ? selectedOption.label : imageComposerText("selection.original", "Bản gốc") }))}</p></div><ol>${selectionCards}</ol></section><section class="portal-image-prompt-composer-review"><strong>${safeText(imageComposerText("review.title", "Rà soát trước khi sử dụng"))}</strong><ul>${review.map((item) => `<li>${safeText(String(item))}</li>`).join("")}</ul></section><div class="portal-form-footer"><span class="portal-form-note">${safeText(imageComposerText("result.footer", "Lưu lựa chọn bạn muốn giữ vào Ghi chú."))}</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/image-studio">${safeText(imageComposerText("result.openStudio", "Mở Thiết kế ảnh"))}</a>${saveControl}</div></div></section>`;
   }
 
   function renderImagePromptComposerSaveReceipt(raw) {
@@ -16942,20 +16956,22 @@ function renderAutoPostHub(page, context) {
     const note = receipt.note && typeof receipt.note === "object" ? receipt.note : null;
     if (!note) return "";
     const selectedVariantIndex = normalizeImagePromptComposerSelectedVariantIndex(receipt.selected_variant_index);
-    const selectedLabel = selectedVariantIndex === 0 ? "Bản gốc" : `Variant ${selectedVariantIndex}`;
-    return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Memory Center riêng tư</span><h2 class="portal-card-title">Đã lưu ${safeText(selectedLabel)}</h2><p class="portal-card-subtitle">${safeText(String(note.category || "Image Prompt Composer"))} · revision ${safeText(String(note.revision || 1))}. Receipt này không giữ lại nội dung ghi chú trong browser.</p></div>${badge("completed")}</div><div class="portal-form-footer"><span class="portal-form-note">Đã tạo ghi chú owner-only trong Memory Center. Không có pending Telegram, Bot/provider call, source image, ảnh, job, ví Xu, PayOS, asset, publish hoặc delivery.</span><a class="portal-button portal-button--primary" href="/notes">Mở Memory Center</a></div></section>`;
+    const selectedLabel = selectedVariantIndex === 0 ? imageComposerText("selection.original", "Bản gốc") : imageComposerText("selection.variant", "Phương án {number} · {label}", { number: String(selectedVariantIndex), label: [imageComposerText("variant.sales", "Bán hàng trực tiếp"), imageComposerText("variant.premium", "Thương hiệu cao cấp"), imageComposerText("variant.social", "Lan tỏa trên mạng xã hội")][selectedVariantIndex - 1] });
+    const category = String(note.category || "");
+    const categoryLabel = !category || category === "Image Prompt Composer" ? imageComposerText("receipt.categoryFallback", "Mô tả ảnh") : category;
+    return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageComposerText("receipt.kicker", "Ghi chú của bạn"))}</span><h2 class="portal-card-title">${safeText(imageComposerText("receipt.title", "Đã lưu {label}", { label: selectedLabel }))}</h2><p class="portal-card-subtitle">${safeText(categoryLabel)} · ${safeText(imageComposerText("receipt.version", "Phiên bản {number}", { number: String(note.revision || 1) }))}. ${safeText(imageComposerText("receipt.description", "Mở Ghi chú để xem nội dung đã lưu."))}</p></div>${badge("completed")}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(imageComposerText("receipt.note", "Bản mô tả đã được lưu riêng trong Ghi chú của bạn."))}</span><a class="portal-button portal-button--primary" href="/notes">${safeText(imageComposerText("receipt.open", "Mở Ghi chú"))}</a></div></section>`;
   }
 
   function renderImagePromptComposer(page, context) {
     const canCompose = Boolean(context.capabilities && context.capabilities["image-prompt-compose"] === true);
     const canSaveToMemory = Boolean(context.capabilities && context.capabilities["image-prompt-composer-save-memory"] === true);
     const values = { goal_code: "product", custom_goal: "", subject: "", style_preset: "auto", style: "", ratio: "1:1", language: "vi" };
-    return `<article class="portal-page portal-image-prompt-composer">${renderHero(page, context)}
-      <section class="portal-image-prompt-composer-intro"><div><span class="portal-section-kicker">Web-native prompt planning</span><h2>Từ creative brief đến prompt ảnh có cấu trúc — không hề tạo ảnh.</h2><p>Composer chuyển trình tự prompt của Bot thành một công cụ Web text-only rõ ràng. Bạn kiểm soát toàn bộ bản nháp, có negative prompt và ba biến thể để review trước khi dùng trong workflow khác.</p></div><dl><div><dt>0</dt><dd>Ảnh / preview</dd></div><div><dt>0</dt><dd>Provider / job</dd></div><div><dt>3</dt><dd>Prompt variants</dd></div></dl></section>
-      <div class="portal-image-prompt-composer-layout"><section class="portal-card portal-card-pad portal-image-prompt-composer-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Brief composer</span><h2 class="portal-card-title">Tạo prompt ảnh để review</h2><p class="portal-card-subtitle">Server xác minh signed session và CSRF rồi áp dụng template deterministic. Brief và kết quả không được lưu thành artboard, asset, project, audit detail hoặc browser draft.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="image-prompt-compose" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(imagePromptComposerFields(), canCompose, context, values, "image-prompt-composer")}<p class="portal-image-prompt-composer-style-status" data-image-prompt-composer-style-status role="status" aria-live="polite"></p><div class="portal-form-footer"><span class="portal-form-note">Nút này chỉ tạo prompt text editable; không gửi lệnh tạo, sửa, upscale, upload hoặc phân tích ảnh.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo prompt nháp</button></div></form></section><aside class="portal-card portal-card-pad portal-image-prompt-composer-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Soạn prompt, không chạy image engine</h2><p class="portal-card-subtitle">Không có source image, upload, phân tích ảnh, model, provider, Bot, job, Xu, PayOS, asset, publish hay delivery trong tool này.</p></div>${badge("guarded")}</div><div class="portal-image-prompt-composer-guard-list"><span><strong>Source image / upload</strong><em>off</em></span><span><strong>Model / provider</strong><em>off</em></span><span><strong>Image / output</strong><em>off</em></span><span><strong>Job / wallet</strong><em>off</em></span><span><strong>Asset / publish</strong><em>off</em></span><span><strong>Bot / bridge</strong><em>off</em></span></div></aside></div>
+    return `<article class="portal-page portal-image-prompt-composer portal-image-composer-customer">${renderHero(page, context)}
+      <section class="portal-image-prompt-composer-intro"><div><span class="portal-section-kicker">${safeText(imageComposerText("intro.kicker", "Soạn ý tưởng hình ảnh"))}</span><h2>${safeText(imageComposerText("intro.title", "Biến ý tưởng thành mô tả ảnh rõ ràng"))}</h2><p>${safeText(imageComposerText("intro.body", "Soạn mô tả ảnh, điều cần tránh và ba phương án để bạn lựa chọn. Bước này tạo bản mô tả, chưa tạo ảnh."))}</p></div></section>
+      <div class="portal-image-prompt-composer-layout"><section class="portal-card portal-card-pad portal-image-prompt-composer-form"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageComposerText("form.kicker", "Mô tả ý tưởng"))}</span><h2 class="portal-card-title">${safeText(imageComposerText("form.title", "Soạn bản mô tả ảnh"))}</h2><p class="portal-card-subtitle">${safeText(imageComposerText("form.description", "Chọn mục tiêu và mô tả hình ảnh bạn muốn tạo."))}</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="image-prompt-compose" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(imagePromptComposerFields(), canCompose, context, values, "image-prompt-composer")}<p class="portal-image-prompt-composer-style-status" data-image-prompt-composer-style-status role="status" aria-live="polite"></p><div class="portal-form-footer"><span class="portal-form-note">${safeText(imageComposerText("form.note", "Bước này chỉ soạn mô tả, chưa tạo hoặc chỉnh sửa ảnh."))}</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>${safeText(imageComposerText("form.submit", "Soạn mô tả"))}</button></div></form></section></div>
       ${renderImagePromptComposerResult(context.imagePromptComposerResult, context.imagePromptComposerSaveSource, context.imagePromptComposerSelectedVariantIndex, canSaveToMemory)}
       ${renderImagePromptComposerSaveReceipt(context.imagePromptComposerSaveReceipt)}
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Bản nháp visual trước, engine sau</h2><p class="portal-card-subtitle">Dùng kết quả như một starting point có thể chỉnh sửa. Khi cần lưu direction có version history, hãy tạo Artboard riêng; việc đó vẫn không tạo ảnh hoặc tự gửi prompt đến provider.</p></div></div>${renderNotes(page)}</section>
+
     </article>`;
   }
 
@@ -39973,6 +39989,26 @@ function renderAutoPostHub(page, context) {
     }
   }
 
+  function synchronizeImagePromptComposerGoal(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "image-prompt-compose") return;
+    const goal = form.querySelector('select[name="goal_code"]');
+    const custom = form.querySelector('textarea[name="custom_goal"]');
+    const field = custom && custom.closest(".portal-field");
+    if (!goal || !custom || !field) return;
+    const customMode = String(goal.value || "product") === "custom";
+    const disabled = Boolean(goal.disabled) || !customMode;
+    custom.disabled = disabled;
+    custom.required = customMode;
+    custom.setAttribute("aria-disabled", String(disabled));
+    custom.setAttribute("aria-required", String(customMode));
+    field.hidden = !customMode;
+    field.classList.toggle("is-muted", !customMode);
+    const mark = field.querySelector("[data-portal-required-mark]");
+    const message = field.querySelector("[data-portal-required-message]");
+    if (mark) mark.hidden = !customMode;
+    if (message) message.hidden = !customMode;
+  }
+
   function synchronizeImagePromptComposerStylePreset(form) {
     if (!form || form.getAttribute("data-portal-action") !== "image-prompt-compose") return;
     const preset = form.querySelector("[data-image-prompt-composer-style-preset]");
@@ -39995,8 +40031,8 @@ function renderAutoPostHub(page, context) {
     const status = form.querySelector("[data-image-prompt-composer-style-status]");
     if (status) {
       status.textContent = customMode
-        ? "Đang dùng direction tự nhập. Chỉ mô tả phong cách nguyên bản mà bạn có quyền sử dụng."
-        : "Đang dùng hướng phong cách do server chọn theo mục tiêu và ngôn ngữ; text tự nhập không đi vào request.";
+        ? imageComposerText("status.custom", "Đang dùng phong cách riêng của bạn.")
+        : imageComposerText("status.auto", "Đang dùng phong cách gợi ý theo mục tiêu và ngôn ngữ.");
     }
   }
 
@@ -42123,6 +42159,10 @@ function renderAutoPostHub(page, context) {
           && event.target && event.target.name === "style_preset") {
           synchronizeImagePromptComposerStylePreset(form);
         }
+        if (form.getAttribute("data-portal-action") === "image-prompt-compose"
+          && event.target && event.target.name === "goal_code") {
+          synchronizeImagePromptComposerGoal(form);
+        }
         if (form.getAttribute("data-portal-action") === "subtitle-asset-operation-submit"
           && event.target && ["source_asset_id", "operation"].includes(event.target.name)) {
           synchronizeSubtitleAssetOperationForm(form);
@@ -42625,7 +42665,10 @@ function renderAutoPostHub(page, context) {
       main.querySelectorAll("[data-music-product-form]").forEach((form) => synchronizeMusicQuoteFreshness(form));
       main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
       main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
-      main.querySelectorAll('[data-portal-action="image-prompt-compose"]').forEach((form) => synchronizeImagePromptComposerStylePreset(form));
+      main.querySelectorAll('[data-portal-action="image-prompt-compose"]').forEach((form) => {
+        synchronizeImagePromptComposerStylePreset(form);
+        synchronizeImagePromptComposerGoal(form);
+      });
       main.querySelectorAll('[data-portal-action="video-transform-operation-estimate"]').forEach((form) => synchronizeVideoTransformEstimateForm(form));
       main.querySelectorAll('[data-portal-action="frame-video-operation-estimate"]').forEach((form) => synchronizeFrameVideoEstimateForm(form));
       main.querySelectorAll("[data-admin-archive-type-map]").forEach((form) => synchronizeAdminArchiveDocumentType(form));

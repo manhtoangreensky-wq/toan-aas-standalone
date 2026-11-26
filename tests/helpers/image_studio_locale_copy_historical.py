@@ -1,6 +1,7 @@
 """Restore only the reviewed Image locale records for historical comparisons."""
 import json
 from pathlib import Path
+from tests.helpers.image_composer_native_locale_historical import image_composer_native_locale_historical_source
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = json.loads((ROOT / "tests/fixtures/image-studio-locale-copy-contract.json").read_bytes())
@@ -41,6 +42,7 @@ def free_tools_readable_colors_historical_source(source: str, file: str) -> str:
 
 
 def image_studio_validation_historical_source(source: str, file: str) -> str:
+    source = image_composer_native_locale_historical_source(source, file)
     source = free_tools_readable_colors_historical_source(source, file)
     source = upstream_catalog_historical_source(source, file)
     if file == "static/portal/portal.js":
