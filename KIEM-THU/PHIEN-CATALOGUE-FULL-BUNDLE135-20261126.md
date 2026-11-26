@@ -49,6 +49,17 @@ Nhóm pin/consumer liên quan19PASS/0fail/error/skip, exit0.
 Không chạy lại505ca CI đã đạt hoặc110tệp local/browser. Chưa merge/deploy;
 CI exactHEAD mới vẫn là cổng bắt buộc.
 
+CI thứ hai45875594448/HEAD7b32e90e qua Composerpin, fail ba Python
+i18n projections/126PASS trong129ca. Python NLRchain thiếu finiteFBCleaf,
+không phải appdefect. Phụlục7200684512 đọc lại trước BUILDleaf.
+Leaf Python dùng cùng fixture/hash/BASE/owner/locale/order/289records,
+giữ unknown bytes, không wholecurrenthash. PressureRED22=21fail/1pass;
+greenảnhhưởng164ca có163pass/1rootQAfail do sentinel chèn giữa record
+addition. Không nới leaf; chuyển sentinel ra projects.title ngoài mọi record,
+chỉca đó chạy lại1PASS. Ledger164unique đạt bằng hai receipts, không fresh
+full rerun. Giữ oldfixtures/pins/assertions/apphash,workerfail0.
+Một hook NLRPython và test mới đăng ký CI; protected application Python giữ.
+
 ## Browser và giới hạn
 
 Browser plugin absent; dùng Playwright/Chrome đã có, không cài mới.

@@ -30,6 +30,12 @@ Chỉ sửa đầu vào kiểm tra lịch sử, giữ ứng dụng và mọi k�
 liên quan đã đạt sau RED1ca. CI mới cần đạt trước merge/triển khai;
 VPS vẫn giữ bản PR814 đã đối chiếu, không tự phát hành khi CI lỗi.
 
+CI tiếp theo qua phép so Composer và chỉ ra ba bộ đọc lịch sử Python
+cũng cần phần đảo chữ hữu hạn. Đã thêm đúng bộ đọc kiểm tra và kiểm
+tra chống sửa ngoài phạm vi;164ca phân biệt đạt qua163ca đầu và một
+ca sửa vị trí dữ liệu kiểm tra. Mọi mã chức năng/dữ liệu/bản dịch giữ.
+Chưa dùng các kết quả cục bộ này để nhận đã đưa bản mới lên VPS.
+
 Không dùng đối chiếu tài nguyên công khai để nhận giao diện production
 sau đăng nhập đã đạt. Full-family chrome, Gallery/Admin, auth/draft,
 accessibility toàn phần, thiết bị/Safari và motion cuối vẫn mở.

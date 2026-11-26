@@ -64,6 +64,18 @@ historical; giữ tất cả expected hashes/records/fixture/assertion strength.
 Không đổi apphash6c6e8664 hoặc worker data. Root QA omission, workerfail0.
 Kiểm lại đúng file pin/consumer liên quan và exactHEAD CI, không lặp browser
 hoặc toàn110tệp local. Không merge/deploy run lỗi.
+
+CI45875594448/HEAD7b32e90e qua pin Composer, dừng ba Python historical
+i18n projections trong nhóm129ca (126pass/3fail). JSleaf đã nối, Python
+NLRleaf chưa nhận FBC vì dependency closure trước chỉ xét `.mjs`.
+Mở đúng `tests/helpers/feature_catalog_full_bundle135_historical.py` mới,
+`tests/test_feature_catalog_full_bundle135_historical.py` mới và một hook
+trong `tests/helpers/native_label_recovery_historical.py`. Leaf Python
+dùng cùng fixture frozen289records/hash/BASE/owner/locale/order/uniqueness;
+không dùng wholecurrenthash để giấu unrelated bytes. Giữ fixture/pin/
+assertions cũ, type contract và passthrough cho file ngoài scope.
+Thêm test mới vào CI. Chạy mới pressureleaf/3RED→ảnh hưởngPythonGREEN,
+không sửa ứng dụng hoặc lặp Node/browser đã đạt. RootQAomission,workerfail0.
 Thêm `tests/feature-catalog-full-bundle135-documents.test.mjs` chạy
 `localizedPageDescription` thật cho hai dạng metadata `/documents` ở ba locale,
 BASE RED rồi current GREEN bằng switch chỉ trong tiến trình QA con.

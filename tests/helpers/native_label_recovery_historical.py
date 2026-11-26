@@ -1,6 +1,7 @@
 """Finite inverse for reviewed native-label records; never application code."""
 import json
 from pathlib import Path
+from tests.helpers.feature_catalog_full_bundle135_historical import feature_catalog_full_bundle135_historical_source
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = json.loads((ROOT / "tests/fixtures/native-label-recovery-contract.json").read_bytes())
@@ -10,6 +11,7 @@ CHANGES = [*CONTRACT["records"], *CONTRACT.get("amendments", [])]
 
 
 def native_label_recovery_historical_source(source: str, file: str) -> str:
+    source = feature_catalog_full_bundle135_historical_source(source, file)
     records = [row for row in CHANGES if row["file"] == file]
     if not any(row["new"] in source for row in records):
         return source

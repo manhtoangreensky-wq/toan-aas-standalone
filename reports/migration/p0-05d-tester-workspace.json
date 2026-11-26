@@ -56,6 +56,7 @@
     "documents_amendment": 7199225755,
     "historical_input_amendment": 7199695259,
     "ci_pin_amendment": 7200174365,
+    "python_history_amendment": 7200684512,
     "manifest": "KIEM-THU/PHIEN-CATALOGUE-FULL-BUNDLE135-20261126.md",
     "case_ids": [
       "FBC-COPY",
@@ -137,12 +138,25 @@
     "initial_ci_head": "c63e6920aa0698a7963dbc35a1b6937ce35baf07",
     "initial_ci_conclusion": "FAILURE_ONE_HISTORICAL_COMPOSER_PIN_505_OF_506_PASS",
     "initial_authenticated_qa": "SKIPPED_DEPENDENCY",
+    "second_ci": 45875594448,
+    "second_ci_head": "7b32e90e9052bad20942d1a3e0793fcba13fcb96",
+    "second_ci_conclusion": "FAILURE_THREE_PYTHON_HISTORICAL_I18N_PROJECTIONS_126_OF_129_PASS",
+    "second_authenticated_qa": "SKIPPED_DEPENDENCY",
     "ci_correction_qa_reader": "tests/image-composer-native-locale.test.mjs",
     "ci_correction_red_cases": 1,
     "ci_correction_red_failed": 1,
     "ci_correction_related_passed": 19,
     "ci_correction_expected_hashes_fixtures_held": true,
     "ci_correction_application_changes": 0,
+    "python_leaf_pressure_red_cases": 22,
+    "python_leaf_pressure_red_failed": 21,
+    "python_related_cases": 164,
+    "python_related_initial_passed": 163,
+    "python_related_initial_qa_failed": 1,
+    "python_related_sentinel_recovery_passed": 1,
+    "python_related_result": "164_UNIQUE_PASS_BY_RECEIPT_UNION_NOT_FRESH_RERUN",
+    "python_leaf_fixture_base_owner_locale_records_order_unique_bound": true,
+    "python_source_application_unchanged": true,
     "ci": "CORRECTED_EXACT_HEAD_PENDING",
     "deploy": "NOT_DEPLOYED",
     "provider_calls": 0,
@@ -880,9 +894,9 @@
     },
     {
       "path": "KIEM-THU/PHIEN-CATALOGUE-FULL-BUNDLE135-20261126.md",
-      "lines": 74,
-      "bytes": 4357,
-      "sha256": "9776d9025ecb8560c555fcec644928ad7fd52aaba0927dad4292090a2da6c167"
+      "lines": 85,
+      "bytes": 5137,
+      "sha256": "58eb94ec76e14efacfd164f37f1cda30d8a1ec37eeae03c71b5d60f2e2ad485b"
     },
     {
       "path": "KIEM-THU/PHIEN-CATALOGUE-VIDEO-NATIVE-20261126.md",
@@ -898,9 +912,9 @@
     },
     {
       "path": "docs/reports/feature-catalog-full-bundle135-prepush-20261126.md",
-      "lines": 40,
-      "bytes": 2595,
-      "sha256": "da4c8b85b0574c2abc744ac7389d085875a6baa7dd230355c05006fb3a4c5c47"
+      "lines": 45,
+      "bytes": 2995,
+      "sha256": "18fe1ed8e018e4c0ae270ffd9437a47783c8e7a12172ca1c67c389813f9159f2"
     },
     {
       "path": "docs/reports/feature-catalog-video-native-prepush-20261126.md",
@@ -916,9 +930,9 @@
     },
     {
       "path": "docs/superpowers/plans/2026-11-26-feature-catalog-full-bundle135.md",
-      "lines": 39,
-      "bytes": 2623,
-      "sha256": "df25f78a6dda9078360b618663c94f77dc416f9acede4a752afd9f145d44775a"
+      "lines": 45,
+      "bytes": 2996,
+      "sha256": "0e8bcad033e59d3c4db4bc0b2b01e89963b000031844817cb94e0c07f9263d5f"
     },
     {
       "path": "docs/superpowers/plans/2026-11-26-feature-catalog-video-native.md",
@@ -934,9 +948,9 @@
     },
     {
       "path": "docs/superpowers/specs/2026-11-26-feature-catalog-full-bundle135.md",
-      "lines": 117,
-      "bytes": 7574,
-      "sha256": "eff812432c8f31d7d2595856d6c81b643c6449b1c24ad78e6134c7e9395bdefa"
+      "lines": 129,
+      "bytes": 8436,
+      "sha256": "5d3d95b2314c313b3c81575b7022392219462eab19b26014e9359003f189edaf"
     },
     {
       "path": "docs/superpowers/specs/2026-11-26-feature-catalog-video-native.md",
@@ -952,9 +966,9 @@
     },
     {
       "path": "reports/tester/CATALOGUE-FULL-BUNDLE135-20261126.md",
-      "lines": 33,
-      "bytes": 2129,
-      "sha256": "f02d86aa1d22546a770bab9027fff099e724622064aee32b8c521b2c02eb6fdf"
+      "lines": 39,
+      "bytes": 2513,
+      "sha256": "61ef7aac3aed83ae303ca89a43ddd3cb5019bd608304143241ba31834010f5dc"
     },
     {
       "path": "reports/tester/CATALOGUE-VIDEO-NATIVE-20261126.md",

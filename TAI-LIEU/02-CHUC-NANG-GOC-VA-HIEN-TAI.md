@@ -26,6 +26,11 @@ Expected hash trước đồng bộ giữ nguyên; chỉ chiếu đầu vào ph�
 lịch sử, acceptance FBC vẫn rawcurrent. RED1→19relatedPASS; không đổi
 bản dịch, khả năng công cụ hoặc pin/fixture để làm xanh.
 
+Python historical chain cũng dùng finite FBCleaf từ cùng fixture289records;
+không thêm vào runtime. Các expected sources/fixtures cũ giữ nguyên và
+unknown bytes ngoài record không bị xóa.164ca liên quan đạt bằng receipt
+hợp nhất sau một lỗi vị trí sentinel của root,không thay app để né kiểm.
+
 ## 26/11/2026 — giản lược mô tả, không đổi khả năng của công cụ
 
 Nguồn đối chiếu là bộ chữ nhẹ135mục/renderer/registry trênBASE

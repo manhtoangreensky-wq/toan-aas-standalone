@@ -34,6 +34,12 @@ giữ expected hashes/records/fixtures và rawFBCacceptance. RED1fail/0error,
 GREEN nhóm liên quan19PASS/exit0; chỉ push correction vào cùng PR815,
 không appchange/workerfail hoặc merge run lỗi.
 
+CI thứhai45875594448 lộ thiếu Pythonleaf (3fail/126pass),phụlục
+7200684512/readback trước thêmleaf/hook/testvàđăngkýCI. RED22=21fail/
+1pass;related164=163pass/1rootQAsentinelfail,failed-only1PASS sauđổi
+vịtrí ngoài frozenrecord. Không nới leaf hoặc đổi app/oldassertions.
+Chốt manifest/provenance và tiếp tục cùngPR815/newexactCI.
+
 10statescósẵn giữ;khôngđọccampaignstate,khôngcleanup lanman.
 Signedproductionkhông cóphiênđăngnhậphiệnhành:khôngloginmới,
 ghiNOT_TESTED,tiếptụcnhữngphầngoalkhôngbịảnhhưởng. Motioncuối.

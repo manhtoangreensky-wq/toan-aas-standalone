@@ -31,3 +31,9 @@ authenticated QA chưa chạy theo dependency. Phụlục7200174365 đọc lại
 trước sửa đúng một QA reader. RED1fail/0error→19pin/consumerPASS,
 giữ expected hashes/fixture/recordset/appdata. Không chạy lại505ca hoặc
 browser; CI exactHEAD mới vẫn chờ, không nhận đã merge/deploy.
+
+CI45875594448 quaComposerpin, fail3Pythonhistory/126pass ở129ca.
+Phụlục7200684512/readback trước thêmfiniteleafPython+NLRhook/pressuretest.
+PressureRED21fail/1pass;related164=163PASS/1rootQAsentinelfail;chỉđổi
+vịtrísentinel ngoài frozenrecord rồicađó1PASS. Ledger164unique từhai
+receipts,không fresh full rerun. Giữapp/fixture/pin/assertions,workerfail0.

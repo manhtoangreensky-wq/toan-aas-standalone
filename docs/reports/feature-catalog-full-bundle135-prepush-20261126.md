@@ -37,4 +37,9 @@ finiteFBCsourceprojection trước hash, giữ expected/records/fixture.
 LocalRED1fail/0error→19relatedPASS/exit0,apphash6c6e8664/workerfail0 giữ.
 Không lặp505ca hoặcbrowser. Correction trên cùngPR815; exactCI mới/
 manifestdelta/provenanceverify làcổng trướcmerge,không dùng runlỗi.
-PUSH_GATE=READY_FOR_CI_RECOVERY_MACHINE_PREFLIGHT.
+CI thứhai45875594448 quaComposerpin,fail3Pythonhistory/126pass129ca.
+Phụlục7200684512/readback trước một leafPython+NLRhook+test/CIregistration.
+PressureRED21fail/1pass,relatedGREEN163pass/1sentinelQAfail;failed-only1
+PASS sauđặtunknownentry ngoài recordđãkhóa. Khôngnớileaf/app/pins.
+Ledger164unique đạt từhai receipts,khôngsumoverlap/fullrerun.
+PUSH_GATE=READY_FOR_PYTHON_RECOVERY_MACHINE_PREFLIGHT; exactHEADCIcònchờ.
