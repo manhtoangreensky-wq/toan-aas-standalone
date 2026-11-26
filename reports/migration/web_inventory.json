@@ -4781,13 +4781,13 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1157,
+      "line": 1183,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1185,
+      "line": 1211,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
@@ -4979,7 +4979,7 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1505,
+      "line": 1531,
       "operation": "INSERT INTO",
       "table": "web_image_artboard_versions"
     },
@@ -4991,13 +4991,13 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1470,
+      "line": 1496,
       "operation": "INSERT INTO",
       "table": "web_image_artboards"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1489,
+      "line": 1515,
       "operation": "UPDATE",
       "table": "web_image_artboards"
     },
@@ -5009,7 +5009,7 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1551,
+      "line": 1577,
       "operation": "INSERT INTO",
       "table": "web_image_direction_versions"
     },
@@ -5021,37 +5021,37 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1514,
+      "line": 1540,
       "operation": "INSERT INTO",
       "table": "web_image_directions"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1544,
+      "line": 1570,
       "operation": "UPDATE",
       "table": "web_image_directions"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1575,
+      "line": 1601,
       "operation": "UPDATE",
       "table": "web_image_directions"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1578,
+      "line": 1604,
       "operation": "UPDATE",
       "table": "web_image_directions"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 2576,
+      "line": 2602,
       "operation": "UPDATE",
       "table": "web_image_directions"
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 2581,
+      "line": 2607,
       "operation": "UPDATE",
       "table": "web_image_directions"
     },
@@ -5291,7 +5291,7 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1594,
+      "line": 1620,
       "operation": "INSERT INTO",
       "table": "web_image_studio_events"
     },
@@ -5633,7 +5633,7 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1883,
+      "line": 1909,
       "operation": "INSERT INTO",
       "table": "web_memory_events"
     },
@@ -5663,7 +5663,7 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1877,
+      "line": 1903,
       "operation": "INSERT INTO",
       "table": "web_memory_note_versions"
     },
@@ -5711,7 +5711,7 @@
     },
     {
       "file": "copyfast_image_studio.py",
-      "line": 1871,
+      "line": 1897,
       "operation": "INSERT INTO",
       "table": "web_memory_notes"
     },
@@ -10382,6 +10382,7 @@
       "files": [
         "KIEM-THU/DANH-SACH-CASE.md",
         "KIEM-THU/HUONG-DAN-TESTER.md",
+        "KIEM-THU/PHIEN-IMAGE-COMPOSER-NATIVE-LOCALE-20261126.md",
         "KIEM-THU/PHIEN-IMAGE-RESIZE-POLISH-20261117.md",
         "KIEM-THU/PHIEN-MEDIA-COLLECTION-LOCALE-20261120.md",
         "KIEM-THU/PHIEN-MEDIA-DETAIL-CUSTOMER-COPY-20261121.md",
@@ -10418,10 +10419,9 @@
         "copyfast_document_operations.py",
         "copyfast_finance_planning.py",
         "copyfast_finance_policy.py",
-        "copyfast_governance.py",
-        "copyfast_growth_review.py"
+        "copyfast_governance.py"
       ],
-      "occurrences": 1246,
+      "occurrences": 1245,
       "provider": "PayOS"
     },
     {
@@ -10495,6 +10495,7 @@
     },
     {
       "files": [
+        "KIEM-THU/PHIEN-IMAGE-COMPOSER-NATIVE-LOCALE-20261126.md",
         "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
         "ai_assistant.py",
         "coach.html",
@@ -10533,10 +10534,9 @@
         "reports/audit/R218-SUBDUB-EMPTY-REVIEW-QA-20261024.json",
         "reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json",
         "reports/audit/R218-SUBDUB-LABEL-CONTRAST-QA-20261024.json",
-        "reports/audit/R218-SUBDUB-MOBILE-RANGE-QA-20261024.json",
-        "reports/audit/R218-SUBDUB-ORIGINAL-TOGGLE-R1-REVIEW-20261024.json"
+        "reports/audit/R218-SUBDUB-MOBILE-RANGE-QA-20261024.json"
       ],
-      "occurrences": 85,
+      "occurrences": 87,
       "provider": "Gemini"
     },
     {
@@ -10673,7 +10673,7 @@
         "copyfast_music_media.py",
         "copyfast_music_sfx_library_bridge.py"
       ],
-      "occurrences": 2127,
+      "occurrences": 2124,
       "provider": "Telegram"
     }
   ],
@@ -11644,7 +11644,7 @@
     {
       "endpoint": "image_artboards",
       "file": "copyfast_image_studio.py",
-      "line": 2047,
+      "line": 2073,
       "methods": [
         "GET"
       ],
@@ -11653,7 +11653,7 @@
     {
       "endpoint": "image_artboard_create",
       "file": "copyfast_image_studio.py",
-      "line": 2118,
+      "line": 2144,
       "methods": [
         "POST"
       ],
@@ -11662,7 +11662,7 @@
     {
       "endpoint": "image_artboard_detail",
       "file": "copyfast_image_studio.py",
-      "line": 2106,
+      "line": 2132,
       "methods": [
         "GET"
       ],
@@ -11671,7 +11671,7 @@
     {
       "endpoint": "image_artboard_update",
       "file": "copyfast_image_studio.py",
-      "line": 2151,
+      "line": 2177,
       "methods": [
         "PATCH"
       ],
@@ -11680,7 +11680,7 @@
     {
       "endpoint": "image_direction_create",
       "file": "copyfast_image_studio.py",
-      "line": 2285,
+      "line": 2311,
       "methods": [
         "POST"
       ],
@@ -11689,7 +11689,7 @@
     {
       "endpoint": "image_directions_reorder",
       "file": "copyfast_image_studio.py",
-      "line": 2543,
+      "line": 2569,
       "methods": [
         "POST"
       ],
@@ -11698,7 +11698,7 @@
     {
       "endpoint": "image_direction_update",
       "file": "copyfast_image_studio.py",
-      "line": 2338,
+      "line": 2364,
       "methods": [
         "PATCH"
       ],
@@ -11707,7 +11707,7 @@
     {
       "endpoint": "image_direction_archive",
       "file": "copyfast_image_studio.py",
-      "line": 2457,
+      "line": 2483,
       "methods": [
         "POST"
       ],
@@ -11716,7 +11716,7 @@
     {
       "endpoint": "image_direction_restore",
       "file": "copyfast_image_studio.py",
-      "line": 2465,
+      "line": 2491,
       "methods": [
         "POST"
       ],
@@ -11725,7 +11725,7 @@
     {
       "endpoint": "image_direction_restore_version",
       "file": "copyfast_image_studio.py",
-      "line": 2473,
+      "line": 2499,
       "methods": [
         "POST"
       ],
@@ -11734,7 +11734,7 @@
     {
       "endpoint": "image_artboard_estimate",
       "file": "copyfast_image_studio.py",
-      "line": 2599,
+      "line": 2625,
       "methods": [
         "GET"
       ],
@@ -11743,7 +11743,7 @@
     {
       "endpoint": "image_artboard_lifecycle",
       "file": "copyfast_image_studio.py",
-      "line": 2192,
+      "line": 2218,
       "methods": [
         "POST"
       ],
@@ -11752,7 +11752,7 @@
     {
       "endpoint": "image_artboard_restore_version",
       "file": "copyfast_image_studio.py",
-      "line": 2234,
+      "line": 2260,
       "methods": [
         "POST"
       ],
@@ -13075,7 +13075,7 @@
     {
       "endpoint": "image_studio_events",
       "file": "copyfast_image_studio.py",
-      "line": 2627,
+      "line": 2653,
       "methods": [
         "GET"
       ],
@@ -14425,7 +14425,7 @@
     {
       "endpoint": "image_studio_history",
       "file": "copyfast_image_studio.py",
-      "line": 2638,
+      "line": 2664,
       "methods": [
         "GET"
       ],
@@ -15640,7 +15640,7 @@
     {
       "endpoint": "image_studio_policy",
       "file": "copyfast_image_studio.py",
-      "line": 1933,
+      "line": 1959,
       "methods": [
         "GET"
       ],
@@ -16297,7 +16297,7 @@
     {
       "endpoint": "image_studio_references",
       "file": "copyfast_image_studio.py",
-      "line": 1948,
+      "line": 1974,
       "methods": [
         "GET"
       ],
@@ -16342,7 +16342,7 @@
     {
       "endpoint": "image_studio_image_asset_references",
       "file": "copyfast_image_studio.py",
-      "line": 1999,
+      "line": 2025,
       "methods": [
         "GET"
       ],
@@ -16360,7 +16360,7 @@
     {
       "endpoint": "image_studio_project_references",
       "file": "copyfast_image_studio.py",
-      "line": 1957,
+      "line": 1983,
       "methods": [
         "GET"
       ],
@@ -16963,7 +16963,7 @@
     {
       "endpoint": "image_studio_summary",
       "file": "copyfast_image_studio.py",
-      "line": 1924,
+      "line": 1950,
       "methods": [
         "GET"
       ],
@@ -17557,7 +17557,7 @@
     {
       "endpoint": "compose_image_prompt",
       "file": "copyfast_image_studio.py",
-      "line": 1757,
+      "line": 1783,
       "methods": [
         "POST"
       ],
@@ -17566,7 +17566,7 @@
     {
       "endpoint": "save_image_prompt_composer_to_memory",
       "file": "copyfast_image_studio.py",
-      "line": 1787,
+      "line": 1813,
       "methods": [
         "POST"
       ],
@@ -18825,39 +18825,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 711,
-  "source_files_scanned": 711,
-  "source_fingerprint_sha256": "e605bb3e15958f098456249e597fd3f32368f80d7faca05bbece0c1f36fef490",
+  "source_files_discovered": 714,
+  "source_files_scanned": 714,
+  "source_fingerprint_sha256": "457314fe7117a4a404711d5e26525af037f3e88f751b257e2d4d962f446286ff",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 36138,
+      "line": 36154,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36454,
+      "line": 36470,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35802,
+      "line": 35818,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36051,
+      "line": 36067,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35423,
+      "line": 35439,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35715,
+      "line": 35731,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -19072,7 +19072,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 37574,
+      "line": 37590,
       "path": "/features"
     },
     {
