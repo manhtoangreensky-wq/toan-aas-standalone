@@ -4,10 +4,12 @@ import path from "node:path";
 import test from "node:test";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
+import {featureCatalogFullBundle135HistoricalSource} from "./helpers/feature-catalog-full-bundle135-historical.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const portalSource = fs.readFileSync(path.join(root, "static", "portal", "portal.js"), "utf8");
-const i18nSource = fs.readFileSync(path.join(root, "static", "portal", "portal-i18n.js"), "utf8");
+// Historical route-fallback expectations; newest FBC tests separately read raw current data.
+const i18nSource = featureCatalogFullBundle135HistoricalSource(fs.readFileSync(path.join(root, "static", "portal", "portal-i18n.js"), "utf8").replace(/\r\n/g,"\n"),"static/portal/portal-i18n.js");
 const registrySource = fs.readFileSync(path.join(root, "copyfast_registry.py"), "utf8");
 
 function sourceBlock(startMarker, endMarker) {

@@ -1,5 +1,22 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## CATALOGUE-FULL-BUNDLE135-20261126 — bộ chữ đầy đủ
+
+Phiên `PHIEN-CATALOGUE-FULL-BUNDLE135-20261126.md`; chỉ dùng dữ liệu riêng.
+
+| Mã | Mức | Phạm vi | PASS bắt buộc |
+|---|---|---|---|
+| FBC-COPY | nặng | 135 mục × VI/EN/ZH | Đủ 810 giá trị canonical; 290 giá trị đang đúng giữ |
+| FBC-CARD | nặng | moduleCard thật, ba trạng thái hiển thị | Đúng tên/mô tả/href/SVG; không suy trạng thái thành quyền thực thi |
+| FBC-DOCS | nặng | Mô tả `/documents`, hai dạng metadata | Actual consumer trả canonical cả ba locale; không sửa page input |
+| FBC-FALLBACK | nặng | workspace_menu, ngoài catalog, unknown/unsafe route | Giữ nhánh riêng/fallback/escaping, từ chối unsafe href |
+| FBC-HISTORY | nặng | Source và snapshot inverse hữu hạn | Khóa fixture/BASE/records/locale/order; không mất unknown bytes |
+| FBC-GUARDS | nặng | Snapshot locale/array, identity/order | Guard cũ chạy trước leaf; unknown entry và identity giữ |
+| FBC-REGRESSION | nặng | Consumer closure liên quan | Không lỗi mới; không lặp các nhóm đã đạt trên app không đổi |
+| FBC-READABLE | nặng | 12 view, 375/1440, sáng/tối, VI/EN/ZH | Card text ≥4,5:1, focus ≥3:1, vùng bấm ≥44px; không tràn/lỗi |
+| FBC-PROTECTED | nặng | Ngoài namespace dữ liệu duyệt | Portal/CSS/route/auth/backend/engine/tiền/motion giữ |
+| FBC-DELIVERY | nặng | CI → merge → VPS → assets → receipt | Bằng chứng riêng từng gate; signed UI không suy từ asset |
+
 ## IMAGE-STUDIO-DETAIL-CUSTOMER-COPY-20261122 — chi tiết và trợ giúp
 
 Phiên `PHIEN-IMAGE-STUDIO-DETAIL-CUSTOMER-COPY-20261122.md`; dùng dữ liệu giả.

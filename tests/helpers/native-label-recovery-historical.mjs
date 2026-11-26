@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {featureCatalogVideoNativeHistoricalSource} from "./feature-catalog-video-native-historical.mjs";
+import {featureCatalogFullBundle135HistoricalSource,featureCatalogFullBundle135HistoricalSnapshot} from "./feature-catalog-full-bundle135-historical.mjs";
 
 const contract = JSON.parse(fs.readFileSync(new URL("../fixtures/native-label-recovery-contract.json", import.meta.url), "utf8"));
 assert.equal(contract.base, "1a57e62152855b1cff39956d43ad0ccfd5f3d5cb");
@@ -9,6 +10,7 @@ const dictionary = new Map(contract.dictionaryRows.map(row => [row[0], row]));
 const changes = [...contract.records, ...(contract.amendments || [])];
 
 export function nativeLabelRecoveryHistoricalSource(source, file) {
+  source = featureCatalogFullBundle135HistoricalSource(source, file);
   source = featureCatalogVideoNativeHistoricalSource(source, file);
   const records = changes.filter(row => row.file === file);
   if (!records.some(row => source.includes(row.new))) return source;
@@ -22,6 +24,7 @@ export function nativeLabelRecoveryHistoricalSource(source, file) {
 export function nativeLabelRecoveryHistoricalSnapshot(entries, locale) {
   const index = ["vi", "en", "zh"].indexOf(locale);
   assert(index >= 0 && Array.isArray(entries));
+  entries = featureCatalogFullBundle135HistoricalSnapshot(entries, locale);
   const additions = entries.filter(([key]) => dictionary.has(key));
   if (!additions.length) return entries;
   assert.equal(additions.length, 14, "Partial native label dictionary");

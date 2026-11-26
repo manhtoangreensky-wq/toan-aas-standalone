@@ -1,5 +1,31 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 27/11/2026 — PR814 đã giao; FBC135 đang khép local
+
+- [x] PR814CI45826768615 haiSUCCESS; merge/runtimefdfe2f75,
+  tree8ebdc31d bằngtestedb7ee4b39; deploy45830982258SUCCESS.
+  VPSsạch/3dịchvụ/health/7direct+7versionedassets exact; receipts
+  Issue689/7193742593 vàPR814/7193743263 đọc lại đúng.
+- [x] FBC135 baAGY4ExtraHigh R1 trảexact810values,289datarecords,
+  520new/changed+290held; appfile duy nhấtportal-i18n.js.
+- [x] PrimaryRED411=405fail/6pass; historyRED21=15fail/6pass;
+  GREEN458pass,0fail/error/skip; giữoldpins/fixtures/expectations.
+- [x] Alias `/documents` phát hiện trong review, sửaROOT_SPEC_OMISSION
+  vàthêm actualconsumer3RED→3GREEN,không appchange/workerfailure.
+  Phụlục7199225755 đọc lại exact.
+- [x] Browser12view/4860samples,min5,5225/focus5,8601/link165,09375px,
+  0unmeasured/finding/error/external/overflow;375sáng/tốiđãxem.
+- [x] ReviewcodeQA C0/I0/M0,khôngsemanticredo810values/suitererun;
+  docsvậnhành/comparison/Tester/mười case đã có.
+- [x] Consumerclosure110tệp2532=2481pass/51QAfail,mixedepoch hai reader;
+  phụlục7199695259/readback→ba tệp215pass/exit0,đủ51lỗi khép.
+  Ledger2532unique từhai receipt,không freshwhole run/không appchange.
+- [ ] Metadata/manifest/protected/
+  secrets/provenance/exactCI/merge/Webdeploy/runtime/14assets/2receipts.
+- [ ] Fullfamilychrome/Gallery/Admin/actionBlockReason/auth/draft/
+  AX/device/Safari/signedproduction vẫn mở; motionM-FINAL01..06LAST.
+  GoalACTIVE,không gọi bộ chữ135mục là toàn WebApp hoàn tất.
+
 ## 26/11/2026 — PR813 đã giao; CD108 local đang hoàn tất
 
 - [x] CVNPR813CI45817536627haiSUCCESS;merge/runtimede870867,

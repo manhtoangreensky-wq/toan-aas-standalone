@@ -119,6 +119,7 @@ jobs:
           node --test tests/native-label-recovery.test.mjs tests/native-label-recovery-source.test.mjs tests/native-subdub-extension.test.mjs
           node --test tests/feature-catalog-video-native.test.mjs tests/feature-catalog-video-native-history.test.mjs tests/feature-catalog-customer-card-locale.test.mjs tests/feature-catalog-account-taxonomy.test.mjs
           node --test tests/feature-catalog-descriptions108.test.mjs tests/feature-catalog-descriptions108-history.test.mjs
+          node --test tests/feature-catalog-full-bundle135.test.mjs tests/feature-catalog-full-bundle135-history.test.mjs tests/feature-catalog-full-bundle135-documents.test.mjs
           python -m pytest --noconftest -q tests/test_free_tools_readable_colors_historical.py
           node --test tests/image-composer-native-locale.test.mjs tests/image-composer-native-locale-history.test.mjs tests/image-composer-receipt-normalization.test.mjs tests/image-composer-receipt-pipeline.test.mjs tests/image-composer-results-locale.test.mjs tests/image-composer-feedback-locale.test.mjs tests/image-composer-feedback-actions.test.mjs tests/image-composer-other-routes.test.mjs
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_image_composer_native_text.py tests/test_image_composer_native_note.py tests/test_image_prompt_composer_portal_contracts.py

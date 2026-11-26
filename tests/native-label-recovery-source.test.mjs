@@ -4,6 +4,7 @@ import fs from "node:fs";
 import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {nativeLabelRecoveryHistoricalSource, nativeLabelRecoveryHistoricalSnapshot} from "./helpers/native-label-recovery-historical.mjs";
+import {featureCatalogFullBundle135HistoricalSource} from "./helpers/feature-catalog-full-bundle135-historical.mjs";
 
 const root = new URL("../", import.meta.url);
 const read = file => fs.readFileSync(new URL(file, root), "utf8").replace(/\r\n/g, "\n");
@@ -17,10 +18,10 @@ for (const pin of contract.applicationSources) {
     assert.equal(expected.split(row.old).length - 1, 1);
     expected = expected.replace(row.old, () => row.new);
   }
-  test(`raw source contains only the accepted native-label records: ${pin.file}`, () => {
+  test(`historical source before FBC contains only the original native-label records: ${pin.file}`, () => {
     assert.equal(hash(before), pin.beforeLfSha256);
     assert.equal(hash(expected), pin.afterLfSha256);
-    assert.equal(read(pin.file), expected);
+    assert.equal(featureCatalogFullBundle135HistoricalSource(read(pin.file),pin.file), expected);
   });
   test(`native-label inverse preserves unknown edits and rejects duplicates/partial application: ${pin.file}`, () => {
     const project = source => nativeLabelRecoveryHistoricalSource(source, pin.file);
