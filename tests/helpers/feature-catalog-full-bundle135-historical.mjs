@@ -3,6 +3,7 @@ import fs from "node:fs";
 import {createHash} from "node:crypto";
 import {featureFamilyNativeChromeHistoricalSource,featureFamilyNativeChromeHistoricalSnapshot} from "./feature-family-native-chrome-historical.mjs";
 import {featureFamilyReadabilityHistoricalSource} from "./feature-family-readability-historical.mjs";
+import {galleryCustomerCopyHistoricalSource} from "./gallery-customer-copy-historical.mjs";
 
 const raw=fs.readFileSync(new URL("../fixtures/feature-catalog-full-bundle135.json",import.meta.url),"utf8").replace(/\r\n/g,"\n");
 assert.equal(createHash("sha256").update(raw).digest("hex"),"bcde5343c0494c81f7deefeb9fcae35293f2ecee4e35e4a35ff4d84ae0f08d28");
@@ -25,6 +26,7 @@ export function featureCatalogFullBundle135HistoricalSource(source,target){
     assert.equal(source.split("  const FEATURE_CATALOG_MESSAGES = {").length-1,1,failure);
     assert.equal(source.split("\n  // Media Studio follows").length-1,1,failure);
   }
+  source=galleryCustomerCopyHistoricalSource(source,target);
   source=featureFamilyNativeChromeHistoricalSource(source,target);
   source=featureFamilyReadabilityHistoricalSource(source,target);
   if(target!==file)return source;

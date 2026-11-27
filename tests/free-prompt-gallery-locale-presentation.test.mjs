@@ -4,10 +4,12 @@ import path from "node:path";
 import test from "node:test";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
+import {galleryCustomerCopyHistoricalSource} from "./helpers/gallery-customer-copy-historical.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const portalSource = fs.readFileSync(path.join(repoRoot, "static/portal/portal.js"), "utf8");
-const i18nSource = fs.readFileSync(path.join(repoRoot, "static/portal/portal-i18n.js"), "utf8");
+// Historical fixed-copy comparator; the new Gallery acceptance reads raw files.
+const portalSource = galleryCustomerCopyHistoricalSource(fs.readFileSync(path.join(repoRoot, "static/portal/portal.js"), "utf8").replace(/\r\n/g,"\n"), "static/portal/portal.js");
+const i18nSource = galleryCustomerCopyHistoricalSource(fs.readFileSync(path.join(repoRoot, "static/portal/portal-i18n.js"), "utf8").replace(/\r\n/g,"\n"), "static/portal/portal-i18n.js");
 
 const helperStart = portalSource.indexOf("  function freePromptGalleryText(key, fallback, params)");
 const helperEnd = portalSource.indexOf("\n  // Prompt authoring surfaces", helperStart);

@@ -1,5 +1,27 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 27/11/2026 — Thư viện: giữ thao tác, bỏ phần giải thích dư
+
+Nguồn đối chiếu: Gallery renderer, bộ chữ và CSS tại PR816
+`bf95e4017717622d694cbef02fde07799a823a8a`; chức năng gốc theo
+`docs/migration/FREE_PROMPT_GALLERY_CONTRACT.md`, không suy chức năng
+xử lý nội dung từ các câu giải thích giao diện.
+
+| BASE | Ứng viên GPC/GPR | Giữ nguyên |
+|---|---|---|
+| Chữ cố định lẫn thuật ngữ triển khai | 17 khóa/51 giá trị đã rà, 50 đổi/1 giữ | Key, route, quyền, dữ liệu khách |
+| Câu cố định từ Web ghi đè chữ dịch | Chỉ ánh xạ hai chuỗi nguyên văn đã xác định | Chuỗi lạ hoặc gần giống không bị dịch |
+| Thẻ lặp hướng dẫn, khung chưa chọn, ô tắt cuối trang | Bỏ đúng các node dư, không tạo ô thay thế | Mọi nút, form, ID, href và điều kiện hoạt động |
+| Mức ưu tiên lưu hiện enum | Dùng nhãn Kho ghi nhớ có sẵn | Enum, chuẩn hóa và guard receipt |
+| Chữ sáng/tối thiếu tương phản, ô nhập điện thoại 15px | 11 rule riêng Gallery, ô lọc 16px | CSS cũ nguyên byte, route khác và motion |
+| Chưa có danh mục vẫn hiện hai ô số 0 | Chỉ hiện số nhóm/ngành khi danh mục hợp lệ và có quyền đọc | Kết quả tìm rỗng vẫn giữ số thật |
+| Thiếu số liệu để trống một cột giới thiệu | Không có bảng số liệu thì chỉ dùng một cột | Không thêm node hoặc đổi dữ liệu |
+| Danh mục tĩnh còn pha ngôn ngữ | Chuyển sang GPC-CATALOG theo ID/version riêng | Không dịch tùy ý prompt khách |
+
+PR816 đã phát hành, không còn là ứng viên. GPC/GPR hiện chưa phát hành;
+source/renderer/browser là các bằng chứng riêng, không chứng minh auth,
+provider, đầu ra thật hoặc toàn WebApp hoàn tất.
+
 ## 27/11/2026 — trang nhóm công cụ và bốn cặp màu chữ
 
 Nguồn đối chiếu: `renderFeatureFamily`, bảy khóa FEATURE_CATALOG_MESSAGES,

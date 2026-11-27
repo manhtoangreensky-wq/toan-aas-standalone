@@ -1,0 +1,774 @@
+{
+  "task": "GALLERY-CUSTOMER-COPY-20261127",
+  "base_sha": "bf95e4017717622d694cbef02fde07799a823a8a",
+  "revision": "ROOT_REVIEWED_AGY_R1",
+  "model": "gemini-4-hydrogen-xhigh",
+  "applicationSources": [
+    {
+      "file": "static/portal/portal.js",
+      "beforeLfSha256": "ee99d4b89b8d22f1cc1cfd1bf71a0dc5e3484080d885c76c4463468a951557f8",
+      "afterLfSha256": "5cbb91ed9f4dc6eba4d9067565c3260b43d5d8f6f1e8069e14da80335c46f4db"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "beforeLfSha256": "e862803dbba36ce2f6cbdb4f56a226d1aa4d86de716293a3f7c9270f1b75a61e",
+      "afterLfSha256": "e42b571326d49db3c764354c8f7ca32d9fe5f4f07eb556a65ae3b07966c6e726"
+    }
+  ],
+  "copyRows": [
+    {
+      "key": "freePromptGallery.intro.kicker",
+      "before": {
+        "vi": "Không gian Web riêng · chỉ đọc",
+        "en": "Private Web space · read-only",
+        "zh": "私有 Web 空间 · 只读"
+      },
+      "after": {
+        "vi": "Thư viện câu lệnh",
+        "en": "Prompt library",
+        "zh": "提示词库"
+      }
+    },
+    {
+      "key": "freePromptGallery.intro.title",
+      "before": {
+        "vi": "Tìm một mẫu câu lệnh rõ ngữ cảnh rồi tự rà soát trước khi dùng.",
+        "en": "Find a clear, contextual prompt sample and review it before use.",
+        "zh": "找到清晰、有上下文的提示词样例，使用前先自行检查。"
+      },
+      "after": {
+        "vi": "Chọn một câu lệnh để xem hoặc sao chép.",
+        "en": "Choose a prompt to view or copy.",
+        "zh": "选择一条提示词查看或复制。"
+      }
+    },
+    {
+      "key": "freePromptGallery.intro.body",
+      "before": {
+        "vi": "Thư viện đưa các mẫu đã được rà soát lên một danh mục gọn, có lọc, phân trang và xem chi tiết theo thao tác của bạn. Trang không tạo đầu ra AI hay kết nối runtime bên ngoài.",
+        "en": "The gallery brings reviewed samples into a compact catalogue with filters, pagination and explicit detail actions. It does not create AI output or connect to an external runtime.",
+        "zh": "此库将已审核的样例整理为紧凑目录，支持筛选、分页和明确的详情操作。页面不会生成 AI 输出，也不会连接外部运行时。"
+      },
+      "after": {
+        "vi": "Tìm kiếm theo chủ đề, ngành nghề hoặc nền tảng, rồi kiểm tra kỹ toàn bộ câu lệnh trước khi dùng.",
+        "en": "Search by topic, industry or platform, then review the full prompt before using it.",
+        "zh": "按主题、行业或平台搜索，使用前请先仔细检查完整提示词。"
+      }
+    },
+    {
+      "key": "freePromptGallery.catalog.kicker",
+      "before": {
+        "vi": "Danh mục bản chụp",
+        "en": "Catalogue snapshot",
+        "zh": "目录快照"
+      },
+      "after": {
+        "vi": "Duyệt xem câu lệnh",
+        "en": "Browse prompts",
+        "zh": "浏览提示词"
+      }
+    },
+    {
+      "key": "freePromptGallery.catalog.descriptionFallback",
+      "before": {
+        "vi": "Danh mục sẽ xuất hiện sau khi phiên đăng nhập đã được máy chủ xác minh.",
+        "en": "The catalogue appears after the signed session is verified by the server.",
+        "zh": "服务器确认已签名会话后，目录才会显示。"
+      },
+      "after": {
+        "vi": "Xem và chọn câu lệnh phù hợp với nhu cầu của bạn.",
+        "en": "Browse and choose a prompt that suits your needs.",
+        "zh": "浏览并选择适合您需求的提示词。"
+      }
+    },
+    {
+      "key": "freePromptGallery.catalog.filterNote",
+      "before": {
+        "vi": "Bộ lọc và truy vấn chỉ dùng cho request hiện tại; không lưu vào URL, bộ nhớ trình duyệt, Project hay Kho ghi nhớ.",
+        "en": "Filters and queries apply only to the current request; they are not saved to the URL, browser storage, Project or Memory Center.",
+        "zh": "筛选和查询只用于当前请求，不会保存到 URL、浏览器存储、项目或记忆中心。"
+      },
+      "after": {
+        "vi": "Chọn bộ lọc, sau đó nhấn Áp dụng bộ lọc để cập nhật kết quả.",
+        "en": "Choose filters, then select Apply filters to update the results.",
+        "zh": "选择筛选条件，然后点击“应用筛选”更新结果。"
+      }
+    },
+    {
+      "key": "freePromptGallery.filter.searchHelp",
+      "before": {
+        "vi": "Tối đa 160 ký tự; chỉ gửi trong bản chụp đã ký và không lưu vào URL hoặc bộ nhớ trình duyệt.",
+        "en": "Up to 160 characters; sent only in this signed snapshot request and never saved to the URL or browser storage.",
+        "zh": "最多 160 个字符；只在本次签名快照请求中发送，不会保存到 URL 或浏览器存储。"
+      },
+      "after": {
+        "vi": "Tối đa 160 ký tự.",
+        "en": "Up to 160 characters.",
+        "zh": "最多 160 个字符。"
+      }
+    },
+    {
+      "key": "freePromptGallery.results.kicker",
+      "before": {
+        "vi": "Kết quả chỉ đọc",
+        "en": "Read-only results",
+        "zh": "只读结果"
+      },
+      "after": {
+        "vi": "Kết quả tìm kiếm",
+        "en": "Search results",
+        "zh": "搜索结果"
+      }
+    },
+    {
+      "key": "freePromptGallery.results.body",
+      "before": {
+        "vi": "Mỗi thẻ là dữ liệu bản chụp do máy chủ trả về; chỉ nút xem chi tiết mới gọi endpoint chi tiết riêng.",
+        "en": "Each card is a server-returned snapshot; only View details calls its separate detail endpoint.",
+        "zh": "每张卡片都是服务器返回的快照；只有查看详情才会调用独立的详情接口。"
+      },
+      "after": {
+        "vi": "Mở một câu lệnh để đọc toàn bộ nội dung hoặc sao chép.",
+        "en": "Open a prompt to read its full text or copy it.",
+        "zh": "打开一条提示词即可阅读全文或复制。"
+      }
+    },
+    {
+      "key": "freePromptGallery.cards.emptyBody",
+      "before": {
+        "vi": "Đổi bộ lọc hoặc từ khóa để xem mẫu có trong danh mục hiện tại. Ứng dụng không tự sinh mẫu khi danh mục không có kết quả.",
+        "en": "Change the filters or search text to view samples in the current catalogue. The app does not invent a sample when the catalogue has no result.",
+        "zh": "更改筛选或搜索文字以查看当前目录中的样例。目录没有结果时，应用不会虚构样例。"
+      },
+      "after": {
+        "vi": "Thử từ khóa khác hoặc thay đổi bộ lọc.",
+        "en": "Try another keyword or change the filters.",
+        "zh": "请尝试其他关键词或更改筛选条件。"
+      }
+    },
+    {
+      "key": "freePromptGallery.detail.staticKicker",
+      "before": {
+        "vi": "Mẫu câu lệnh tĩnh",
+        "en": "Static prompt sample",
+        "zh": "静态提示词样例"
+      },
+      "after": {
+        "vi": "Mẫu câu lệnh",
+        "en": "Prompt template",
+        "zh": "提示词模板"
+      }
+    },
+    {
+      "key": "freePromptGallery.detail.body",
+      "before": {
+        "vi": "Đây là mẫu để tự rà soát, không phải đầu ra AI, tài sản, bài đăng hoặc biên nhận bàn giao.",
+        "en": "This is a sample for self-review, not AI output, an asset, a post or a delivery receipt.",
+        "zh": "此样例用于自行检查，不是 AI 输出、资产、帖子或交付回执。"
+      },
+      "after": {
+        "vi": "Kiểm tra nội dung, nguồn và quyền sử dụng trước khi dùng câu lệnh này.",
+        "en": "Review the content, sources and usage rights before using this prompt.",
+        "zh": "使用此提示词前，请检查内容、来源和使用权。"
+      }
+    },
+    {
+      "key": "freePromptGallery.detail.readBadge",
+      "before": {
+        "vi": "ĐỌC",
+        "en": "READ",
+        "zh": "阅读"
+      },
+      "after": {
+        "vi": "Xem",
+        "en": "View",
+        "zh": "查看"
+      }
+    },
+    {
+      "key": "freePromptGallery.detail.saveConfirm",
+      "before": {
+        "vi": "Lưu mẫu này thành ghi chú riêng trong Kho ghi nhớ? Máy chủ sẽ lấy lại mẫu từ danh mục đã duyệt; không tạo thao tác Bot, không gọi nhà cung cấp, không tạo tác vụ, không đổi ví Xu, PayOS hoặc đăng bài.",
+        "en": "Save this sample as a private note in Memory Center? The server will retrieve it from the reviewed catalogue; no Bot pending action, provider call, job, Xu wallet change, PayOS action or publishing action is created.",
+        "zh": "将此样例保存为记忆中心中的私有笔记吗？服务器会从已审核目录重新读取它；不会创建 Bot 待处理操作、服务商调用、任务、Xu 钱包变更、PayOS 操作或发布操作。"
+      },
+      "after": {
+        "vi": "Lưu câu lệnh này thành ghi chú riêng trong Kho ghi nhớ?",
+        "en": "Save this prompt as a private note in Memory Center?",
+        "zh": "将此提示词保存为记忆中心的私有笔记吗？"
+      }
+    },
+    {
+      "key": "freePromptGallery.detail.note",
+      "before": {
+        "vi": "Lưu chỉ tạo ghi chú riêng trong Kho ghi nhớ từ bản chụp phía máy chủ; không tạo thao tác chờ phía Bot.",
+        "en": "Saving creates only a private note in Memory Center from the server snapshot; it does not create a Bot pending action.",
+        "zh": "保存只会根据服务器快照在记忆中心创建私有笔记，不会创建 Bot 待处理操作。"
+      },
+      "after": {
+        "vi": "Lưu lại sẽ thêm một ghi chú riêng vào Kho ghi nhớ.",
+        "en": "Saving adds a private note to Memory Center.",
+        "zh": "保存后会在记忆中心添加一条私有笔记。"
+      }
+    },
+    {
+      "key": "freePromptGallery.save.note",
+      "before": {
+        "vi": "Ghi chú riêng đã được lưu trong Kho ghi nhớ. Đây không phải thao tác chờ phía Bot và không tạo nhà cung cấp, tác vụ, ví Xu, PayOS hoặc đăng bài.",
+        "en": "The private note is saved in Memory Center. This is not a Bot pending action and does not create a provider call, job, Xu wallet change, PayOS action or publishing action.",
+        "zh": "私有笔记已保存到记忆中心。这不是 Bot 待处理操作，也不会创建服务商调用、任务、Xu 钱包变更、PayOS 操作或发布操作。"
+      },
+      "after": {
+        "vi": "Câu lệnh đã được lưu thành ghi chú riêng trong Kho ghi nhớ.",
+        "en": "The prompt has been saved as a private note in Memory Center.",
+        "zh": "提示词已作为私有笔记保存到记忆中心。"
+      }
+    },
+    {
+      "key": "shellNav.freePromptGallery",
+      "before": {
+        "vi": "Prompt miễn phí",
+        "en": "Free Prompt Gallery",
+        "zh": "免费提示词库"
+      },
+      "after": {
+        "vi": "Thư viện câu lệnh miễn phí",
+        "en": "Free prompt library",
+        "zh": "免费提示词库"
+      }
+    }
+  ],
+  "reviewedValues": 51,
+  "changedValues": 50,
+  "sourceRecords": 6,
+  "originalSourceFragments": 8,
+  "records": [
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "shellNav.freePromptGallery",
+      "locale": "vi",
+      "owner": "SHELL_NAVIGATION_MESSAGES",
+      "old": "      \"shellNav.freePromptGallery\": \"Prompt miễn phí\",",
+      "new": "      \"shellNav.freePromptGallery\": \"Thư viện câu lệnh miễn phí\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "shellNav.freePromptGallery",
+      "locale": "en",
+      "owner": "SHELL_NAVIGATION_MESSAGES",
+      "old": "      \"shellNav.freePromptGallery\": \"Free Prompt Gallery\",",
+      "new": "      \"shellNav.freePromptGallery\": \"Free prompt library\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.intro.kicker",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.intro.kicker\": \"Không gian Web riêng · chỉ đọc\",",
+      "new": "      \"freePromptGallery.intro.kicker\": \"Thư viện câu lệnh\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.intro.title",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.intro.title\": \"Tìm một mẫu câu lệnh rõ ngữ cảnh rồi tự rà soát trước khi dùng.\",",
+      "new": "      \"freePromptGallery.intro.title\": \"Chọn một câu lệnh để xem hoặc sao chép.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.intro.body",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.intro.body\": \"Thư viện đưa các mẫu đã được rà soát lên một danh mục gọn, có lọc, phân trang và xem chi tiết theo thao tác của bạn. Trang không tạo đầu ra AI hay kết nối runtime bên ngoài.\",",
+      "new": "      \"freePromptGallery.intro.body\": \"Tìm kiếm theo chủ đề, ngành nghề hoặc nền tảng, rồi kiểm tra kỹ toàn bộ câu lệnh trước khi dùng.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.catalog.kicker",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.catalog.kicker\": \"Danh mục bản chụp\",",
+      "new": "      \"freePromptGallery.catalog.kicker\": \"Duyệt xem câu lệnh\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.catalog.descriptionFallback",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.catalog.descriptionFallback\": \"Danh mục sẽ xuất hiện sau khi phiên đăng nhập đã được máy chủ xác minh.\",",
+      "new": "      \"freePromptGallery.catalog.descriptionFallback\": \"Xem và chọn câu lệnh phù hợp với nhu cầu của bạn.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.catalog.filterNote",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.catalog.filterNote\": \"Bộ lọc và truy vấn chỉ dùng cho request hiện tại; không lưu vào URL, bộ nhớ trình duyệt, Project hay Kho ghi nhớ.\",",
+      "new": "      \"freePromptGallery.catalog.filterNote\": \"Chọn bộ lọc, sau đó nhấn Áp dụng bộ lọc để cập nhật kết quả.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.filter.searchHelp",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.filter.searchHelp\": \"Tối đa 160 ký tự; chỉ gửi trong bản chụp đã ký và không lưu vào URL hoặc bộ nhớ trình duyệt.\",",
+      "new": "      \"freePromptGallery.filter.searchHelp\": \"Tối đa 160 ký tự.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.results.kicker",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.results.kicker\": \"Kết quả chỉ đọc\",",
+      "new": "      \"freePromptGallery.results.kicker\": \"Kết quả tìm kiếm\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.results.body",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.results.body\": \"Mỗi thẻ là dữ liệu bản chụp do máy chủ trả về; chỉ nút xem chi tiết mới gọi endpoint chi tiết riêng.\",",
+      "new": "      \"freePromptGallery.results.body\": \"Mở một câu lệnh để đọc toàn bộ nội dung hoặc sao chép.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.cards.emptyBody",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.cards.emptyBody\": \"Đổi bộ lọc hoặc từ khóa để xem mẫu có trong danh mục hiện tại. Ứng dụng không tự sinh mẫu khi danh mục không có kết quả.\",",
+      "new": "      \"freePromptGallery.cards.emptyBody\": \"Thử từ khóa khác hoặc thay đổi bộ lọc.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.staticKicker",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.staticKicker\": \"Mẫu câu lệnh tĩnh\",",
+      "new": "      \"freePromptGallery.detail.staticKicker\": \"Mẫu câu lệnh\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.body",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.body\": \"Đây là mẫu để tự rà soát, không phải đầu ra AI, tài sản, bài đăng hoặc biên nhận bàn giao.\",",
+      "new": "      \"freePromptGallery.detail.body\": \"Kiểm tra nội dung, nguồn và quyền sử dụng trước khi dùng câu lệnh này.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.readBadge",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.readBadge\": \"ĐỌC\",",
+      "new": "      \"freePromptGallery.detail.readBadge\": \"Xem\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.saveConfirm",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.saveConfirm\": \"Lưu mẫu này thành ghi chú riêng trong Kho ghi nhớ? Máy chủ sẽ lấy lại mẫu từ danh mục đã duyệt; không tạo thao tác Bot, không gọi nhà cung cấp, không tạo tác vụ, không đổi ví Xu, PayOS hoặc đăng bài.\",",
+      "new": "      \"freePromptGallery.detail.saveConfirm\": \"Lưu câu lệnh này thành ghi chú riêng trong Kho ghi nhớ?\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.note",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.note\": \"Lưu chỉ tạo ghi chú riêng trong Kho ghi nhớ từ bản chụp phía máy chủ; không tạo thao tác chờ phía Bot.\",",
+      "new": "      \"freePromptGallery.detail.note\": \"Lưu lại sẽ thêm một ghi chú riêng vào Kho ghi nhớ.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.save.note",
+      "locale": "vi",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.save.note\": \"Ghi chú riêng đã được lưu trong Kho ghi nhớ. Đây không phải thao tác chờ phía Bot và không tạo nhà cung cấp, tác vụ, ví Xu, PayOS hoặc đăng bài.\",",
+      "new": "      \"freePromptGallery.save.note\": \"Câu lệnh đã được lưu thành ghi chú riêng trong Kho ghi nhớ.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.intro.kicker",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.intro.kicker\": \"Private Web space · read-only\",",
+      "new": "      \"freePromptGallery.intro.kicker\": \"Prompt library\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.intro.title",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.intro.title\": \"Find a clear, contextual prompt sample and review it before use.\",",
+      "new": "      \"freePromptGallery.intro.title\": \"Choose a prompt to view or copy.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.intro.body",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.intro.body\": \"The gallery brings reviewed samples into a compact catalogue with filters, pagination and explicit detail actions. It does not create AI output or connect to an external runtime.\",",
+      "new": "      \"freePromptGallery.intro.body\": \"Search by topic, industry or platform, then review the full prompt before using it.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.catalog.kicker",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.catalog.kicker\": \"Catalogue snapshot\",",
+      "new": "      \"freePromptGallery.catalog.kicker\": \"Browse prompts\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.catalog.descriptionFallback",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.catalog.descriptionFallback\": \"The catalogue appears after the signed session is verified by the server.\",",
+      "new": "      \"freePromptGallery.catalog.descriptionFallback\": \"Browse and choose a prompt that suits your needs.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.catalog.filterNote",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.catalog.filterNote\": \"Filters and queries apply only to the current request; they are not saved to the URL, browser storage, Project or Memory Center.\",",
+      "new": "      \"freePromptGallery.catalog.filterNote\": \"Choose filters, then select Apply filters to update the results.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.filter.searchHelp",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.filter.searchHelp\": \"Up to 160 characters; sent only in this signed snapshot request and never saved to the URL or browser storage.\",",
+      "new": "      \"freePromptGallery.filter.searchHelp\": \"Up to 160 characters.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.results.kicker",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.results.kicker\": \"Read-only results\",",
+      "new": "      \"freePromptGallery.results.kicker\": \"Search results\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.results.body",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.results.body\": \"Each card is a server-returned snapshot; only View details calls its separate detail endpoint.\",",
+      "new": "      \"freePromptGallery.results.body\": \"Open a prompt to read its full text or copy it.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.cards.emptyBody",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.cards.emptyBody\": \"Change the filters or search text to view samples in the current catalogue. The app does not invent a sample when the catalogue has no result.\",",
+      "new": "      \"freePromptGallery.cards.emptyBody\": \"Try another keyword or change the filters.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.staticKicker",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.staticKicker\": \"Static prompt sample\",",
+      "new": "      \"freePromptGallery.detail.staticKicker\": \"Prompt template\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.body",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.body\": \"This is a sample for self-review, not AI output, an asset, a post or a delivery receipt.\",",
+      "new": "      \"freePromptGallery.detail.body\": \"Review the content, sources and usage rights before using this prompt.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.readBadge",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.readBadge\": \"READ\",",
+      "new": "      \"freePromptGallery.detail.readBadge\": \"View\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.saveConfirm",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.saveConfirm\": \"Save this sample as a private note in Memory Center? The server will retrieve it from the reviewed catalogue; no Bot pending action, provider call, job, Xu wallet change, PayOS action or publishing action is created.\",",
+      "new": "      \"freePromptGallery.detail.saveConfirm\": \"Save this prompt as a private note in Memory Center?\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.note",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.note\": \"Saving creates only a private note in Memory Center from the server snapshot; it does not create a Bot pending action.\",",
+      "new": "      \"freePromptGallery.detail.note\": \"Saving adds a private note to Memory Center.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.save.note",
+      "locale": "en",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.save.note\": \"The private note is saved in Memory Center. This is not a Bot pending action and does not create a provider call, job, Xu wallet change, PayOS action or publishing action.\",",
+      "new": "      \"freePromptGallery.save.note\": \"The prompt has been saved as a private note in Memory Center.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.intro.kicker",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.intro.kicker\": \"私有 Web 空间 · 只读\",",
+      "new": "      \"freePromptGallery.intro.kicker\": \"提示词库\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.intro.title",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.intro.title\": \"找到清晰、有上下文的提示词样例，使用前先自行检查。\",",
+      "new": "      \"freePromptGallery.intro.title\": \"选择一条提示词查看或复制。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.intro.body",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.intro.body\": \"此库将已审核的样例整理为紧凑目录，支持筛选、分页和明确的详情操作。页面不会生成 AI 输出，也不会连接外部运行时。\",",
+      "new": "      \"freePromptGallery.intro.body\": \"按主题、行业或平台搜索，使用前请先仔细检查完整提示词。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.catalog.kicker",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.catalog.kicker\": \"目录快照\",",
+      "new": "      \"freePromptGallery.catalog.kicker\": \"浏览提示词\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.catalog.descriptionFallback",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.catalog.descriptionFallback\": \"服务器确认已签名会话后，目录才会显示。\",",
+      "new": "      \"freePromptGallery.catalog.descriptionFallback\": \"浏览并选择适合您需求的提示词。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.catalog.filterNote",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.catalog.filterNote\": \"筛选和查询只用于当前请求，不会保存到 URL、浏览器存储、项目或记忆中心。\",",
+      "new": "      \"freePromptGallery.catalog.filterNote\": \"选择筛选条件，然后点击“应用筛选”更新结果。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.filter.searchHelp",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.filter.searchHelp\": \"最多 160 个字符；只在本次签名快照请求中发送，不会保存到 URL 或浏览器存储。\",",
+      "new": "      \"freePromptGallery.filter.searchHelp\": \"最多 160 个字符。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.results.kicker",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.results.kicker\": \"只读结果\",",
+      "new": "      \"freePromptGallery.results.kicker\": \"搜索结果\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.results.body",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.results.body\": \"每张卡片都是服务器返回的快照；只有查看详情才会调用独立的详情接口。\",",
+      "new": "      \"freePromptGallery.results.body\": \"打开一条提示词即可阅读全文或复制。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.cards.emptyBody",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.cards.emptyBody\": \"更改筛选或搜索文字以查看当前目录中的样例。目录没有结果时，应用不会虚构样例。\",",
+      "new": "      \"freePromptGallery.cards.emptyBody\": \"请尝试其他关键词或更改筛选条件。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.staticKicker",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.staticKicker\": \"静态提示词样例\",",
+      "new": "      \"freePromptGallery.detail.staticKicker\": \"提示词模板\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.body",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.body\": \"此样例用于自行检查，不是 AI 输出、资产、帖子或交付回执。\",",
+      "new": "      \"freePromptGallery.detail.body\": \"使用此提示词前，请检查内容、来源和使用权。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.readBadge",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.readBadge\": \"阅读\",",
+      "new": "      \"freePromptGallery.detail.readBadge\": \"查看\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.saveConfirm",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.saveConfirm\": \"将此样例保存为记忆中心中的私有笔记吗？服务器会从已审核目录重新读取它；不会创建 Bot 待处理操作、服务商调用、任务、Xu 钱包变更、PayOS 操作或发布操作。\",",
+      "new": "      \"freePromptGallery.detail.saveConfirm\": \"将此提示词保存为记忆中心的私有笔记吗？\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.detail.note",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.detail.note\": \"保存只会根据服务器快照在记忆中心创建私有笔记，不会创建 Bot 待处理操作。\",",
+      "new": "      \"freePromptGallery.detail.note\": \"保存后会在记忆中心添加一条私有笔记。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "kind": "copy",
+      "key": "freePromptGallery.save.note",
+      "locale": "zh",
+      "owner": "FREE_PROMPT_GALLERY_MESSAGES",
+      "old": "      \"freePromptGallery.save.note\": \"私有笔记已保存到记忆中心。这不是 Bot 待处理操作，也不会创建服务商调用、任务、Xu 钱包变更、PayOS 操作或发布操作。\",",
+      "new": "      \"freePromptGallery.save.note\": \"提示词已作为私有笔记保存到记忆中心。\","
+    },
+    {
+      "file": "static/portal/portal.js",
+      "kind": "source",
+      "owner": "localizedPageDescription",
+      "new": "  function localizedPageDescription(page) {\n    const fallback = typeof page.description === \"string\" ? page.description : \"\";\n    const path = normalizePath(page && (page.routePath || page.path));\n    if (path === \"/free-prompt-gallery\") return freePromptGalleryText(\"intro.body\", fallback);",
+      "old": "  function localizedPageDescription(page) {\n    const fallback = typeof page.description === \"string\" ? page.description : \"\";\n    const path = normalizePath(page && (page.routePath || page.path));"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "kind": "source",
+      "owner": "freePromptGalleryCatalogState",
+      "new": "  function freePromptGallerySourceText(value) {\n    const source = String(value || \"\");\n    if (source === \"Bộ seed prompt Free Hub đã rà soát, cố định cho Web App.\") {\n      return freePromptGalleryText(\"intro.body\", source);\n    }\n    if (source === \"Dùng seed này làm brief hoặc prompt; tự rà soát sự chính xác, quyền sử dụng và claim trước khi xuất bản.\") {\n      return freePromptGalleryText(\"detail.body\", source);\n    }\n    return source;\n  }\n\n  function freePromptGalleryCatalogState(context) {",
+      "old": "  function freePromptGalleryCatalogState(context) {"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "kind": "source",
+      "owner": "renderFreePromptGalleryCards",
+      "old": "  function renderFreePromptGalleryCards(items, enabled) {\n    if (!items.length) return renderEmpty(\n      freePromptGalleryText(\"cards.emptyTitle\", \"Chưa có mẫu phù hợp\"),\n      freePromptGalleryText(\"cards.emptyBody\", \"Đổi bộ lọc hoặc từ khóa để xem mẫu có trong danh mục hiện tại. Ứng dụng không tự sinh mẫu khi danh mục không có kết quả.\"),\n      \"◇\"\n    );\n    return `<div class=\"portal-prompt-library-grid\">${items.map((item) => {\n      const id = String(item.id || \"\");\n      const preview = String(item.prompt || \"\");\n      const shortPreview = preview.length > 420 ? `${preview.slice(0, 420)}…` : preview;\n      return `<article class=\"portal-card portal-card-pad portal-prompt-library-card\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(String(item.category_title || freePromptGalleryText(\"cards.defaultCategory\", \"Mẫu\")))} · ${safeText(String(item.industry || freePromptGalleryText(\"cards.defaultIndustry\", \"Chung\")))}</span><h3 class=\"portal-card-title\">${safeText(String(item.title || freePromptGalleryText(\"cards.defaultTitle\", \"Mẫu câu lệnh\")))}</h3><p class=\"portal-card-subtitle\">${safeText(shortPreview)}</p></div>${badge(\"read_only\")}</div>${freePromptGalleryTags([...(Array.isArray(item.goals) ? item.goals : []), ...(Array.isArray(item.platforms) ? item.platforms : [])])}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(freePromptGalleryText(\"cards.note\", \"Danh mục chỉ đọc · không tạo tác vụ, tài sản hoặc thao tác đăng bài.\"))}</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"free-prompt-gallery-detail\" data-portal-route=\"/free-prompt-gallery\" data-free-prompt-gallery-id=\"${safeText(id)}\" data-copy-text=\"${safeText(id)}\"${enabled ? \"\" : \" disabled\"}>${safeText(freePromptGalleryText(\"cards.detail\", \"Xem chi tiết\"))}</button><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"free-prompt-gallery-copy\" data-portal-route=\"/free-prompt-gallery\" data-free-prompt-gallery-id=\"${safeText(id)}\" data-copy-text=\"${safeText(id)}\"${enabled ? \"\" : \" disabled\"}>${safeText(freePromptGalleryText(\"cards.copy\", \"Sao chép mẫu\"))}</button></div></div></article>`;\n    }).join(\"\")}</div>`;\n  }\n",
+      "new": "  function renderFreePromptGalleryCards(items, enabled) {\n    if (!items.length) return renderEmpty(\n      freePromptGalleryText(\"cards.emptyTitle\", \"Chưa có mẫu phù hợp\"),\n      freePromptGalleryText(\"cards.emptyBody\", \"Đổi bộ lọc hoặc từ khóa để xem mẫu có trong danh mục hiện tại. Ứng dụng không tự sinh mẫu khi danh mục không có kết quả.\"),\n      \"◇\"\n    );\n    return `<div class=\"portal-prompt-library-grid\">${items.map((item) => {\n      const id = String(item.id || \"\");\n      const preview = String(item.prompt || \"\");\n      const shortPreview = preview.length > 420 ? `${preview.slice(0, 420)}…` : preview;\n      return `<article class=\"portal-card portal-card-pad portal-prompt-library-card\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(String(item.category_title || freePromptGalleryText(\"cards.defaultCategory\", \"Mẫu\")))} · ${safeText(String(item.industry || freePromptGalleryText(\"cards.defaultIndustry\", \"Chung\")))}</span><h3 class=\"portal-card-title\">${safeText(String(item.title || freePromptGalleryText(\"cards.defaultTitle\", \"Mẫu câu lệnh\")))}</h3><p class=\"portal-card-subtitle\">${safeText(shortPreview)}</p></div>${badge(\"read_only\")}</div>${freePromptGalleryTags([...(Array.isArray(item.goals) ? item.goals : []), ...(Array.isArray(item.platforms) ? item.platforms : [])])}<div class=\"portal-form-footer\"><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"free-prompt-gallery-detail\" data-portal-route=\"/free-prompt-gallery\" data-free-prompt-gallery-id=\"${safeText(id)}\" data-copy-text=\"${safeText(id)}\"${enabled ? \"\" : \" disabled\"}>${safeText(freePromptGalleryText(\"cards.detail\", \"Xem chi tiết\"))}</button><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"free-prompt-gallery-copy\" data-portal-route=\"/free-prompt-gallery\" data-free-prompt-gallery-id=\"${safeText(id)}\" data-copy-text=\"${safeText(id)}\"${enabled ? \"\" : \" disabled\"}>${safeText(freePromptGalleryText(\"cards.copy\", \"Sao chép mẫu\"))}</button></div></div></article>`;\n    }).join(\"\")}</div>`;\n  }\n"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "kind": "source",
+      "owner": "renderFreePromptGalleryDetail",
+      "old": "  function renderFreePromptGalleryDetail(raw, enabled, canSave) {\n    const detail = normalizeFreePromptGalleryDetail(raw);\n    const item = detail.item && typeof detail.item === \"object\" ? detail.item : null;\n    if (!item) {\n      return `<section class=\"portal-card portal-card-pad portal-content-prompt-pack-result\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(freePromptGalleryText(\"detail.kicker\", \"Chi tiết mẫu\"))}</span><h2 class=\"portal-card-title\">${safeText(freePromptGalleryText(\"detail.emptyTitle\", \"Chọn một mẫu để xem đầy đủ\"))}</h2><p class=\"portal-card-subtitle\">${safeText(freePromptGalleryText(\"detail.emptyBody\", \"Chi tiết chỉ được nạp sau phiên đăng nhập đã xác minh và thao tác rõ ràng của bạn; ứng dụng không đoán hoặc ghép mẫu từ Bot, nhà cung cấp hay bộ nhớ cũ.\"))}</p></div>${badge(\"empty\")}</div></section>`;\n    }\n    const itemId = safeText(String(item.id || \"\"));\n    const saveControl = `<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"free-prompt-gallery-save\" data-portal-route=\"/free-prompt-gallery\" data-free-prompt-gallery-id=\"${itemId}\" data-copy-text=\"${itemId}\" data-portal-confirm=\"${safeText(freePromptGalleryText(\"detail.saveConfirm\", \"Lưu mẫu này thành ghi chú riêng trong Kho ghi nhớ? Máy chủ sẽ lấy lại mẫu từ danh mục đã duyệt; không tạo thao tác Bot, không gọi nhà cung cấp, không tạo tác vụ, không đổi ví Xu, PayOS hoặc đăng bài.\"))}\"${canSave ? \"\" : \" disabled\"}>${safeText(freePromptGalleryText(\"detail.save\", \"Lưu vào Kho ghi nhớ\"))}</button>`;\n    return `<section class=\"portal-card portal-card-pad portal-content-prompt-pack-result\" aria-live=\"polite\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(freePromptGalleryText(\"detail.staticKicker\", \"Mẫu câu lệnh tĩnh\"))}</span><h2 class=\"portal-card-title\">${safeText(String(item.title || freePromptGalleryText(\"cards.defaultTitle\", \"Mẫu câu lệnh\")))}</h2><p class=\"portal-card-subtitle\">${safeText(String(item.category_title || freePromptGalleryText(\"cards.defaultCategory\", \"Mẫu\")))} · ${safeText(String(item.industry || freePromptGalleryText(\"cards.defaultIndustry\", \"Chung\")))}. ${safeText(freePromptGalleryText(\"detail.body\", \"Đây là mẫu để tự rà soát, không phải đầu ra AI, tài sản, bài đăng hoặc biên nhận bàn giao.\"))}</p></div>${badge(\"read_only\")}</div>${freePromptGalleryTags([...(Array.isArray(item.goals) ? item.goals : []), ...(Array.isArray(item.platforms) ? item.platforms : [])])}<section class=\"portal-content-prompt-pack-section\"><h3>${safeText(freePromptGalleryText(\"detail.promptHeading\", \"Mẫu đầy đủ\"))}</h3><div><article><span>${safeText(freePromptGalleryText(\"detail.readBadge\", \"ĐỌC\"))}</span><pre>${safeText(String(item.prompt || \"\"))}</pre></article></div></section><div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(String(detail.copy_instruction || \"\"))} ${safeText(freePromptGalleryText(\"detail.note\", \"Lưu chỉ tạo ghi chú riêng trong Kho ghi nhớ từ bản chụp phía máy chủ; không tạo thao tác chờ phía Bot.\"))}</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--primary\" type=\"button\" data-portal-action=\"free-prompt-gallery-copy\" data-portal-route=\"/free-prompt-gallery\" data-free-prompt-gallery-id=\"${itemId}\" data-copy-text=\"${itemId}\"${enabled ? \"\" : \" disabled\"}>${safeText(freePromptGalleryText(\"detail.copy\", \"Sao chép mẫu\"))}</button>${saveControl}</div></div></section>`;\n  }\n",
+      "new": "  function renderFreePromptGalleryDetail(raw, enabled, canSave) {\n    const detail = normalizeFreePromptGalleryDetail(raw);\n    const item = detail.item && typeof detail.item === \"object\" ? detail.item : null;\n    if (!item) return \"\";\n    const itemId = safeText(String(item.id || \"\"));\n    const saveControl = `<button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"free-prompt-gallery-save\" data-portal-route=\"/free-prompt-gallery\" data-free-prompt-gallery-id=\"${itemId}\" data-copy-text=\"${itemId}\" data-portal-confirm=\"${safeText(freePromptGalleryText(\"detail.saveConfirm\", \"Lưu mẫu này thành ghi chú riêng trong Kho ghi nhớ? Máy chủ sẽ lấy lại mẫu từ danh mục đã duyệt; không tạo thao tác Bot, không gọi nhà cung cấp, không tạo tác vụ, không đổi ví Xu, PayOS hoặc đăng bài.\"))}\"${canSave ? \"\" : \" disabled\"}>${safeText(freePromptGalleryText(\"detail.save\", \"Lưu vào Kho ghi nhớ\"))}</button>`;\n    return `<section class=\"portal-card portal-card-pad portal-content-prompt-pack-result\" aria-live=\"polite\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(freePromptGalleryText(\"detail.staticKicker\", \"Mẫu câu lệnh tĩnh\"))}</span><h2 class=\"portal-card-title\">${safeText(String(item.title || freePromptGalleryText(\"cards.defaultTitle\", \"Mẫu câu lệnh\")))}</h2><p class=\"portal-card-subtitle\">${safeText(String(item.category_title || freePromptGalleryText(\"cards.defaultCategory\", \"Mẫu\")))} · ${safeText(String(item.industry || freePromptGalleryText(\"cards.defaultIndustry\", \"Chung\")))}. ${safeText(freePromptGalleryText(\"detail.body\", \"Đây là mẫu để tự rà soát, không phải đầu ra AI, tài sản, bài đăng hoặc biên nhận bàn giao.\"))}</p></div>${badge(\"read_only\")}</div>${freePromptGalleryTags([...(Array.isArray(item.goals) ? item.goals : []), ...(Array.isArray(item.platforms) ? item.platforms : [])])}<section class=\"portal-content-prompt-pack-section\"><h3>${safeText(freePromptGalleryText(\"detail.promptHeading\", \"Mẫu đầy đủ\"))}</h3><div><article><span>${safeText(freePromptGalleryText(\"detail.readBadge\", \"ĐỌC\"))}</span><pre>${safeText(String(item.prompt || \"\"))}</pre></article></div></section><div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(freePromptGallerySourceText(detail.copy_instruction))} ${safeText(freePromptGalleryText(\"detail.note\", \"Lưu chỉ tạo ghi chú riêng trong Kho ghi nhớ từ bản chụp phía máy chủ; không tạo thao tác chờ phía Bot.\"))}</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--primary\" type=\"button\" data-portal-action=\"free-prompt-gallery-copy\" data-portal-route=\"/free-prompt-gallery\" data-free-prompt-gallery-id=\"${itemId}\" data-copy-text=\"${itemId}\"${enabled ? \"\" : \" disabled\"}>${safeText(freePromptGalleryText(\"detail.copy\", \"Sao chép mẫu\"))}</button>${saveControl}</div></div></section>`;\n  }\n"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "kind": "source",
+      "owner": "renderFreePromptGallerySaveResult",
+      "old": "  function renderFreePromptGallerySaveResult(raw, selectedPromptId) {\n    const receipt = normalizeFreePromptGallerySaveResult(raw);\n    const promptId = typeof selectedPromptId === \"string\" ? selectedPromptId : \"\";\n    if (!receipt.note || !receipt.gallery || receipt.gallery.prompt_id !== promptId) return \"\";\n    const note = freePromptGalleryText(\"save.note\", \"Ghi chú riêng đã được lưu trong Kho ghi nhớ. Đây không phải thao tác chờ phía Bot và không tạo nhà cung cấp, tác vụ, ví Xu, PayOS hoặc đăng bài.\");\n    return `<section class=\"portal-card portal-card-pad portal-content-prompt-pack-result\" aria-live=\"polite\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(freePromptGalleryText(\"save.kicker\", \"Kho ghi nhớ riêng tư\"))}</span><h2 class=\"portal-card-title\">${safeText(freePromptGalleryText(\"save.title\", \"Đã lưu mẫu\"))}</h2><p class=\"portal-card-subtitle\">${safeText(String(receipt.note.category || freePromptGalleryText(\"save.defaultCategory\", \"Ghi chú\")))} · ${safeText(String(receipt.note.priority || freePromptGalleryText(\"save.defaultPriority\", \"bình thường\")))} · ${safeText(freePromptGalleryText(\"save.revision\", \"phiên bản {revision}\", { revision: String(receipt.note.revision || 1) }))}</p></div>${badge(\"completed\")}</div><div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(note)}</span><a class=\"portal-button portal-button--primary\" href=\"/notes/${encodeURIComponent(String(receipt.note.id || \"\"))}\">${safeText(freePromptGalleryText(\"save.open\", \"Mở ghi chú riêng\"))}</a></div></section>`;\n  }\n",
+      "new": "  function renderFreePromptGallerySaveResult(raw, selectedPromptId) {\n    const receipt = normalizeFreePromptGallerySaveResult(raw);\n    const promptId = typeof selectedPromptId === \"string\" ? selectedPromptId : \"\";\n    if (!receipt.note || !receipt.gallery || receipt.gallery.prompt_id !== promptId) return \"\";\n    const note = freePromptGalleryText(\"save.note\", \"Ghi chú riêng đã được lưu trong Kho ghi nhớ. Đây không phải thao tác chờ phía Bot và không tạo nhà cung cấp, tác vụ, ví Xu, PayOS hoặc đăng bài.\");\n    return `<section class=\"portal-card portal-card-pad portal-content-prompt-pack-result\" aria-live=\"polite\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(freePromptGalleryText(\"save.kicker\", \"Kho ghi nhớ riêng tư\"))}</span><h2 class=\"portal-card-title\">${safeText(freePromptGalleryText(\"save.title\", \"Đã lưu mẫu\"))}</h2><p class=\"portal-card-subtitle\">${safeText(String(receipt.note.category || freePromptGalleryText(\"save.defaultCategory\", \"Ghi chú\")))} · ${safeText(memoryPriorityLabel(receipt.note.priority))} · ${safeText(freePromptGalleryText(\"save.revision\", \"phiên bản {revision}\", { revision: String(receipt.note.revision || 1) }))}</p></div>${badge(\"completed\")}</div><div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(note)}</span><a class=\"portal-button portal-button--primary\" href=\"/notes/${encodeURIComponent(String(receipt.note.id || \"\"))}\">${safeText(freePromptGalleryText(\"save.open\", \"Mở ghi chú riêng\"))}</a></div></section>`;\n  }\n"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "kind": "source",
+      "owner": "renderFreePromptGallery",
+      "old": "  function renderFreePromptGallery(page, context) {\n    const catalog = freePromptGalleryCatalogState(context);\n    const listing = freePromptGalleryListingState(context);\n    const canRead = Boolean(context.capabilities && context.capabilities[\"free-prompt-gallery-view\"] === true);\n    const canSave = Boolean(context.capabilities && context.capabilities[\"free-prompt-gallery-save\"] === true);\n    const canBrowse = canRead && Boolean(catalog.snapshot_version);\n    const categoryCount = Array.isArray(catalog.categories) ? catalog.categories.length : 0;\n    const industryCount = Array.isArray(catalog.industries) ? catalog.industries.length : 0;\n    const catalogTotal = Number.isInteger(Number(catalog.total_items)) ? Number(catalog.total_items) : 0;\n    return `<article class=\"portal-page portal-content-prompt-pack portal-free-prompt-gallery\">${renderHero(page, context)}<section class=\"portal-content-prompt-pack-intro\"><div><span class=\"portal-section-kicker\">${safeText(freePromptGalleryText(\"intro.kicker\", \"Không gian Web riêng · chỉ đọc\"))}</span><h2>${safeText(freePromptGalleryText(\"intro.title\", \"Tìm một mẫu câu lệnh rõ ngữ cảnh rồi tự rà soát trước khi dùng.\"))}</h2><p>${safeText(freePromptGalleryText(\"intro.body\", \"Thư viện đưa các mẫu đã được rà soát lên một danh mục gọn, có lọc, phân trang và xem chi tiết theo thao tác của bạn. Trang không tạo đầu ra AI hay kết nối runtime bên ngoài.\"))}</p></div><dl><div><dt>${safeText(String(categoryCount))}</dt><dd>${safeText(freePromptGalleryText(\"intro.stat.categories\", \"Nhóm mẫu\"))}</dd></div><div><dt>${safeText(String(industryCount))}</dt><dd>${safeText(freePromptGalleryText(\"intro.stat.industries\", \"Ngành\"))}</dd></div></dl></section><section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(freePromptGalleryText(\"catalog.kicker\", \"Danh mục bản chụp\"))}</span><h2 class=\"portal-card-title\">${safeText(freePromptGalleryText(\"catalog.title\", \"Khám phá {count} mẫu\", { count: String(catalogTotal || \"—\") }))}</h2><p class=\"portal-card-subtitle\">${safeText(String(catalog.description || freePromptGalleryText(\"catalog.descriptionFallback\", \"Danh mục sẽ xuất hiện sau khi phiên đăng nhập đã được máy chủ xác minh.\")))}</p></div>${badge(canBrowse ? \"read_only\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-no-transient data-portal-action=\"free-prompt-gallery-filter\" data-portal-route=\"/free-prompt-gallery\" novalidate>${renderFields(freePromptGalleryFilterFields(catalog), canBrowse, context, listing.filters, \"free-prompt-gallery-filter\")}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(freePromptGalleryText(\"catalog.filterNote\", \"Bộ lọc và truy vấn chỉ dùng cho request hiện tại; không lưu vào URL, bộ nhớ trình duyệt, Project hay Kho ghi nhớ.\"))}</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"free-prompt-gallery-refresh\" data-portal-route=\"/free-prompt-gallery\"${canRead ? \"\" : \" disabled\"}>${safeText(freePromptGalleryText(\"catalog.refresh\", \"Làm mới danh mục\"))}</button><button class=\"portal-button portal-button--primary\" type=\"submit\"${canBrowse ? \"\" : \" disabled\"}>${safeText(freePromptGalleryText(\"catalog.submit\", \"Áp dụng bộ lọc\"))}</button></div></div></form></section><section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(freePromptGalleryText(\"results.kicker\", \"Kết quả chỉ đọc\"))}</span><h2 class=\"portal-card-title\">${safeText(freePromptGalleryText(\"results.title\", \"Mẫu phù hợp\"))}</h2><p class=\"portal-card-subtitle\">${safeText(freePromptGalleryText(\"results.body\", \"Mỗi thẻ là dữ liệu bản chụp do máy chủ trả về; chỉ nút xem chi tiết mới gọi endpoint chi tiết riêng.\"))}</p></div>${badge(canBrowse ? \"ready\" : \"guarded\")}</div>${renderFreePromptGalleryCards(listing.items, canBrowse)}${renderFreePromptGalleryPagination(listing.pagination, canBrowse)}</section>${renderFreePromptGalleryDetail(context.freePromptGalleryDetail, canBrowse, canSave)}${renderFreePromptGallerySaveResult(context.freePromptGallerySaveResult, context.freePromptGalleryDetail && context.freePromptGalleryDetail.item && context.freePromptGalleryDetail.item.id)}<section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(freePromptGalleryText(\"boundary.kicker\", \"Ranh giới thực thi\"))}</span><h2 class=\"portal-card-title\">${safeText(freePromptGalleryText(\"boundary.title\", \"Danh mục để tham khảo, không thực thi\"))}</h2><p class=\"portal-card-subtitle\">${safeText(freePromptGalleryText(\"boundary.body\", \"Gallery không có nhà cung cấp, Bot, Core Bridge, tác vụ, ví Xu, PayOS, tài sản, kết xuất, đăng bài hoặc bàn giao. Hãy kiểm tra claim, nguồn và quyền sử dụng trước khi đưa mẫu vào workflow khác.\"))}</p></div>${badge(\"guarded\")}</div><div class=\"portal-content-prompt-pack-guard-list\"><span><strong>${safeText(freePromptGalleryText(\"boundary.provider\", \"Nhà cung cấp / Bot / cầu nối\"))}</strong><em>${safeText(freePromptGalleryText(\"boundary.off\", \"tắt\"))}</em></span><span><strong>${safeText(freePromptGalleryText(\"boundary.job\", \"Tác vụ / ví / thanh toán\"))}</strong><em>${safeText(freePromptGalleryText(\"boundary.off\", \"tắt\"))}</em></span><span><strong>${safeText(freePromptGalleryText(\"boundary.asset\", \"Tài sản / đăng bài / bàn giao\"))}</strong><em>${safeText(freePromptGalleryText(\"boundary.off\", \"tắt\"))}</em></span></div>${renderNotes(page)}</section></article>`;\n  }\n",
+      "new": "  function renderFreePromptGallery(page, context) {\n    const catalog = freePromptGalleryCatalogState(context);\n    const listing = freePromptGalleryListingState(context);\n    const canRead = Boolean(context.capabilities && context.capabilities[\"free-prompt-gallery-view\"] === true);\n    const canSave = Boolean(context.capabilities && context.capabilities[\"free-prompt-gallery-save\"] === true);\n    const canBrowse = canRead && Boolean(catalog.snapshot_version);\n    const categoryCount = Array.isArray(catalog.categories) ? catalog.categories.length : 0;\n    const industryCount = Array.isArray(catalog.industries) ? catalog.industries.length : 0;\n    const catalogTotal = Number.isInteger(Number(catalog.total_items)) ? Number(catalog.total_items) : 0;\n    return `<article class=\"portal-page portal-content-prompt-pack portal-free-prompt-gallery\">${renderHero(page, context)}<section class=\"portal-content-prompt-pack-intro\"><div><span class=\"portal-section-kicker\">${safeText(freePromptGalleryText(\"intro.kicker\", \"Không gian Web riêng · chỉ đọc\"))}</span><h2>${safeText(freePromptGalleryText(\"intro.title\", \"Tìm một mẫu câu lệnh rõ ngữ cảnh rồi tự rà soát trước khi dùng.\"))}</h2><p>${safeText(freePromptGalleryText(\"intro.body\", \"Thư viện đưa các mẫu đã được rà soát lên một danh mục gọn, có lọc, phân trang và xem chi tiết theo thao tác của bạn. Trang không tạo đầu ra AI hay kết nối runtime bên ngoài.\"))}</p></div><dl><div><dt>${safeText(String(categoryCount))}</dt><dd>${safeText(freePromptGalleryText(\"intro.stat.categories\", \"Nhóm mẫu\"))}</dd></div><div><dt>${safeText(String(industryCount))}</dt><dd>${safeText(freePromptGalleryText(\"intro.stat.industries\", \"Ngành\"))}</dd></div></dl></section><section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(freePromptGalleryText(\"catalog.kicker\", \"Danh mục bản chụp\"))}</span><h2 class=\"portal-card-title\">${safeText(freePromptGalleryText(\"catalog.title\", \"Khám phá {count} mẫu\", { count: String(catalogTotal || \"—\") }))}</h2><p class=\"portal-card-subtitle\">${safeText(String(freePromptGallerySourceText(catalog.description) || freePromptGalleryText(\"catalog.descriptionFallback\", \"Danh mục sẽ xuất hiện sau khi phiên đăng nhập đã được máy chủ xác minh.\")))}</p></div>${badge(canBrowse ? \"read_only\" : \"guarded\")}</div><form class=\"portal-form\" data-portal-form data-portal-no-transient data-portal-action=\"free-prompt-gallery-filter\" data-portal-route=\"/free-prompt-gallery\" novalidate>${renderFields(freePromptGalleryFilterFields(catalog), canBrowse, context, listing.filters, \"free-prompt-gallery-filter\")}<div class=\"portal-form-footer\"><span class=\"portal-form-note\">${safeText(freePromptGalleryText(\"catalog.filterNote\", \"Bộ lọc và truy vấn chỉ dùng cho request hiện tại; không lưu vào URL, bộ nhớ trình duyệt, Project hay Kho ghi nhớ.\"))}</span><div class=\"portal-inline-actions\"><button class=\"portal-button portal-button--quiet\" type=\"button\" data-portal-action=\"free-prompt-gallery-refresh\" data-portal-route=\"/free-prompt-gallery\"${canRead ? \"\" : \" disabled\"}>${safeText(freePromptGalleryText(\"catalog.refresh\", \"Làm mới danh mục\"))}</button><button class=\"portal-button portal-button--primary\" type=\"submit\"${canBrowse ? \"\" : \" disabled\"}>${safeText(freePromptGalleryText(\"catalog.submit\", \"Áp dụng bộ lọc\"))}</button></div></div></form></section><section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(freePromptGalleryText(\"results.kicker\", \"Kết quả chỉ đọc\"))}</span><h2 class=\"portal-card-title\">${safeText(freePromptGalleryText(\"results.title\", \"Mẫu phù hợp\"))}</h2><p class=\"portal-card-subtitle\">${safeText(freePromptGalleryText(\"results.body\", \"Mỗi thẻ là dữ liệu bản chụp do máy chủ trả về; chỉ nút xem chi tiết mới gọi endpoint chi tiết riêng.\"))}</p></div>${badge(canBrowse ? \"ready\" : \"guarded\")}</div>${renderFreePromptGalleryCards(listing.items, canBrowse)}${renderFreePromptGalleryPagination(listing.pagination, canBrowse)}</section>${renderFreePromptGalleryDetail(context.freePromptGalleryDetail, canBrowse, canSave)}${renderFreePromptGallerySaveResult(context.freePromptGallerySaveResult, context.freePromptGalleryDetail && context.freePromptGalleryDetail.item && context.freePromptGalleryDetail.item.id)}</article>`;\n  }\n"
+    }
+  ],
+  "heldUnusedKeys": [
+    "freePromptGallery.cards.note",
+    "freePromptGallery.detail.emptyBody",
+    "freePromptGallery.boundary.kicker",
+    "freePromptGallery.boundary.title",
+    "freePromptGallery.boundary.body",
+    "freePromptGallery.boundary.provider",
+    "freePromptGallery.boundary.job",
+    "freePromptGallery.boundary.asset",
+    "freePromptGallery.boundary.off"
+  ],
+  "provenance": [
+    {
+      "conversation": "e76f7bc6-9271-4491-b876-79b2eb1cc4ac",
+      "rawSha256": "e2b0162b6c8b6f74ec8083d5bc1217d35dd475c6b8a0c894fb6a785af1d996a8"
+    },
+    {
+      "conversation": "413a8333-f784-4083-a3ad-9c0e52ad75c5",
+      "rawSha256": "2e0c2fb693d82409976cf6b69c6850721a722e9cc10fca8cc3ae16c5dd7d5b37"
+    },
+    {
+      "conversation": "6e58a235-94b0-48c6-8d9f-7e68a39d2a95",
+      "rawSha256": "bc77751e040b5e8eda48627b11670bbd3fc30716abad8d779c88ea234cebaf2c"
+    },
+    {
+      "conversation": "bc780912-b425-417a-89aa-6b568f2ccbf8",
+      "rawSha256": "04fb48ef0f754bf6df418b3b30404cd14205a77341d6401990c732414515cd58"
+    },
+    {
+      "conversation": "a4b75dc7-23a0-4896-b9e1-c574b7062223",
+      "rawSha256": "f63aace263618c33cd8e00bae7e08661ccf4722b362038f5c5867e0689114258"
+    }
+  ],
+  "workerFailures": 0,
+  "applicationWrites": 0
+}

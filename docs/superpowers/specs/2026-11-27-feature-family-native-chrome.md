@@ -110,8 +110,11 @@ Appgroupcopy: portal.js10182/10330/12312/12611/12647/12649/12650/
 - [x] OutsideDOM/control/input/810values;541primary/2533closurePASS.
 - [x] Browser96view5196samples/0finding,min4,9871;FCRprerequisiteđãkhép.
 - [x] ReviewFCH/FCRmỗiphần1lượtC0I0M0;docs/Testerđãcó.
-- [ ] Metadata/manifest/provenance.
-- [ ] ExactCI/merge/Webdeploy/runtime/assets/cache/receiptreadback.
+- [x] Metadata/manifest/provenance đãkhépPR816.
+- [x] ExactCI45945310401haiSUCCESS;merge/runtimebf95e401,
+  tree7e057484 bằngtestedtree;Webdeploy45948237821SUCCESS.
+  VPSsạch/3active/health/7+7assets/cachelocal-780dbd9e3e3684897e17;
+  receiptsIssue6897211048271/PR8167211048279readbackexact.
 - [ ] FullgoalGallery/Admin/actionBlockReason/auth/draft/AX/device/Safari/
   signedproductionvẫnmở,motionM-FINAL01..06LAST.
 

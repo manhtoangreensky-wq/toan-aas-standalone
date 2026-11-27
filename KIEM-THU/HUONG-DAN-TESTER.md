@@ -1,5 +1,19 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Thư viện câu lệnh miễn phí — 27/11/2026
+
+Dùng `PHIEN-GALLERY-CUSTOMER-COPY-20261127.md`, chín case GPC/GPR,
+cùng Issue689; không tạo Issue hoặc PR rỗng. VI/EN/ZH phải dùng chữ cố
+định đúng ngôn ngữ, không dịch nội dung khách. Thẻ/chi tiết/lưu vẫn giữ
+mọi thao tác và điều kiện hoạt động. Chưa có danh mục không hiện hai
+ô số0; tìm không có kết quả nhưng danh mục hợp lệ vẫn giữ số nhóm/ngành.
+
+Kiểm375/1440 sáng/tối, nhập tìm kiếm và dùng Tab. Xem ảnh đầu trang:
+không chấp nhận desktop bị bó thành cột hẹp dù không tràn ngang.
+Chữ≥4,5:1, focus≥3:1, ô lọc16px và vùng bấm44px. Không gọi tạo/lưu
+thật hoặc dùng dữ liệu khách/provider/tiền. Các gate auth/fullshell/
+thiết bị/Safari/signed-production/motion giữ riêng; motion làm cuối.
+
 ## Trang nhóm công cụ — 27/11/2026
 
 Dùng `PHIEN-FAMILY-CHROME-NATIVE-20261127.md`,cùngIssue689.
