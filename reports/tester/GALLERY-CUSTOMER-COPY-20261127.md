@@ -46,3 +46,9 @@ thiếuprojGPC17keys,83PASS. LocalRED3 vàphụlục7213848011readback.
 QAonlyrecovery:finiteGallerysnapshot+FBCsnapshot hook+pressurecases.
 Ứngdụng/bảndịch/CSS/fixture/pins/kỳvọng cũ giữ;khôngbrowserrerun.
 Recovery146PASS/0fail/skip,QA-onlydeltareviewC0I0M0. ChưanewCI.
+CI45968986049qua3snapshotcases,fail2FBCreader. LocalRED2 vàphụlục
+7214208850readback;testFBC inputprojectionGPCbeforeFCH,khôngđổi
+fixture/pin/assertion/app. Closure117tệpphụthuộcchạymộtlượt,loại146GREEN.
+Closure117files3027PASS/0fail/skip,terminalexit0. App3pins giữ.
+StaticPythonGallery5=4PASS/1BASEFAIL,exactBASE/branchsamefunctionline115;
+test/integrationunchanged,0new. Khôngđổiexpectation/khôiphụctextkỹthuật.

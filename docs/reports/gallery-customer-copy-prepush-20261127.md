@@ -55,3 +55,10 @@ RecoverychỉQA:snapshotinverse17Gallerykeys trướcFCH+pressuretests,
 giữmọiapp/CSS/copy/fixture/pin/assertion. Khôngrerunbrowser hoặc51value
 semanticreview. PR818 giữmở,cùngnhánh;exactHEADCI2job còn bắtbuộc.
 Recovery146PASS/0fail/skip,QA-onlyreviewC0I0M0. App khôngđổi.
+CI45968986049qua3snapshotcases rồi fail2FBCrawhistoricalreader:
+RED2/7214208850readback→GPCprojection trướcFCH trongtestreader,
+giữexpectations/fixture/pin/app. Closure117tệpphụthuộc mộtlượt;
+khônggồm146đãGREEN,khôngbrowser/copyreviewlặp.
+Closure117files3027PASS/0fail/skip/exit0. StaticPythonGallery4PASS/
+1BASEFAILởline115,exactBASE/branchsamefailure,test/integrationunchanged,
+NEW_FAILURES=0. BảnchỉQAđượcđẩy vào cùngPR818,khôngapprewrite.

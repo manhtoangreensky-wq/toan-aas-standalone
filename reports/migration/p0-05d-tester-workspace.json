@@ -118,6 +118,15 @@
     "ci_snapshot_root_qa_omission": true,
     "ci_snapshot_recovery_passed": 146,
     "ci_snapshot_delta_review": "C0_I0_M0",
+    "ci_second_failed_run": 45968986049,
+    "ci_fbc_reader_amendment": 7214208850,
+    "consumer_closure_files": 117,
+    "consumer_closure_passed": 3027,
+    "consumer_closure_failed": 0,
+    "consumer_closure_skipped": 0,
+    "static_gallery_python_passed": 4,
+    "static_gallery_python_unchanged_baseline_failures": 1,
+    "static_gallery_python_new_failures": 0,
     "signed_production_ui": "NOT_TESTED",
     "auth_draft_full_lifecycle": "NOT_TESTED",
     "device_safari": "NOT_TESTED",
@@ -1004,9 +1013,9 @@
     },
     {
       "path": "KIEM-THU/PHIEN-GALLERY-CUSTOMER-COPY-20261127.md",
-      "lines": 76,
-      "bytes": 4443,
-      "sha256": "c26ac10b93d5b842f5bc3032e4308df833dbad8cda8e652414f2fe441326dc64"
+      "lines": 83,
+      "bytes": 4916,
+      "sha256": "98e72a9de5b343b65d6fa9e5bcbcb8aec0d97eb30fec6e60f9983e1c3a5f725f"
     },
     {
       "path": "docs/reports/feature-catalog-descriptions108-prepush-20261126.md",
@@ -1034,9 +1043,9 @@
     },
     {
       "path": "docs/reports/gallery-customer-copy-prepush-20261127.md",
-      "lines": 57,
-      "bytes": 3459,
-      "sha256": "a2991bd09a081544055305ea34c16d7186ff6619da4dacb699c90f3711395795"
+      "lines": 64,
+      "bytes": 3946,
+      "sha256": "7625d744e8afc999a72f9bcae86996b16a75a4050b8d1d095b03b3274236358a"
     },
     {
       "path": "docs/superpowers/plans/2026-11-26-feature-catalog-descriptions108.md",
@@ -1100,9 +1109,9 @@
     },
     {
       "path": "docs/superpowers/specs/2026-11-27-gallery-customer-copy.md",
-      "lines": 98,
-      "bytes": 6055,
-      "sha256": "4f658a6234ae3e356198e1d571b38c1ddf2e7ac4b7dd28b6c3598a38e2b48bc3"
+      "lines": 108,
+      "bytes": 6700,
+      "sha256": "b56f54fe805abf9a3d8a7bbb8d0fe2c92b28f133376396fe14165a9f0f849a27"
     },
     {
       "path": "docs/superpowers/specs/2026-11-27-gallery-readability.md",
@@ -1136,9 +1145,9 @@
     },
     {
       "path": "reports/tester/GALLERY-CUSTOMER-COPY-20261127.md",
-      "lines": 48,
-      "bytes": 2818,
-      "sha256": "8bbda8da99a729647c64f1c1b5513abf183db4b8378d37ec7ef60a7e54306bcd"
+      "lines": 54,
+      "bytes": 3270,
+      "sha256": "7196ee92e9e49ec33afb98b830db4d241a57496fde7d5c5cb3e6afbf94862a3a"
     },
     {
       "path": "scripts/tester_case_sync.py",

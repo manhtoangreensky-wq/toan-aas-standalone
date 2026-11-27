@@ -96,3 +96,13 @@ Sửa chỉ helper snapshot hữu hạn+FBCsnapshot hook trước FCH+pressurete
 Khôngđổiapp/CSS/copy/fixture/pin/assertion cũ,khônggọi lạiworker
 hoặcbrowser60view. Đây làROOT_QA_OMISSION,workerfail0.
 Recovery146PASS/0fail/skip,reviewQA-deltaC0I0M0;chỉnhómfailed/affected.
+
+CI45968986049 vượt lỗi snapshot,phát hiện2ca FBC raw historical reader
+chưa đảoGPCtrướcFCH. LocalRED2;phụlục7214208850readbackexact.
+ChỉthêmGPCinputprojection trongtestFBC,giữfixture/pin/assertion;
+root ràclosure117tệp phụthuộc source/snapshot mộtlượt,khônglặp146
+đãGREENvàkhôngđổiứngdụng/bảndịch/CSS.
+Closure117tệp/3027PASS/0fail/skip,terminalexit0. Giữ146recoveryPASS
+riêng,khôngcộngchồngnhómcũ. StaticPythonGallery5ca=4PASS/1BASEFAIL:
+exactBASE/branch cùngtestsaveassertliteral tạidòng115,NEW_FAILURES=0;
+khôngsửatest/integration hoặcđưacâukỹthuậttrởlại.

@@ -16,6 +16,9 @@
 - [x] GPR history/affected Node94PASS/Python51PASS; delta C0I0M0.
   Browser corrected60view/2304mẫu,min5,21665/focus5,86008/input16/target44;
   desktopmain1136px,0finding/error/tràn/egress/unmeasured;ảnhđãxem.
+- [x] CIrecovery cùngPR818:3snapshotcases→146PASS/reviewC0I0M0;
+  2FBCreader cases→closure117files3027PASS/0fail/skip. Appgiữ.
+  StaticGalleryPython4PASS/1exactBASEFAILline115,0NEW;khôngđổiassertion.
 - [ ] Docs/Tester/metadata/provenance/exactCI/merge/Webdeploy/runtime/
   assets/cache/receipt. Chưa coi GPC/GPR là bản đã phát hành.
 - [ ] GPC-CATALOG theo static ID/version; sau đó Admin/actionBlockReason,

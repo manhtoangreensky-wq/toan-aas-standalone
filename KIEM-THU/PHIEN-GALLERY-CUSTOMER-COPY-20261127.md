@@ -74,3 +74,10 @@ snapshotinverse trướcFCH,chặnthiếu/sai/lặp/đảo/foreignlocale/mixed/s
 Khôngđổiapp/copy/CSS,khôngreviewlại51values hoặcchạybrowserlại.
 ExactHEADCI của bản QA recovery vẫn phải đạt hai job trướcmerge/deploy.
 Recovery146PASS/0fail/skip;QA-deltareviewC0I0M0. App3pins giữ nguyên.
+CI45968986049 vượt3snapshotcases,fail2FBCrawhistoricalreader.
+LocalRED2;7214208850readback→testFBCreaderGPCbeforeFCH,khôngđổi
+assertion/fixture/pin/app. Closure117tệp phụthuộckhônggồm146đãGREEN.
+Closure117tệp3027PASS/0fail/skip/exit0. Khôngcộngvớicácnhómchồng.
+StaticPythonGallery4PASS/1BASEFAIL;exactBASE/branchcùngline115
+đòiconfirmliteralđãđượclocalize trướcBASE. Test/integrationnguyên,
+0new;khôngtrảlạicâukỹthuật.
