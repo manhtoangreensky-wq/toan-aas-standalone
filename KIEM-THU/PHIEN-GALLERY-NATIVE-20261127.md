@@ -1,5 +1,13 @@
 # Phiên kiểm tra danh mục câu lệnh theo ngôn ngữ
 
+## Mốc cuối27/11/2026 — đã giao PR819
+
+CI46021673561 haiSUCCESS/456QA;Webdeploy46027449612SUCCESS.
+Runtime5f316f29/tree8bcfab62 đúng testedtree;VPS sạch/baactive/health,
+7direct+7versioned+17cache exact. Receipt689/7222538286 vàPR819/
+7222538994 đọc lại exact. Các mục release pending dưới đây là lịch sử.
+Signed-production,auth/draft/device/Safari/motion vẫn mở riêng.
+
 Đang đọc và áp dụng skill owner-governed-codex cho task này.
 
 ID=GALLERY-NATIVE-20261127;Issue689;BASE29e0c154dfd247ac4b0a68cd6336ec83fb3af8ef;

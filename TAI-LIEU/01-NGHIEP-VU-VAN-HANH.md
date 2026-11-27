@@ -1,5 +1,35 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 27/11/2026 — Gallery đã giao; thông báo quản trị là ứng viên local
+
+Gallery đã phát hành qua PR819: CI46021673561 hai SUCCESS, QA456/456;
+deploy46027449612 SUCCESS. Runtime5f316f29/cây8bcfab62 đúng bản đã kiểm,
+VPS sạch/ba dịch vụ active/health;7tài nguyên trực tiếp+7có phiên bản+
+17cache exact. Receipt Issue689/7222538286 vàPR819/7222538994 đã đọc lại.
+Các mô tả “GSC chưa phát hành” bên dưới là mốc lịch sử trước lần giao này.
+Signed-production Gallery vẫn mở; không lấy tài nguyên công khai thay
+bằng chứng phiên khách đăng nhập hoặc thao tác lưu trên production.
+
+Ứng viên AGC chỉ đổi chữ: thông báo vì sao một thao tác bị khóa và chữ
+giới thiệu/trạng thái ở Trung tâm hỗ trợ,Điều hành tự động. Có31hàng/
+93giá trị VI/EN/ZH,22cặp sửa trong2tệp giao diện. Khung giải thích kỹ thuật
+ở cuối danh sách hỗ trợ được bỏ,không bỏ bộ lọc,danh sách,quyền hay nút.
+Trạng thái chưa bật/đang tải/chưa tải được/một phần chưa tải/giới hạn
+quản lý vẫn khác nhau;không coi lỗi tải là hàng chờ trống.
+
+Local:129nativePASS (126giữ+3payment cases sửa fixture theo constant thực),
+consumer222/222 vàGallery130/130 theo ledger failed-only;Node source179/
+snapshot34 vàPython198pressure đạt. Browser108cảnh/36disabledhero,
+390/768/1440×VI/EN/ZH×sáng/tối,input16px,vùng bấm44px,0lỗi/tràn/egress.
+Đây là component QA,không chứng minh auth/hydration/fullshell/độ tương phản
+toàn bộ/thiết bị/Safari hoặc signed-production. Chưa phát hành AGC.
+
+Lưu ý nghiệp vụ hiện có: payment-create thuộc nhóm thao tác Web và đi qua
+điều kiện nhóm này trước nhánh danh mục nạp trong actionBlockReason,
+ở cả BASE và ứng viên. Đợt này không đổi thứ tự điều kiện hoặc tính tiền.
+Không đổi Bot/route-engine/provider/ví/PayOS/ENV/schema/dữ liệu production;
+chưa gọi API tạo nội dung hoặc giao dịch thật.
+
 ## 27/11/2026 — PR818 đã giao; danh mục theo ngôn ngữ đang nghiệm thu local
 
 PR818 đã giao tại runtime `29e0c154dfd247ac4b0a68cd6336ec83fb3af8ef`.

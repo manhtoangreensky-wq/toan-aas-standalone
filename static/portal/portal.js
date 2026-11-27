@@ -9759,22 +9759,22 @@
   }
 
   function actionBlockReason(page, context) {
-    if (page.action === "start-telegram-link" && !telegramConnectionReady(context)) return telegramConnectionBlockReason(context);
-    if (page.access === "admin" && !serverAuthorizesAdminRoute(context, page.routePath || page.path)) return "Cần signed authority do máy chủ xác minh cho module này.";
-    if (context.session.authenticated !== true && page.access !== "public") return "Cần signed session trước khi tạo yêu cầu.";
+    if (page.action === "start-telegram-link" && !telegramConnectionReady(context)) return uiText("actionBlockReason.telegramUnavailable", "Chưa thể liên kết Telegram. Hãy thử lại sau.");
+    if (page.access === "admin" && !serverAuthorizesAdminRoute(context, page.routePath || page.path)) return uiText("actionBlockReason.adminRequired", "Bạn cần quyền truy cập để thực hiện thao tác này.");
+    if (context.session.authenticated !== true && page.access !== "public") return uiText("actionBlockReason.signInRequired", "Vui lòng đăng nhập để tiếp tục.");
     if (WEB_LOCAL_ACTIONS.has(page.action)) {
       const supportAction = String(page.action || "").startsWith("support-");
       if (context.session.csrfReady !== true && context.bridge.csrfReady !== true) return supportAction
-        ? "CSRF chưa sẵn sàng; thao tác Support Desk đang được khóa an toàn."
-        : "CSRF chưa sẵn sàng; thay đổi kế hoạch Web đang được khóa an toàn.";
-      return supportAction ? "Khả năng Support Desk chưa sẵn sàng cho phiên hiện tại." : "Khả năng lập kế hoạch Web chưa sẵn sàng cho phiên hiện tại.";
+        ? uiText("actionBlockReason.supportRetry", "Chưa thể gửi thay đổi hỗ trợ. Hãy tải lại trang rồi thử lại.")
+        : uiText("actionBlockReason.planRetry", "Chưa thể lưu thay đổi. Hãy tải lại trang rồi thử lại.");
+      return supportAction ? uiText("actionBlockReason.supportUnavailable", "Bạn chưa thể xử lý yêu cầu hỗ trợ lúc này. Hãy thử lại sau.") : uiText("actionBlockReason.planUnavailable", "Bạn chưa thể lập kế hoạch lúc này. Hãy thử lại sau.");
     }
     const linkAction = page.action === "start-telegram-link" || page.action === "refresh-link-status";
-    if (page.access === "member" && !linkAction && !telegramIdentityLinked(context)) return "Cần liên kết Telegram trong Bot trước khi dùng workflow canonical.";
-    if (context.bridge.available !== true && page.access !== "public") return "Core Bridge chưa được máy chủ bật cho phiên này.";
-    if (context.session.csrfReady !== true && context.bridge.csrfReady !== true) return "CSRF chưa sẵn sàng; yêu cầu write bị khóa an toàn.";
-    if (page.action === "payment-create" && context.paymentOptions && context.paymentOptions.payos && context.paymentOptions.payos.topup_catalog_available !== true) return "Danh mục mệnh giá nạp canonical chưa được bridge cấp cho Web. Dùng /naptien trong bot đã liên kết để tạo PayOS QR động.";
-    return "Khả năng này chưa được Core Bridge cấp cho phiên hiện tại.";
+    if (page.access === "member" && !linkAction && !telegramIdentityLinked(context)) return uiText("actionBlockReason.telegramLinkRequired", "Hãy liên kết Telegram trong mục Tài khoản để tiếp tục.");
+    if (context.bridge.available !== true && page.access !== "public") return uiText("actionBlockReason.temporarilyUnavailable", "Chưa thể thực hiện thao tác lúc này. Hãy thử lại sau.");
+    if (context.session.csrfReady !== true && context.bridge.csrfReady !== true) return uiText("actionBlockReason.retrySession", "Chưa thể gửi yêu cầu. Hãy tải lại trang rồi thử lại.");
+    if (page.action === "payment-create" && context.paymentOptions && context.paymentOptions.payos && context.paymentOptions.payos.topup_catalog_available !== true) return uiText("actionBlockReason.topupUnavailable", "Chưa tải được các mức nạp tiền. Hãy thử lại sau.");
+    return uiText("actionBlockReason.unavailable", "Bạn chưa thể dùng thao tác này. Hãy thử lại sau.");
   }
 
   function badge(status, label) {
@@ -31420,7 +31420,7 @@ function renderAutoPostHub(page, context) {
     ].join("");
     const careFilterForm = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${copy("filter.title", "Lọc hàng đợi")}</h2><p class="portal-card-subtitle">${copy("filter.description", "Chỉ hiển thị yêu cầu của Trung tâm hỗ trợ trên Web.")}</p></div>${badge("read_only")}</div><form class="portal-support-filter" data-portal-form data-portal-no-transient data-portal-action="support-admin-cases-filter" data-portal-route="/admin/support" novalidate>${filterFields}<div class="portal-form-footer"><span class="portal-form-note">${copy("filter.note", "Chỉ các bộ lọc giới hạn được gửi tới Trung tâm hỗ trợ trên Web.")}</span><button class="portal-button portal-button--quiet" type="submit">${copy("action.apply", "Áp dụng")}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="support-admin-cases-filter-clear" data-portal-route="/admin/support">${copy("action.clear", "Xóa lọc")}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="support-admin-cases-refresh" data-portal-route="/admin/support">${copy("action.refresh", "Làm mới")}</button></div></form></section>`;
     const roleLabel = copy(staffRole === "manager" ? "role.manager" : "role.operator", staffRole === "manager" ? "Quản lý" : "Nhân viên vận hành");
-    return `<article class="portal-page portal-support-admin">${renderHero(page, context)}<section class="portal-support-admin-intro"><div><span class="portal-section-kicker">${copy("intro.kicker", "Vận hành hỗ trợ trên Web")}</span><h2>${copy("intro.title", "Hỗ trợ có phân loại, không bỏ qua quy trình")}</h2><p>${copy("intro.body", "Nhân viên vận hành xử lý đúng yêu cầu, đúng phiên bản và đúng phạm vi.")}</p></div><dl><div><dt>${roleLabel}</dt><dd>${copy("role.verified", "Vai trò do máy chủ xác minh")}</dd></div><div><dt>${copy("scope.webOnly", "Chỉ trên Web")}</dt><dd>${copy("scope.noExternalDelivery", "Không gửi ra bên ngoài")}</dd></div></dl></section>${renderSupportAdminSummary(summary)}${renderSupportResolutionFeedbackSummary(context)}${careFilterForm}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${copy("list.title", "Hàng đợi yêu cầu")}</h2><p class="portal-card-subtitle">${copy("list.description", "Sắp theo mức ưu tiên và lần cập nhật gần nhất.")}</p></div><span class="portal-form-note">${copy("list.count", "{count} yêu cầu trên trang này", { count: String(items.length) })}</span></div>${renderSupportCaseCards(items, true)}${renderSupportAdminCasePagination(listing, allowed)}</section><section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>${copy("boundary.title", "Ranh giới nghiệp vụ")}</strong><p>${copy("boundary.body", "Trung tâm hỗ trợ không thay đổi ví Xu, PayOS, sổ hoàn tiền, tác vụ, nhà cung cấp hoặc giao tệp.")}</p></div></div></section></article>`;
+    return `<article class="portal-page portal-support-admin">${renderHero(page, context)}<section class="portal-support-admin-intro"><div><span class="portal-section-kicker">${copy("intro.kicker", "Vận hành hỗ trợ trên Web")}</span><h2>${copy("intro.title", "Hỗ trợ có phân loại, không bỏ qua quy trình")}</h2><p>${copy("intro.body", "Nhân viên vận hành xử lý đúng yêu cầu, đúng phiên bản và đúng phạm vi.")}</p></div><dl><div><dt>${roleLabel}</dt><dd>${copy("role.verified", "Vai trò do máy chủ xác minh")}</dd></div><div><dt>${copy("scope.webOnly", "Chỉ trên Web")}</dt><dd>${copy("scope.noExternalDelivery", "Không gửi ra bên ngoài")}</dd></div></dl></section>${renderSupportAdminSummary(summary)}${renderSupportResolutionFeedbackSummary(context)}${careFilterForm}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${copy("list.title", "Hàng đợi yêu cầu")}</h2><p class="portal-card-subtitle">${copy("list.description", "Sắp theo mức ưu tiên và lần cập nhật gần nhất.")}</p></div><span class="portal-form-note">${copy("list.count", "{count} yêu cầu trên trang này", { count: String(items.length) })}</span></div>${renderSupportCaseCards(items, true)}${renderSupportAdminCasePagination(listing, allowed)}</section></article>`;
   }
 
   function renderSupportAdmin(page, context) {

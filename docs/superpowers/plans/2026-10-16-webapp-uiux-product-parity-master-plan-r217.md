@@ -5,6 +5,23 @@
 **Nhánh tài liệu:** `webapp-plan-r116` → push vào `webapp-checklist-r116`
 **Mục tiêu:** có một thứ tự thi công duy nhất, một checklist có trạng thái và các spec đủ cụ thể để người thực hiện không phải đoán.
 
+### Cập nhật27/11/2026 — GSC đã giao, AGC đang bàn giao
+
+PR819 đã merge và triển khai Web-only: CI46021673561 hai SUCCESS,
+QA456/456;deploy46027449612;runtime5f316f29/tree8bcfab62.
+VPS/source sạch/ba dịch vụ/health;7direct+7versioned+17cache khớp,
+receipt Issue689/7222538286 vàPR819/7222538994 đọc lại exact.
+Những mục GSC pending ngay bên dưới là mốc trước giao hàng,không hiện trạng.
+
+Kế tiếp AGC giữ guards/actions và chỉ sửa thông báo thao tác/Support/
+Operations VI/EN/ZH;22proposalrecords/2appfiles. Native129PASS với ba
+payment cases đã dùng constant thực; consumer222 vàGallery130 đều khép
+failed-only. Node source179/snapshot34,Python198 pressure đạt;
+browser108cảnh/36guard,input16,target44,0error/tràn/egress.
+AGC chưa merge/deploy; docs/Tester/provenance/exactCI còn đang khép.
+Auth/draft,AX/responsive còn thiếu và signed-production giữ mở;
+motionM-FINAL01..06 vẫn cuối. Không mở Bot/engine/provider/tiền/data.
+
 ### Cập nhật27/11/2026 — PR818DELIVERED, GSC vẫn mở
 
 - [x] GPC/GPR đã giao PR818/runtime29e0c154;CI45975827455 haiSUCCESS,
@@ -92,9 +109,12 @@ bỏ sót, nhưng chỉ mở khi Owner giao task riêng và qua safety gate.
 - Type scale cố định: body 16px (mobile không nhỏ hơn 16px), helper 14px, label 14–16px,
   heading trang 32px desktop/28px mobile, section 24/20px, card title 18px; line-height
   body 1.5, heading 1.2–1.3. Kiểm tra chuỗi dấu tiếng Việt `Ẫ Ặ Ệ Ộ Ỡ Ự ỷ ẳ` ở mọi weight.
-- Fixed chrome của VI/EN/ZH dùng đúng một ngôn ngữ; chỉ giữ tên riêng/danh từ sản phẩm
-  được phép (`Telegram`, `PayOS`, `TikTok`, `Facebook`, `SFX`, `ASR`, `SRT`, `Content
-  Studio`). Không dịch ID, URL, timestamp, receipt hoặc dữ liệu server.
+- Fixed chrome của VI/EN/ZH dùng đúng một ngôn ngữ. Trong tiếng Việt chỉ giữ
+  tên riêng phù hợp như `Telegram`, `PayOS`, `TikTok`, `Facebook`; các từ chung
+  `Media`, `Studio`, `Content Studio` phải dùng nhãn tiếng Việt đúng ngữ cảnh.
+  Chỉ giữ định dạng tệp tiêu chuẩn khi cần chọn/nhận biết tệp; không dùng mã hay
+  thuật ngữ triển khai làm lời hướng dẫn khách. Không dịch ID, URL hoặc nội dung
+  khách hàng; không tự thay dữ liệu nguồn. Quy định này thay allowance cũ.
 
 ### 3.2 Bố cục, component và thao tác
 

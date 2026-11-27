@@ -1,5 +1,35 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 27/11/2026 — PR819 đã giao; AGC đang khép bàn giao local
+
+- [x] GSC PR819: CI46021673561 hai SUCCESS, đăng nhập456/456;
+  Web-only deploy46027449612 SUCCESS; runtime5f316f29,
+  tree8bcfab62 bằng tested tree. Giữ nguyên phần main PR817 đã có.
+- [x] VPS sạch/ba dịch vụ active/health đúng;7direct+7versioned+17cache
+  exact; stamp local-6d6f25201df85322307c. Receipt Issue689/7222538286,
+  PR819/7222538994 đã đọc lại exact; không còn PR819 treo.
+- [x] Spec runtime bản cập nhật đã công bố đúngfile vào Issue689/
+  7223164974,readbackexact21185ký tự; không thay bằng chứng LIVE.
+- [x] AGC: ba Antigravity4ExtraHigh proposal-only,22record/2appfile;
+  31row/93value cố định VI/EN/ZH; bỏ một khung giải thích Support.
+  Điều kiện/quyền/handlers/dữ liệu/motion giữ nguyên.
+- [x] Native129GREEN; ba payment cases đổi sang constant thực và recovery
+  3GREEN,giữ126ca khác. Không tuyên bố nhánh topup sau local-action reachable.
+- [x] Consumer222:220PASS+2historical recoveryPASS; consumer Gallery130:
+  127PASS+3snapshot recoveryPASS. Giữ old fixture/pin/assertions.
+- [x] Node source pressure158+21targeted và snapshot34PASS;
+  Python pressure198PASS+2consumer recoveryPASS; không cộng thành whole-app.
+- [x] Browser108uniqueviews/36disabledhero/6ảnh;390/768/1440,
+  VI/EN/ZH sáng/tối;input16,target44,0error/overflow/egress.
+  Component gate,không auth/fullmount/contrastmatrix/device/Safari proof.
+- [ ] AGC docs/Tester metadata/provenance/exactCI→mộtPR→merge→
+  Webdeploy→runtime/assets/cache/receipt.
+- [ ] Auth/draft lifecycle, responsive/AX còn thiếu, signed-production,
+  CacheStorage/offline/device/Safari vẫn mở theo thứ tự.
+- [ ] Motion M-FINAL01..06 cuối cùng; WHOLE_GOAL_COMPLETE=NO.
+
+Các trạng thái “chưa phát hành” trong các mốc bên dưới là lịch sử.
+
 ## 27/11/2026 — PR816 đã giao; GPC/GPR đang nghiệm thu
 
 - [x] PR816: CI45945310401 hai SUCCESS; deploy45948237821 SUCCESS;

@@ -12783,26 +12783,26 @@
   const ADMIN_OPERATIONS_MESSAGES = { vi: {}, en: {}, zh: {} };
   const ADMIN_OPERATIONS_COPY = Object.freeze([
     ["disabled.title", "Điều hành tự động chưa được bật", "Operations is not enabled", "自动化运营尚未启用"],
-    ["disabled.body", "Phân hệ này đang tắt theo cấu hình máy chủ. Đây không phải thông báo tài khoản thiếu quyền. Không có tác vụ nào được thực hiện.", "This module is disabled in server configuration. This does not indicate missing account permission. No action has been executed.", "此模块在服务器配置中已关闭，并不表示账户缺少权限。未执行任何操作。"],
-    ["unavailable.title", "Chưa xác minh được dữ liệu điều hành", "Operations data is not verified", "运营数据尚未验证"],
-    ["unavailable.body", "Máy chủ chưa cung cấp dữ liệu điều hành hợp lệ cho phiên hiện tại. Chưa thể kết luận nguyên nhân là quyền truy cập hay kết nối. Không có tác vụ nào được thực hiện.", "The server has not provided valid Operations data for this session. The cause may involve access or connectivity and is not yet confirmed. No action has been executed.", "服务器尚未为当前会话提供有效的运营数据。访问权限或连接原因尚未确认。未执行任何操作。"],
+    ["disabled.body","Điều hành tự động chưa được bật. Chưa có thao tác nào được thực hiện.","Automated operations is not enabled. No action has been performed.","自动化运营尚未启用，未执行任何操作。"],
+    ["unavailable.title","Chưa tải được dữ liệu điều hành","Operations data could not be loaded","暂时无法加载运营数据"],
+    ["unavailable.body","Chưa tải được dữ liệu. Hãy làm mới hoặc thử lại sau.","Data could not be loaded. Refresh or try again later.","暂时无法加载数据，请刷新或稍后重试。"],
     ["page.title", "Điều hành tự động", "Operations Autopilot", "自动化运营"],
-    ["page.description", "Giám sát lần quét, sự cố và đề xuất chờ quyết định trong phạm vi quyền do máy chủ xác minh.", "Monitor runs, incidents, and approval proposals within server-verified permissions.", "在服务器验证的权限范围内监控运行、事件和待审批提案。"],
+    ["page.description","Theo dõi hoạt động, sự cố và các đề xuất đang chờ quyết định.","Monitor activity, incidents, and proposals awaiting a decision.","查看活动、事件以及等待决定的提案。"],
     ["hero.section", "Quản trị ERP", "ERP Administration", "ERP 管理"],
     ["loading.title", "Đang xác minh quyền điều hành", "Checking Operations permission", "正在验证运营权限"],
-    ["loading.body", "Máy chủ đang kiểm tra phiên đăng nhập, vai trò hỗ trợ và ranh giới điều hành.", "The server is checking the signed session, Support role, and Operations boundary.", "服务器正在检查登录会话、支持角色和运营边界。"],
+    ["loading.body","Đang kiểm tra quyền truy cập và tải dữ liệu điều hành.","Checking your access and loading Operations data.","正在检查访问权限并加载运营数据。"],
     ["guard.title", "Quyền điều hành chưa được cấp", "Operations permission has not been granted", "尚未授予运营权限"],
-    ["guard.body", "Chỉ quản trị viên, quản lý hỗ trợ hoặc nhân viên vận hành hỗ trợ do máy chủ xác minh mới được xem dữ liệu điều hành. Trình duyệt không thể tự gán quyền bằng bộ nhớ cục bộ, ID Telegram hoặc tham số URL.", "Only server-verified administrators, support managers, or support operators may view Operations data. The browser cannot grant itself access through local storage, a Telegram ID, or URL parameters.", "只有经服务器验证的管理员、支持经理或支持操作员才能查看运营数据。浏览器无法通过本地存储、Telegram ID 或 URL 参数自行授予权限。"],
+    ["guard.body","Bạn cần quyền điều hành để xem dữ liệu tại đây.","You need Operations permission to view this data.","您需要运营权限才能查看此处的数据。"],
     ["queue.guarded.title", "Chưa thể đọc {label}", "Unable to read {label}", "无法读取{label}"],
-    ["queue.guarded.body", "Tóm tắt và vai trò điều hành đã được máy chủ xác minh, nhưng hàng đợi này chưa trả ranh giới hợp lệ. Cổng Web đã xóa riêng phần chưa xác minh, không dùng dữ liệu cũ hoặc coi đó là hàng đợi rỗng.", "The Operations summary and role are verified, but this queue did not return a valid boundary. The Web portal cleared only the unverified section and does not use stale data or present it as an empty queue.", "运营摘要和角色已验证，但此队列未返回有效边界。Web 门户仅清除未验证部分，不使用旧数据，也不会将其显示为空队列。"],
-    ["partial.title", "Một phần dữ liệu điều hành đang được bảo vệ", "Some Operations data is guarded", "部分运营数据受保护"],
-    ["partial.body", "Tóm tắt vai trò vẫn hợp lệ; một hoặc nhiều hàng đợi phụ chưa trả dữ liệu đã xác minh trong phạm vi chủ sở hữu. Hãy làm mới khi nguồn sẵn sàng. Không hàng đợi nào được thay bằng số 0, dữ liệu cũ hoặc hành động tự động.", "The role summary remains valid, but one or more subqueues have not returned verified owner-scoped data. Refresh when the source is ready. No queue is replaced with zero, stale data, or an automated action.", "角色摘要仍然有效，但一个或多个子队列尚未返回经验证的所有者范围数据。数据源就绪后请刷新。系统不会用零值、旧数据或自动操作替代任何队列。"],
+    ["queue.guarded.body","Chưa tải được hàng chờ này. Hãy làm mới hoặc thử lại sau.","This queue could not be loaded. Refresh or try again later.","暂时无法加载此队列，请刷新或稍后重试。"],
+    ["partial.title","Một số hàng chờ chưa tải xong","Some queues have not loaded","部分队列尚未加载"],
+    ["partial.body","Bạn vẫn có thể xem phần đã tải. Hãy làm mới để thử tải lại các hàng chờ còn thiếu.","You can still view the loaded sections. Refresh to try loading the remaining queues.","您仍可查看已加载的部分，请刷新以重试加载其余队列。"],
     ["intro.kicker", "Điều hành có kiểm soát", "Controlled operations", "受控运营"],
     ["intro.title", "Tự động hóa có người chịu trách nhiệm", "Automation with accountable oversight", "有责任监督的自动化"],
-    ["intro.body", "Vai trò {role} được máy chủ xác minh. Bảng chỉ hiển thị dữ liệu đã làm sạch trong phạm vi quyền; không hiển thị thông tin xác thực, nội dung thô, dữ liệu cá nhân, ví Xu, PayOS hoặc quyền điều khiển nhà cung cấp.", "The server verified the {role} role. This board shows only sanitized data within that scope; it exposes no credentials, raw payloads, personal data, Xu wallet, PayOS, or provider controls.", "服务器已验证{role}角色。此面板仅显示权限范围内的清理数据，不显示凭据、原始载荷、个人数据、Xu 钱包、PayOS 或服务商控制。"],
+    ["intro.body","Quyền hiện tại: {role}. Theo dõi dữ liệu và xem các đề xuất trong phạm vi được phép.","Current access: {role}. Monitor data and review proposals within your permissions.","当前权限：{role}。查看权限范围内的数据和提案。"],
     ["role.manager", "Quản lý", "Manager", "经理"],
     ["role.operator", "Nhân viên vận hành", "Operator", "操作员"],
-    ["role.verified", "Vai trò do máy chủ xác minh", "Role verified by the server", "角色由服务器验证"],
+    ["role.verified","Quyền điều hành hiện tại","Your current Operations access","您当前的运营权限"],
     ["preflight.ready", "Sẵn sàng", "Ready", "就绪"],
     ["preflight.guarded", "Đang bảo vệ", "Guarded", "受保护"],
     ["metrics.aria", "Tổng quan điều hành quản trị", "Admin Operations overview", "管理运营概览"],
@@ -12818,7 +12818,7 @@
     ["approval.title", "Hàng chờ quyết định", "Approval queue", "审批队列"],
     ["approval.description", "Người quản lý có thể ghi quyết định sau khi xác nhận. Việc ghi duyệt không gọi thanh toán, nhà cung cấp, Bot, công việc, triển khai hoặc phản hồi khách hàng.", "A manager may record a decision after confirmation. Recording approval does not invoke payments, providers, Bot, jobs, deployments, or customer replies.", "经理可在确认后记录决策。记录审批不会调用支付、服务商、Bot、任务、部署或客户回复。"],
     ["approval.managerOnly.title", "Chỉ người quản lý hỗ trợ mới được xem hàng chờ quyết định", "Support managers only", "仅限支持经理"],
-    ["approval.managerOnly.body", "Nhân viên vận hành không nhận bản ghi chờ quyết định, ID, mức rủi ro, sự cố hoặc số lượng hàng chờ. Đây là giới hạn quyền có chủ đích, không phải hàng đợi rỗng.", "Operators do not receive approval records, IDs, risk levels, incidents, or queue totals. This is an intentional permission boundary, not an empty queue.", "操作员不会收到审批记录、ID、风险等级、事件或队列总数。这是有意的权限边界，并非空队列。"],
+    ["approval.managerOnly.body","Chỉ quản lý hỗ trợ mới được xem và quyết định các đề xuất trong hàng chờ này.","Only Support managers can view and decide on proposals in this queue.","只有支持经理可以查看并决定此队列中的提案。"],
     ["approval.queueLabel", "hàng chờ quyết định", "approval queue", "审批队列"],
     ["approval.approve.confirm", "Ghi nhận phê duyệt dữ liệu này? Hành động chỉ tạo bản ghi kiểm toán; không chạy thanh toán, gọi nhà cung cấp, Bot, công việc, triển khai hoặc phản hồi khách hàng.", "Record approval for this data? This creates an audit record only; it does not run payments, providers, Bot, jobs, deployments, or customer replies.", "记录此数据的批准吗？此操作只创建审计记录，不会运行支付、服务商、Bot、任务、部署或客户回复。"],
     ["approval.approve.action", "Ghi nhận duyệt", "Record approval", "记录批准"],
@@ -13236,26 +13236,26 @@
   const ADMIN_SUPPORT_MESSAGES = { vi: {}, en: {}, zh: {} };
   const ADMIN_SUPPORT_COPY = Object.freeze([
     ["page.list.title", "Trung tâm hỗ trợ khách hàng", "Web Customer Support Center", "Web 客户支持中心"],
-    ["page.list.description", "Không gian chăm sóc khách hàng được máy chủ cấp quyền riêng; không phụ thuộc cầu nối quản trị Telegram.", "A server-authorized Web customer care workspace that does not depend on the Telegram administration bridge.", "由服务器授权的 Web 客户服务空间，不依赖 Telegram 管理桥接。"],
+    ["page.list.description","Theo dõi và xử lý các yêu cầu hỗ trợ của khách hàng.","Track and handle customer support requests.","查看并处理客户支持请求。"],
     ["page.detail.title", "Xử lý yêu cầu hỗ trợ", "Handle support request", "处理支持请求"],
-    ["page.detail.description", "Phân loại một yêu cầu theo quyền hỗ trợ do máy chủ xác minh.", "Triage a Web request within Support permissions verified by the server.", "在服务器验证的支持权限范围内分诊 Web 请求。"],
+    ["page.detail.description","Xem nội dung, phân loại và phản hồi yêu cầu hỗ trợ.","Read, categorize, and reply to a support request.","查看、分类并回复支持请求。"],
     ["hero.list.section", "Quản trị ERP", "ERP Administration", "ERP 管理"],
     ["hero.detail.section", "Quản trị ERP", "ERP Administration", "ERP 管理"],
 
     ["guard.title", "Quyền hỗ trợ chưa được cấp", "Support permission has not been granted", "尚未授予支持权限"],
-    ["guard.body", "Máy chủ chỉ mở dữ liệu chăm sóc khách hàng cho tài khoản Web đã đăng nhập có quyền quản trị, quản lý hỗ trợ hoặc vận hành hỗ trợ. Trình duyệt không thể tự gán quyền bằng ID quản trị, ID Telegram hoặc bộ nhớ cục bộ.", "The server opens customer care data only to signed Web accounts with administrator, support manager, or support operator permission. The browser cannot grant itself access through an administrator ID, Telegram ID, or local storage.", "服务器仅向已登录且具备管理员、支持经理或支持操作员权限的 Web 账户开放客户服务数据。浏览器无法通过管理员 ID、Telegram ID 或本地存储自行授予权限。"],
+    ["guard.body","Bạn cần quyền hỗ trợ để xem và xử lý yêu cầu của khách hàng.","You need Support permission to view and handle customer requests.","您需要支持权限才能查看和处理客户请求。"],
     ["guard.serverRole", "Vai trò do máy chủ xác minh", "Server-verified role", "服务器验证的角色"],
     ["guard.noBotBridge", "Không gọi cầu nối Bot", "No Bot bridge call", "不调用 Bot 桥接"],
     ["guard.noPiiFallback", "Không dùng dữ liệu cá nhân dự phòng", "No personal-data fallback", "不使用个人数据回退"],
     ["loading.title", "Đang kiểm tra quyền hỗ trợ", "Checking Support permission", "正在检查支持权限"],
-    ["loading.body", "Máy chủ đang xác thực phiên đăng nhập và vai trò trên Web trước khi nạp yêu cầu vận hành.", "The server is verifying the signed session and Web role before loading operational requests.", "服务器正在验证登录会话和 Web 角色，然后再加载运营请求。"],
+    ["loading.body","Đang kiểm tra quyền truy cập và tải yêu cầu hỗ trợ.","Checking your access and loading support requests.","正在检查访问权限并加载支持请求。"],
 
     ["intro.kicker", "Vận hành hỗ trợ", "Web support operations", "Web 支持运营"],
     ["intro.title", "Hỗ trợ có phân loại, không bỏ qua quy trình", "Structured support without shortcuts", "有序支持，不跳过流程"],
-    ["intro.body", "Nhân viên vận hành xử lý đúng yêu cầu, đúng phiên bản và đúng phạm vi. Mọi thay đổi cần CSRF, xác nhận, chống xử lý trùng và nhật ký kiểm toán do máy chủ thực hiện.", "Operators handle the correct request, revision, and scope. Every change requires server-enforced CSRF, confirmation, idempotency, and audit.", "操作员处理正确的请求、版本和范围。每项更改都需要服务器执行 CSRF、确认、幂等和审计。"],
+    ["intro.body","Phân loại, phân công và phản hồi yêu cầu ngay tại đây.","Categorize, assign, and reply to requests here.","在此分类、分配并回复请求。"],
     ["role.manager", "Quản lý", "Manager", "经理"],
     ["role.operator", "Nhân viên vận hành", "Operator", "操作员"],
-    ["role.verified", "Vai trò do máy chủ xác minh", "Role verified by the server", "角色由服务器验证"],
+    ["role.verified","Quyền hỗ trợ hiện tại","Your current Support access","您当前的支持权限"],
     ["scope.webOnly", "Chỉ trên Web", "Web only", "仅限 Web"],
     ["scope.noExternalDelivery", "Không gửi ra bên ngoài", "No external delivery", "不向外部发送"],
 
@@ -13298,7 +13298,7 @@
     ["filter.allSla", "Tất cả mức SLA", "All SLA levels", "所有 SLA 等级"],
     ["filter.allSlaStatuses", "Tất cả trạng thái SLA", "All SLA statuses", "所有 SLA 状态"],
     ["filter.allEscalations", "Tất cả trạng thái chuyển cấp", "All escalation states", "所有升级状态"],
-    ["filter.note", "Chỉ hàng đợi, SLA, trạng thái SLA, trạng thái chuyển cấp và từ khóa tìm kiếm giới hạn được gửi tới Trung tâm hỗ trợ trên Web. Trạng thái SLA là mốc tiếp nhận nội bộ do máy chủ tính, không phải cam kết giao hàng; trình duyệt không gửi ID tài khoản, giờ hệ thống hoặc trạng thái bên ngoài.", "Only queue, SLA, SLA status, escalation state, and a bounded search query are sent to the Web Customer Support Center. SLA status is a server-calculated internal acknowledgement target, not a delivery promise; the browser does not send account IDs, system time, or external state.", "仅向 Web 客户支持中心发送队列、SLA、SLA 状态、升级状态和受限搜索词。SLA 状态是服务器计算的内部接收目标，并非交付承诺；浏览器不会发送账户 ID、系统时间或外部状态。"],
+    ["filter.note","Chọn bộ lọc để tìm đúng yêu cầu cần xử lý.","Choose filters to find the requests you need to handle.","选择筛选条件，查找需要处理的请求。"],
     ["action.apply", "Áp dụng", "Apply", "应用"],
     ["action.clear", "Xóa lọc", "Clear filters", "清除筛选"],
     ["action.refresh", "Làm mới", "Refresh", "刷新"],
@@ -23544,6 +23544,10 @@
     "freePromptGallery.feedback.readFailed": "无法加载目录，请重试。",
     "freePromptGallery.feedback.saveFailed": "未能保存提示词，请重试。"
   });
+
+  Object.assign(MESSAGES.vi, {"actionBlockReason.telegramUnavailable":"Chưa thể liên kết Telegram. Hãy thử lại sau.","actionBlockReason.adminRequired":"Bạn cần quyền truy cập để thực hiện thao tác này.","actionBlockReason.signInRequired":"Vui lòng đăng nhập để tiếp tục.","actionBlockReason.supportRetry":"Chưa thể gửi thay đổi hỗ trợ. Hãy tải lại trang rồi thử lại.","actionBlockReason.planRetry":"Chưa thể lưu thay đổi. Hãy tải lại trang rồi thử lại.","actionBlockReason.supportUnavailable":"Bạn chưa thể xử lý yêu cầu hỗ trợ lúc này. Hãy thử lại sau.","actionBlockReason.planUnavailable":"Bạn chưa thể lập kế hoạch lúc này. Hãy thử lại sau.","actionBlockReason.telegramLinkRequired":"Hãy liên kết Telegram trong mục Tài khoản để tiếp tục.","actionBlockReason.temporarilyUnavailable":"Chưa thể thực hiện thao tác lúc này. Hãy thử lại sau.","actionBlockReason.retrySession":"Chưa thể gửi yêu cầu. Hãy tải lại trang rồi thử lại.","actionBlockReason.topupUnavailable":"Chưa tải được các mức nạp tiền. Hãy thử lại sau.","actionBlockReason.unavailable":"Bạn chưa thể dùng thao tác này. Hãy thử lại sau."});
+  Object.assign(MESSAGES.en, {"actionBlockReason.telegramUnavailable":"Telegram linking is not available right now. Try again later.","actionBlockReason.adminRequired":"You need access permission to perform this action.","actionBlockReason.signInRequired":"Sign in to continue.","actionBlockReason.supportRetry":"Support changes cannot be sent right now. Reload the page and try again.","actionBlockReason.planRetry":"Changes cannot be saved right now. Reload the page and try again.","actionBlockReason.supportUnavailable":"You cannot handle support requests right now. Try again later.","actionBlockReason.planUnavailable":"You cannot create a plan right now. Try again later.","actionBlockReason.telegramLinkRequired":"Link Telegram in Account settings to continue.","actionBlockReason.temporarilyUnavailable":"This action cannot be performed right now. Try again later.","actionBlockReason.retrySession":"The request cannot be sent right now. Reload the page and try again.","actionBlockReason.topupUnavailable":"Top-up amounts could not be loaded. Try again later.","actionBlockReason.unavailable":"You cannot use this action right now. Try again later."});
+  Object.assign(MESSAGES.zh, {"actionBlockReason.telegramUnavailable":"暂时无法关联 Telegram，请稍后重试。","actionBlockReason.adminRequired":"您需要相应权限才能执行此操作。","actionBlockReason.signInRequired":"请登录后继续。","actionBlockReason.supportRetry":"暂时无法提交支持更改，请刷新页面后重试。","actionBlockReason.planRetry":"暂时无法保存更改，请刷新页面后重试。","actionBlockReason.supportUnavailable":"您暂时无法处理支持请求，请稍后重试。","actionBlockReason.planUnavailable":"您暂时无法创建计划，请稍后重试。","actionBlockReason.telegramLinkRequired":"请在账户设置中关联 Telegram 后继续。","actionBlockReason.temporarilyUnavailable":"暂时无法执行此操作，请稍后重试。","actionBlockReason.retrySession":"暂时无法提交请求，请刷新页面后重试。","actionBlockReason.topupUnavailable":"暂时无法加载充值金额，请稍后重试。","actionBlockReason.unavailable":"您暂时无法使用此操作，请稍后重试。"});
 
   verifyEqualKeysets();
 

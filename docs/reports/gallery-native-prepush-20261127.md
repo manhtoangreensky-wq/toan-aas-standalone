@@ -1,5 +1,13 @@
 # GSC — cổng bàn giao trước push
 
+## Mốc cuối27/11/2026 — PR819 đã phát hành
+
+Source cuối ef137d63,CI46021673561 haiSUCCESS/456QA;merge/runtime5f316f29,
+tree8bcfab62;Webdeploy46027449612SUCCESS. VPS sạch/baactive/health;
+7direct+7versioned+17cache exact;receipt689/7222538286 vàPR819/
+7222538994 đọc lại đúng. Nội dung pending bên dưới là báo cáo trước
+giao hàng,không hiện trạng. Signed-production chưa được chứng minh.
+
 Đang đọc và áp dụng skill owner-governed-codex cho task này.
 
 Product=standalone WebApp;repo=`manhtoangreensky-wq/toan-aas-standalone`;

@@ -1,7 +1,7 @@
 # MAP — TOAN AAS standalone WebApp
 > Rà lại 20/11/2026 trên BASE `e49427e5` và thay đổi UI V07 đang nghiệm thu. FastAPI/Python + vanilla JS/CSS. Gốc: `_webapp-r218-voice`.
 > Bản đồ được đính kèm nguyên văn vào phiếu Builder; không thay việc đọc source.
-> Bổ sung27/11: GSC native đang local; khối máy sinh20/11 giữ mốc lịch sử, không quét lại phần ngoài scope.
+> Bổ sung27/11: GSC đã giao PR819/runtime5f316f29; AGC text-only đang local, khối máy sinh20/11 giữ mốc.
 
 ## 1. Module và vai trò
 - `app.py`: ứng dụng FastAPI đang chạy; mount routes/API/static.

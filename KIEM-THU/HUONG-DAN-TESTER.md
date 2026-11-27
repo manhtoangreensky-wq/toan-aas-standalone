@@ -1,5 +1,21 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Thông báo thao tác và quản trị — 27/11/2026
+
+Dùng `PHIEN-ADMIN-GUARD-CUSTOMER-COPY-20261127.md`,támcaseAGC trong
+DANH-SACH-CASE vàcùngIssue689. KiểmVI/EN/ZH,390/768/1440,sáng/tối.
+Thao tác bị khóa phải cho biết việc cần làm bằng chữ dễ hiểu,nhưng không
+tự bật nút. Support giữ bộ lọc/danh sách/phân trang,không có khung cuối
+trang chỉ giải thích kỹ thuật. Operations phân biệt chưa bật/đang tải/
+chưa tải được vàgiới hạn quyền;không dùng số0 thay phần chưa tải.
+
+Nhập tìm kiếm rồi dùngTab/Shift+Tab;chuỗi giống mã HTML phải được hiển thị
+như chữ,không chạy. Ô nhập điện thoại16px,vùng bấm44px,không tràn ngang.
+Assigned/Unassigned là chữ tiếng Anh hợp lệ,không bắt nhầm từ con “signed”.
+Không sửa hoặc thử thanh toán để lấy bằng chứng lý do khóa.
+Component gate không thay fullauth/draft/contrastmatrix/device/Safari/
+signed-production. Chỉ kiểm lại phần failed/affected,không lặp nhóm đã đạt.
+
 ## Thư viện câu lệnh miễn phí — 27/11/2026
 
 Dùng `PHIEN-GALLERY-CUSTOMER-COPY-20261127.md`, chín case GPC/GPR,
