@@ -6,6 +6,7 @@ import {fileURLToPath} from "node:url";
 import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {fullBundleI18n,fullBundleConsumer,cardText} from "./helpers/feature-catalog-full-bundle135-render.mjs";
+import {featureFamilyNativeChromeHistoricalSource} from "./helpers/feature-family-native-chrome-historical.mjs";
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const read=file=>fs.readFileSync(path.join(root,file),"utf8").replace(/\r\n/g,"\n");
@@ -15,8 +16,8 @@ assert.equal(hash(rawFixture),"bcde5343c0494c81f7deefeb9fcae35293f2ecee4e35e4a35
 const fixture=JSON.parse(rawFixture),canonicalRaw=read(fixture.canonicalFixture);
 assert.equal(hash(canonicalRaw),fixture.canonicalFixtureLfSha256);
 const canonical=JSON.parse(canonicalRaw).copy;
-// Newest FBC acceptance reads the physical source directly, not an inverse.
-const source=read(fixture.applicationFile),portal=read("static/portal/portal.js");
+// Historical FBC acceptance retains its frozen copy epoch; newest FCH acceptance is raw physical.
+const source=featureFamilyNativeChromeHistoricalSource(read(fixture.applicationFile),fixture.applicationFile),portal=read("static/portal/portal.js");
 const before=execFileSync("git",["show",fixture.base_sha+":"+fixture.applicationFile],{cwd:root,encoding:"utf8",maxBuffer:10e6}).replace(/\r\n/g,"\n");
 const api=fullBundleI18n(source),baseApi=fullBundleI18n(before);
 const{render,manifest}=fullBundleConsumer(portal,api,fixture.entries);
@@ -77,6 +78,6 @@ test("only270 owned fields per locale change; all other fixed messages and exist
   }
   assert.equal(held,290);
 });
-test("full current i18n source is the independently frozen physical candidate",()=>{
+test("historical FBC i18n source is the independently frozen candidate after finite FCH projection",()=>{
   assert.equal(hash(source),fixture.afterLfSha256);
 });

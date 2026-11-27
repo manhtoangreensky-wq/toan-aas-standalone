@@ -1,0 +1,269 @@
+{
+  "task": "FAMILY-CHROME-NATIVE-20261127",
+  "base_sha": "363d6ca55081eea4089ebf489cd183b09ba1aa96",
+  "build_contract_comment": 7201641353,
+  "applicationSources": [
+    {
+      "file": "static/portal/portal.js",
+      "beforeLfSha256": "1d375a8be795db698b43aa3b7ca6a7a5e725390faa3abf0d8b7a3fbcf164eb06",
+      "afterLfSha256": "ee99d4b89b8d22f1cc1cfd1bf71a0dc5e3484080d885c76c4463468a951557f8"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "beforeLfSha256": "6c6e866460c6e0473ecd7dbe6715673cf7ab6019b92f2dd44fa966f21c7105e2",
+      "afterLfSha256": "e862803dbba36ce2f6cbdb4f56a226d1aa4d86de716293a3f7c9270f1b75a61e"
+    }
+  ],
+  "records": [
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "vi",
+      "key": "featureCatalog.group.image.description",
+      "old": "      \"featureCatalog.group.image.description\": \"Tạo, chỉnh sửa và xử lý ảnh theo quy trình được xác nhận.\",",
+      "new": "      \"featureCatalog.group.image.description\": \"Chọn công cụ phù hợp để lên ý tưởng, chỉnh sửa và sắp xếp hình ảnh.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "vi",
+      "key": "featureCatalog.group.voice.description",
+      "old": "      \"featureCatalog.group.voice.description\": \"TTS, kho giọng, nhân bản giọng và nghe thử riêng tư.\",",
+      "new": "      \"featureCatalog.group.voice.description\": \"Chọn công cụ chuyển văn bản thành giọng nói, chuyển giọng nói thành văn bản và làm việc với giọng nói.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "vi",
+      "key": "featureCatalog.group.music.description",
+      "old": "      \"featureCatalog.group.music.description\": \"Nhạc AI, bài hát, hiệu ứng âm thanh và thư viện tài sản âm thanh.\",",
+      "new": "      \"featureCatalog.group.music.description\": \"Chọn công cụ cho ý tưởng âm nhạc, hiệu ứng âm thanh và thư viện âm thanh.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "vi",
+      "key": "featureCatalog.group.subtitle.description",
+      "old": "      \"featureCatalog.group.subtitle.description\": \"ASR, SRT/VTT, dịch và lồng tiếng.\",",
+      "new": "      \"featureCatalog.group.subtitle.description\": \"Công cụ làm việc với phụ đề, dịch thuật và lồng tiếng.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "vi",
+      "key": "featureCatalog.family.emptyTitle",
+      "old": "      \"featureCatalog.family.emptyTitle\": \"Nhóm đang chờ hệ thống cập nhật\",",
+      "new": "      \"featureCatalog.family.emptyTitle\": \"Không có công cụ nào trong nhóm này\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "vi",
+      "key": "featureCatalog.family.emptyBody",
+      "old": "      \"featureCatalog.family.emptyBody\": \"Máy chủ chưa công bố quy trình hợp lệ trong ứng dụng cho nhóm này. Ứng dụng không tự tạo biểu mẫu hoặc trạng thái thay thế.\",",
+      "new": "      \"featureCatalog.family.emptyBody\": \"Quay lại danh mục để chọn công cụ khác.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "en",
+      "key": "featureCatalog.group.image.description",
+      "old": "      \"featureCatalog.group.image.description\": \"Create, edit and process images through canonical workflows.\",",
+      "new": "      \"featureCatalog.group.image.description\": \"Choose suitable tools for image ideas, editing and organizing images.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "en",
+      "key": "featureCatalog.group.voice.description",
+      "old": "      \"featureCatalog.group.voice.description\": \"TTS, Voice Vault, cloning and private previews.\",",
+      "new": "      \"featureCatalog.group.voice.description\": \"Choose tools for text-to-speech, transcription and working with voices.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "en",
+      "key": "featureCatalog.group.music.title",
+      "old": "      \"featureCatalog.group.music.title\": \"Music & SFX\",",
+      "new": "      \"featureCatalog.group.music.title\": \"Music & Sound Effects\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "en",
+      "key": "featureCatalog.group.music.description",
+      "old": "      \"featureCatalog.group.music.description\": \"AI music, songs, SFX and an audio-asset library.\",",
+      "new": "      \"featureCatalog.group.music.description\": \"Choose tools for music ideas, sound effects and an audio library.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "en",
+      "key": "featureCatalog.group.subtitle.description",
+      "old": "      \"featureCatalog.group.subtitle.description\": \"ASR, SRT/VTT, translation and dubbing.\",",
+      "new": "      \"featureCatalog.group.subtitle.description\": \"Tools for working with subtitles, translations and dubbing.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "en",
+      "key": "featureCatalog.family.emptyTitle",
+      "old": "      \"featureCatalog.family.emptyTitle\": \"This group awaits the registry\",",
+      "new": "      \"featureCatalog.family.emptyTitle\": \"No tools in this group\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "en",
+      "key": "featureCatalog.family.emptyBody",
+      "old": "      \"featureCatalog.family.emptyBody\": \"Core Bridge has not published a valid Web workflow for this group. The Portal does not invent a form or substitute state.\",",
+      "new": "      \"featureCatalog.family.emptyBody\": \"Return to the catalogue to choose another tool.\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "zh",
+      "key": "featureCatalog.group.image.description",
+      "old": "      \"featureCatalog.group.image.description\": \"按照已确认的流程创建、编辑和处理图像。\",",
+      "new": "      \"featureCatalog.group.image.description\": \"选择适合图片构思、编辑和整理的工具。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "zh",
+      "key": "featureCatalog.group.voice.description",
+      "old": "      \"featureCatalog.group.voice.description\": \"TTS、语音库、声音克隆和私密试听。\",",
+      "new": "      \"featureCatalog.group.voice.description\": \"选择用于文字转语音、语音转文字和处理声音的工具。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "zh",
+      "key": "featureCatalog.group.music.title",
+      "old": "      \"featureCatalog.group.music.title\": \"音乐与 SFX\",",
+      "new": "      \"featureCatalog.group.music.title\": \"音乐与音效\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "zh",
+      "key": "featureCatalog.group.music.description",
+      "old": "      \"featureCatalog.group.music.description\": \"AI 音乐、歌曲、SFX 和音频资源库。\",",
+      "new": "      \"featureCatalog.group.music.description\": \"选择用于音乐构思、音效和音频库的工具。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "zh",
+      "key": "featureCatalog.group.subtitle.description",
+      "old": "      \"featureCatalog.group.subtitle.description\": \"ASR、SRT/VTT、翻译和配音。\",",
+      "new": "      \"featureCatalog.group.subtitle.description\": \"用于处理字幕、翻译和配音的工具。\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "zh",
+      "key": "featureCatalog.family.emptyTitle",
+      "old": "      \"featureCatalog.family.emptyTitle\": \"此分组正在等待系统更新\",",
+      "new": "      \"featureCatalog.family.emptyTitle\": \"此分组没有工具\","
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "locale": "zh",
+      "key": "featureCatalog.family.emptyBody",
+      "old": "      \"featureCatalog.family.emptyBody\": \"服务器尚未为该分组发布有效的应用内流程。应用不会虚构表单或替代状态。\",",
+      "new": "      \"featureCatalog.family.emptyBody\": \"返回目录选择其他工具。\","
+    },
+    {
+      "file": "static/portal/portal.js",
+      "new": "    return `<article class=\"portal-page\">${renderHero(page, context)}${familyNav}${interactiveWorkbench}<div class=\"portal-status-grid\">${renderStatusCard(page, context)}${summary}</div>${renderRouteEngineBoundary(context)}<section class=\"portal-feature-catalog\"><div class=\"portal-section-heading\"><div><h2>${safeText(featureCatalogText(\"family.heading\", \"Chọn quy trình phù hợp\"))}</h2></div><a class=\"portal-button portal-button--quiet\" href=\"/features\">${safeText(featureCatalogText(\"action.openAll\", \"Xem mọi công cụ\"))} <span aria-hidden=\"true\">→</span></a></div>${cards}</section></article>`;",
+      "old": "    return `<article class=\"portal-page\">${renderHero(page, context)}${familyNav}${interactiveWorkbench}<div class=\"portal-status-grid\">${renderStatusCard(page, context)}${summary}</div>${renderRouteEngineBoundary(context)}<section class=\"portal-feature-catalog\"><div class=\"portal-section-heading\"><div><span class=\"portal-section-kicker\">${safeText(featureCatalogGroupCopy(family, \"title\"))}</span><h2>${safeText(featureCatalogText(\"family.heading\", \"Chọn quy trình phù hợp\"))}</h2><p>${safeText(featureCatalogGroupCopy(family, \"description\"))} ${safeText(featureCatalogText(\"family.bodySuffix\", \"Mỗi thẻ giữ các bước bản nháp → ước tính → xác nhận và trạng thái do hệ thống cấp.\"))}</p></div><a class=\"portal-button portal-button--quiet\" href=\"/features\">${safeText(featureCatalogText(\"action.openAll\", \"Xem mọi công cụ\"))} <span aria-hidden=\"true\">→</span></a></div>${cards}</section></article>`;"
+    }
+  ],
+  "copyRows": [
+    {
+      "key": "featureCatalog.family.emptyTitle",
+      "before": {
+        "vi": "Nhóm đang chờ hệ thống cập nhật",
+        "en": "This group awaits the registry",
+        "zh": "此分组正在等待系统更新"
+      },
+      "after": {
+        "vi": "Không có công cụ nào trong nhóm này",
+        "en": "No tools in this group",
+        "zh": "此分组没有工具"
+      }
+    },
+    {
+      "key": "featureCatalog.family.emptyBody",
+      "before": {
+        "vi": "Máy chủ chưa công bố quy trình hợp lệ trong ứng dụng cho nhóm này. Ứng dụng không tự tạo biểu mẫu hoặc trạng thái thay thế.",
+        "en": "Core Bridge has not published a valid Web workflow for this group. The Portal does not invent a form or substitute state.",
+        "zh": "服务器尚未为该分组发布有效的应用内流程。应用不会虚构表单或替代状态。"
+      },
+      "after": {
+        "vi": "Quay lại danh mục để chọn công cụ khác.",
+        "en": "Return to the catalogue to choose another tool.",
+        "zh": "返回目录选择其他工具。"
+      }
+    },
+    {
+      "key": "featureCatalog.group.image.description",
+      "before": {
+        "vi": "Tạo, chỉnh sửa và xử lý ảnh theo quy trình được xác nhận.",
+        "en": "Create, edit and process images through canonical workflows.",
+        "zh": "按照已确认的流程创建、编辑和处理图像。"
+      },
+      "after": {
+        "vi": "Chọn công cụ phù hợp để lên ý tưởng, chỉnh sửa và sắp xếp hình ảnh.",
+        "en": "Choose suitable tools for image ideas, editing and organizing images.",
+        "zh": "选择适合图片构思、编辑和整理的工具。"
+      }
+    },
+    {
+      "key": "featureCatalog.group.voice.description",
+      "before": {
+        "vi": "TTS, kho giọng, nhân bản giọng và nghe thử riêng tư.",
+        "en": "TTS, Voice Vault, cloning and private previews.",
+        "zh": "TTS、语音库、声音克隆和私密试听。"
+      },
+      "after": {
+        "vi": "Chọn công cụ chuyển văn bản thành giọng nói, chuyển giọng nói thành văn bản và làm việc với giọng nói.",
+        "en": "Choose tools for text-to-speech, transcription and working with voices.",
+        "zh": "选择用于文字转语音、语音转文字和处理声音的工具。"
+      }
+    },
+    {
+      "key": "featureCatalog.group.subtitle.description",
+      "before": {
+        "vi": "ASR, SRT/VTT, dịch và lồng tiếng.",
+        "en": "ASR, SRT/VTT, translation and dubbing.",
+        "zh": "ASR、SRT/VTT、翻译和配音。"
+      },
+      "after": {
+        "vi": "Công cụ làm việc với phụ đề, dịch thuật và lồng tiếng.",
+        "en": "Tools for working with subtitles, translations and dubbing.",
+        "zh": "用于处理字幕、翻译和配音的工具。"
+      }
+    },
+    {
+      "key": "featureCatalog.group.music.title",
+      "before": {
+        "vi": "Âm nhạc & hiệu ứng âm thanh",
+        "en": "Music & SFX",
+        "zh": "音乐与 SFX"
+      },
+      "after": {
+        "vi": "Âm nhạc & hiệu ứng âm thanh",
+        "en": "Music & Sound Effects",
+        "zh": "音乐与音效"
+      }
+    },
+    {
+      "key": "featureCatalog.group.music.description",
+      "before": {
+        "vi": "Nhạc AI, bài hát, hiệu ứng âm thanh và thư viện tài sản âm thanh.",
+        "en": "AI music, songs, SFX and an audio-asset library.",
+        "zh": "AI 音乐、歌曲、SFX 和音频资源库。"
+      },
+      "after": {
+        "vi": "Chọn công cụ cho ý tưởng âm nhạc, hiệu ứng âm thanh và thư viện âm thanh.",
+        "en": "Choose tools for music ideas, sound effects and an audio library.",
+        "zh": "选择用于音乐构思、音效和音频库的工具。"
+      }
+    }
+  ],
+  "held": [
+    {
+      "locale": "vi",
+      "key": "featureCatalog.group.music.title",
+      "value": "Âm nhạc & hiệu ứng âm thanh"
+    }
+  ],
+  "reviewedValues": 21,
+  "changedValues": 20,
+  "heldValues": 1,
+  "protectedEntryFixture": "tests/fixtures/feature-catalog-descriptions108.json",
+  "protectedEntryFixtureLfSha256": "0decec95d52d462c18482c823cb7032d8c4f5815cbc78516659f86036430f294"
+}

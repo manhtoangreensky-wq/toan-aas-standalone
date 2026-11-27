@@ -1,5 +1,20 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## FAMILY-CHROME-NATIVE-20261127 — Issue #689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| FCH-COPY | nặng | Đọc7khóa ởVI/EN/ZH |20giá trị đổi/1giữ đúngworker,khôngthuậtngữ triểnkhai | Fixture21records/raw72acceptance |
+| FCH-DEDUP | vừa | Mở7familyfilled/empty | Bỏ2node lặp;hero/h2/CTA/nav/cards còn,khôngôtrống | Markup/control/contextBASEcomparison |
+| FCH-PROTECTED | nặng | Sooutside/source/unknownfamily/customertext |810entryvalues/guards/escaping/dataheld | Primary541PASS |
+| FCH-HISTORY | nặng | Thửsource/snapshotthiếu/sai/lặp/tách/đảo/unknown | Finiteinverse;oldguardfailureidentity/pinsheld |22Node+1composed;16Python;21oldFBCpressure |
+| FCH-REGRESSION | nặng | Kiểmclosure110tệp vàPythonảnhhưởng | Khônglỗimới;baselineđòicâukỹthuậtgiữ riêng |2533NodePASS;Pythonledger181=180PASS/1BASEFAIL |
+| FCR-LINK | nặng | Hover/Tablinknhómsáng | Text≥4,5;focus≥3;khôngđổinền/outline | Browser96view5196samples |
+| FCR-CURRENT | nặng | Đọcnhómđangchọnnềntối | Chữrõ,span/aria-currentgiữ | FourAGYproposals/source5GREEN |
+| FCR-EMPTY | nặng | Nhómrỗngnềnsáng | Hướngdẫnđọcrõ,khônghứakhảnăng | Sharedempty12view |
+| FCR-EYEBROW | nặng | Nhãnnhỏđầutrangsáng | Text≥4,5;rootkhôngmatch | Rootexclusion4view;0findings |
+| FCH-DELIVERY | nặng | ExactCI→merge/tree→Webdeploy→runtime/assets/cache/receipt | Mỗigatecóbằngchứngriêng;khôngnhậnLIVEtừasset | CHƯAPHÁTHÀNH;[phiênkiểmtra](PHIEN-FAMILY-CHROME-NATIVE-20261127.md) |
+
 ## CATALOGUE-FULL-BUNDLE135-20261126 — bộ chữ đầy đủ
 
 Phiên `PHIEN-CATALOGUE-FULL-BUNDLE135-20261126.md`; chỉ dùng dữ liệu riêng.

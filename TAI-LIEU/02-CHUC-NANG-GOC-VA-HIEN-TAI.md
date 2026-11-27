@@ -1,5 +1,26 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 27/11/2026 — trang nhóm công cụ và bốn cặp màu chữ
+
+Nguồn đối chiếu: `renderFeatureFamily`, bảy khóa FEATURE_CATALOG_MESSAGES,
+hai stylesheet tại BASE PR815 `363d6ca55081eea4089ebf489cd183b09ba1aa96`.
+Danh sách chức năng gốc tiếp tục từ masterR217/registry; không bịa khả năng
+xử lý nội dung từ thay đổi câu chữ hoặc kết quả giao diện.
+
+| BASE | Ứng viên FCH/FCR | Giữ nguyên |
+|---|---|---|
+| Hero và section dưới lặp tên/mô tả | Bỏ đúng kicker và paragraph ở section | Hero,h2,CTA,nav,thẻ,guards |
+| Bảy khóa có mô tả kỹ thuật/thuật ngữ lẫn ngôn ngữ |21giá trị rà,20đổi/1giữ |810giá trị entry đã giao |
+| Nhóm rỗng giải thích máy chủ/cơ chế | Hai câu hướng dẫn ngắn theo locale | Điều kiện rỗng/not-found/fallback |
+| Nhãn nhóm được dùng ở nhiều consumer | Chữ mới áp hero/nav/explorer/full-catalog có chủ đích | Key/route/order/state/quyền/customertext |
+| Link sáng focus và eyebrow quá nhạt;marker tối và hướng dẫn rỗng thiếu tương phản | Bốn foregroundrule scoped family/default-route | CSS trước đó nguyên byte;nền/outline/font/layout/motion |
+| Root `/features` có presentation riêng | Không match bốn selector mới trong4cảnh đối chứng | Root light/dark renderer và chức năng |
+| Comparator lịch sử khóa mốc trước | Finite FCH21record +FCR4rule trên đầu vào lịch sử | Pin/fixture/assertion cũ;acceptance mới đọc rawphysical |
+
+FBC135 đã giao quaPR815,không còn là ứng viên chờ phát hành. FCH/FCR
+chưa qua CI/phát hành; số đo component không xác minh engine/provider/
+auth/draft/production hoặc toàn bộ mục tiêu. Motion vẫn bước cuối.
+
 ## 27/11/2026 — đồng bộ tên và mô tả sang bộ chữ đầy đủ
 
 Nguồn gốc đối chiếu: full i18n và consumer tại BASE PR814

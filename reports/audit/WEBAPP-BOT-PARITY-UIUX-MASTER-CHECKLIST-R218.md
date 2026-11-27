@@ -1,5 +1,28 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 27/11/2026 — PR815 đã giao; FCH/FCR local đạt, chưa phát hành
+
+- [x] PR815CI45878733080haiSUCCESS;merge/runtime363d6ca5,
+  testedtree=mergetreedc21faee;deploy45883173277SUCCESS.
+  VPSsạch/3active/health/14assetskhớp;cachelocal-51a084b6f92683d45a0f;
+  receiptIssue6897201561348/PR8157201561707readbackexact.
+- [x] FCH3AGYR1:21reviewedvalues20changed1held/21records,
+  bỏ2nodelặp;810entryvalues/controls/context/input/escapingheld.
+- [x] RED72=67fail5pass→541primaryPASS;closure110files2533PASS.
+  Nodeleaf22+1composed/Pythonleaf16/oldFBCpressure21PASS.
+- [x] Pythonaffectedledger181unique180PASS/1BASEFAIL;BASEbranch
+  cùngtest391đòicâukỹthuật,NEW_FAILURES=0;khôngsửatest/appđểné.
+- [x] FCR4colorprereqcontract7202275592/readback;bốnAGY4ExtraHigh
+  proposal→exactappend;sourceRED5→GREEN5,Nodeleaf12/Python9/CSSconsumer19.
+- [x] Browser96view5196samples,min4,9871/focus5,4095/target44,
+  0finding/error/overflow/egress/unmeasured;4rootviews0match;
+  ảnh375sáng/tốiđãxem. Khôngauth/fullshell/production/device/Safariproof.
+- [x] FCHreviewC0I0M0 vàFCRdeltaC0I0M0;docsops/comparison/Tester10case.
+- [ ] Metadata/manifest/secrets/protected/Webprovenance/exactCI2SUCCESS/
+  pinnedmerge/treeexact/exclusiveWebdeploy/runtime/assets/cache/receipts.
+- [ ] Gallery/Admin/actionBlockReason/auth/draft/AX/device/Safari/
+  signedproductionvẫnmở;motionM-FINAL01..06LAST;WHOLE_GOAL_COMPLETE=NO.
+
 ## 27/11/2026 — PR814 đã giao; FBC135 đang khép local
 
 - [x] PR814CI45826768615 haiSUCCESS; merge/runtimefdfe2f75,

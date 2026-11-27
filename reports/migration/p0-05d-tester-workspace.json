@@ -45,8 +45,90 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-27",
-  "local_files_refresh_scope": "FBC135:289datarecords/1appfile,810canonicalvalues,458green+3documents,12componentviews;PR814delivered;consumer/CI/release truth in current session.",
+  "local_files_refresh_scope": "FCH21records/FCR4colorappends;3appfiles;541primary/2533closure;96views5196samples;PR815delivered;exactCI/releasepending.",
   "current_verification_session": {
+    "id": "FAMILY-CHROME-NATIVE-20261127",
+    "base_sha": "363d6ca55081eea4089ebf489cd183b09ba1aa96",
+    "branch": "codex/feature-family-native-chrome-20261127",
+    "tracker_issue": 689,
+    "build_contract": 7201641353,
+    "readability_prerequisite_contract": 7202275592,
+    "manifest": "KIEM-THU/PHIEN-FAMILY-CHROME-NATIVE-20261127.md",
+    "case_ids": [
+      "FCH-COPY",
+      "FCH-DEDUP",
+      "FCH-PROTECTED",
+      "FCH-HISTORY",
+      "FCH-REGRESSION",
+      "FCR-LINK",
+      "FCR-CURRENT",
+      "FCR-EMPTY",
+      "FCR-EYEBROW",
+      "FCH-DELIVERY"
+    ],
+    "status": "READY_FOR_EXACT_HEAD_CI_AFTER_MACHINE_PROVENANCE_GATE",
+    "model": "gemini-4-hydrogen-xhigh",
+    "proposal_sessions": 7,
+    "transport_zero_turn_retries": 1,
+    "worker_failures": 0,
+    "application_files": 3,
+    "fch_records": 21,
+    "reviewed_values": 21,
+    "changed_values": 20,
+    "held_values": 1,
+    "protected_entry_values": 810,
+    "css_foreground_rules": 4,
+    "coordinator_application_logic_authored": 0,
+    "grouped_fch_review": "C0_I0_M0",
+    "delta_fcr_review": "C0_I0_M0",
+    "primary_green_passed": 541,
+    "consumer_closure_files": 110,
+    "consumer_closure_passed": 2533,
+    "python_affected_unique": 181,
+    "python_affected_passed": 180,
+    "baseline_failures": 1,
+    "new_failures": 0,
+    "baseline_failure_test": "test_feature_catalog_discloses_all_mapped_customer_workflows_without_faking_readiness",
+    "baseline_safety_test_modified": false,
+    "fcr_source_passed": 5,
+    "fcr_node_history_passed": 12,
+    "fcr_python_history_passed": 9,
+    "fcr_css_consumer_passed": 19,
+    "counts_overlap_do_not_sum": true,
+    "newest_acceptance": "RAW_PHYSICAL",
+    "old_pins_fixtures_expectations_held": true,
+    "browser_views": 96,
+    "browser_measured_text_samples": 5196,
+    "minimum_text_contrast": 4.987079411628882,
+    "minimum_focus_contrast": 5.409547285826742,
+    "minimum_target_height": 44,
+    "browser_unmeasured": 0,
+    "browser_findings": 0,
+    "browser_errors": 0,
+    "browser_external": 0,
+    "browser_overflow": 0,
+    "root_exclusion_views": 4,
+    "root_owned_selector_matches": 0,
+    "metadata_unique_cases": 33,
+    "metadata_passed_by_receipt_union": 32,
+    "metadata_windows_baseline_failures": 1,
+    "metadata_new_failures": 0,
+    "metadata_failed_hash_recovery_passed": 1,
+    "metadata_posix_mode_test_and_sync_sources_unchanged": true,
+    "browser_run": "family-chrome-browser-physical-nov27-readability-green",
+    "browser_scope": "ACTUAL_FULL_FAMILY_RENDERER_HTTP_NOT_AUTHENTICATED_FULL_SHELL",
+    "signed_production_ui": "NOT_TESTED_NO_ACTIVE_BROWSER_SESSION",
+    "auth_draft_full_lifecycle": "NOT_TESTED",
+    "device_safari": "NOT_TESTED",
+    "motion": "LAST_STEP_OPEN",
+    "ci": "EXACT_HEAD_PENDING",
+    "deploy": "NOT_DEPLOYED",
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "production_data_writes": 0,
+    "whole_goal_complete": false
+  },
+  "catalogue_full_bundle135_verification_session": {
     "id": "CATALOGUE-FULL-BUNDLE135-20261126",
     "base_sha": "fdfe2f753e641c5a5ecc7d6a19305fa3c42b7b30",
     "branch": "codex/catalogue-full-bundle135-20261126",
@@ -70,7 +152,7 @@
       "FBC-PROTECTED",
       "FBC-DELIVERY"
     ],
-    "status": "LOCAL_SCOPED_PASS_REVIEW_C0_I0_M0_EXACT_CI_RELEASE_PENDING",
+    "status": "DELIVERED_PR815_RECEIPT_READBACK_EXACT",
     "model": "gemini-4-hydrogen-xhigh",
     "original_sessions": 3,
     "correction_sessions": 0,
@@ -157,8 +239,16 @@
     "python_related_result": "164_UNIQUE_PASS_BY_RECEIPT_UNION_NOT_FRESH_RERUN",
     "python_leaf_fixture_base_owner_locale_records_order_unique_bound": true,
     "python_source_application_unchanged": true,
-    "ci": "CORRECTED_EXACT_HEAD_PENDING",
-    "deploy": "NOT_DEPLOYED",
+    "ci": 45878733080,
+    "deploy": 45883173277,
+    "pr": 815,
+    "runtime": "363d6ca55081eea4089ebf489cd183b09ba1aa96",
+    "tested_head": "8dfec7138e11e581fd6f2e36bcf27bdb20bb718d",
+    "tested_merge_tree": "dc21faee90ff8653456654cde3ad71ced0b3bf25",
+    "tracker_receipt": 7201561348,
+    "pr_receipt": 7201561707,
+    "receipt_readback": "EXACT",
+    "public_cache_version": "local-51a084b6f92683d45a0f",
     "provider_calls": 0,
     "wallet_mutations": 0,
     "production_data_writes": 0,
@@ -876,15 +966,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 2161,
-      "bytes": 224011,
-      "sha256": "21eeb36bdaea0b98be1d37a9d787d6519d9fc6161d75db11672090fc345efba3"
+      "lines": 2176,
+      "bytes": 225656,
+      "sha256": "d606a2390111c03ce29320c881dafcf49dc0944564c0adb40156919d34573052"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 746,
-      "bytes": 57454,
-      "sha256": "07974aa15e78c9ee4ca7d4348d421ade8b4dbc0d3f3b94d26587157b8b586aab"
+      "lines": 762,
+      "bytes": 58507,
+      "sha256": "6558dcd84c2ebf64a05b27fd3177f2f3b7c053abc22dde845d0134b3b9c0bd23"
     },
     {
       "path": "KIEM-THU/PHIEN-CATALOGUE-DESCRIPTIONS108-20261126.md",
@@ -905,6 +995,12 @@
       "sha256": "2f7ce428bef7d41c1d1f49b08635ca291ed9e24c11a68ea0323b6744a490426d"
     },
     {
+      "path": "KIEM-THU/PHIEN-FAMILY-CHROME-NATIVE-20261127.md",
+      "lines": 68,
+      "bytes": 3542,
+      "sha256": "a0cffc64ce58fa20d750f265fa4d3f810342131414157b2ecfa7b769594c9064"
+    },
+    {
       "path": "docs/reports/feature-catalog-descriptions108-prepush-20261126.md",
       "lines": 41,
       "bytes": 2371,
@@ -921,6 +1017,12 @@
       "lines": 69,
       "bytes": 3840,
       "sha256": "c32429c7d6a217a4c59cfb5397b0484bedbc1c5452f23cceddb68d20ff0505ea"
+    },
+    {
+      "path": "docs/reports/feature-family-native-chrome-prepush-20261127.md",
+      "lines": 49,
+      "bytes": 2803,
+      "sha256": "e97f8b431b6b466118deece5b36e5b5a725a0170736e1fa689adc48a4afa955f"
     },
     {
       "path": "docs/superpowers/plans/2026-11-26-feature-catalog-descriptions108.md",
@@ -941,6 +1043,12 @@
       "sha256": "99d4d618a236ecff2cf74a869df1ba9d4619fd744b295943be2dac9139594581"
     },
     {
+      "path": "docs/superpowers/plans/2026-11-27-feature-family-native-chrome.md",
+      "lines": 36,
+      "bytes": 2302,
+      "sha256": "45cc8e8700ba507bfaa80874cd16a33897d5e972a26ce44fdfe568f797b5c58b"
+    },
+    {
       "path": "docs/superpowers/specs/2026-11-26-feature-catalog-descriptions108.md",
       "lines": 102,
       "bytes": 5999,
@@ -959,6 +1067,18 @@
       "sha256": "f7316540b46b1fb5a7c40315dde0d52371c45142312b0d7bd41d976314d97d4c"
     },
     {
+      "path": "docs/superpowers/specs/2026-11-27-feature-family-native-chrome.md",
+      "lines": 128,
+      "bytes": 8037,
+      "sha256": "b1ff528b53ff650e26db3ba1d39d7d7981937b19582d1d5adcdb0df897555d24"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-27-feature-family-readability.md",
+      "lines": 90,
+      "bytes": 5310,
+      "sha256": "e0d17f72513f0e6aeff05f32f3286bb401f6fc5101ce9f90e47a2643ce5c7962"
+    },
+    {
       "path": "reports/tester/CATALOGUE-DESCRIPTIONS108-20261126.md",
       "lines": 26,
       "bytes": 1408,
@@ -975,6 +1095,12 @@
       "lines": 38,
       "bytes": 2153,
       "sha256": "dccd3c59a39ca720a7d56c5401ee3da6aed5ac3e26383d3fe0c950fb454b6994"
+    },
+    {
+      "path": "reports/tester/FAMILY-CHROME-NATIVE-20261127.md",
+      "lines": 31,
+      "bytes": 1678,
+      "sha256": "677c1e37280777db3d866a723ad19aaa86f287df8a7e693444e1c9411401f172"
     },
     {
       "path": "scripts/tester_case_sync.py",

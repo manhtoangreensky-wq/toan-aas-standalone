@@ -1,5 +1,21 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Trang nhóm công cụ — 27/11/2026
+
+Dùng `PHIEN-FAMILY-CHROME-NATIVE-20261127.md`,cùngIssue689.
+Bộ chữ135mục đã giao quaPR815,không dịch hoặc kiểm lại ngữ nghĩa810giá trị.
+Kiểm bảy nhóm bằngVI/EN/ZH: tiêu đề/mô tả chính còn một lần,section giữ
+heading/thẻ/link; nhánh rỗng hướng dẫn quay về danh mục,không có ô thay thế.
+Tên/nội dung khách,quyền,route vàđiều kiện hoạt động phải giữ.
+
+Rê chuột rồi dùngTab ởnav; kiểm chữ nhóm hiện tại trên nền tối,nhãn đầu
+trang vàhướng dẫn rỗng trên nền sáng.375/1440,sáng/tối,ba ngôn ngữ:
+text≥4,5:1,focus≥3:1,vùngbấm44px;khôngtràn/lỗi. Root `/features`
+không được nhận bốn rulemới. Không gọi chức năng tạo/xửlý,nạp tiền,
+provider hoặc dùng dữ liệu khách. Chỉ chạy lại failed/affected khi sửa.
+BrowserfamilyHTTP không thay bằng chứng authhydration/signedproduction/
+thiếtbị/Safari/motion; các mục đó giữ mở.
+
 ## Bộ chữ danh mục đầy đủ — 27/11/2026
 
 Dùng phiên `PHIEN-CATALOGUE-FULL-BUNDLE135-20261126.md`, mười case FBC.
