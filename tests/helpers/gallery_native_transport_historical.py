@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+from tests.helpers.auth_return_historical import auth_return_historical_source
 
 
 _FAIL = "Unreviewed Gallery native transport history"
@@ -79,6 +80,7 @@ def gallery_native_transport_historical_source(
 ) -> str:
     """Reverse only all eleven approved Gallery edits; preserve other bytes."""
     _require(isinstance(source, str), "string source")
+    source = auth_return_historical_source(source, file)
     if file != _TARGET or not _SIGNALS.search(source):
         return source
     for row in reversed(_RECORDS):

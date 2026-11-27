@@ -1026,11 +1026,14 @@
   function safeReturnPath(value) {
     if (typeof value !== "string") return "";
     const route = value.trim();
-    if (!route || !route.startsWith("/") || route.startsWith("//") || route.includes("\\") || route.includes("\u0000") || route.includes("#")) return "";
+    if (!route || !route.startsWith("/") || route.startsWith("//") || route.includes("\\") || /[\u0000-\u001f\u007f]/.test(route) || route.includes("#")) return "";
     const separator = route.indexOf("?");
     const pathname = separator >= 0 ? route.slice(0, separator) : route;
     const query = separator >= 0 ? route.slice(separator + 1) : "";
     const normalized = pathname.replace(/\/+$/, "") || "/";
+    if (normalized === "/api" || normalized.startsWith("/api/")
+      || normalized === "/internal" || normalized.startsWith("/internal/")
+      || normalized.includes("%") || normalized.split("/").some((segment) => segment === "." || segment === "..")) return "";
     if (!query) return ["/login", "/register", "/password-recovery", "/onboarding"].includes(normalized) ? "" : normalized;
     const params = new URLSearchParams(query);
     const entries = Array.from(params.entries());

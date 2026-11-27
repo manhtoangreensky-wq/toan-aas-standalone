@@ -78,6 +78,7 @@ jobs:
           node --check static/portal/portal.js
           node --check static/portal/portal-theme.js
           node --check static/portal/integration.js
+          node --check static/portal/portal-auth.js
           node --check static/portal/service-worker.js
           node --check extensions/chrome-live-translate/offscreen.js
           node --check extensions/chrome-live-translate/background.js
@@ -86,6 +87,8 @@ jobs:
 
       - name: Video Studio locale and navigation presentation regressions
         run: |
+          node --test tests/auth-return-html-targets.test.mjs tests/auth-return-historical.test.mjs
+          python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_auth_return_historical.py
           node --test tests/pdf-customer-cleanup.test.mjs
           node --test tests/pdf-utilities-customer-copy.test.mjs tests/pdf-utilities-customer-copy-source.test.mjs
           node --test tests/image-edit-customer-copy.test.mjs tests/image-edit-customer-copy-source.test.mjs
