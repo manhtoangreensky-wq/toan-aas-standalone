@@ -20,6 +20,7 @@ let reconnectAttempts = 0;
 let reconnectTimer = null;
 let isReplaying = false;
 let isReconnecting = false;
+let isDubMuted = false;
 let stopConfirmationResolver = null;
 
 const MAX_RECONNECT_ATTEMPTS = 5;
@@ -52,6 +53,9 @@ if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
           if (typeof sendResponse === "function") sendResponse({ ok: false, error: err.message });
         });
       return true;
+    } else if (message.type === "SET_DUB_MUTED") {
+      isDubMuted = Boolean(message.muted);
+      if (typeof sendResponse === "function") sendResponse({ ok: true, muted: isDubMuted });
     }
   });
 }
@@ -361,7 +365,7 @@ async function handleDownstreamEvent(rawData) {
 
     // 3. Audio Ducking & TTS playback (consumes canonical Bot audio_b64, fallback audio_base64)
     const rawAudioB64 = event.audio_b64 || event.audio_base64;
-    if (event.type === "tts.audio" && rawAudioB64 && originalGainNode && audioContext) {
+    if (event.type === "tts.audio" && rawAudioB64 && !isDubMuted && originalGainNode && audioContext) {
       originalGainNode.gain.cancelScheduledValues(audioContext.currentTime);
       originalGainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
 
