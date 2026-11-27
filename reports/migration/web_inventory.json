@@ -1805,7 +1805,7 @@
     },
     {
       "file": "copyfast_memory.py",
-      "line": 1067,
+      "line": 1087,
       "operation": "UPDATE",
       "table": "a"
     },
@@ -4793,25 +4793,25 @@
     },
     {
       "file": "copyfast_memory.py",
-      "line": 298,
+      "line": 299,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 359,
+      "line": 360,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 374,
+      "line": 375,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 410,
+      "line": 411,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
@@ -5639,7 +5639,7 @@
     },
     {
       "file": "copyfast_memory.py",
-      "line": 419,
+      "line": 420,
       "operation": "INSERT INTO",
       "table": "web_memory_events"
     },
@@ -5669,25 +5669,25 @@
     },
     {
       "file": "copyfast_memory.py",
-      "line": 897,
+      "line": 915,
       "operation": "INSERT INTO",
       "table": "web_memory_note_versions"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 988,
+      "line": 1008,
       "operation": "INSERT INTO",
       "table": "web_memory_note_versions"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 1100,
+      "line": 1120,
       "operation": "INSERT INTO",
       "table": "web_memory_note_versions"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 1203,
+      "line": 1223,
       "operation": "INSERT INTO",
       "table": "web_memory_note_versions"
     },
@@ -5717,37 +5717,37 @@
     },
     {
       "file": "copyfast_memory.py",
-      "line": 891,
+      "line": 909,
       "operation": "INSERT INTO",
       "table": "web_memory_notes"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 982,
+      "line": 1002,
       "operation": "INSERT INTO",
       "table": "web_memory_notes"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 1094,
+      "line": 1114,
       "operation": "UPDATE",
       "table": "web_memory_notes"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 1132,
+      "line": 1152,
       "operation": "UPDATE",
       "table": "web_memory_notes"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 1160,
+      "line": 1180,
       "operation": "UPDATE",
       "table": "web_memory_notes"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 1198,
+      "line": 1218,
       "operation": "UPDATE",
       "table": "web_memory_notes"
     },
@@ -5765,19 +5765,19 @@
     },
     {
       "file": "copyfast_memory.py",
-      "line": 1288,
+      "line": 1308,
       "operation": "INSERT INTO",
       "table": "web_memory_reminders"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 1337,
+      "line": 1357,
       "operation": "UPDATE",
       "table": "web_memory_reminders"
     },
     {
       "file": "copyfast_memory.py",
-      "line": 1411,
+      "line": 1431,
       "operation": "UPDATE",
       "table": "web_memory_reminders"
     },
@@ -10421,7 +10421,7 @@
         "copyfast_data_controls.py",
         "copyfast_db.py"
       ],
-      "occurrences": 1241,
+      "occurrences": 1242,
       "provider": "PayOS"
     },
     {
@@ -12310,7 +12310,7 @@
     {
       "endpoint": "get_catalog",
       "file": "copyfast_free_prompt_gallery.py",
-      "line": 324,
+      "line": 326,
       "methods": [
         "GET"
       ],
@@ -13084,7 +13084,7 @@
     {
       "endpoint": "memory_events",
       "file": "copyfast_memory.py",
-      "line": 1455,
+      "line": 1475,
       "methods": [
         "GET"
       ],
@@ -14362,7 +14362,7 @@
     {
       "endpoint": "save_gallery_item_to_memory",
       "file": "copyfast_memory.py",
-      "line": 919,
+      "line": 937,
       "methods": [
         "POST"
       ],
@@ -14515,7 +14515,7 @@
     {
       "endpoint": "get_items",
       "file": "copyfast_free_prompt_gallery.py",
-      "line": 332,
+      "line": 348,
       "methods": [
         "GET"
       ],
@@ -14650,7 +14650,7 @@
     {
       "endpoint": "get_item",
       "file": "copyfast_free_prompt_gallery.py",
-      "line": 381,
+      "line": 419,
       "methods": [
         "GET"
       ],
@@ -15064,7 +15064,7 @@
     {
       "endpoint": "list_notes",
       "file": "copyfast_memory.py",
-      "line": 781,
+      "line": 799,
       "methods": [
         "GET"
       ],
@@ -15073,7 +15073,7 @@
     {
       "endpoint": "create_note",
       "file": "copyfast_memory.py",
-      "line": 867,
+      "line": 885,
       "methods": [
         "POST"
       ],
@@ -15082,7 +15082,7 @@
     {
       "endpoint": "get_note",
       "file": "copyfast_memory.py",
-      "line": 1030,
+      "line": 1050,
       "methods": [
         "GET"
       ],
@@ -15091,7 +15091,7 @@
     {
       "endpoint": "archive_note",
       "file": "copyfast_memory.py",
-      "line": 1114,
+      "line": 1134,
       "methods": [
         "POST"
       ],
@@ -15100,7 +15100,7 @@
     {
       "endpoint": "restore_note",
       "file": "copyfast_memory.py",
-      "line": 1142,
+      "line": 1162,
       "methods": [
         "POST"
       ],
@@ -15109,7 +15109,7 @@
     {
       "endpoint": "restore_note_version",
       "file": "copyfast_memory.py",
-      "line": 1170,
+      "line": 1190,
       "methods": [
         "POST"
       ],
@@ -15118,7 +15118,7 @@
     {
       "endpoint": "update_note",
       "file": "copyfast_memory.py",
-      "line": 1066,
+      "line": 1086,
       "methods": [
         "POST"
       ],
@@ -16387,7 +16387,7 @@
     {
       "endpoint": "list_reminders",
       "file": "copyfast_memory.py",
-      "line": 1217,
+      "line": 1237,
       "methods": [
         "GET"
       ],
@@ -16396,7 +16396,7 @@
     {
       "endpoint": "create_reminder",
       "file": "copyfast_memory.py",
-      "line": 1261,
+      "line": 1281,
       "methods": [
         "POST"
       ],
@@ -16405,7 +16405,7 @@
     {
       "endpoint": "cancel_reminder",
       "file": "copyfast_memory.py",
-      "line": 1449,
+      "line": 1469,
       "methods": [
         "POST"
       ],
@@ -16414,7 +16414,7 @@
     {
       "endpoint": "complete_reminder",
       "file": "copyfast_memory.py",
-      "line": 1431,
+      "line": 1451,
       "methods": [
         "POST"
       ],
@@ -16423,7 +16423,7 @@
     {
       "endpoint": "pause_reminder",
       "file": "copyfast_memory.py",
-      "line": 1437,
+      "line": 1457,
       "methods": [
         "POST"
       ],
@@ -16432,7 +16432,7 @@
     {
       "endpoint": "resume_reminder",
       "file": "copyfast_memory.py",
-      "line": 1443,
+      "line": 1463,
       "methods": [
         "POST"
       ],
@@ -16441,7 +16441,7 @@
     {
       "endpoint": "update_reminder",
       "file": "copyfast_memory.py",
-      "line": 1303,
+      "line": 1323,
       "methods": [
         "POST"
       ],
@@ -16972,7 +16972,7 @@
     {
       "endpoint": "memory_summary",
       "file": "copyfast_memory.py",
-      "line": 728,
+      "line": 746,
       "methods": [
         "GET"
       ],
@@ -18825,39 +18825,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 732,
-  "source_files_scanned": 732,
-  "source_fingerprint_sha256": "a7ab71e7a3278dbb654574a4b2ae6faf7e3ed634d9e0462f6e6bc654b0a9c4f6",
+  "source_files_discovered": 737,
+  "source_files_scanned": 737,
+  "source_fingerprint_sha256": "c608371657b30a33b6fec72f3b9d893ad9db42749248bf15ed999629109c240b",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 36143,
+      "line": 36158,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36459,
+      "line": 36474,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35807,
+      "line": 35822,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36056,
+      "line": 36071,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35428,
+      "line": 35443,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35720,
+      "line": 35735,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -19072,7 +19072,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 37579,
+      "line": 37594,
       "path": "/features"
     },
     {
