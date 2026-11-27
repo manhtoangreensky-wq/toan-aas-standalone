@@ -10421,7 +10421,7 @@
         "copyfast_data_controls.py",
         "copyfast_db.py"
       ],
-      "occurrences": 1247,
+      "occurrences": 1241,
       "provider": "PayOS"
     },
     {
@@ -10495,6 +10495,7 @@
     },
     {
       "files": [
+        "KIEM-THU/PHIEN-GALLERY-CUSTOMER-COPY-20261127.md",
         "KIEM-THU/PHIEN-IMAGE-COMPOSER-NATIVE-LOCALE-20261126.md",
         "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
         "ai_assistant.py",
@@ -10533,10 +10534,9 @@
         "reports/audit/R218-SUBDUB-AUTHORING-READINESS-QA-20261024.json",
         "reports/audit/R218-SUBDUB-EMPTY-REVIEW-QA-20261024.json",
         "reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json",
-        "reports/audit/R218-SUBDUB-LABEL-CONTRAST-QA-20261024.json",
-        "reports/audit/R218-SUBDUB-MOBILE-RANGE-QA-20261024.json"
+        "reports/audit/R218-SUBDUB-LABEL-CONTRAST-QA-20261024.json"
       ],
-      "occurrences": 87,
+      "occurrences": 88,
       "provider": "Gemini"
     },
     {
@@ -18825,39 +18825,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 729,
-  "source_files_scanned": 729,
-  "source_fingerprint_sha256": "42670d3c461fc134676c0477a739e2bd270ae2b295f52807329a15f2066f11d1",
+  "source_files_discovered": 732,
+  "source_files_scanned": 732,
+  "source_fingerprint_sha256": "03eb2e6b0fb04280f296cec2f5f84864a4c1883d64ab1a438757e0df3e1f6929",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 36133,
+      "line": 36143,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36449,
+      "line": 36459,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35797,
+      "line": 35807,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36046,
+      "line": 36056,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35418,
+      "line": 35428,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35710,
+      "line": 35720,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -19072,7 +19072,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 37569,
+      "line": 37579,
       "path": "/features"
     },
     {
