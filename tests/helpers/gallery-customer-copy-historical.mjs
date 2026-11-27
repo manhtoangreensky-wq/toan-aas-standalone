@@ -48,3 +48,20 @@ export function galleryCustomerCopyHistoricalSource(source,file){
   for(const row of records)source=source.replace(row.new,()=>row.old);
   return source;
 }
+
+// Full-dictionary comparisons need the same finite projection as source readers.
+const snapshotRows=new Map(fixture.copyRows.map(row=>[row.key,row]));
+const snapshotOrder=["shellNav.freePromptGallery",...fixture.copyRows.filter(row=>row.key!=="shellNav.freePromptGallery").map(row=>row.key)];
+export function galleryCustomerCopyHistoricalSnapshot(entries,locale){
+  const failure=fail+" snapshot";
+  assert(Array.isArray(entries)&&["vi","en","zh"].includes(locale),failure+" input");
+  const values=entries.filter(row=>Array.isArray(row)&&snapshotRows.has(row[0]));
+  if(!values.length)return entries;
+  assert(values.every(row=>row.length===2),failure+" pair shape");
+  assert.equal(values.length,17,failure+" complete");
+  assert.equal(new Set(values.map(row=>row[0])).size,17,failure+" unique");
+  assert.deepEqual(values.map(row=>row[0]),snapshotOrder,failure+" order");
+  if(values.every(([key,value])=>value===snapshotRows.get(key).before[locale]))return entries;
+  for(const[key,value]of values)assert.equal(value,snapshotRows.get(key).after[locale],failure+" exact locale value");
+  return entries.map(row=>Array.isArray(row)&&snapshotRows.has(row[0])?[row[0],snapshotRows.get(row[0]).before[locale]]:row);
+}

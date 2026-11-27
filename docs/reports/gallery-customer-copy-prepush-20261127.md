@@ -48,3 +48,10 @@ không sửa quyền hoặc kỳ vọng để làm xanh. NEW_FAILURES=0 cho nhó
 Một PR → exactHEAD hai job CI SUCCESS → pinned merge/tree →
 exclusive Web-only deploy → runtime/health/14assets/cache →
 receipt Issue689+PR đọc lại đúng. Không suy LIVE từ asset hoặc HTTP200.
+
+CI45966746125 chặn ba historical catalogue snapshot cases ởshared-select
+(83ca cùngnhóm đạt). Phụlục7213848011 đọc lại đúng;localRED3 tái hiện.
+RecoverychỉQA:snapshotinverse17Gallerykeys trướcFCH+pressuretests,
+giữmọiapp/CSS/copy/fixture/pin/assertion. Khôngrerunbrowser hoặc51value
+semanticreview. PR818 giữmở,cùngnhánh;exactHEADCI2job còn bắtbuộc.
+Recovery146PASS/0fail/skip,QA-onlyreviewC0I0M0. App khôngđổi.

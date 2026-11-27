@@ -85,3 +85,14 @@ Verifyroot: `node --test tests/gallery-customer-copy.test.mjs`
 →0fail/skip sauRED đúngfeature;finitehistorypressure riêng.
 Browseractualfullrenderer+CSS quaHTTPkhôngthayauth/fullshell/device/
 Safari/signedproduction. Khôngbấmtạo/kíchhoạtprovider/tiềnhoặcdữliệukhách.
+
+## CI snapshot amendment — PR818
+
+CI45966746125 dừng tại3ca VI/EN/ZH trong shared-select-labels:
+full-dictionary historical snapshot chưa đi qua GPC17key inverse.
+83ca khác trongnhóm đạt; chưamerge/deploy. Phụlục7213848011
+đọc lại exact trước QAedit. LocalRED3 tái hiện cùngassertion.
+Sửa chỉ helper snapshot hữu hạn+FBCsnapshot hook trước FCH+pressuretests.
+Khôngđổiapp/CSS/copy/fixture/pin/assertion cũ,khônggọi lạiworker
+hoặcbrowser60view. Đây làROOT_QA_OMISSION,workerfail0.
+Recovery146PASS/0fail/skip,reviewQA-deltaC0I0M0;chỉnhómfailed/affected.

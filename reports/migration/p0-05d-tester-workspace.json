@@ -113,6 +113,11 @@
     "metadata_windows_baseline_failures": 1,
     "metadata_new_failures": 0,
     "metadata_test_and_sync_sources_unchanged": true,
+    "ci_first_failed_run": 45966746125,
+    "ci_snapshot_amendment": 7213848011,
+    "ci_snapshot_root_qa_omission": true,
+    "ci_snapshot_recovery_passed": 146,
+    "ci_snapshot_delta_review": "C0_I0_M0",
     "signed_production_ui": "NOT_TESTED",
     "auth_draft_full_lifecycle": "NOT_TESTED",
     "device_safari": "NOT_TESTED",
@@ -999,9 +1004,9 @@
     },
     {
       "path": "KIEM-THU/PHIEN-GALLERY-CUSTOMER-COPY-20261127.md",
-      "lines": 67,
-      "bytes": 3952,
-      "sha256": "bc53986fb9b749e44ce2a0ab8605ef321dfd6871a9f51b48748aa4f5ffa12c3a"
+      "lines": 76,
+      "bytes": 4443,
+      "sha256": "c26ac10b93d5b842f5bc3032e4308df833dbad8cda8e652414f2fe441326dc64"
     },
     {
       "path": "docs/reports/feature-catalog-descriptions108-prepush-20261126.md",
@@ -1029,9 +1034,9 @@
     },
     {
       "path": "docs/reports/gallery-customer-copy-prepush-20261127.md",
-      "lines": 50,
-      "bytes": 2996,
-      "sha256": "3a939110ebb8f7c2e622e4af4e1a5ad9dc708433cd7c28ed9533bb3c3b7b4674"
+      "lines": 57,
+      "bytes": 3459,
+      "sha256": "a2991bd09a081544055305ea34c16d7186ff6619da4dacb699c90f3711395795"
     },
     {
       "path": "docs/superpowers/plans/2026-11-26-feature-catalog-descriptions108.md",
@@ -1095,9 +1100,9 @@
     },
     {
       "path": "docs/superpowers/specs/2026-11-27-gallery-customer-copy.md",
-      "lines": 87,
-      "bytes": 5444,
-      "sha256": "057275cfd93d2de8fae776c2b4766337ee2dcbed03abc287a38a88e976232b2d"
+      "lines": 98,
+      "bytes": 6055,
+      "sha256": "4f658a6234ae3e356198e1d571b38c1ddf2e7ac4b7dd28b6c3598a38e2b48bc3"
     },
     {
       "path": "docs/superpowers/specs/2026-11-27-gallery-readability.md",
@@ -1131,9 +1136,9 @@
     },
     {
       "path": "reports/tester/GALLERY-CUSTOMER-COPY-20261127.md",
-      "lines": 42,
-      "bytes": 2459,
-      "sha256": "7d7d072b5ff55b9912697c6d19febe44e8f4f41b105e55d387bb5f2345e57622"
+      "lines": 48,
+      "bytes": 2818,
+      "sha256": "8bbda8da99a729647c64f1c1b5513abf183db4b8378d37ec7ef60a7e54306bcd"
     },
     {
       "path": "scripts/tester_case_sync.py",

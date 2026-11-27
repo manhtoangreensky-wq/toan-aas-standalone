@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 import {execFileSync} from "node:child_process";
-import {galleryCustomerCopyHistoricalSource as project} from "./helpers/gallery-customer-copy-historical.mjs";
+import {galleryCustomerCopyHistoricalSource as project,galleryCustomerCopyHistoricalSnapshot as snapshot} from "./helpers/gallery-customer-copy-historical.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/gallery-customer-copy.json",import.meta.url),"utf8"));
 const fail=/Unreviewed Gallery customer copy/;
 for(const pin of fixture.applicationSources){
@@ -28,3 +28,30 @@ for(const pin of fixture.applicationSources){
     assert.notEqual(bad,current);assert.throws(()=>project(bad,pin.file),fail);
   });
 }
+const copyByKey=new Map(fixture.copyRows.map(row=>[row.key,row]));
+const orderedKeys=["shellNav.freePromptGallery",...fixture.copyRows.filter(row=>row.key!=="shellNav.freePromptGallery").map(row=>row.key)];
+for(const locale of["vi","en","zh"]){
+  const current=orderedKeys.map(key=>[key,copyByKey.get(key).after[locale]]);
+  const before=orderedKeys.map(key=>[key,copyByKey.get(key).before[locale]]);
+  test(`Gallery ${locale} snapshot restores only reviewed values, is idempotent, and retains outside row identity`,()=>{
+    const unknown=["CUSTOMER_UNRELATED","CUSTOMER & <safe>"],rows=[unknown,...current];
+    const saved=JSON.stringify(rows),result=snapshot(rows,locale);
+    assert.equal(JSON.stringify(rows),saved);assert.equal(result[0],unknown);
+    assert.deepEqual(result,[unknown,...before]);assert.deepEqual(snapshot(result,locale),result);
+    assert.equal(snapshot(before,locale),before);assert.equal(snapshot([unknown],locale)[0],unknown);
+  });
+  for(const kind of["partial","changed","duplicate","reordered","wrong-locale","mixed","shape"])test(`Gallery ${locale} snapshot rejects ${kind} without masking historical differences`,()=>{
+    let bad=current.map(row=>[...row]);
+    if(kind==="partial")bad.pop();
+    if(kind==="changed")bad[1][1]="UNREVIEWED_COPY";
+    if(kind==="duplicate")bad.push([...bad[1]]);
+    if(kind==="reordered")[bad[0],bad[1]]=[bad[1],bad[0]];
+    if(kind==="wrong-locale")bad=orderedKeys.map(key=>[key,copyByKey.get(key).after[locale==="vi"?"en":"vi"]]);
+    if(kind==="mixed")bad[1][1]=copyByKey.get(bad[1][0]).before[locale];
+    if(kind==="shape")bad[1].push("UNREVIEWED_EXTRA");
+    assert.throws(()=>snapshot(bad,locale),fail);
+  });
+}
+test("Gallery snapshot rejects invalid locale or non-array input",()=>{
+  assert.throws(()=>snapshot([],"ar"),fail);assert.throws(()=>snapshot({},"vi"),fail);
+});

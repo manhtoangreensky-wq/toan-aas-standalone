@@ -65,3 +65,12 @@ permission/kỳvọng; CI Linux exactHEAD còn làcổng bắtbuộc.
 CI/merge/deploy/runtime/assets/cache/receipt là gate riêng còn mở.
 PROVIDER_CALLS=0; WALLET_MUTATIONS=0; PRODUCTION_DATA_WRITES=0.
 WHOLE_GOAL_COMPLETE=NO; MOTION=LAST.
+
+## CI recovery
+
+PR818/CI45966746125:3historicalcataloguesnapshotFAIL/83PASS ởshared-select.
+PhụlụcIssue6897213848011readbackexact;localRED3. Bổsung đúng17key
+snapshotinverse trướcFCH,chặnthiếu/sai/lặp/đảo/foreignlocale/mixed/shape.
+Khôngđổiapp/copy/CSS,khôngreviewlại51values hoặcchạybrowserlại.
+ExactHEADCI của bản QA recovery vẫn phải đạt hai job trướcmerge/deploy.
+Recovery146PASS/0fail/skip;QA-deltareviewC0I0M0. App3pins giữ nguyên.

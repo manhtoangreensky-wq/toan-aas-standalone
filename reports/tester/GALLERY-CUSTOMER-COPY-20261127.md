@@ -40,3 +40,9 @@ test/scriptsync nguyênBASE,0NEW. Khôngđổipermission/testđểné.
 Ứng viên chưa phát hành. Không auth-hydration/fullshell/device/Safari/
 signed-production/motion hoặc đầu ra provider. Goal ACTIVE, motion cuối.
 PROVIDER_CALLS=0; WALLET_MUTATIONS=0; PRODUCTION_DATA_WRITES=0.
+
+CI45966746125/PR818 chưa qua:3shared-select catalogue snapshot cases
+thiếuprojGPC17keys,83PASS. LocalRED3 vàphụlục7213848011readback.
+QAonlyrecovery:finiteGallerysnapshot+FBCsnapshot hook+pressurecases.
+Ứngdụng/bảndịch/CSS/fixture/pins/kỳvọng cũ giữ;khôngbrowserrerun.
+Recovery146PASS/0fail/skip,QA-onlydeltareviewC0I0M0. ChưanewCI.
