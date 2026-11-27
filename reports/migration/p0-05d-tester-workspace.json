@@ -1197,9 +1197,9 @@
     },
     {
       "path": "docs/superpowers/specs/2026-11-27-gallery-native-runtime.md",
-      "lines": 365,
-      "bytes": 22313,
-      "sha256": "be75be46855433a1e34fd9941a09f7b648f08535999e272bd5bd7d76356a7f11"
+      "lines": 384,
+      "bytes": 23467,
+      "sha256": "5a03375fea543ea44edb0e6053095d3eca8c242ac4522e25663ef4d2ce777bbe"
     },
     {
       "path": "docs/superpowers/specs/2026-11-27-gallery-readability.md",

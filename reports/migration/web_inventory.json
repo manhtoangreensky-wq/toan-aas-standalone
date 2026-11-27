@@ -1504,7 +1504,7 @@
     {
       "file": "app.py",
       "kind": "function",
-      "line": 2727,
+      "line": 2728,
       "target": "pwa_service_worker"
     },
     {
@@ -1654,7 +1654,7 @@
     {
       "file": "app.py",
       "kind": "function",
-      "line": 2500,
+      "line": 2501,
       "target": "root_service_worker"
     },
     {
@@ -1790,11 +1790,11 @@
     "callback_templates": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 256,
-    "env_references": 298,
+    "database_tables": 257,
+    "env_references": 301,
     "providers": 14,
     "routes": 905,
-    "ui_path_references": 52
+    "ui_path_references": 57
   },
   "database_references": [
     {
@@ -2348,6 +2348,18 @@
       "line": 961,
       "operation": "UPDATE",
       "table": "projection"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 875,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "realtime_translate_sessions"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 901,
+      "operation": "INSERT INTO",
+      "table": "realtime_translate_sessions"
     },
     {
       "file": "copyfast_subtitle_workspace.py",
@@ -8576,6 +8588,7 @@
     "payos_orders",
     "payos_processed",
     "projection",
+    "realtime_translate_sessions",
     "request",
     "routing",
     "schema",
@@ -8936,6 +8949,11 @@
       "name": "CUTOUT_API_KEY"
     },
     {
+      "file": "copyfast_realtime_translate.py",
+      "line": 846,
+      "name": "DATABASE_PATH"
+    },
+    {
       "file": "config.py",
       "line": 21,
       "name": "DB_BACKUP_DIR"
@@ -8977,12 +8995,12 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 924,
+      "line": 1179,
       "name": "ENV"
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 960,
+      "line": 1215,
       "name": "ENV"
     },
     {
@@ -8997,7 +9015,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 925,
+      "line": 1180,
       "name": "ENVIRONMENT"
     },
     {
@@ -9032,7 +9050,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 365,
+      "line": 369,
       "name": "INTERNAL_MANUAL_ADMIN_TOKEN"
     },
     {
@@ -9122,7 +9140,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 963,
+      "line": 1218,
       "name": "PYTEST_CURRENT_TEST"
     },
     {
@@ -9142,12 +9160,12 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 965,
+      "line": 1220,
       "name": "REALTIME_ALLOW_UNPRICED_TEST_SESSION"
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 843,
+      "line": 1098,
       "name": "REALTIME_STREAM_SECRET"
     },
     {
@@ -9164,6 +9182,11 @@
       "file": "copyfast_music_sfx_library_bridge.py",
       "line": 82,
       "name": "SFX_LIBRARY_XU_PER_ITEM"
+    },
+    {
+      "file": "copyfast_realtime_translate.py",
+      "line": 847,
+      "name": "SQLITE_DB_PATH"
     },
     {
       "file": "billing.py",
@@ -9192,7 +9215,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 961,
+      "line": 1216,
       "name": "TESTING"
     },
     {
@@ -9202,7 +9225,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 926,
+      "line": 1181,
       "name": "TOAN_AAS_ENV"
     },
     {
@@ -10016,6 +10039,11 @@
       "name": "WEBAPP_SESSION_DB_PATH"
     },
     {
+      "file": "copyfast_realtime_translate.py",
+      "line": 848,
+      "name": "WEBAPP_SESSION_DB_PATH"
+    },
+    {
       "file": "scripts/purge_demo_data.py",
       "line": 14,
       "name": "WEBAPP_SESSION_DB_PATH"
@@ -10708,7 +10736,7 @@
     {
       "endpoint": "legacy_admin_redirect",
       "file": "app.py",
-      "line": 2743,
+      "line": 2744,
       "methods": [
         "GET"
       ],
@@ -11176,7 +11204,7 @@
     {
       "endpoint": "legacy_affiliate_redirect",
       "file": "app.py",
-      "line": 2763,
+      "line": 2764,
       "methods": [
         "GET"
       ],
@@ -11374,7 +11402,7 @@
     {
       "endpoint": "durable_login",
       "file": "app.py",
-      "line": 2567,
+      "line": 2568,
       "methods": [
         "POST"
       ],
@@ -11383,7 +11411,7 @@
     {
       "endpoint": "durable_register",
       "file": "app.py",
-      "line": 2553,
+      "line": 2554,
       "methods": [
         "POST"
       ],
@@ -11392,7 +11420,7 @@
     {
       "endpoint": "durable_password_change",
       "file": "app.py",
-      "line": 2581,
+      "line": 2582,
       "methods": [
         "POST"
       ],
@@ -11428,7 +11456,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2715,
+      "line": 2716,
       "methods": [
         "GET"
       ],
@@ -11833,7 +11861,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2774,
+      "line": 2775,
       "methods": [
         "GET"
       ],
@@ -11878,7 +11906,7 @@
     {
       "endpoint": "legacy_b2b_redirect",
       "file": "app.py",
-      "line": 2779,
+      "line": 2780,
       "methods": [
         "GET"
       ],
@@ -12121,7 +12149,7 @@
     {
       "endpoint": "legacy_campaign_redirect",
       "file": "app.py",
-      "line": 2758,
+      "line": 2759,
       "methods": [
         "GET"
       ],
@@ -12355,7 +12383,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2774,
+      "line": 2775,
       "methods": [
         "GET"
       ],
@@ -13174,7 +13202,7 @@
     {
       "endpoint": "download_live_translate_extension",
       "file": "copyfast_realtime_translate.py",
-      "line": 1154,
+      "line": 1442,
       "methods": [
         "GET"
       ],
@@ -13183,7 +13211,7 @@
     {
       "endpoint": "download_live_translate_extension",
       "file": "copyfast_realtime_translate.py",
-      "line": 1154,
+      "line": 1442,
       "methods": [
         "GET"
       ],
@@ -14407,7 +14435,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2715,
+      "line": 2716,
       "methods": [
         "GET"
       ],
@@ -14821,7 +14849,7 @@
     {
       "endpoint": "pwa_manifest",
       "file": "app.py",
-      "line": 2721,
+      "line": 2722,
       "methods": [
         "GET"
       ],
@@ -14830,7 +14858,7 @@
     {
       "endpoint": "pwa_manifest",
       "file": "app.py",
-      "line": 2721,
+      "line": 2722,
       "methods": [
         "GET"
       ],
@@ -14875,7 +14903,7 @@
     {
       "endpoint": "legacy_media_redirect",
       "file": "app.py",
-      "line": 2768,
+      "line": 2769,
       "methods": [
         "GET"
       ],
@@ -15181,7 +15209,7 @@
     {
       "endpoint": "pwa_offline_page",
       "file": "app.py",
-      "line": 2737,
+      "line": 2738,
       "methods": [
         "GET"
       ],
@@ -15721,7 +15749,7 @@
     {
       "endpoint": "pwa_service_worker",
       "file": "app.py",
-      "line": 2727,
+      "line": 2728,
       "methods": [
         "GET"
       ],
@@ -16729,7 +16757,7 @@
     {
       "endpoint": "root_service_worker",
       "file": "app.py",
-      "line": 2500,
+      "line": 2501,
       "methods": [
         "GET"
       ],
@@ -16738,7 +16766,7 @@
     {
       "endpoint": "create_live_translate_session",
       "file": "copyfast_realtime_translate.py",
-      "line": 990,
+      "line": 1245,
       "methods": [
         "POST"
       ],
@@ -16747,7 +16775,7 @@
     {
       "endpoint": "get_session_status",
       "file": "copyfast_realtime_translate.py",
-      "line": 1050,
+      "line": 1330,
       "methods": [
         "GET"
       ],
@@ -16756,7 +16784,7 @@
     {
       "endpoint": "export_session_subtitles",
       "file": "copyfast_realtime_translate.py",
-      "line": 1116,
+      "line": 1404,
       "methods": [
         "GET"
       ],
@@ -16765,7 +16793,7 @@
     {
       "endpoint": "stop_session",
       "file": "copyfast_realtime_translate.py",
-      "line": 1065,
+      "line": 1345,
       "methods": [
         "POST"
       ],
@@ -17989,7 +18017,7 @@
     {
       "endpoint": "legacy_video_redirect",
       "file": "app.py",
-      "line": 2753,
+      "line": 2754,
       "methods": [
         "GET"
       ],
@@ -18052,7 +18080,7 @@
     {
       "endpoint": "legacy_wallet_redirect",
       "file": "app.py",
-      "line": 2748,
+      "line": 2749,
       "methods": [
         "GET"
       ],
@@ -18574,7 +18602,7 @@
     {
       "endpoint": "page",
       "file": "app.py",
-      "line": 2784,
+      "line": 2807,
       "methods": [
         "GET"
       ],
@@ -18825,9 +18853,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 737,
-  "source_files_scanned": 737,
-  "source_fingerprint_sha256": "300a96302d50b9d02e65ff34f2c9a262da2029afeb9ff210725416a53a8410ac",
+  "source_files_discovered": 733,
+  "source_files_scanned": 733,
+  "source_fingerprint_sha256": "ff49c322a4d05808159cef635e25b1ebcb69e0a65289879a505eb009a3efa413",
   "source_root": "repository-root",
   "ui_path_references": [
     {
@@ -18881,6 +18909,11 @@
       "path": "/api/v1/assistant/ask"
     },
     {
+      "file": "static/portal/live-translate-studio.js",
+      "line": 160,
+      "path": "/api/v1/auth/me"
+    },
+    {
       "file": "customer_app.html",
       "line": 842,
       "path": "/api/v1/billing/create-payment-link"
@@ -18924,6 +18957,11 @@
       "file": "admin.html",
       "line": 337,
       "path": "/api/v1/control/status"
+    },
+    {
+      "file": "static/portal/live-translate-studio.js",
+      "line": 186,
+      "path": "/api/v1/core/status"
     },
     {
       "file": "customer_app.js",
@@ -19046,6 +19084,11 @@
       "path": "/api/v1/erp/workloads"
     },
     {
+      "file": "static/portal/live-translate-studio.js",
+      "line": 395,
+      "path": "/api/v1/live-translate/sessions"
+    },
+    {
       "file": "customer_app.html",
       "line": 681,
       "path": "/api/v1/media-ops/assets"
@@ -19069,6 +19112,16 @@
       "file": "video.html",
       "line": 77,
       "path": "/api/v1/video/generate-script"
+    },
+    {
+      "file": "static/portal/live-translate-studio.js",
+      "line": 215,
+      "path": "/api/v1/voice/profiles"
+    },
+    {
+      "file": "static/portal/live-translate-studio.js",
+      "line": 195,
+      "path": "/api/v1/wallet"
     },
     {
       "file": "static/portal/portal.js",

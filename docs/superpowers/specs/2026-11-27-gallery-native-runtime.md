@@ -304,6 +304,25 @@ ChỉrerunreadinesscaseFAIL;294PASSvà128groupskhôngrerunlocal.
 Filemetadata vàspecnày nằmngoàifingerprintWebeligible;verifyprovenance
 trêncommitmớivẫnbắtbuộc,không tựsửagiátrịfingerprint.
 
+### GSC-MAIN-SYNC — amendment sau mainf11e84e4
+
+CI46015721580HEADab9227df có2jobSUCCESS;authenticated456/456,
+provider/wallet/productionmutation0. Browserfresh18pages0errors;
+haihistoricalmatrix trongartifact khácSHA bịloại,không cộngkếtquảmới.
+MergePR819 bịGitHub từchối dirty vìmain đã nhậnPR817 tại
+`f11e84e41b7f54f70d611b49835f8b74bd5cb6d7` vàdeploy46017450047SUCCESS.
+
+Đây làđồngbộBASE,khônggiao/sửa lại realtime hoặc Bot/engine/provider/
+settlement củaPR817. Cho phép merge main đãcó vào cùngnhánhGSC,
+giữbyteexactmọi16incomingpaths ngoài2metadata vàworkflowghép:
+workflowphải bằngmainmới+cùng2nativecommandlines đãduyệt,không tựđổi
+BotSHA. App7GSC vẫnexactab9227df. Chỉresolved2Webprovenancefile bằng
+Web-onlyrefresh sausourcecommit;nonWebpreflight củamain giữexact.
+TESTERmetadata chỉrefresh đúngspecrowLFhash doamendmentnày,không đổi
+test/snapshot/remoteclaims. Khôngreset/checkoutđè/forcepush/rollbackmain.
+Saumergecompareinheritance/app/protected/workflow/Testermetadata,
+exactHEADCI mới bắtbuộc. Khôngdeployoldab9227df lênVPSmới.
+
 ## Impact scan trước code
 
 `git grep -n -E 'free_prompt_item\(|filter_free_prompt_items\(|_gallery_memory_note_fields\(|freePromptGalleryItemsPath\(|freePromptGalleryRequestIsCurrent\(' -- '*.py' '*.js' '*.mjs' ':!.agents/state/**'`

@@ -833,8 +833,263 @@ class RealtimeAudioIngressBuffer:
         return segment
 
 
-# In-memory registry for active sessions
+# In-memory registry for active sessions & multi-worker / settlement coordination
 _ACTIVE_SESSIONS: Dict[str, RealtimeTranslateSession] = {}
+_SESSION_CANONICAL_ACTORS: Dict[str, str] = {}
+_SESSION_UNBILLED_CHARS: Dict[str, int] = {}
+_SESSION_BOT_BRIDGE_OK: Dict[str, int] = {}
+_SESSION_LAST_BALANCE_AFTER: Dict[str, Optional[int]] = {}
+
+
+def _db_persistence_enabled() -> bool:
+    return bool(
+        os.environ.get("DATABASE_PATH", "").strip()
+        or os.environ.get("SQLITE_DB_PATH", "").strip()
+        or os.environ.get("WEBAPP_SESSION_DB_PATH", "").strip()
+    )
+
+
+def _persist_realtime_session(session: RealtimeTranslateSession) -> None:
+    if not _db_persistence_enabled():
+        return
+    try:
+        from copyfast_db import transaction
+
+        sid = session.session_id
+        seg_payload = [
+            {
+                "segment_id": s.segment_id,
+                "sequence": s.sequence,
+                "start_ms": s.start_ms,
+                "end_ms": s.end_ms,
+                "source_text": s.source_text,
+                "translated_text": s.translated_text,
+                "is_final": s.is_final,
+            }
+            for s in session.segments
+        ]
+        processed_ranges = sorted(list(getattr(session, "processed_seq_set", set())))
+        with transaction() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS realtime_translate_sessions (
+                    session_id TEXT PRIMARY KEY,
+                    owner_id TEXT NOT NULL,
+                    canonical_actor_id TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    mode TEXT NOT NULL,
+                    source_language TEXT NOT NULL,
+                    target_language TEXT NOT NULL,
+                    voice_profile_id TEXT,
+                    gender_preference TEXT,
+                    client_device_id TEXT,
+                    total_audio_ms INTEGER NOT NULL DEFAULT 0,
+                    last_processed_seq INTEGER NOT NULL DEFAULT 0,
+                    consumed_blocks INTEGER NOT NULL DEFAULT 0,
+                    settled_blocks INTEGER NOT NULL DEFAULT 0,
+                    settled_xu INTEGER NOT NULL DEFAULT 0,
+                    unbilled_chars INTEGER NOT NULL DEFAULT 0,
+                    bot_bridge_ok INTEGER NOT NULL DEFAULT 0,
+                    processed_seqs_json TEXT NOT NULL DEFAULT '[]',
+                    segments_json TEXT NOT NULL DEFAULT '[]',
+                    updated_at REAL NOT NULL
+                )
+                """
+            )
+            conn.execute(
+                """
+                INSERT INTO realtime_translate_sessions (
+                    session_id, owner_id, canonical_actor_id, state, mode,
+                    source_language, target_language, voice_profile_id, gender_preference, client_device_id,
+                    total_audio_ms, last_processed_seq, consumed_blocks, settled_blocks, settled_xu,
+                    unbilled_chars, bot_bridge_ok, processed_seqs_json, segments_json, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(session_id) DO UPDATE SET
+                    canonical_actor_id=excluded.canonical_actor_id,
+                    state=excluded.state,
+                    total_audio_ms=excluded.total_audio_ms,
+                    last_processed_seq=excluded.last_processed_seq,
+                    consumed_blocks=excluded.consumed_blocks,
+                    settled_blocks=excluded.settled_blocks,
+                    settled_xu=excluded.settled_xu,
+                    unbilled_chars=excluded.unbilled_chars,
+                    bot_bridge_ok=excluded.bot_bridge_ok,
+                    processed_seqs_json=excluded.processed_seqs_json,
+                    segments_json=excluded.segments_json,
+                    updated_at=excluded.updated_at
+                """,
+                (
+                    sid,
+                    str(session.config.owner_id),
+                    str(_SESSION_CANONICAL_ACTORS.get(sid) or session.config.owner_id),
+                    session.state.value,
+                    session.config.mode.value,
+                    session.config.source_language,
+                    session.config.target_language,
+                    session.config.voice_profile_id,
+                    session.config.gender_preference,
+                    session.config.client_device_id,
+                    int(session.total_audio_ms),
+                    int(session.last_processed_seq),
+                    int(session.consumed_blocks),
+                    int(session.settled_blocks),
+                    int(session.settled_xu),
+                    int(_SESSION_UNBILLED_CHARS.get(sid, 0)),
+                    int(_SESSION_BOT_BRIDGE_OK.get(sid, 0)),
+                    json.dumps(processed_ranges),
+                    json.dumps(seg_payload, ensure_ascii=False),
+                    time.time(),
+                ),
+            )
+    except Exception as exc:
+        logger.debug(f"Persist realtime session skipped/failed: {exc}")
+
+
+def _get_or_load_session(session_id: str) -> Optional[RealtimeTranslateSession]:
+    existing = _ACTIVE_SESSIONS.get(session_id)
+    if existing is not None:
+        return existing
+    if not _db_persistence_enabled():
+        return None
+    try:
+        from copyfast_db import read_transaction
+
+        with read_transaction() as conn:
+            row = conn.execute(
+                """
+                SELECT owner_id, canonical_actor_id, state, mode, source_language, target_language,
+                       voice_profile_id, gender_preference, client_device_id,
+                       total_audio_ms, last_processed_seq, consumed_blocks, settled_blocks, settled_xu,
+                       unbilled_chars, bot_bridge_ok, processed_seqs_json, segments_json
+                FROM realtime_translate_sessions
+                WHERE session_id = ?
+                """,
+                (session_id,),
+            ).fetchone()
+        if not row:
+            return None
+        mode_enum = (
+            RealtimeTranslateMode(row[3])
+            if row[3] in RealtimeTranslateMode._value2member_map_
+            else RealtimeTranslateMode.LIVE_DUB_BILINGUAL
+        )
+        config = RealtimeSessionConfig(
+            owner_id=row[0],
+            source_language=row[4],
+            target_language=row[5],
+            mode=mode_enum,
+            voice_profile_id=row[6],
+            gender_preference=row[7] or "male",
+            client_device_id=row[8],
+        )
+        session = RealtimeTranslateSession(session_id, config)
+        try:
+            session.state = RealtimeSessionState(row[2])
+        except Exception:
+            pass
+        session.total_audio_ms = int(row[9] or 0)
+        session.last_processed_seq = int(row[10] or 0)
+        session.last_ack_seq = session.last_processed_seq
+        session.consumed_blocks = int(row[11] or 0)
+        session.settled_blocks = int(row[12] or 0)
+        session.settled_xu = int(row[13] or 0)
+        try:
+            session.processed_seq_set = set(json.loads(row[16] or "[]"))
+        except Exception:
+            pass
+        try:
+            for s in json.loads(row[17] or "[]"):
+                session.add_segment(
+                    RealtimeTranscriptSegment(
+                        segment_id=s["segment_id"],
+                        sequence=int(s["sequence"]),
+                        start_ms=int(s["start_ms"]),
+                        end_ms=int(s["end_ms"]),
+                        source_text=s.get("source_text", ""),
+                        translated_text=s.get("translated_text", ""),
+                        is_final=bool(s.get("is_final", True)),
+                    )
+                )
+        except Exception:
+            pass
+        _SESSION_CANONICAL_ACTORS[session_id] = str(row[1] or row[0])
+        _SESSION_UNBILLED_CHARS[session_id] = int(row[14] or 0)
+        _SESSION_BOT_BRIDGE_OK[session_id] = int(row[15] or 0)
+        _ACTIVE_SESSIONS[session_id] = session
+        _ACTIVE_INGRESS_BUFFERS.setdefault(session_id, RealtimeAudioIngressBuffer())
+        return session
+    except Exception as exc:
+        logger.debug(f"Load realtime session from DB skipped/failed: {exc}")
+        return None
+
+
+async def _settle_realtime_slice(
+    session: RealtimeTranslateSession,
+    *,
+    block_count: int = 0,
+    is_final: bool = False,
+) -> Optional[Dict[str, Any]]:
+    """Debits canonical 2x SubDub Xu in Bot ledger for processed realtime audio/text."""
+    sid = session.session_id
+    unbilled_chars = int(_SESSION_UNBILLED_CHARS.get(sid, 0))
+    if block_count <= 0 and not (is_final and unbilled_chars > 0 and _SESSION_BOT_BRIDGE_OK.get(sid, 0) > 0):
+        return None
+    try:
+        from copyfast_bridge import CoreBridgeClient, bridge_request
+
+        if not CoreBridgeClient().configured:
+            return None
+        actor_id = str(_SESSION_CANONICAL_ACTORS.get(sid) or session.config.owner_id).strip()
+        if not actor_id:
+            return None
+        idemp = f"rt:{sid}:{'final' if is_final else 'blk'}:b{session.settled_blocks}:seq{session.last_processed_seq}:c{unbilled_chars}"
+        res = await bridge_request(
+            "POST",
+            "/internal/v1/realtime/settle",
+            payload={
+                "session_id": sid,
+                "actor_id": actor_id,
+                "idempotency_key": idemp,
+                "mode": session.config.mode.value,
+                "char_count": unbilled_chars,
+                "block_count": max(0, int(block_count)),
+                "audio_seconds": round(session.total_audio_ms / 1000.0, 2),
+                "voice_profile_id": session.config.voice_profile_id,
+                "is_final": bool(is_final),
+            },
+            actor_id=actor_id,
+        )
+        if not isinstance(res, dict):
+            return None
+        data = res.get("data") if isinstance(res.get("data"), dict) and "ok" not in res else res
+        if res.get("ok"):
+            charged = int(data.get("amount_xu") or 0)
+            _SESSION_UNBILLED_CHARS[sid] = 0
+            session.settled_blocks += max(0, int(block_count))
+            session.settled_xu += charged
+            bal_after = data.get("balance_after")
+            if isinstance(bal_after, (int, float)):
+                _SESSION_LAST_BALANCE_AFTER[sid] = int(bal_after)
+            _persist_realtime_session(session)
+            return {
+                "type": "settlement.updated",
+                "session_id": sid,
+                "status": data.get("status", "settled"),
+                "xu_charged": charged,
+                "total_xu_consumed": session.settled_xu,
+                "balance_after": bal_after,
+                "exempt": bool(data.get("exempt", False)),
+            }
+        err_code = str(res.get("error_code") or "")
+        if err_code in {"INSUFFICIENT_FUNDS", "CORE_BRIDGE_PAYMENT_REQUIRED"} or res.get("status_code") == 402:
+            return {
+                "type": "session.error",
+                "error_code": "INSUFFICIENT_FUNDS",
+                "message": res.get("message") or "Số dư Xu không đủ để tiếp tục Dịch trực tiếp.",
+            }
+    except Exception as exc:
+        logger.warning(f"Realtime settlement call failed safely: {exc}")
+    return None
 _ACTIVE_INGRESS_BUFFERS: Dict[str, RealtimeAudioIngressBuffer] = {}
 
 
@@ -1003,11 +1258,32 @@ async def create_live_translate_session(
         else RealtimeTranslateMode.LIVE_DUB_BILINGUAL
     )
 
+    canonical_actor_id = str(account.get("canonical_user_id") or "").strip()
+    effective_account = dict(account)
+    if canonical_actor_id and not any(k in effective_account for k in ("balance_xu", "credits", "balance")):
+        try:
+            from copyfast_bridge import CoreBridgeClient, bridge_request
+
+            if CoreBridgeClient().configured:
+                wallet_res = await bridge_request(
+                    "GET",
+                    "/internal/v1/wallet",
+                    params={"user_id": canonical_actor_id},
+                    actor_id=canonical_actor_id,
+                )
+                if isinstance(wallet_res, dict) and wallet_res.get("ok"):
+                    w_data = wallet_res.get("data") or {}
+                    bal = w_data.get("balance_xu", w_data.get("balance"))
+                    if isinstance(bal, (int, float)):
+                        effective_account["balance_xu"] = bal
+        except Exception:
+            pass
+
     # PRICING ADMISSION CHECK (Owner approved 2x SubDub pricing; requires paid account)
-    if not is_pricing_admission_allowed(mode_enum, account=account):
+    if not is_pricing_admission_allowed(mode_enum, account=effective_account):
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"PRICING_NOT_CONFIGURED: Tài khoản cần có số dư Xu để sử dụng tính năng dịch trực tiếp (Cước phí 2x SubDub). Vui lòng nạp Xu tại app.toanaas.vn/wallet-app.",
+            detail=f"PRICING_NOT_CONFIGURED: Tài khoản cần có số dư Xu để sử dụng tính năng dịch trực tiếp (Cước phí 2x SubDub). Vui lòng nạp Xu tại app.toanaas.vn/wallet/topup.",
         )
 
     session_id = f"rts_{uuid.uuid4().hex[:12]}"
@@ -1025,7 +1301,11 @@ async def create_live_translate_session(
 
     session = RealtimeTranslateSession(session_id, config)
     _ACTIVE_SESSIONS[session_id] = session
+    _SESSION_CANONICAL_ACTORS[session_id] = canonical_actor_id or owner_id
+    _SESSION_UNBILLED_CHARS[session_id] = 0
+    _SESSION_BOT_BRIDGE_OK[session_id] = 0
     _ACTIVE_INGRESS_BUFFERS[session_id] = RealtimeAudioIngressBuffer()
+    _persist_realtime_session(session)
 
     exp = int(time.time()) + TOKEN_TTL_SECONDS
     try:
@@ -1053,7 +1333,7 @@ async def get_session_status(
 ) -> Dict[str, Any]:
     """Retrieves session metadata, enforcing owner isolation (STATUS_OWNER_AUTH)."""
     owner_id = str(account.get("id") or account.get("account_id") or "").strip()
-    session = _ACTIVE_SESSIONS.get(session_id)
+    session = _get_or_load_session(session_id)
     if not session:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     if str(session.config.owner_id) != owner_id:
@@ -1101,15 +1381,23 @@ async def stop_session(
             detail="Authentication required: valid session cookie or stream token required",
         )
 
-    session = _ACTIVE_SESSIONS.get(session_id)
+    session = _get_or_load_session(session_id)
     if not session:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     if str(session.config.owner_id) != owner_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: session belongs to another owner")
 
+    await _settle_realtime_slice(session, block_count=0, is_final=True)
     session.end()
+    _persist_realtime_session(session)
     _ACTIVE_INGRESS_BUFFERS.pop(session_id, None)
-    return {"ok": True, "session_id": session_id, "state": session.state.value}
+    return {
+        "ok": True,
+        "session_id": session_id,
+        "state": session.state.value,
+        "settled_xu": session.settled_xu,
+        "balance_after": _SESSION_LAST_BALANCE_AFTER.get(session_id),
+    }
 
 
 @router.get("/sessions/{session_id}/export")
@@ -1120,7 +1408,7 @@ async def export_session_subtitles(
 ) -> Dict[str, Any]:
     """Exports transcript as SRT or WebVTT subtitles, enforcing owner scope (EXPORT_OWNER_AUTH)."""
     owner_id = str(account.get("id") or account.get("account_id") or "").strip()
-    session = _ACTIVE_SESSIONS.get(session_id)
+    session = _get_or_load_session(session_id)
     if not session:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     if str(session.config.owner_id) != owner_id:
@@ -1198,9 +1486,10 @@ async def forward_segment_to_bot(
 ) -> BotBridgeResponse:
     """Signs and forwards audio segment to Bot canonical internal realtime route via actual Core Bridge."""
 
+    bridge_actor_id = str(_SESSION_CANONICAL_ACTORS.get(session.session_id) or session.config.owner_id)
     payload = {
         "session_id": session.session_id,
-        "actor_id": str(session.config.owner_id),
+        "actor_id": bridge_actor_id,
         "sequence": sequence,
         "segment_id": speech_seg.segment_id,
         "pcm_bytes_b64": base64.b64encode(speech_seg.pcm_bytes).decode("ascii"),
@@ -1219,7 +1508,7 @@ async def forward_segment_to_bot(
             "POST",
             "/internal/v1/realtime/process-chunk",
             payload=payload,
-            actor_id=str(session.config.owner_id),
+            actor_id=bridge_actor_id,
         )
         if isinstance(bridge_res, dict):
             events = bridge_res.get("events")
@@ -1308,7 +1597,7 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
         return
     token_owner_id, token_device_id = token_res
 
-    session = _ACTIVE_SESSIONS.get(session_id)
+    session = _get_or_load_session(session_id)
     ingress = _ACTIVE_INGRESS_BUFFERS.get(session_id)
     if not session or not ingress:
         await websocket.close(code=4404, reason="Session not found")
@@ -1497,12 +1786,28 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
 
                             for ev in claim_outcome.events:
                                 await websocket.send_json(ev)
+                                if ev.get("type") in ("stt.final", "translation.final"):
+                                    txt = str(ev.get("translated_text") or ev.get("source_text") or "").strip()
+                                    if txt:
+                                        _SESSION_UNBILLED_CHARS[session_id] = _SESSION_UNBILLED_CHARS.get(session_id, 0) + len(txt)
 
+                            _SESSION_BOT_BRIDGE_OK[session_id] = _SESSION_BOT_BRIDGE_OK.get(session_id, 0) + 1
                             await websocket.send_json({"type": "ack", "seq": claim_outcome.ack_seq})
 
                             new_blocks = session.compute_pending_metering_blocks()
                             if new_blocks > 0:
-                                await websocket.send_json(session.get_telemetry_usage())
+                                settle_ev = await _settle_realtime_slice(session, block_count=new_blocks, is_final=False)
+                                if settle_ev:
+                                    await websocket.send_json(settle_ev)
+                                    if settle_ev.get("type") == "session.error":
+                                        explicitly_ended = True
+                                        session.end()
+                                        _persist_realtime_session(session)
+                                        await websocket.close(code=4402, reason="Insufficient balance")
+                                        break
+                                else:
+                                    await websocket.send_json(session.get_telemetry_usage())
+                            _persist_realtime_session(session)
 
                         elif claim_outcome.status == "permanent_rejection":
                             if not session.is_socket_lease_active(socket_lease):
@@ -1550,21 +1855,32 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
                             await websocket.send_json({"type": "session.state", "state": "active"})
                         elif action == "stop":
                             explicitly_ended = True
+                            settle_ev = await _settle_realtime_slice(session, block_count=0, is_final=True)
+                            if settle_ev:
+                                try:
+                                    await websocket.send_json(settle_ev)
+                                except Exception:
+                                    pass
                             session.end()
+                            _persist_realtime_session(session)
                             _ACTIVE_INGRESS_BUFFERS.pop(session_id, None)
-                            await websocket.send_json({"type": "session.state", "state": "ended"})
+                            await websocket.send_json({"type": "session.state", "state": "ended", "settled_xu": session.settled_xu})
                             break
                 except Exception as e:
                     logger.warning(f"Error handling control message: {e}")
 
     except WebSocketDisconnect:
         logger.info(f"Session {session_id} WebSocket disconnected.")
+        _persist_realtime_session(session)
     except Exception as e:
         logger.error(f"Session {session_id} unexpected error: {e}")
         session.fail(str(e))
+        _persist_realtime_session(session)
     finally:
         if explicitly_ended or session.state in (RealtimeSessionState.ENDED, RealtimeSessionState.ERROR):
+            await _settle_realtime_slice(session, block_count=0, is_final=True)
             session.end()
+            _persist_realtime_session(session)
             _ACTIVE_INGRESS_BUFFERS.pop(session_id, None)
         else:
             if session.is_socket_lease_active(socket_lease):

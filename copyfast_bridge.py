@@ -310,10 +310,14 @@ def _sanitize_data(value: Any, *, depth: int = 0) -> Any:
         return "[Dữ liệu lồng quá sâu đã được ẩn]"
     if isinstance(value, dict):
         result: dict[str, Any] = {}
+        is_tts_audio_event = str(value.get("type") or "").strip() == "tts.audio"
         for index, (key, item) in enumerate(value.items()):
             if index >= _MAX_SAFE_DATA_ITEMS:
                 break
             if _sensitive_key(key):
+                continue
+            if is_tts_audio_event and key == "audio_b64" and isinstance(item, str):
+                result[str(key)[:160]] = item[:2_000_000]
                 continue
             result[str(key)[:160]] = _sanitize_data(item, depth=depth + 1)
         return result
