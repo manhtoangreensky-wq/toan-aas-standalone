@@ -288,6 +288,22 @@ không được ghiPASS;fullverbosekếtthúc518,77s. Node/browser/primary giữ
 Issue689amendment7219673927 đã đăng/readbackexact. Bộsourcehiện41file
 gồm7app/21QA/12docs/1workflow,cộng2metadataWeb saurefresh=43file.
 
+### GSC-TESTER-METADATA — amendment sau CI46010974970
+
+Run trênHEAD9b5c38d5 đã qua128regressioncommands,sharedcontracts,
+engine-safety vàComposer;criticalgroup294PASS/1FAILdừng ở
+`test_readiness_json_has_explicit_truth_and_file_metadata`.
+TesterreadinessJSON còn ghi2190dòng trongkhiDANH-SACH-CASE đã2206dòng.
+Đúngca này đã tái hiện local1FAIL;khôngphải app/workerfailure.
+Allowlistmetadata-only MODIFY
+`reports/migration/p0-05d-tester-workspace.json`:đo lạiLFportable
+lines/bytes/SHA256củalocal_files,đăng ký7tài liệuGSCmới vàactiveGSCsession
+theobằngchứngđãcó;giữnguyênsnapshotGPCcũdướikeyprior,remoteclaims/dates/
+legacy48WA18P0/schema/safety/test/syncscript. Không đổiassertionCI.
+ChỉrerunreadinesscaseFAIL;294PASSvà128groupskhôngrerunlocal.
+Filemetadata vàspecnày nằmngoàifingerprintWebeligible;verifyprovenance
+trêncommitmớivẫnbắtbuộc,không tựsửagiátrịfingerprint.
+
 ## Impact scan trước code
 
 `git grep -n -E 'free_prompt_item\(|filter_free_prompt_items\(|_gallery_memory_note_fields\(|freePromptGalleryItemsPath\(|freePromptGalleryRequestIsCurrent\(' -- '*.py' '*.js' '*.mjs' ':!.agents/state/**'`
