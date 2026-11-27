@@ -45,8 +45,66 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-27",
-  "local_files_refresh_scope": "GPC56/GPR12 immutable records;3appfiles;raw104/26,affected113/94,Python51;60topology-correctviews2304samples;PR816delivered;exactCI/releasepending.",
+  "local_files_refresh_scope": "GSC native 7appfiles;117rows/351values/420expansions;14backend/54taxonomy/55currentness;3mountedlocaleflows;Python187pressure/253consumerPASS+2BASEfail;PR819 exactCI metadata recovery;no deploy/LIVE claim.",
   "current_verification_session": {
+    "id": "GALLERY-NATIVE-20261127",
+    "base_sha": "29e0c154dfd247ac4b0a68cd6336ec83fb3af8ef",
+    "branch": "codex/gallery-static-catalogue-20261127",
+    "tracker_issue": 689,
+    "runtime_contract": 7219170926,
+    "ci_python_history_amendment": 7219673927,
+    "manifest": "KIEM-THU/PHIEN-GALLERY-NATIVE-20261127.md",
+    "status": "LOCAL_PASS_CI_METADATA_RECOVERY_PENDING",
+    "model": "gemini-4-hydrogen-xhigh",
+    "application_files": 7,
+    "static_rows": 117,
+    "native_values": 351,
+    "expanded_samples": 420,
+    "native_backend_passed": 14,
+    "taxonomy_passed": 54,
+    "currentness_passed": 55,
+    "ui_history_pressure_passed": 70,
+    "transport_history_pressure_passed": 75,
+    "runtime_history_pressure_passed": 169,
+    "python_convergence_pressure_passed": 187,
+    "node_consumer_initial_passed": 3121,
+    "node_consumer_recovered_failures": 40,
+    "node_consumer_final_new_failures": 0,
+    "python_consumer_passed": 253,
+    "python_consumer_baseline_equivalent_failures": 2,
+    "python_consumer_new_failures": 0,
+    "mounted_locales": ["vi", "en", "zh"],
+    "mounted_viewport": "390x844",
+    "mounted_flow_passed": 3,
+    "mounted_display_clipboard_note_exact": true,
+    "mounted_private_note_count_per_account": 1,
+    "mounted_unexpected_requests": 0,
+    "mounted_page_errors": 0,
+    "mounted_console_errors": 0,
+    "component_browser_views": 54,
+    "counts_overlap_do_not_sum": true,
+    "application_proposal_exact": true,
+    "old_pins_fixtures_expectations_held": true,
+    "coordinator_application_logic_authored": 0,
+    "pr": 819,
+    "first_ci": 46006189663,
+    "second_ci": 46010974970,
+    "second_ci_head": "9b5c38d544eb1e1723d7cc0123b21ddd25ebb807",
+    "second_ci_critical_passed_before_metadata_failure": 294,
+    "second_ci_critical_failed": 1,
+    "metadata_recovery_application_changes": 0,
+    "signed_production_ui": "NOT_TESTED",
+    "auth_draft_full_lifecycle": "NOT_TESTED",
+    "device_safari": "NOT_TESTED",
+    "motion": "LAST_STEP_OPEN",
+    "ci": "EXACT_HEAD_PENDING_AFTER_METADATA_RECOVERY",
+    "deploy": "NOT_DEPLOYED",
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "production_data_writes": 0,
+    "whole_goal_complete": false
+  },
+  "prior_gallery_customer_copy_verification_session": {
     "id": "GALLERY-CUSTOMER-COPY-20261127",
     "base_sha": "bf95e4017717622d694cbef02fde07799a823a8a",
     "branch": "codex/gallery-customer-copy-20261127",
@@ -977,9 +1035,9 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 2190,
-      "bytes": 227239,
-      "sha256": "b093405ad7eb96a15b896d34922c6495a2c6a8161ae41ac7b059c797056ed2e1"
+      "lines": 2206,
+      "bytes": 229118,
+      "sha256": "71b1ec8da47abde564e078ceb79ab2d3bcc46e0d34b4c6a9bd28ab0e4dcec37d"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
@@ -1018,6 +1076,12 @@
       "sha256": "98e72a9de5b343b65d6fa9e5bcbcb8aec0d97eb30fec6e60f9983e1c3a5f725f"
     },
     {
+      "path": "KIEM-THU/PHIEN-GALLERY-NATIVE-20261127.md",
+      "lines": 77,
+      "bytes": 4983,
+      "sha256": "b1aefce34e667b77fd2c5ab59a7ba874ff8092dcb0bbdcc8030b1bf6814ad56b"
+    },
+    {
       "path": "docs/reports/feature-catalog-descriptions108-prepush-20261126.md",
       "lines": 41,
       "bytes": 2371,
@@ -1048,6 +1112,12 @@
       "sha256": "7625d744e8afc999a72f9bcae86996b16a75a4050b8d1d095b03b3274236358a"
     },
     {
+      "path": "docs/reports/gallery-native-prepush-20261127.md",
+      "lines": 89,
+      "bytes": 4784,
+      "sha256": "f1d2e279169119ed938a8ac6c4cd85a31c1836aa3f267a4f0f54b79f78043676"
+    },
+    {
       "path": "docs/superpowers/plans/2026-11-26-feature-catalog-descriptions108.md",
       "lines": 30,
       "bytes": 2060,
@@ -1076,6 +1146,18 @@
       "lines": 30,
       "bytes": 1875,
       "sha256": "69d6e380502f5e4827f902db1d591d048950ce04c0078127db27b14c8cd507ea"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-11-27-gallery-native-runtime.md",
+      "lines": 124,
+      "bytes": 7534,
+      "sha256": "017720da653b4bd21534e46bddadf82a8744dd5ad700ec184c0b3b807dd45e3d"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-11-27-gallery-static-catalogue-copy-data.md",
+      "lines": 61,
+      "bytes": 3448,
+      "sha256": "544585a08603f39d11f7d8410f7b21e5d10e2aeb00b29277456899e15a622030"
     },
     {
       "path": "docs/superpowers/specs/2026-11-26-feature-catalog-descriptions108.md",
@@ -1114,10 +1196,22 @@
       "sha256": "b56f54fe805abf9a3d8a7bbb8d0fe2c92b28f133376396fe14165a9f0f849a27"
     },
     {
+      "path": "docs/superpowers/specs/2026-11-27-gallery-native-runtime.md",
+      "lines": 384,
+      "bytes": 23467,
+      "sha256": "5a03375fea543ea44edb0e6053095d3eca8c242ac4522e25663ef4d2ce777bbe"
+    },
+    {
       "path": "docs/superpowers/specs/2026-11-27-gallery-readability.md",
       "lines": 76,
       "bytes": 4289,
       "sha256": "8ca16522ae8676d4aa6ad60e5f3fd4bca0df1f5240fee75035c771a04c959ba3"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-27-gallery-static-catalogue-copy-data.md",
+      "lines": 79,
+      "bytes": 4753,
+      "sha256": "1d45e72105ba427606e807b54eba2e9715a18ae26a4553f71a8080410189538a"
     },
     {
       "path": "reports/tester/CATALOGUE-DESCRIPTIONS108-20261126.md",
@@ -1148,6 +1242,12 @@
       "lines": 54,
       "bytes": 3270,
       "sha256": "7196ee92e9e49ec33afb98b830db4d241a57496fde7d5c5cb3e6afbf94862a3a"
+    },
+    {
+      "path": "reports/tester/GALLERY-NATIVE-20261127.md",
+      "lines": 55,
+      "bytes": 3560,
+      "sha256": "c52e73e8a773dcfd0e29511c16b6f16c979245bb6efdd9c20896bb25258b23be"
     },
     {
       "path": "scripts/tester_case_sync.py",

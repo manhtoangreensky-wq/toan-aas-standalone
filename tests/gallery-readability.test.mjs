@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
+import {galleryNativeHistoricalSource} from "./helpers/gallery-native-historical.mjs";
 import {physicalGallerySources,galleryRendererFromSources,galleryContext} from "./helpers/gallery-customer-copy-render.mjs";
 const fixtureRaw=fs.readFileSync(new URL("./fixtures/gallery-readability.json",import.meta.url),"utf8").replace(/\r\n/g,"\n");
 assert.equal(createHash("sha256").update(fixtureRaw).digest("hex"),"3cfbd7b2618e05a11d91179d0b12d6be37d911e2d85ad495738defb0e00ab68f");
@@ -26,7 +27,7 @@ test("raw Gallery source changes only the approved counts condition after GPC",(
   assert.equal(hash(expected),fix.portalBeforeLfSha256);
   assert.equal(expected.split(fix.portalRecord.old).length-1,1);
   expected=expected.replace(fix.portalRecord.old,()=>fix.portalRecord.new);
-  assert.equal(source[portalFile]===expected,true,"Unknown application edits must not be hidden");
+  assert.equal(galleryNativeHistoricalSource(source[portalFile],portalFile)===expected,true,"Unknown application edits must not be hidden");
 });
 for(const locale of["vi","en","zh"]){
   for(const state of["guarded","unloaded","denied-valid","malformed"])test(`Gallery ${locale}/${state} never represents an unknown catalog with zero metric tiles`,()=>{

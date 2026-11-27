@@ -23407,6 +23407,144 @@
   MESSAGES.en["portal.form.requiredWarning"] = "Complete the required fields before continuing.";
   MESSAGES.zh["portal.form.requiredWarning"] = "请先填写必填项，然后继续。";
 
+  Object.assign(MESSAGES.vi, {
+    "freePromptGallery.taxonomy.goal.sell": "Bán hàng",
+    "freePromptGallery.taxonomy.goal.lead": "Thu hút khách hàng tiềm năng",
+    "freePromptGallery.taxonomy.goal.engagement": "Tương tác",
+    "freePromptGallery.taxonomy.goal.branding": "Xây dựng thương hiệu",
+    "freePromptGallery.taxonomy.goal.educate": "Giáo dục",
+    "freePromptGallery.taxonomy.goal.organize": "Tổ chức nội dung",
+    "freePromptGallery.taxonomy.goal.mood": "Không khí cảm xúc",
+    "freePromptGallery.taxonomy.platform.tiktok": "TikTok",
+    "freePromptGallery.taxonomy.platform.reels": "Reels",
+    "freePromptGallery.taxonomy.platform.facebook": "Facebook",
+    "freePromptGallery.taxonomy.platform.social": "Mạng xã hội",
+    "freePromptGallery.taxonomy.platform.poster": "Áp phích",
+    "freePromptGallery.taxonomy.platform.instagram": "Instagram",
+    "freePromptGallery.taxonomy.platform.short_video": "Video ngắn",
+    "freePromptGallery.taxonomy.platform.notes": "Ghi chú",
+    "freePromptGallery.taxonomy.platform.video": "Video"
+  });
+
+  Object.assign(MESSAGES.en, {
+    "freePromptGallery.taxonomy.goal.sell": "Sales",
+    "freePromptGallery.taxonomy.goal.lead": "Lead generation",
+    "freePromptGallery.taxonomy.goal.engagement": "Engagement",
+    "freePromptGallery.taxonomy.goal.branding": "Brand building",
+    "freePromptGallery.taxonomy.goal.educate": "Education",
+    "freePromptGallery.taxonomy.goal.organize": "Content organization",
+    "freePromptGallery.taxonomy.goal.mood": "Mood",
+    "freePromptGallery.taxonomy.platform.tiktok": "TikTok",
+    "freePromptGallery.taxonomy.platform.reels": "Reels",
+    "freePromptGallery.taxonomy.platform.facebook": "Facebook",
+    "freePromptGallery.taxonomy.platform.social": "Social media",
+    "freePromptGallery.taxonomy.platform.poster": "Poster",
+    "freePromptGallery.taxonomy.platform.instagram": "Instagram",
+    "freePromptGallery.taxonomy.platform.short_video": "Short video",
+    "freePromptGallery.taxonomy.platform.notes": "Notes",
+    "freePromptGallery.taxonomy.platform.video": "Video"
+  });
+
+  Object.assign(MESSAGES.zh, {
+    "freePromptGallery.taxonomy.goal.sell": "销售",
+    "freePromptGallery.taxonomy.goal.lead": "获取潜在客户",
+    "freePromptGallery.taxonomy.goal.engagement": "互动",
+    "freePromptGallery.taxonomy.goal.branding": "品牌建设",
+    "freePromptGallery.taxonomy.goal.educate": "教育",
+    "freePromptGallery.taxonomy.goal.organize": "内容整理",
+    "freePromptGallery.taxonomy.goal.mood": "情绪氛围",
+    "freePromptGallery.taxonomy.platform.tiktok": "TikTok",
+    "freePromptGallery.taxonomy.platform.reels": "Reels",
+    "freePromptGallery.taxonomy.platform.facebook": "Facebook",
+    "freePromptGallery.taxonomy.platform.social": "社交媒体",
+    "freePromptGallery.taxonomy.platform.poster": "海报",
+    "freePromptGallery.taxonomy.platform.instagram": "Instagram",
+    "freePromptGallery.taxonomy.platform.short_video": "短视频",
+    "freePromptGallery.taxonomy.platform.notes": "笔记",
+    "freePromptGallery.taxonomy.platform.video": "视频"
+  });
+
+  Object.assign(MESSAGES.vi, {
+    "freePromptGallery.feedback.loading": "Đang tải thư viện câu lệnh…",
+    "freePromptGallery.feedback.sessionRequired": "Bạn cần đăng nhập để xem thư viện câu lệnh.",
+    "freePromptGallery.feedback.pageInvalid": "Trang thư viện câu lệnh không hợp lệ. Vui lòng chọn trang khác hoặc tải lại.",
+    "freePromptGallery.feedback.itemInvalid": "Câu lệnh đã chọn trong thư viện câu lệnh không hợp lệ. Vui lòng chọn mục khác hoặc tải lại.",
+    "freePromptGallery.feedback.notLoaded": "Thư viện câu lệnh chưa được tải. Vui lòng tải lại.",
+    "freePromptGallery.feedback.emptyPrompt": "Thư viện câu lệnh chưa có nội dung câu lệnh để sao chép. Vui lòng chọn mục khác hoặc tải lại.",
+    "freePromptGallery.feedback.clipboardUnavailable": "Trình duyệt hiện chưa cho phép sao chép câu lệnh. Vui lòng kiểm tra quyền sao chép hoặc thử lại.",
+    "freePromptGallery.feedback.copied": "Đã sao chép câu lệnh.",
+    "freePromptGallery.feedback.detailLoaded": "Đã tải chi tiết câu lệnh.",
+    "freePromptGallery.feedback.memoryUnavailable": "Chưa thể lưu từ thư viện câu lệnh vào Ghi nhớ lúc này. Vui lòng đăng nhập, tải lại trang rồi thử lại.",
+    "freePromptGallery.feedback.detailRequired": "Vui lòng mở chi tiết câu lệnh đã chọn trong thư viện câu lệnh trước khi lưu vào Ghi nhớ.",
+    "freePromptGallery.feedback.savePending": "Ghi chú từ thư viện câu lệnh đang chờ xác nhận lưu.",
+    "freePromptGallery.feedback.receiptInvalid": "Chưa thể xác nhận việc lưu từ thư viện câu lệnh. Vui lòng thử lại.",
+    "freePromptGallery.feedback.saved": "Đã lưu vào ghi chú riêng trong Ghi nhớ.",
+    "freePromptGallery.feedback.filtered": "Đã áp dụng bộ lọc thư viện câu lệnh.",
+    "freePromptGallery.feedback.allShown": "Đã hiển thị toàn bộ câu lệnh trong thư viện câu lệnh.",
+    "freePromptGallery.feedback.refreshed": "Đã làm mới thư viện câu lệnh.",
+    "freePromptGallery.feedback.catalogFailed": "Không thể tải danh mục thư viện câu lệnh. Vui lòng tải lại hoặc thử lại.",
+    "freePromptGallery.feedback.listingFailed": "Không thể tải danh sách thư viện câu lệnh. Vui lòng thử lại.",
+    "freePromptGallery.feedback.detailFailed": "Không thể tải chi tiết câu lệnh từ thư viện câu lệnh. Vui lòng thử lại.",
+    "freePromptGallery.feedback.queryInvalid": "Từ khóa thư viện câu lệnh không hợp lệ hoặc chứa thông tin nhạy cảm. Vui lòng chọn từ khóa khác và thử lại.",
+    "freePromptGallery.feedback.filterInvalid": "Bộ lọc thư viện câu lệnh không còn hợp lệ. Vui lòng tải lại danh mục hoặc chọn lại.",
+    "freePromptGallery.feedback.readFailed": "Không thể tải danh mục. Vui lòng thử lại.",
+    "freePromptGallery.feedback.saveFailed": "Chưa lưu được câu lệnh. Vui lòng thử lại."
+  });
+
+  Object.assign(MESSAGES.en, {
+    "freePromptGallery.feedback.loading": "Loading the Prompt Library…",
+    "freePromptGallery.feedback.sessionRequired": "Please sign in to view the Prompt Library.",
+    "freePromptGallery.feedback.pageInvalid": "This Prompt Library page isn't valid. Please choose another page or reload.",
+    "freePromptGallery.feedback.itemInvalid": "The selected Prompt Library item isn't valid. Please choose another or reload.",
+    "freePromptGallery.feedback.notLoaded": "Prompt Library hasn't loaded yet. Please reload.",
+    "freePromptGallery.feedback.emptyPrompt": "No prompt content is available in the Prompt Library to copy. Please choose another or reload.",
+    "freePromptGallery.feedback.clipboardUnavailable": "Your browser doesn't allow copying right now. Please check browser permissions and try again.",
+    "freePromptGallery.feedback.copied": "Prompt copied.",
+    "freePromptGallery.feedback.detailLoaded": "Prompt details loaded.",
+    "freePromptGallery.feedback.memoryUnavailable": "Prompt Library can't save to Memory Center right now. Please sign in or reload and try again.",
+    "freePromptGallery.feedback.detailRequired": "Please open the selected prompt's details in the Prompt Library before saving to Memory Center.",
+    "freePromptGallery.feedback.savePending": "Your Prompt Library note is waiting for save confirmation.",
+    "freePromptGallery.feedback.receiptInvalid": "Couldn't confirm saving from the Prompt Library. Please try again.",
+    "freePromptGallery.feedback.saved": "Saved to private notes in Memory Center.",
+    "freePromptGallery.feedback.filtered": "Prompt Library filter applied.",
+    "freePromptGallery.feedback.allShown": "Showing all prompts in the Prompt Library.",
+    "freePromptGallery.feedback.refreshed": "Prompt Library refreshed.",
+    "freePromptGallery.feedback.catalogFailed": "Couldn't load the Prompt Library catalog. Please reload or try again.",
+    "freePromptGallery.feedback.listingFailed": "Couldn't load the Prompt Library list. Please try again.",
+    "freePromptGallery.feedback.detailFailed": "Couldn't load prompt details from the Prompt Library. Please try again.",
+    "freePromptGallery.feedback.queryInvalid": "This Prompt Library search term isn't valid or contains sensitive information. Please choose another and try again.",
+    "freePromptGallery.feedback.filterInvalid": "This Prompt Library filter is no longer valid. Please reload or choose another.",
+    "freePromptGallery.feedback.readFailed": "Couldn't load the catalog. Please try again.",
+    "freePromptGallery.feedback.saveFailed": "Couldn't save the prompt. Please try again."
+  });
+
+  Object.assign(MESSAGES.zh, {
+    "freePromptGallery.feedback.loading": "正在加载提示词库…",
+    "freePromptGallery.feedback.sessionRequired": "请先登录以查看提示词库。",
+    "freePromptGallery.feedback.pageInvalid": "该提示词库页面无效，请选择其他页面或重新加载。",
+    "freePromptGallery.feedback.itemInvalid": "所选提示词库条目无效，请重新选择或重新加载。",
+    "freePromptGallery.feedback.notLoaded": "提示词库尚未加载，请重新加载。",
+    "freePromptGallery.feedback.emptyPrompt": "提示词库中暂无可复制的提示词内容，请重新选择或重新加载。",
+    "freePromptGallery.feedback.clipboardUnavailable": "浏览器暂未允许复制提示词，请检查权限后重试。",
+    "freePromptGallery.feedback.copied": "已复制提示词。",
+    "freePromptGallery.feedback.detailLoaded": "已加载提示词详情。",
+    "freePromptGallery.feedback.memoryUnavailable": "当前无法将提示词库内容保存到记忆中心，请先登录或重新加载后重试。",
+    "freePromptGallery.feedback.detailRequired": "请先在提示词库中打开所选提示词的详情，再保存到记忆中心。",
+    "freePromptGallery.feedback.savePending": "提示词库笔记正在等待保存确认。",
+    "freePromptGallery.feedback.receiptInvalid": "未能确认保存提示词库内容，请重试。",
+    "freePromptGallery.feedback.saved": "已保存到记忆中心私人笔记。",
+    "freePromptGallery.feedback.filtered": "已应用提示词库筛选。",
+    "freePromptGallery.feedback.allShown": "已显示提示词库中的全部提示词。",
+    "freePromptGallery.feedback.refreshed": "已刷新提示词库。",
+    "freePromptGallery.feedback.catalogFailed": "无法加载提示词库目录，请重新加载或重试。",
+    "freePromptGallery.feedback.listingFailed": "无法加载提示词库列表，请重试。",
+    "freePromptGallery.feedback.detailFailed": "无法加载提示词库详情，请重试。",
+    "freePromptGallery.feedback.queryInvalid": "该提示词库搜索词无效或包含敏感信息，请更换关键词后重试。",
+    "freePromptGallery.feedback.filterInvalid": "提示词库筛选条件已失效，请重新加载或重新选择。",
+    "freePromptGallery.feedback.readFailed": "无法加载目录，请重试。",
+    "freePromptGallery.feedback.saveFailed": "未能保存提示词，请重试。"
+  });
+
   verifyEqualKeysets();
 
   function deepFreeze(value) {

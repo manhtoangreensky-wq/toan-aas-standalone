@@ -1,5 +1,21 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## GALLERY-NATIVE-20261127 — Issue689, đang local
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| GSC-DATA | nặng | Đối chiếu117row/351value |Đúng ID/token/số/ý nghĩa,không tự dịch dữ liệu khách |Frozen receipt/420samples |
+| GSC-READ-SAVE | nặng | Đọc/tìm/chi tiết/lưuVI/EN/ZH |Native prompt thống nhất,strictlang/body,legacyVI replay |14backendPASS |
+| GSC-TAXONOMY | vừa | Chọn mục tiêu/nền tảng |16native labels,IDs/unknown held |54rendererPASS |
+| GSC-CURRENT | nặng | Đổi locale/session/selection/cached reuse khi chờ |Không stale merge/copy/toast/unlock;retrykey/capabilityheld |55currentnessPASS |
+| GSC-RESPONSIVE | vừa | Native list/detail/loading390/768/1440 |Không tràn/emptygiả;input16,target44 |54browserviews |
+| GSC-HISTORY | nặng | Source/snapshot thiếu/sai/lặp/đảo/unknown |Finite inversefailclosed,oldpinheld |70pressure/135composed/51PythonPASS |
+| GSC-TRANSPORT-HISTORY | nặng |11transportrecords vàstatic/mount/stale |Exactinverse,assertionsgiữ,baselinecùngID |75pressurePASS;7PASS/1BASEFAIL |
+| GSC-MOUNTED | nặng |Profilelocale→signedshell→filter/detail/copy/save |Display/clipboard/newnote exact,mỗiaccount0→1note |3locale390×844PASS,0unexpected/pageerror/consoleerror |
+| GSC-CONSUMER | nặng |Runtime/backend inverse và28file lịch sử từngFAIL |Khôngđổiapp/pins;khéptoàn40failure |169pressurePASS;40FAIL→40PASS;3121PASSgiữ |
+| GSC-PYTHON-CI | nặng |Pythonconvergence5UI/11transport/7backend |Khôngđổiapp/pins;giữoldfailureclassification |187pressurePASS;255consumer253PASS/2BASEfail;warningtarget1GREEN |
+| GSC-DELIVERY | nặng |CI→merge→deploy→runtime→assets/cache/receipt |Mỗi gate có bằng chứng riêng |Chưa phát hành;[phiên kiểm tra](PHIEN-GALLERY-NATIVE-20261127.md) |
+
 ## GALLERY-CUSTOMER-COPY-20261127 — Issue #689
 
 | Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
@@ -12,7 +28,7 @@
 | GPR-COUNTS | nặng | Chưa tải, không quyền, tìm rỗng, có kết quả | Không 0 giả; số thật giữ; không cột trống | Raw/count26PASS + browser geometry |
 | GPR-READABLE | nặng | 375/1440 sáng/tối ×ba locale ×năm state | Chữ≥4,5/focus≥3/input16/target44; không tràn/lỗi | Browser topology-corrected gate |
 | GPR-HISTORY | nặng | Thiếu/sai/lặp/tách/đảo addition | Fail closed; unknown bytes giữ | Finite JS/Python pressure |
-| GPC-DELIVERY | nặng | CI→merge/tree→Webdeploy→runtime/assets/cache/receipt | Mỗi gate có bằng chứng riêng | Chưa phát hành; [phiên kiểm tra](PHIEN-GALLERY-CUSTOMER-COPY-20261127.md) |
+| GPC-DELIVERY | nặng | CI→merge/tree→Webdeploy→runtime/assets/cache/receipt | Mỗi gate có bằng chứng riêng | PR818DELIVERED29e0c154;CI45975827455/deploy45980538327/receipt7215714422 |
 
 ## FAMILY-CHROME-NATIVE-20261127 — Issue #689
 

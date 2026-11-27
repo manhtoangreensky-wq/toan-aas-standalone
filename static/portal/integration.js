@@ -327,6 +327,8 @@
   let freePromptGallerySessionEpoch = 0;
   let freePromptGalleryListHydrationEpoch = 0;
   let freePromptGalleryDetailHydrationEpoch = 0;
+  let freePromptGalleryLocaleOwner = "";
+  const freePromptGalleryActionEpochs = Object.create(null);
   // Guide Center is a short-lived signed read. Keep its own invalidation
   // sequence so a late catalog response cannot repopulate another account,
   // a different route or an already-guarded session.
@@ -7034,7 +7036,7 @@
     const platform = freePromptGalleryIdentifier(line(source.platform === undefined ? saved.platform : source.platform));
     const query = line(source.q === undefined ? saved.q : source.q);
     if (query.length > 160 || /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(query) || FREE_PROMPT_GALLERY_SECRET_PATTERN.test(query)) {
-      throw new Error("Từ khóa Prompt Gallery không hợp lệ hoặc chứa thông tin nhạy cảm.");
+      throw freePromptGalleryCreateError("queryInvalid");
     }
     const catalog = base().freePromptGalleryCatalog && typeof base().freePromptGalleryCatalog === "object" ? base().freePromptGalleryCatalog : {};
     const categories = new Set(Array.isArray(catalog.categories) ? catalog.categories.map((item) => item && item.id).filter(Boolean) : []);
@@ -7042,12 +7044,12 @@
     const goals = new Set(Array.isArray(catalog.categories) ? catalog.categories.flatMap((item) => Array.isArray(item && item.goals) ? item.goals : []) : []);
     const platforms = new Set(Array.isArray(catalog.categories) ? catalog.categories.flatMap((item) => Array.isArray(item && item.platforms) ? item.platforms : []) : []);
     if ((categoryId && !categories.has(categoryId)) || (industryId && !industries.has(industryId)) || (goal && !goals.has(goal)) || (platform && !platforms.has(platform))) {
-      throw new Error("Bộ lọc Prompt Gallery không còn hợp lệ. Hãy làm mới catalog.");
+      throw freePromptGalleryCreateError("filterInvalid");
     }
     return { category_id: categoryId, industry_id: industryId, goal, platform, q: query };
   }
 
-  function freePromptGalleryItemsPath(filter, page) {
+  function freePromptGalleryItemsPath(filter, page, locale) {
     const params = new URLSearchParams();
     const source = filter && typeof filter === "object" ? filter : {};
     ["category_id", "industry_id", "goal", "platform", "q"].forEach((key) => {
@@ -7056,6 +7058,7 @@
     });
     params.set("page", String(page));
     params.set("page_size", "20");
+    params.set("lang", locale === undefined ? freePromptGalleryActiveLocale() : freePromptGalleryNormalizeLocale(locale));
     return `/free-prompt-gallery/items?${params.toString()}`;
   }
 
@@ -17350,13 +17353,122 @@
       && Boolean(base().session && base().session.authenticated === true);
   }
 
-  function freePromptGalleryRequestIsCurrent(requestEpoch, currentEpoch, sessionEpoch, expectedPath) {
+  const FREE_PROMPT_GALLERY_FEEDBACK_VI = Object.freeze({
+    sessionRequired: "Bạn cần đăng nhập để xem thư viện câu lệnh.",
+    pageInvalid: "Trang thư viện câu lệnh không hợp lệ. Vui lòng chọn trang khác hoặc tải lại.",
+    itemInvalid: "Câu lệnh đã chọn trong thư viện câu lệnh không hợp lệ. Vui lòng chọn mục khác hoặc tải lại.",
+    notLoaded: "Thư viện câu lệnh chưa được tải. Vui lòng tải lại.",
+    emptyPrompt: "Thư viện câu lệnh chưa có nội dung câu lệnh để sao chép. Vui lòng chọn mục khác hoặc tải lại.",
+    clipboardUnavailable: "Trình duyệt hiện chưa cho phép sao chép câu lệnh. Vui lòng kiểm tra quyền sao chép hoặc thử lại.",
+    copied: "Đã sao chép câu lệnh.",
+    detailLoaded: "Đã tải chi tiết câu lệnh.",
+    memoryUnavailable: "Chưa thể lưu từ thư viện câu lệnh vào Ghi nhớ lúc này. Vui lòng đăng nhập, tải lại trang rồi thử lại.",
+    detailRequired: "Vui lòng mở chi tiết câu lệnh đã chọn trong thư viện câu lệnh trước khi lưu vào Ghi nhớ.",
+    savePending: "Ghi chú từ thư viện câu lệnh đang chờ xác nhận lưu.",
+    receiptInvalid: "Chưa thể xác nhận việc lưu từ thư viện câu lệnh. Vui lòng thử lại.",
+    saved: "Đã lưu vào ghi chú riêng trong Ghi nhớ.",
+    filtered: "Đã áp dụng bộ lọc thư viện câu lệnh.",
+    allShown: "Đã hiển thị toàn bộ câu lệnh trong thư viện câu lệnh.",
+    refreshed: "Đã làm mới thư viện câu lệnh.",
+    catalogFailed: "Không thể tải danh mục thư viện câu lệnh. Vui lòng tải lại hoặc thử lại.",
+    listingFailed: "Không thể tải danh sách thư viện câu lệnh. Vui lòng thử lại.",
+    detailFailed: "Không thể tải chi tiết câu lệnh từ thư viện câu lệnh. Vui lòng thử lại.",
+    queryInvalid: "Từ khóa thư viện câu lệnh không hợp lệ hoặc chứa thông tin nhạy cảm. Vui lòng chọn từ khóa khác và thử lại.",
+    filterInvalid: "Bộ lọc thư viện câu lệnh không còn hợp lệ. Vui lòng tải lại danh mục hoặc chọn lại.",
+    readFailed: "Không thể tải danh mục. Vui lòng thử lại.",
+    saveFailed: "Chưa lưu được câu lệnh. Vui lòng thử lại."
+  });
+
+  function freePromptGalleryFeedbackText(key) {
+    const fullKey = `freePromptGallery.feedback.${key}`;
+    const fallback = FREE_PROMPT_GALLERY_FEEDBACK_VI[key] || FREE_PROMPT_GALLERY_FEEDBACK_VI.readFailed;
+    const i18n = typeof window !== "undefined" ? window.TOANAASI18n : null;
+    if (i18n && typeof i18n.t === "function") {
+      const translated = i18n.t(fullKey);
+      if (typeof translated === "string" && translated && translated !== fullKey) return translated;
+    }
+    return fallback;
+  }
+
+  function freePromptGalleryCreateError(key) {
+    const err = new Error(freePromptGalleryFeedbackText(key));
+    err.galleryFeedbackKey = key;
+    return err;
+  }
+
+  function freePromptGalleryErrorKey(error, fallbackKey) {
+    if (error && typeof error.galleryFeedbackKey === "string"
+      && Object.prototype.hasOwnProperty.call(FREE_PROMPT_GALLERY_FEEDBACK_VI, error.galleryFeedbackKey)) {
+      return error.galleryFeedbackKey;
+    }
+    return fallbackKey;
+  }
+
+  function freePromptGalleryNormalizeLocale(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (raw === "vi" || raw === "en" || raw === "zh") return raw;
+    if (raw.startsWith("en-") || raw.startsWith("en_")) return "en";
+    if (raw.startsWith("zh-") || raw.startsWith("zh_")) return "zh";
+    if (raw.startsWith("vi-") || raw.startsWith("vi_")) return "vi";
+    return "vi";
+  }
+
+  function freePromptGalleryActiveLocale() {
+    const i18n = typeof window !== "undefined" ? window.TOANAASI18n : null;
+    const raw = i18n && typeof i18n.getLocale === "function" ? i18n.getLocale() : "";
+    return freePromptGalleryNormalizeLocale(raw);
+  }
+
+  function freePromptGalleryNextActionEpoch(action) {
+    const next = (freePromptGalleryActionEpochs[action] || 0) + 1;
+    freePromptGalleryActionEpochs[action] = next;
+    return next;
+  }
+
+  function freePromptGallerySyncLocaleOwner(locale) {
+    const normalized = freePromptGalleryNormalizeLocale(locale);
+    if (freePromptGalleryLocaleOwner === normalized) return false;
+    freePromptGalleryLocaleOwner = normalized;
+    ++freePromptGalleryListHydrationEpoch;
+    ++freePromptGalleryDetailHydrationEpoch;
+    merge({
+      freePromptGalleryCatalog: {},
+      freePromptGalleryListing: {},
+      freePromptGalleryDetail: {},
+      freePromptGallerySaveResult: {},
+      freePromptGalleryReadState: "loading"
+    });
+    return true;
+  }
+
+  function freePromptGalleryRequestIsCurrent(requestEpoch, currentEpoch, sessionEpoch, expectedPath, expectedLocale) {
     return requestEpoch === currentEpoch
       && sessionEpoch === freePromptGallerySessionEpoch
       && currentPortalPath() === expectedPath
       && expectedPath === "/free-prompt-gallery"
       && base().freePromptGalleryEnabled === true
-      && Boolean(base().session && base().session.authenticated === true);
+      && Boolean(base().session && base().session.authenticated === true)
+      && (!expectedLocale || (freePromptGalleryLocaleOwner === expectedLocale && freePromptGalleryActiveLocale() === expectedLocale));
+  }
+
+  function freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, expectedLocale) {
+    return freePromptGalleryActionEpochs[action] === actionEpoch
+      && sessionEpoch === freePromptGallerySessionEpoch
+      && currentPortalPath() === expectedPath
+      && expectedPath === "/free-prompt-gallery"
+      && base().freePromptGalleryEnabled === true
+      && Boolean(base().session && base().session.authenticated === true)
+      && freePromptGalleryLocaleOwner === expectedLocale
+      && freePromptGalleryActiveLocale() === expectedLocale;
+  }
+
+  function freePromptGallerySaveIsCurrent(detailEpoch, sessionEpoch, expectedPath, expectedLocale, expectedPromptId) {
+    if (!freePromptGalleryRequestIsCurrent(detailEpoch, freePromptGalleryDetailHydrationEpoch, sessionEpoch, expectedPath, expectedLocale)) {
+      return false;
+    }
+    const currentDetail = base().freePromptGalleryDetail;
+    return freePromptGalleryDetailIsSafe(currentDetail, base().freePromptGalleryCatalog)
+      && String(currentDetail.item && currentDetail.item.id || "") === expectedPromptId;
   }
 
   function guideCenterRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
@@ -17523,10 +17635,12 @@
     }
   }
 
-  async function hydrateFreePromptGallery(filterValue, requestedPage) {
+  async function hydrateFreePromptGallery(filterValue, requestedPage, expectedLocale) {
     // This helper is called only by the current private route or an explicit
     // filter/page/refresh interaction. It reads no Bot/bridge/provider state
     // and never writes a query, result or selected prompt to browser storage.
+    const locale = expectedLocale === undefined ? freePromptGalleryActiveLocale() : freePromptGalleryNormalizeLocale(expectedLocale);
+    const ownerChanged = freePromptGallerySyncLocaleOwner(locale);
     const requestEpoch = ++freePromptGalleryListHydrationEpoch;
     // A catalog/list refresh clears the selected prompt. Invalidate a late
     // detail request before it can refill that private selection.
@@ -17542,20 +17656,23 @@
     const savedPagination = saved.pagination && typeof saved.pagination === "object" ? saved.pagination : {};
     const rawPage = requestedPage === undefined ? savedPagination.page : requestedPage;
     const page = Number(rawPage || 1);
-    if (!Number.isInteger(page) || page < 1 || page > 10000) throw new Error("Trang Prompt Gallery không hợp lệ.");
+    if (!Number.isInteger(page) || page < 1 || page > 10000) throw freePromptGalleryCreateError("pageInvalid");
     try {
       let catalog = base().freePromptGalleryCatalog;
-      if (!freePromptGalleryCatalogIsSafe(catalog)) {
-        const catalogResult = await api("/free-prompt-gallery/catalog");
-        if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryListHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      if (ownerChanged || freePromptGalleryLocaleOwner !== locale || !freePromptGalleryCatalogIsSafe(catalog)) {
+        if (base().freePromptGalleryReadState !== "loading") {
+          merge({ freePromptGalleryReadState: "loading" });
+        }
+        const catalogResult = await api(`/free-prompt-gallery/catalog?lang=${encodeURIComponent(locale)}`);
+        if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryListHydrationEpoch, sessionEpoch, expectedPath, locale)) return { stale: true };
         catalog = catalogResult.data && typeof catalogResult.data === "object" ? catalogResult.data : {};
-        if (!freePromptGalleryCatalogIsSafe(catalog)) throw new Error("Máy chủ chưa trả catalog Prompt Gallery an toàn.");
+        if (!freePromptGalleryCatalogIsSafe(catalog)) throw freePromptGalleryCreateError("catalogFailed");
       }
-      const itemsResult = await api(freePromptGalleryItemsPath(filter, page));
-      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryListHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      const itemsResult = await api(freePromptGalleryItemsPath(filter, page, locale));
+      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryListHydrationEpoch, sessionEpoch, expectedPath, locale)) return { stale: true };
       const listing = itemsResult.data && typeof itemsResult.data === "object" ? itemsResult.data : {};
-      if (!freePromptGalleryListingIsSafe(listing, catalog)) throw new Error("Máy chủ chưa trả danh sách Prompt Gallery an toàn.");
-      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryListHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      if (!freePromptGalleryListingIsSafe(listing, catalog)) throw freePromptGalleryCreateError("listingFailed");
+      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryListHydrationEpoch, sessionEpoch, expectedPath, locale)) return { stale: true };
       const successState = {
         freePromptGalleryCatalog: catalog,
         freePromptGalleryListing: listing,
@@ -17571,11 +17688,11 @@
         delete successState.freePromptGalleryDetail;
         delete successState.freePromptGallerySaveResult;
       }
-      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryListHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryListHydrationEpoch, sessionEpoch, expectedPath, locale)) return { stale: true };
       merge(successState);
       return { catalog, listing };
     } catch (error) {
-      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryListHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryListHydrationEpoch, sessionEpoch, expectedPath, locale)) return { stale: true };
       const failureState = {
         freePromptGalleryCatalog: {},
         freePromptGalleryListing: {},
@@ -17588,27 +17705,33 @@
         delete failureState.freePromptGalleryDetail;
         delete failureState.freePromptGallerySaveResult;
       }
-      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryListHydrationEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryListHydrationEpoch, sessionEpoch, expectedPath, locale)) return { stale: true };
       merge(failureState);
-      throw error;
+      throw freePromptGalleryCreateError(freePromptGalleryErrorKey(error, "readFailed"));
     }
   }
 
-  async function hydrateFreePromptGalleryDetail(promptId) {
+  async function hydrateFreePromptGalleryDetail(promptId, expectedLocale) {
     const id = freePromptGalleryItemId(promptId);
+    if (!id) throw freePromptGalleryCreateError("itemInvalid");
+    const locale = expectedLocale === undefined ? freePromptGalleryActiveLocale() : freePromptGalleryNormalizeLocale(expectedLocale);
+    const ownerChanged = freePromptGallerySyncLocaleOwner(locale);
     const catalog = base().freePromptGalleryCatalog;
-    if (!id || !freePromptGalleryCatalogIsSafe(catalog)) throw new Error("Prompt Gallery chưa được nạp an toàn. Hãy làm mới catalog.");
+    if (ownerChanged || freePromptGalleryLocaleOwner !== locale || !freePromptGalleryCatalogIsSafe(catalog)) {
+      throw freePromptGalleryCreateError("notLoaded");
+    }
     const requestEpoch = ++freePromptGalleryDetailHydrationEpoch;
     const sessionEpoch = freePromptGallerySessionEpoch;
     const expectedPath = currentPortalPath();
     try {
-      const result = await api(`/free-prompt-gallery/items/${encodeURIComponent(id)}`);
-      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryDetailHydrationEpoch, sessionEpoch, expectedPath)) return null;
+      const result = await api(`/free-prompt-gallery/items/${encodeURIComponent(id)}?lang=${encodeURIComponent(locale)}`);
+      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryDetailHydrationEpoch, sessionEpoch, expectedPath, locale)) return null;
       const detail = result.data && typeof result.data === "object" ? result.data : {};
-      if (!freePromptGalleryDetailIsSafe(detail, catalog) || String(detail.item.id || "") !== id) {
-        throw new Error("Máy chủ chưa trả chi tiết Prompt Gallery an toàn.");
+      const currentCatalog = base().freePromptGalleryCatalog;
+      if (!freePromptGalleryCatalogIsSafe(currentCatalog) || !freePromptGalleryDetailIsSafe(detail, currentCatalog) || String(detail.item.id || "") !== id) {
+        throw freePromptGalleryCreateError("detailFailed");
       }
-      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryDetailHydrationEpoch, sessionEpoch, expectedPath)) return null;
+      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryDetailHydrationEpoch, sessionEpoch, expectedPath, locale)) return null;
       merge({
         freePromptGalleryDetail: detail,
         freePromptGallerySaveResult: {},
@@ -17617,9 +17740,9 @@
       });
       return detail;
     } catch (error) {
-      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryDetailHydrationEpoch, sessionEpoch, expectedPath)) return null;
+      if (!freePromptGalleryRequestIsCurrent(requestEpoch, freePromptGalleryDetailHydrationEpoch, sessionEpoch, expectedPath, locale)) return null;
       merge({ freePromptGalleryDetail: {} });
-      throw error;
+      throw freePromptGalleryCreateError(freePromptGalleryErrorKey(error, "detailFailed"));
     }
   }
 
@@ -28530,80 +28653,225 @@
         return;
       }
       if (action === "free-prompt-gallery-filter") {
-        if (!(base().capabilities && base().capabilities["free-prompt-gallery-view"] === true)) throw new Error("Cần signed Web session để xem Prompt Gallery.");
-        const filter = freePromptGalleryFilterPayload(fields, {});
-        await hydrateFreePromptGallery(filter, 1);
-        toast(filter.q || filter.category_id || filter.industry_id || filter.goal || filter.platform
-          ? "Đã áp dụng bộ lọc Prompt Gallery."
-          : "Đã hiển thị toàn bộ prompt trong snapshot hiện tại.");
+        if (!(base().capabilities && base().capabilities["free-prompt-gallery-view"] === true)) {
+          toast(freePromptGalleryFeedbackText("sessionRequired"), "error");
+          return;
+        }
+        const locale = freePromptGalleryActiveLocale();
+        const sessionEpoch = freePromptGallerySessionEpoch;
+        const expectedPath = currentPortalPath();
+        const actionEpoch = freePromptGalleryNextActionEpoch(action);
+        const ownerChanged = freePromptGallerySyncLocaleOwner(locale);
+        let startedHydrate = false;
+        try {
+          const filter = freePromptGalleryFilterPayload(fields, {});
+          startedHydrate = true;
+          const result = await hydrateFreePromptGallery(filter, 1, locale);
+          if (!result || result.stale || !freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)) return;
+          toast(freePromptGalleryFeedbackText(
+            filter.q || filter.category_id || filter.industry_id || filter.goal || filter.platform
+              ? "filtered"
+              : "allShown"
+          ));
+        } catch (error) {
+          if (!freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)) return;
+          if (ownerChanged && !startedHydrate && base().freePromptGalleryReadState === "loading") {
+            merge({ freePromptGalleryReadState: "guarded" });
+          }
+          toast(freePromptGalleryFeedbackText(freePromptGalleryErrorKey(error, "readFailed")), "error");
+        }
         return;
       }
       if (action === "free-prompt-gallery-refresh") {
-        if (!(base().capabilities && base().capabilities["free-prompt-gallery-view"] === true)) throw new Error("Cần signed Web session để xem Prompt Gallery.");
+        if (!(base().capabilities && base().capabilities["free-prompt-gallery-view"] === true)) {
+          toast(freePromptGalleryFeedbackText("sessionRequired"), "error");
+          return;
+        }
+        const locale = freePromptGalleryActiveLocale();
+        const sessionEpoch = freePromptGallerySessionEpoch;
+        const expectedPath = currentPortalPath();
+        const actionEpoch = freePromptGalleryNextActionEpoch(action);
+        const ownerChanged = freePromptGallerySyncLocaleOwner(locale);
+        if (!ownerChanged && !freePromptGalleryCatalogIsSafe(base().freePromptGalleryCatalog) && base().freePromptGalleryReadState !== "loading") {
+          merge({ freePromptGalleryReadState: "loading" });
+        }
         setActionBusy(action, route, true);
         try {
-          await hydrateFreePromptGallery();
-          toast("Đã làm mới Prompt Gallery từ snapshot signed.");
+          const result = await hydrateFreePromptGallery(undefined, undefined, locale);
+          if (!result || result.stale || !freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)) return;
+          toast(freePromptGalleryFeedbackText("refreshed"));
+        } catch (error) {
+          if (!freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)) return;
+          toast(freePromptGalleryFeedbackText(freePromptGalleryErrorKey(error, "readFailed")), "error");
         } finally {
-          setActionBusy(action, route, false);
+          if (freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)) {
+            setActionBusy(action, route, false);
+          }
         }
         return;
       }
       if (action === "free-prompt-gallery-page") {
-        if (!(base().capabilities && base().capabilities["free-prompt-gallery-view"] === true)) throw new Error("Cần signed Web session để xem Prompt Gallery.");
+        if (!(base().capabilities && base().capabilities["free-prompt-gallery-view"] === true)) {
+          toast(freePromptGalleryFeedbackText("sessionRequired"), "error");
+          return;
+        }
         const page = Number(String(detail.copyText || "").trim());
-        if (!Number.isInteger(page) || page < 1 || page > 10000) throw new Error("Trang Prompt Gallery không hợp lệ.");
+        if (!Number.isInteger(page) || page < 1 || page > 10000) {
+          toast(freePromptGalleryFeedbackText("pageInvalid"), "error");
+          return;
+        }
+        const locale = freePromptGalleryActiveLocale();
+        const sessionEpoch = freePromptGallerySessionEpoch;
+        const expectedPath = currentPortalPath();
+        const actionEpoch = freePromptGalleryNextActionEpoch(action);
+        const ownerChanged = freePromptGallerySyncLocaleOwner(locale);
+        if (!ownerChanged && !freePromptGalleryCatalogIsSafe(base().freePromptGalleryCatalog) && base().freePromptGalleryReadState !== "loading") {
+          merge({ freePromptGalleryReadState: "loading" });
+        }
         setActionBusy(action, route, true);
         try {
-          await hydrateFreePromptGallery(undefined, page);
+          const result = await hydrateFreePromptGallery(undefined, page, locale);
+          if (!result || result.stale || !freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)) return;
+        } catch (error) {
+          if (!freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)) return;
+          toast(freePromptGalleryFeedbackText(freePromptGalleryErrorKey(error, "readFailed")), "error");
         } finally {
-          setActionBusy(action, route, false);
+          if (freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)) {
+            setActionBusy(action, route, false);
+          }
         }
         return;
       }
       if (action === "free-prompt-gallery-detail" || action === "free-prompt-gallery-copy") {
-        if (!(base().capabilities && base().capabilities["free-prompt-gallery-view"] === true)) throw new Error("Cần signed Web session để xem Prompt Gallery.");
+        if (!(base().capabilities && base().capabilities["free-prompt-gallery-view"] === true)) {
+          toast(freePromptGalleryFeedbackText("sessionRequired"), "error");
+          return;
+        }
         const promptId = freePromptGalleryItemId(detail.copyText || "");
-        if (!promptId) throw new Error("Mã prompt Gallery không hợp lệ.");
+        if (!promptId) {
+          toast(freePromptGalleryFeedbackText("itemInvalid"), "error");
+          return;
+        }
+        const locale = freePromptGalleryActiveLocale();
+        const sessionEpoch = freePromptGallerySessionEpoch;
+        const expectedPath = currentPortalPath();
+        const actionEpoch = freePromptGalleryNextActionEpoch(action);
+        const ownerChanged = freePromptGallerySyncLocaleOwner(locale);
+        let detailEpochAtSelection = freePromptGalleryDetailHydrationEpoch;
         setActionBusy(action, route, true);
         try {
           const existing = base().freePromptGalleryDetail;
-          const selected = freePromptGalleryDetailIsSafe(existing, base().freePromptGalleryCatalog)
-            && String(existing.item && existing.item.id || "") === promptId
-            ? existing
-            : await hydrateFreePromptGalleryDetail(promptId);
-          if (action === "free-prompt-gallery-copy") {
-            const prompt = selected && selected.item && typeof selected.item.prompt === "string" ? selected.item.prompt : "";
-            if (!prompt) throw new Error("Prompt Gallery chưa có nội dung an toàn để sao chép.");
-            if (!(navigator.clipboard && window.isSecureContext)) throw new Error("Trình duyệt chưa cho phép Clipboard API an toàn để sao chép prompt.");
-            await navigator.clipboard.writeText(prompt);
-            toast("Đã sao chép prompt seed. Chưa có AI execution, job hoặc publish action.");
+          const canReuseExisting = !ownerChanged
+            && freePromptGalleryLocaleOwner === locale
+            && freePromptGalleryActiveLocale() === locale
+            && freePromptGalleryDetailIsSafe(existing, base().freePromptGalleryCatalog)
+            && String(existing.item && existing.item.id || "") === promptId;
+          if (!canReuseExisting) {
+            const hydratePromise = hydrateFreePromptGalleryDetail(promptId, locale);
+            detailEpochAtSelection = freePromptGalleryDetailHydrationEpoch;
+            const hydrated = await hydratePromise;
+            if (!hydrated) return;
           } else {
-            toast("Đã tải chi tiết prompt từ snapshot signed.");
+            freePromptGalleryDetailHydrationEpoch += 1;
+            detailEpochAtSelection = freePromptGalleryDetailHydrationEpoch;
+          }
+          if (!freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)
+            || !freePromptGalleryRequestIsCurrent(detailEpochAtSelection, freePromptGalleryDetailHydrationEpoch, sessionEpoch, expectedPath, locale)) {
+            return;
+          }
+          const currentDetail = base().freePromptGalleryDetail;
+          if (!freePromptGalleryDetailIsSafe(currentDetail, base().freePromptGalleryCatalog)
+            || String(currentDetail.item && currentDetail.item.id || "") !== promptId) {
+            return;
+          }
+          if (canReuseExisting) {
+            for (const siblingAction of ["free-prompt-gallery-detail", "free-prompt-gallery-copy"]) {
+              if (siblingAction !== action) {
+                setActionBusy(siblingAction, route, false);
+              }
+            }
+            if (base().capabilities && base().capabilities["free-prompt-gallery-save"] === true) {
+              setActionBusy("free-prompt-gallery-save", route, false);
+            }
+          }
+          if (action === "free-prompt-gallery-copy") {
+            const prompt = currentDetail && currentDetail.item && typeof currentDetail.item.prompt === "string" ? currentDetail.item.prompt : "";
+            if (!prompt) {
+              toast(freePromptGalleryFeedbackText("emptyPrompt"), "error");
+              return;
+            }
+            if (!(navigator.clipboard && window.isSecureContext)) {
+              toast(freePromptGalleryFeedbackText("clipboardUnavailable"), "error");
+              return;
+            }
+            try {
+              await navigator.clipboard.writeText(prompt);
+            } catch (_) {
+              if (!freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)
+                || !freePromptGalleryRequestIsCurrent(detailEpochAtSelection, freePromptGalleryDetailHydrationEpoch, sessionEpoch, expectedPath, locale)) {
+                return;
+              }
+              toast(freePromptGalleryFeedbackText("clipboardUnavailable"), "error");
+              return;
+            }
+            if (!freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)
+              || !freePromptGalleryRequestIsCurrent(detailEpochAtSelection, freePromptGalleryDetailHydrationEpoch, sessionEpoch, expectedPath, locale)) {
+              return;
+            }
+            const latestDetail = base().freePromptGalleryDetail;
+            if (!freePromptGalleryDetailIsSafe(latestDetail, base().freePromptGalleryCatalog)
+              || String(latestDetail.item && latestDetail.item.id || "") !== promptId) {
+              return;
+            }
+            toast(freePromptGalleryFeedbackText("copied"));
+          } else {
+            toast(freePromptGalleryFeedbackText("detailLoaded"));
           }
         } catch (error) {
-          merge({ freePromptGalleryDetail: {} });
-          throw error;
+          if (!freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)
+            || detailEpochAtSelection !== freePromptGalleryDetailHydrationEpoch) {
+            return;
+          }
+          toast(freePromptGalleryFeedbackText(freePromptGalleryErrorKey(error, "detailFailed")), "error");
         } finally {
-          setActionBusy(action, route, false);
+          if (freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)
+            && detailEpochAtSelection === freePromptGalleryDetailHydrationEpoch) {
+            setActionBusy(action, route, false);
+          }
         }
         return;
       }
       if (action === "free-prompt-gallery-save") {
         const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
         if (!(capabilities["free-prompt-gallery-view"] === true && capabilities["free-prompt-gallery-save"] === true)) {
-          throw new Error("Prompt Gallery chỉ có thể lưu vào Memory Center khi signed Web session, CSRF và Memory Center đang sẵn sàng.");
+          toast(freePromptGalleryFeedbackText("memoryUnavailable"), "error");
+          return;
         }
+        const locale = freePromptGalleryActiveLocale();
+        const sessionEpoch = freePromptGallerySessionEpoch;
+        const expectedPath = currentPortalPath();
+        const actionEpoch = freePromptGalleryNextActionEpoch(action);
+        const ownerChanged = freePromptGallerySyncLocaleOwner(locale);
         const promptId = freePromptGalleryItemId(detail.copyText || "");
         const selected = base().freePromptGalleryDetail;
-        if (!promptId || !freePromptGalleryDetailIsSafe(selected, base().freePromptGalleryCatalog)
+        if (ownerChanged || !promptId
+          || freePromptGalleryLocaleOwner !== locale
+          || freePromptGalleryActiveLocale() !== locale
+          || !freePromptGalleryDetailIsSafe(selected, base().freePromptGalleryCatalog)
           || String(selected.item && selected.item.id || "") !== promptId) {
-          throw new Error("Hãy mở chi tiết prompt Gallery đã chọn trước khi lưu vào Memory Center.");
+          toast(freePromptGalleryFeedbackText("detailRequired"), "error");
+          return;
         }
-        const scope = `memory:gallery-save:${promptId}`;
-        const submission = acquireSubmission(scope, promptId);
+        const detailEpochAtStart = freePromptGalleryDetailHydrationEpoch;
+        if (!freePromptGalleryRequestIsCurrent(detailEpochAtStart, freePromptGalleryDetailHydrationEpoch, sessionEpoch, expectedPath, locale)) {
+          toast(freePromptGalleryFeedbackText("memoryUnavailable"), "error");
+          return;
+        }
+        const scope = `memory:gallery-save:${promptId}:${locale}`;
+        const fingerprint = `${promptId}:${locale}`;
+        const submission = acquireSubmission(scope, fingerprint);
         if (!submission) {
-          toast("Ghi chú Gallery đang chờ máy chủ xác nhận.", "error");
+          toast(freePromptGalleryFeedbackText("savePending"), "error");
           return;
         }
         let acknowledged = false;
@@ -28613,24 +28881,39 @@
           // write. The server resolves the immutable Gallery item itself; no
           // prompt text, Bot state, provider input, job or payment data leaves
           // this browser action.
-          const result = await api(`/memory/gallery-items/${encodeURIComponent(promptId)}/save`, {
+          const result = await api(`/memory/gallery-items/${encodeURIComponent(promptId)}/save?lang=${encodeURIComponent(locale)}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ idempotency_key: submission.key })
           });
           acknowledged = true;
+          if (!freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)
+            || !freePromptGallerySaveIsCurrent(detailEpochAtStart, sessionEpoch, expectedPath, locale, promptId)) {
+            return;
+          }
           const receipt = freePromptGallerySaveReceipt(result.data, promptId);
-          if (!receipt) throw new Error("Máy chủ chưa trả receipt lưu Prompt Gallery an toàn.");
+          if (!receipt) {
+            merge({ freePromptGallerySaveResult: {} });
+            toast(freePromptGalleryFeedbackText("receiptInvalid"), "error");
+            return;
+          }
           merge({ freePromptGallerySaveResult: receipt });
-          toast("Đã lưu seed Gallery vào Memory Center riêng của Web account hiện tại.");
+          toast(freePromptGalleryFeedbackText("saved"));
         } catch (error) {
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (!freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)
+            || !freePromptGallerySaveIsCurrent(detailEpochAtStart, sessionEpoch, expectedPath, locale, promptId)) {
+            return;
+          }
           merge({ freePromptGallerySaveResult: {} });
-          throw error;
+          toast(freePromptGalleryFeedbackText("saveFailed"), "error");
         } finally {
           releaseSubmission(submission);
           if (acknowledged) discardSubmission(scope, submission);
-          setActionBusy(action, route, false);
+          if (freePromptGalleryActionContextIsCurrent(action, actionEpoch, sessionEpoch, expectedPath, locale)
+            && freePromptGallerySaveIsCurrent(detailEpochAtStart, sessionEpoch, expectedPath, locale, promptId)) {
+            setActionBusy(action, route, false);
+          }
         }
         return;
       }

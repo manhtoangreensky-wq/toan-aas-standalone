@@ -19,13 +19,14 @@ import uuid
 from typing import Any, Callable
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_db import ensure_copyfast_schema, memory_center_enabled, transaction, utc_now
 from copyfast_free_prompt_gallery import SNAPSHOT_VERSION, free_prompt_item
+from copyfast_gallery_locale import gallery_locale_text, localized_gallery_item
 
 
 router = APIRouter(prefix="/api/v1/memory", tags=["Web Memory Center"])
@@ -495,7 +496,9 @@ def _gallery_memory_boundaries(*, memory_note_persisted: bool) -> dict[str, bool
     return boundaries
 
 
-def _gallery_memory_note_fields(prompt_id: str) -> tuple[str, str, list[str], str, str] | None:
+def _gallery_memory_note_fields(
+    prompt_id: str, lang: str | None = None
+) -> tuple[str, str, list[str], str, str] | None:
     """Resolve one immutable Gallery item into server-controlled note fields.
 
     The static snapshot is the sole source for the saved prompt.  Nothing in
@@ -506,8 +509,23 @@ def _gallery_memory_note_fields(prompt_id: str) -> tuple[str, str, list[str], st
     item = free_prompt_item(prompt_id)
     if item is None:
         return None
+    if lang is None:
+        resolved_item = item
+        category_name = "Free Prompt Gallery"
+        intro = "Mẫu prompt đã lưu từ Free Prompt Gallery của TOAN AAS Web."
+        version_line = f"Snapshot: {SNAPSHOT_VERSION}"
+        identifier_line = f"Prompt ID: {prompt_id}"
+        footer = "Tự rà soát tính chính xác, quyền sử dụng và claim trước khi xuất bản."
+    else:
+        resolved_item = localized_gallery_item(item, lang)
+        category_name = gallery_locale_text("note.category", lang)
+        intro = gallery_locale_text("note.intro", lang)
+        version_line = f"{gallery_locale_text('note.version', lang)}: {SNAPSHOT_VERSION}"
+        identifier_line = f"{gallery_locale_text('note.identifier', lang)}: {prompt_id}"
+        footer = gallery_locale_text("note.footer", lang)
+
     title = _single_line(
-        f"Free Prompt Gallery — {str(item['title'])}",
+        f"{category_name} — {str(resolved_item['title'])}",
         label="Tiêu đề ghi chú Gallery",
         minimum=3,
         maximum=MAX_NOTE_TITLE,
@@ -515,21 +533,21 @@ def _gallery_memory_note_fields(prompt_id: str) -> tuple[str, str, list[str], st
     content = _safe_content(
         "\n".join(
             (
-                "Mẫu prompt đã lưu từ Free Prompt Gallery của TOAN AAS Web.",
-                f"Snapshot: {SNAPSHOT_VERSION}",
-                f"Prompt ID: {prompt_id}",
+                intro,
+                version_line,
+                identifier_line,
                 "",
-                str(item["prompt"]),
+                str(resolved_item["prompt"]),
                 "",
-                "Tự rà soát tính chính xác, quyền sử dụng và claim trước khi xuất bản.",
+                footer,
             )
         ),
         label="Nội dung ghi chú Gallery",
         maximum=MAX_NOTE_CONTENT,
     )
-    tags = _tags(["free-prompt-gallery", str(item["category_id"]), str(item["industry_id"])])
+    tags = _tags(["free-prompt-gallery", str(resolved_item["category_id"]), str(resolved_item["industry_id"])])
     category = _single_line(
-        "Free Prompt Gallery",
+        category_name,
         label="Danh mục ghi chú Gallery",
         minimum=1,
         maximum=MAX_CATEGORY,
@@ -920,6 +938,7 @@ async def save_gallery_item_to_memory(
     prompt_id: str,
     payload: GalleryItemMemorySaveRequest,
     request: Request,
+    lang: str | None = Query(None, pattern="^(vi|en|zh)$"),
     account: dict = Depends(require_csrf),
 ) -> Any:
     """Save one known static Gallery seed into the signed owner's Memory Center.
@@ -934,7 +953,7 @@ async def save_gallery_item_to_memory(
     normalized_prompt_id = str(prompt_id or "").strip()
     if not GALLERY_ITEM_ID_PATTERN.fullmatch(normalized_prompt_id):
         raise HTTPException(status_code=422, detail="Prompt ID Gallery không hợp lệ")
-    fields = _gallery_memory_note_fields(normalized_prompt_id)
+    fields = _gallery_memory_note_fields(normalized_prompt_id, lang=lang)
     if fields is None:
         return JSONResponse(
             envelope(
@@ -949,13 +968,14 @@ async def save_gallery_item_to_memory(
     key = _idempotency_key(payload.idempotency_key)
     account_id = str(account["id"])
     tags_json = json.dumps(tags, ensure_ascii=False, separators=(",", ":"))
-    fingerprint = _fingerprint(
-        {
-            "action": "save_static_gallery_item_to_memory",
-            "prompt_id": normalized_prompt_id,
-            "snapshot_version": SNAPSHOT_VERSION,
-        }
-    )
+    fingerprint_payload = {
+        "action": "save_static_gallery_item_to_memory",
+        "prompt_id": normalized_prompt_id,
+        "snapshot_version": SNAPSHOT_VERSION,
+    }
+    if lang in ("en", "zh"):
+        fingerprint_payload["lang"] = lang
+    fingerprint = _fingerprint(fingerprint_payload)
 
     def operation(conn: Any) -> dict[str, Any]:
         count = conn.execute(

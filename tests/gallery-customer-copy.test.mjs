@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {execFileSync} from "node:child_process";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
+import {galleryNativeHistoricalSource,galleryNativeHistoricalSnapshot} from "./helpers/gallery-native-historical.mjs";
 import {galleryFiles,physicalGallerySources,galleryRendererFromSources,galleryContext,galleryAssertNormalized,
   galleryKnownDescription,galleryKnownInstruction,galleryCustomer,galleryEscape as esc} from "./helpers/gallery-customer-copy-render.mjs";
 const base="bf95e4017717622d694cbef02fde07799a823a8a",physical=physicalGallerySources();
@@ -76,9 +77,10 @@ for(const row of fixture.copyRows)for(const locale of locales)test(`Gallery revi
 });
 for(const locale of locales)test(`Gallery ${locale} leaves every unrelated fixed message and key unchanged`,()=>{
   const {row,old}=rows.get(locale+":list"),owned=new Set(fixture.copyRows.map(copy=>copy.key));
-  const outside=messages=>Object.entries(messages).filter(([key])=>!owned.has(key));
+  const historical=messages=>galleryNativeHistoricalSnapshot(Object.entries(messages),locale);
+  const outside=messages=>historical(messages).filter(([key])=>!owned.has(key));
   assert.deepEqual(outside(row.messages[locale]),outside(old.messages[locale]));
-  assert.deepEqual(Object.keys(row.messages[locale]),Object.keys(old.messages[locale]));
+  assert.deepEqual(historical(row.messages[locale]).map(([key])=>key),historical(old.messages[locale]).map(([key])=>key));
 });
 for(const pin of fixture.applicationSources)test("physical "+pin.file+" equals BASE plus only approved Gallery records",()=>{
   let expected=before[pin.file];
@@ -90,5 +92,5 @@ for(const pin of fixture.applicationSources)test("physical "+pin.file+" equals B
     const row=amendment.portalRecord;assert.equal(expected.split(row.old).length-1,1);
     expected=expected.replace(row.old,()=>row.new);
   }
-  assert.equal(physical[pin.file]===expected,true,"No bytes outside GPC plus its frozen count amendment");
+  assert.equal(galleryNativeHistoricalSource(physical[pin.file],pin.file)===expected,true,"No bytes outside GPC plus its frozen count amendment");
 });
