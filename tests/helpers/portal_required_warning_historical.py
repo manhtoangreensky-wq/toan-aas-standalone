@@ -19,6 +19,8 @@ ADDITIONS = (
 
 def required_warning_historical_source(source: str, file: str) -> str:
     assert isinstance(source, str) and isinstance(file, str), FAIL
+    if file == CATALOGUE and KEY in source:
+        assert source.count(KEY) == 3 and source.count(ADDITIONS) == 1, FAIL
     source = _FIELDS_PROJECT(source, file)
     if file not in (PORTAL, CATALOGUE) or KEY not in source:
         return source

@@ -38,6 +38,7 @@ client retry scope;phản hồi cũ im lặng và không bật control của m�
 | Runtime/backend finitehistory |169pressurePASS,11integration+7backendrecords,rootreview/hookcomplete |
 | CI wiring |YAML/byteguardexit0,chỉ hai native runlines;exactheadCI chưa chạy |
 | Actual mountedE2E |3locale390×844 PASS;profilefirstmount,filter/detail/clipboard/newprivateMemorynote;0unexpected/pageerror/consoleerror |
+| Python CI convergence |187pressurePASS;18consumer255ca253PASS/2BASE-equivalent,warningtarget1GREEN |
 
 Evidence local:gallery-static-data-frozen-nov27.json,
 gallery-native-independent-receipt-nov27.json,gallery-server-receipt-nov27.json,
@@ -65,6 +66,9 @@ không mock chức năng production. Backend chỉ DB/secret giả trong QAchild
 - [x] Actual mountedE2E3locale,clipboard/newprivateMemorynote trongDBtạm.
 - [ ] Manifest/provenance/secret gate final.
 - [x] Công bố runtimecontract đúngquyền,comment7219170926/readbackexact.
+- [x] PR819CI46006189663collectionfail được tái hiện;QA-onlyrecovery
+ khép253PASS/2BASEequivalent,cùngtestfunctionline222/25,câu kỹthuật
+ khôngkhôiphục. KhôngrerunNode/browser/primarykhôngđổi.
 - [ ] Một push/PR cuối sauWeb-onlyprovenance refresh/verify.
 - [ ] Exact-headCI,merge,Web-onlydeploy/runtime/assets/cache/receipt.
 - [ ] Signed-production exact behavior có bằng chứng riêng hoặc để mở.

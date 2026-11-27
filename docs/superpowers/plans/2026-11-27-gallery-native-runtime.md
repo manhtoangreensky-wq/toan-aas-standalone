@@ -88,6 +88,13 @@ dùng mạng hiện có, không đăng nhập/settings mới.
 
 ## Task4 — bàn giao và phát hành đúng một lô
 
+- [x] Runtimecontract công bố/readback7219170926;sourcef0813d95,
+ provenancec2824cf1 vàPR819 đã tạo. CI46006189663FAILcollectionPython
+ historical,khôngmerge/deploy. QA-onlyrecovery187pressurePASS và
+ 18consumer255ca253PASS/2BASE-equivalent sauwarningtarget1GREEN;
+ haiBASEfail cùngfunction/assertionline222/25,không sửaapp/expected.
+- [ ] Pushrecovery+Web-onlyprovenance vào cùngPR819,exactHEADCI xanh.
+
 - [x] Browser localhost54views:390/768/1440,VI/EN/ZH,light/dark,keyboard,
  firstpaint/loading,clipboard/save parity/escaping;0provider/wallet.
 - [x] Independent review đúng delta:backendC0/I0/M0;clientC0/I1/M0,
@@ -104,7 +111,7 @@ dùng mạng hiện có, không đăng nhập/settings mới.
  trigger/permissions/env/deploy giữ. Chưa có exact-headCI result.
 - [x] Cập nhật current operations/initial comparison/master/Tester/
  readiness bằng evidence; thêm PR818DELIVERED recap trong cùng lô.
-- [ ] Finalmanifest/sourcecommit vàWeb-onlyprovenance,không thaypublicationgate.
+- [ ] Finalrecoverymanifest/sourcecommit vàWeb-onlyprovenance.
 - [x] Owner duyệt riêng đúngfile;runtimecontract7219170926 đã công bố
  vàreadbackexact16416ký tự,không bypass rejection.
 - [ ] Explicit stage đúng manifest, commit/push một nhánh/PR, exact-headCI.

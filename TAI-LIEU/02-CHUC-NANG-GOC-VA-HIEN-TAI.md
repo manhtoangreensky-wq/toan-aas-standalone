@@ -18,6 +18,7 @@ GPC/GPR bên dưới đã giao quaPR818/runtime29e0c154; không còn là ứng v
 | Phản hồi muộn bật control lựa chọn mới/cached selection cũ chiếm lựa chọn mới |55ca currentness cuối đạt |Release/discard intent luôn thực hiện;savecapabilitygiữ |
 | Comparator nguồn khóa mốc trước |7failure→finiteleaf70PASS/135composedPASS |Fixture/pin/kỳ vọng cũ giữ,chỉ project input |
 | Comparator toàn nguồn backend/integration ở121consumerfiles |3121PASS giữ;40FAIL→40PASS sau169finitepressure |Đúng7backend/11integrationrecords;không chạy lại3121PASS |
+| Python historicalconvergence choUI mới |187pressurePASS;255consumer253PASS/2BASEfail,warningtarget1GREEN |Giữoldpins/assertions,khôngkhôiphụccâukỹthuậtBASE |
 
 14ca backend mới đạt;34ca affected có32đạt và2BASE-equivalent do thiếu
 tzdata trên Windows;không đổi nhắc lịch để né môi trường.

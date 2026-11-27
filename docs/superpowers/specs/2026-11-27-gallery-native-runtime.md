@@ -240,6 +240,54 @@ profilefirstmount vàdisplay/clipboard/note exact,mỗi account0→1note,
 serverexit0. Evidence `gallery-mounted-KIuDXw/summary.json` và3ảnh.
 Không suy signedproduction/device/Safari/motion/PWAcache từlocalgate.
 
+### GSC-CI-PYTHON-HISTORY — amendment sau CI46006189663
+
+PR819/HEADc2824cf1 CI dừng ởcollection của
+`tests/test_document_operation_portal_contracts.py`:chuỗi Pythonhistorical
+đếngallery_customer_copy_historical_source chưa đảo5UIrecordGSC trước
+GPCpin. Nodefiniteleaf đã có,Pythontransport11record đã có nhưng không
+phải PythonUI/backendconvergence. Không sửa app hoặc xóaassertion.
+
+QA-only allowlist:
+CREATE `tests/helpers/gallery_native_historical.py`,
+`tests/test_gallery_native_historical.py`;
+MODIFY đúng import/hook đầu vào trướcGPRguard của
+`tests/helpers/gallery_customer_copy_historical.py`;
+MODIFY đúng nativepytest runline trong `.github/workflows/webapp-quality.yml`
+để gọi pressurefile mới. Dùng nguyên ba fixture đã khóa:5UIrecord,
+11transportrecord,7backendrecord;không tạo/sửa pin dữ liệu khác.
+Port finiteUI/backend sourceinverse cóowner/slot/hashguard,transport dùng
+helper11recordđã có. Khôngsnapshot/runtimehelper hoặc codeapp mới.
+Giữ old/no-signal/foreignfile/unknownbytes;partial/changed/duplicate/
+detached/foreignowner phảifailclosed;actualcurrent5sources đảo vềGitBASE
+đọcđộc lập. Primarynative vẫnđọcraw.
+
+Root tái hiện đúng3filecommandCI→helperpressure→chỉ groupFAIL vàclosure
+Pythonconsumersbị thay input,không lặp các Node/primary/browser đãđạt.
+SauQApass cập nhậtdocs,sourcecommit rồiWeb-onlyprovenance,đẩy vào cùngPR819;
+không mởPR/Issue mới,khôngmerge/deploy khiCIcònFAIL.
+
+Consumer18file kết thúc255ca:252PASS/3FAIL. Hai assertion rawImageStudio/
+audiohandoff đòi câu kỹ thuật cũ phải đối chiếuBASE cùngtest trước khi
+phânloại,không sửa appđểkhôi phục câu cũ. Failurethứba làwarninghistorical
+pressureinput sửa/lặp warningowner cũ bịnativeleafbáoValueErrortrước khi
+helperwarning báoAssertionErrorđúngnamespace.
+AllowlistQA bổ sung MODIFY `tests/helpers/portal_required_warning_historical.py`
+đúng earlyguard catalogueKEYcount/ADDITIONSexactcount trước_FIELDS_PROJECT,
+giữ originalpostprojectionguard/placement vàmọiassertiontest nguyên vẹn.
+Guard chỉ nhận diện malformedwarning thuộcownerhiệncó,không nớiGSCslot.
+Chỉ rerun1pressurecaseFAIL và haiBASEdiagnostics;252PASS giữ,không lặp
+toàn18file hoặc đổi expectedmessage.
+
+Kết quảkhép:187nativePythonpressurePASS một lượt;18consumers255ca có
+252PASS/3FAIL,warningtargetrerun1PASS/exit0,hainhánhrawcopy chạy cùng
+testfunctionBASE bất biến đềuFAILđúngline222ImageStudio/line25Audiohandoff.
+Ledgercuối253PASS/2BASE-equivalent,0newfailure. Không khôi phục câu kỹ
+thuật hoặc sửa expectedassertion. Lượtconsumer240s bịtoolkill chưađầyđủ
+không được ghiPASS;fullverbosekếtthúc518,77s. Node/browser/primary giữ.
+Issue689amendment7219673927 đã đăng/readbackexact. Bộsourcehiện41file
+gồm7app/21QA/12docs/1workflow,cộng2metadataWeb saurefresh=43file.
+
 ## Impact scan trước code
 
 `git grep -n -E 'free_prompt_item\(|filter_free_prompt_items\(|_gallery_memory_note_fields\(|freePromptGalleryItemsPath\(|freePromptGalleryRequestIsCurrent\(' -- '*.py' '*.js' '*.mjs' ':!.agents/state/**'`

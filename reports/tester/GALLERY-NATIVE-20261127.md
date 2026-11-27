@@ -24,6 +24,9 @@ Tách đúng cổng:local verification không phải release/deploy/LIVE.
 | Browser component |54views390/768/1440,VI/EN/ZH,light/dark;0error/overflow/egress |
 | Browser mounted full flow |3locale390×844 PASS,profilefirst→filter→detail→clipboard→newMemorynote;0unexpected/pageerror/consoleerror |
 | Source review |BackendC0/I0/M0;clientcachedreusefinding closed with RED/worker/GREEN |
+| Python CI convergence |187pressurePASS;5UI/11transport/7backend sourceinverse,pinsgiữ |
+| Python consumers |18file255ca253PASS/2BASE-equivalent;warningtarget1GREEN,khônglặp252PASS |
+| CI first head |46006189663FAILcollection;cùngPR819,khôngmerge/deploy;đangpushQArecovery |
 
 Các suite chồng nhau được giữ thành nhóm,không cộng thành tổng toàn app.
 Không chạy lại nhóm chưa đổi chỉ để lặp kết quả. Native primary đọc raw;
@@ -41,6 +44,8 @@ historical projection hữu hạn không dùng trong runtime.
 - [x] Runtimecontract đã công bố theoOwnerduyệt,Issue689comment7219170926;
  readbackexact16416ký tự. Publicationblocker được gỡ,không gọi lạiworker.
 - [ ] Manifest final vàprovenance Web-only đúngsourcecommit.
+- [x] CIrecoveryQA0appchanges;haiBASEequivalentfail cùngfunction/assertion
+ line222ImageStudio vàline25Audiohandoff;khôngđưa câu kỹthuật trởlạiUI.
 - [ ] Exact-headCI/PR/merge/Webdeploy/runtime/assets/cache/receipt.
 - [ ] Signed-production/auth/fullshell/device/Safari/motion theo checklist mẹ.
 

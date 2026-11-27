@@ -24,8 +24,12 @@
  40PASS/0FAIL/0SKIP/0ERROR sau169finitepressure;không lặp3121PASS.
 - [x] RuntimecontractGSC7219170926 đã công bố đúngfile sauOwnerduyệt;
  readbackexact16416ký tự,publicationblockerđãgỡ.
+- [x] PR819firstCI46006189663FAILPythoncollection;QA-onlyrecovery
+ 187pressurePASS và255consumer253PASS/2BASE-equivalent,
+ warningtarget1GREEN;0appchange/0expectedpinchange.
 - [ ] GSC sourcecommit/provenance/CI→PR→merge→Webdeploy→
- runtime/assets/cache/receipt;chưa đẩy code hoặcdeploy lô này.
+ runtime/assets/cache/receipt;firstheadc2824cf1 đãpush,đangpushQArecovery
+ vào cùngPR819;chưamerge/deploy.
 - [ ] Signed-production/authdraft/Admin/actionBlockReason/AX/device/Safari
  vẫn theo thứ tự checklist;không suy PASS từ asset parity.
 - [ ] MOTION M-FINAL vẫn làm cuối;không Bot/route-engine/provider/wallet/

@@ -13,6 +13,7 @@
 | GSC-TRANSPORT-HISTORY | nặng |11transportrecords vàstatic/mount/stale |Exactinverse,assertionsgiữ,baselinecùngID |75pressurePASS;7PASS/1BASEFAIL |
 | GSC-MOUNTED | nặng |Profilelocale→signedshell→filter/detail/copy/save |Display/clipboard/newnote exact,mỗiaccount0→1note |3locale390×844PASS,0unexpected/pageerror/consoleerror |
 | GSC-CONSUMER | nặng |Runtime/backend inverse và28file lịch sử từngFAIL |Khôngđổiapp/pins;khéptoàn40failure |169pressurePASS;40FAIL→40PASS;3121PASSgiữ |
+| GSC-PYTHON-CI | nặng |Pythonconvergence5UI/11transport/7backend |Khôngđổiapp/pins;giữoldfailureclassification |187pressurePASS;255consumer253PASS/2BASEfail;warningtarget1GREEN |
 | GSC-DELIVERY | nặng |CI→merge→deploy→runtime→assets/cache/receipt |Mỗi gate có bằng chứng riêng |Chưa phát hành;[phiên kiểm tra](PHIEN-GALLERY-NATIVE-20261127.md) |
 
 ## GALLERY-CUSTOMER-COPY-20261127 — Issue #689

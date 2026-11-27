@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 from tests.helpers.gallery_readability_historical import gallery_readability_historical_source
+from tests.helpers.gallery_native_historical import gallery_native_historical_source
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW = (ROOT / "tests/fixtures/gallery-customer-copy.json").read_bytes().replace(b"\r\n", b"\n")
@@ -17,6 +18,7 @@ FILES = {row["file"] for row in FIXTURE["applicationSources"]}
 
 def gallery_customer_copy_historical_source(source: str, file: str) -> str:
     assert isinstance(source, str), FAIL
+    source = gallery_native_historical_source(source, file)
     source = gallery_readability_historical_source(source, file)
     if file not in FILES:
         return source

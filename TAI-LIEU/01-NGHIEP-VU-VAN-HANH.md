@@ -37,6 +37,11 @@ Runtimecontract7219170926 đã đăng vàoIssue689 sauOwnerduyệt riêng đúng
 readbackexact16416ký tự;contractDATA7216006483 giữnguyên.
 Đang chuẩn bịsourcecommit/Web-onlyprovenance/exactheadCI,không coi local
 hoặcpublication là bằng chứngdeploy/LIVE.
+PR819 đầuHEADc2824cf1 bịCI46006189663 chặn ởPythonhistoricalcollection.
+QArecoverykhôngsửaapp:187pressurePASS,18consumer255ca253PASS/2BASEfail
+cùngfunction/assertioncũ;warningclassificationtarget1GREEN. Hai câu kỹ
+thuật rawImageStudio/Audiohandoff ởBASE cũng đãbỏ,không đưa lạiUI.
+Đang đẩyrecovery/provenance vào cùngPR;chưamerge/deployGSC.
 
 ## 27/11/2026 — PR816 đã giao; đang nghiệm thu Thư viện
 

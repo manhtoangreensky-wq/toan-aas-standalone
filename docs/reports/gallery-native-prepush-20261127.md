@@ -7,6 +7,15 @@ BASE/HEAD=`29e0c154dfd247ac4b0a68cd6336ec83fb3af8ef`;
 branch=`codex/gallery-static-catalogue-20261127`;working diff chưa commit.
 Issue689 là tracker chung;không tạo Issue/PR/Project trống.
 
+Checkpointrelease:sourcef0813d9517a93bce1380fd14240c8d7d339c8403,
+provenancec2824cf107411e1a1ece4153851a04743fc2bc16 đãpush/cùngPR819.
+CI46006189663FAILPythonhistoricalcollection;QA-onlyrecovery thêm
+convergence187pressurePASS,18consumer255ca253PASS/2BASE-equivalent,
+warningtarget1GREEN. HaiBASEfail cùngtestfunction/line222ImageStudio và
+line25Audiohandoff đòi câu kỹthuật đãbỏ. Không đổiapp/expectedpins.
+Recoverydelta chỉQA/docs vàcùngCIline;sourcecommit/provenance mới trước
+pushnextHEAD.41sourcefiles+2metadata=43,app7giữnguyên.
+
 ## Ba phần bàn giao
 
 1. Current operations đã cập nhật:
@@ -70,8 +79,8 @@ TESTER_PROJECT_ID=GALLERY-NATIVE-20261127 (local QA session, not GitHub Project)
 TESTER_PROJECT_STATUS=READY
 GITHUB_TRACKER=Issue689 OPEN, existing labels; no ProjectItem
 PUSH_GATE=READY_AFTER_REQUIRED_WEB_PROVENANCE_REFRESH_AND_VERIFY
-COMMIT=NO
-PUSH=NO
+COMMIT=SOURCE_AND_FIRST_PROVENANCE_DONE; RECOVERY_PENDING
+PUSH=FIRST_HEAD_c2824cf1_DONE; RECOVERY_PENDING
 MERGE=NO
 DEPLOY=NO
 LIVE_PASS=NOT_TESTED
