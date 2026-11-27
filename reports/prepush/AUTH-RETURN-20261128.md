@@ -50,3 +50,12 @@ PUSH_GATE=READY;DEPLOY=NO;LIVE_PASS=NOT_TESTED;
 PROVIDER_CALLS=0;WALLET_MUTATIONS=0;PRODUCTION_DATA_WRITES=0.
 Khôngđóngwholegoal;fullauthdraft/race/AX/device/Safari/signedproduction,
 clientcachevàmotioncuốivẫnmở. LESSON_CANDIDATE=NONE.
+
+## CI-1 correction
+
+Run46053422969/HEAD947a3514khôngđạt:criticalcontracts294PASS/1FAIL,
+metadataTester chưa khớp DANH-SACH-CASE thêm10dòng;browser/authQA skip.
+Đã tái hiện selector local. Đây là lỗi đóng gói của điều phối,không phải
+application/worker failure. Amendment mở đúng1readinessJSON để đo lại
+metadata vàghi phiênAUTH;oldtest/remoteclaims/dates/safety giữ nguyên.
+Ứng dụng giữ nguyên exactworkerpairs;local/browsertests không chạy lại.

@@ -112,3 +112,15 @@ Mounted4flowVI/API,EN/internal,ZH/dot,ZH/validlang390×844:
 wrongpassword→A→UIlogout/authme401→Bsamecontext;8ảnh,
 0console/pageerror/unknownrequest,serverexit0. SignedprofileVI;
 khôngsuyfullauth/draft/race/AX/device/Safari/motion/production.
+
+## Amendment CI-1 — metadata Tester, không sửa ứng dụng
+
+CI46053422969 trênHEAD947a3514:mọi cổng trước criticalcontracts đạt;
+criticalcontracts294PASS/1FAIL do p0-05d-tester-workspace.json chưa đo
+lại DANH-SACH-CASE.md sau thêm10dòng. Browser/authQA bị skip,khôngPASS.
+Localđã tái hiện đúngselector test_readiness_json_has_explicit_truth_and_file_metadata.
+Mở đúngreports/migration/p0-05d-tester-workspace.json cho mechanical
+UTF8/LFline/byte/SHArefresh và đăng ký phiênAUTH đã có;giữremoteclaims/
+P0casecount/dates/safety/kỳvọngtestcũ. Không đổ lỗi hoặc gọi lại worker.
+Sauđó chạy đúngmetadata selector,commitnguồn/docs/metadata→refresh
+hai Web-onlyprovenancefile→CI lại cùngPR821đúngHEADmới.
