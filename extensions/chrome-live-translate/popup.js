@@ -99,6 +99,7 @@ function handleStopResponse(stopRes, elements) {
 
 let _currentUserBalanceXu = 0;
 let _isAuthenticated = false;
+let _csrfToken = "";
 
 async function checkAccountAuth(apiBase) {
   try {
@@ -107,8 +108,10 @@ async function checkAccountAuth(apiBase) {
       return { authenticated: false };
     }
     const data = await res.json();
-    const account = data?.data || data?.account || data || {};
-    
+    const payload = data?.data || {};
+    const account = payload.account || data?.account || (payload.id || payload.email ? payload : {});
+    const csrfToken = payload.csrf_token || data?.csrf_token || "";
+
     // Check wallet balance
     let balance = 0;
     try {
@@ -124,6 +127,7 @@ async function checkAccountAuth(apiBase) {
       authenticated: true,
       email: account.email || account.display_name || "Tài khoản TOAN AAS",
       balanceXu: balance,
+      csrfToken,
     };
   } catch (err) {
     return { authenticated: false, error: err.message };
@@ -156,6 +160,7 @@ if (typeof document !== "undefined") {
       const auth = await checkAccountAuth(DEFAULT_API_BASE);
       _isAuthenticated = auth.authenticated;
       _currentUserBalanceXu = auth.balanceXu || 0;
+      _csrfToken = auth.csrfToken || "";
 
       if (auth.authenticated) {
         if (loginCard) loginCard.style.display = "none";
@@ -165,6 +170,26 @@ if (typeof document !== "undefined") {
         if (userBalance) userBalance.textContent = `Số dư: ${_currentUserBalanceXu.toLocaleString("vi-VN")} Xu`;
         if (balanceWarning) {
           balanceWarning.style.display = _currentUserBalanceXu > 0 ? "none" : "block";
+        }
+        if (selectVoice) {
+          try {
+            const vpRes = await fetch(`${DEFAULT_API_BASE}/api/v1/voice/profiles`, { credentials: "include" });
+            if (vpRes.ok) {
+              const vpJson = await vpRes.json();
+              const items = vpJson?.data?.items || [];
+              items.forEach((p) => {
+                if (String(p.status || "").toLowerCase() === "ready" && p.id) {
+                  const val = `vp_${p.id}`;
+                  if (![...selectVoice.options].some((o) => o.value === val)) {
+                    const opt = document.createElement("option");
+                    opt.value = val;
+                    opt.textContent = `Giọng riêng: ${p.name || p.id}`;
+                    selectVoice.appendChild(opt);
+                  }
+                }
+              });
+            }
+          } catch (_) {}
         }
       } else {
         if (loginCard) loginCard.style.display = "block";
@@ -222,6 +247,7 @@ if (typeof document !== "undefined") {
         try {
           await fetch(`${DEFAULT_API_BASE}/api/v1/auth/logout`, {
             method: "POST",
+            headers: _csrfToken ? { "X-CSRF-Token": _csrfToken } : {},
             credentials: "include",
           });
         } catch (_) {}
@@ -257,7 +283,7 @@ if (typeof document !== "undefined") {
           } else {
             // Check balance before starting
             if (_isAuthenticated && _currentUserBalanceXu <= 0) {
-              updateUiFailedElements(elements, "Tài khoản cần có số dư Xu để sử dụng dịch trực tiếp (Cước phí: 2x SubDub). Vui lòng nạp Xu tại app.toanaas.vn/wallet-app.");
+              updateUiFailedElements(elements, "Tài khoản cần có số dư Xu để sử dụng dịch trực tiếp (Cước phí: 2x SubDub). Vui lòng nạp Xu tại app.toanaas.vn/wallet/topup.");
               return;
             }
 
@@ -269,18 +295,20 @@ if (typeof document !== "undefined") {
 
             try {
               const apiBase = DEFAULT_API_BASE;
+              const rawVoice = selectVoice?.value || "male";
               const sessionPayload = {
-                mode: selectMode?.value || "LIVE_DUB",
+                mode: selectMode?.value || "LIVE_DUB_BILINGUAL",
                 target_language: selectLang?.value || "vi",
-                gender_preference: selectVoice?.value === "female" ? "female" : "male",
-                voice_profile_id: selectVoice?.value?.startsWith("vp_") ? selectVoice.value : null,
+                gender_preference: rawVoice === "female" ? "female" : "male",
+                voice_profile_id: rawVoice.startsWith("vp_") ? rawVoice.slice(3) : null,
               };
+
+              const reqHeaders = { "Content-Type": "application/json" };
+              if (_csrfToken) reqHeaders["X-CSRF-Token"] = _csrfToken;
 
               const createRes = await fetch(`${apiBase}/api/v1/live-translate/sessions`, {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: reqHeaders,
                 credentials: "include",
                 body: JSON.stringify(sessionPayload),
               });
@@ -309,6 +337,8 @@ if (typeof document !== "undefined") {
                 sessionData: {
                   sessionId: sessionData.session_id,
                   streamToken: sessionData.stream_token,
+                  authToken: sessionData.stream_token,
+                  apiBase: apiBase,
                   websocketUrl: wsUrl,
                   mode: sessionData.mode,
                   targetLanguage: sessionData.target_language,

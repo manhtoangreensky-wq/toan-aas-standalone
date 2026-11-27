@@ -113,6 +113,9 @@
       btnDub.classList.remove("active");
       dubIcon.textContent = "🔇";
     }
+    try {
+      chrome.runtime.sendMessage({ type: "SET_DUB_MUTED", muted: !isDubbingEnabled });
+    } catch (_) {}
   });
 
   // Font Size Controls
@@ -216,8 +219,8 @@
     if (message.type === "SERVER_EVENT" && message.data) {
       const data = message.data;
 
-      if (data.type === "stt.final" && data.text) {
-        origText.textContent = data.text;
+      if (data.type === "stt.final" && (data.source_text || data.text)) {
+        origText.textContent = data.source_text || data.text;
       }
 
       if (data.type === "translation.final" && data.translated_text) {

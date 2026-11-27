@@ -2350,6 +2350,7 @@ async def security_headers(request: Request, call_next):
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins(),
+    allow_origin_regex=r"^chrome-extension://[a-p]{32}$",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
     allow_headers=["Content-Type", "X-CSRF-Token", "X-Request-ID", "Idempotency-Key"],
@@ -2780,6 +2781,28 @@ async def legacy_b2b_redirect():
     return RedirectResponse("/admin/users", status_code=307)
 
 
+def _attach_live_translate_studio(response: Response, normalized_path: str) -> Response:
+    """Attach the standalone Direct Chrome Live Translate studio on workspace routes."""
+    if normalized_path in {"/welcome", "/legal", "/privacy", "/password-recovery", "/login", "/register", "/admin/login", "/features"}:
+        return response
+    raw_body = getattr(response, "body", None)
+    if not isinstance(raw_body, (bytes, bytearray)):
+        return response
+    html_text = bytes(raw_body).decode("utf-8", errors="ignore")
+    if "/static/portal/integration.js" not in html_text or "live-translate-studio.js" in html_text:
+        return response
+    ver = ""
+    marker = "/static/portal/integration.js?v="
+    if marker in html_text:
+        ver = "?v=" + html_text.split(marker, 1)[1].split('"', 1)[0]
+    css_tag = f'<link rel="stylesheet" href="/static/portal/live-translate-studio.css{ver}">'
+    js_tag = f'<script src="/static/portal/live-translate-studio.js{ver}" defer></script>'
+    updated = html_text.replace("</head>", f"  {css_tag}\n</head>", 1).replace("</body>", f"  {js_tag}\n</body>", 1)
+    headers = {k: v for k, v in response.headers.items() if k.lower() != "content-length"}
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=updated, status_code=response.status_code, headers=headers)
+
+
 @app.get("/{page_path:path}", include_in_schema=False)
 async def page(page_path: str, request: Request):
     normalized = ("/" + page_path.lstrip("/")) if page_path else "/"
@@ -2893,4 +2916,7 @@ async def page(page_path: str, request: Request):
         portal_interface_locale = _public_welcome_interface_locale(request)
     elif normalized == "/password-recovery":
         portal_interface_locale = _public_access_interface_locale(request)
-    return render_portal(page_path, interface_locale=portal_interface_locale)
+    return _attach_live_translate_studio(
+        render_portal(page_path, interface_locale=portal_interface_locale),
+        normalized,
+    )
