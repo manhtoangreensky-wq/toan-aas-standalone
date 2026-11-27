@@ -1,5 +1,20 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 28/11/2026 — AGC đã giao; AUTH-RETURN-01 nghiệm thu local
+
+- [x] AGC PR820/runtimefc9aef43/tree642a89fe;CI46039186914 haiSUCCESS,
+  QA456/456;Webdeploy46043920049SUCCESS;VPS/source/assets/cache exact.
+  Receipt Issue689/7224786017,PR820/7224787056 đọc lại đúng.
+- [x] AUTH-RETURN-01: hai Antigravity4ExtraHigh proposal exact lượt1,
+  88/88 primary; hai helper ngoài phạm vi giữ byte;syntax hai tệp.
+- [x] Mountedreturn4flow/8ảnh390×844:VI/API,EN/internal,ZH/dot,ZH/valid;
+  sai mật khẩu→A→logout→B cùngcontext,0console/pageerror/unknown.
+- [x] Finitehistory120Node/120Python;3NodeFAIL→8selectedPASS;
+  2PythonphysicalreaderPASS,không đổi oldpins/fixtures/assertions.
+- [ ] AUTH exactHEADCI→mộtPR→merge→Webdeploy→runtime/assets/cache/receipt.
+- [ ] Fullauth/draft/race,remainingresponsive/AX,signedproduction,
+  device/Safari/clientofflinecache giữ mở;motionM-FINALcuối.
+
 ## 27/11/2026 — PR819 đã giao; AGC đang khép bàn giao local
 
 - [x] GSC PR819: CI46021673561 hai SUCCESS, đăng nhập456/456;

@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
+import {authReturnHistoricalSource} from './auth-return-historical.mjs';
 
 const failure='Unreviewed Gallery native runtime history';
 const base='29e0c154dfd247ac4b0a68cd6336ec83fb3af8ef';
@@ -101,6 +102,7 @@ const backendSignals=/^from copyfast_gallery_locale import |gallery_locale_text\
 
 export function galleryNativeRuntimeHistoricalSource(source,file){
   require(typeof source==='string','string source');
+  source=authReturnHistoricalSource(source,file);
   if(file===integration){
     if(!transportSignals.test(source))return source;
     for(const row of [...transport.records].reverse()){

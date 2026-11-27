@@ -10523,6 +10523,7 @@
     },
     {
       "files": [
+        "KIEM-THU/PHIEN-AUTH-RETURN-20261128.md",
         "KIEM-THU/PHIEN-GALLERY-CUSTOMER-COPY-20261127.md",
         "KIEM-THU/PHIEN-IMAGE-COMPOSER-NATIVE-LOCALE-20261126.md",
         "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
@@ -10561,10 +10562,9 @@
         "reports/audit/R218-PR661-MAIN-COMPAT-QA-20261023.json",
         "reports/audit/R218-SUBDUB-AUTHORING-READINESS-QA-20261024.json",
         "reports/audit/R218-SUBDUB-EMPTY-REVIEW-QA-20261024.json",
-        "reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json",
-        "reports/audit/R218-SUBDUB-LABEL-CONTRAST-QA-20261024.json"
+        "reports/audit/R218-SUBDUB-INPUT-FONT-QA-20261024.json"
       ],
-      "occurrences": 88,
+      "occurrences": 89,
       "provider": "Gemini"
     },
     {
@@ -18853,9 +18853,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 741,
-  "source_files_scanned": 741,
-  "source_fingerprint_sha256": "3f6490dfba6006f14199012c30418bc955c3cde2390d780ecb81843c775dc168",
+  "source_files_discovered": 743,
+  "source_files_scanned": 743,
+  "source_fingerprint_sha256": "5126b32a00ba6917dfc53c529adfad0f2a344c88636460b2534c26b7945aa0a4",
   "source_root": "repository-root",
   "ui_path_references": [
     {

@@ -1,5 +1,15 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## AUTH-RETURN-01 — Issue689, phiên AUTH-RETURN-20261128
+
+| Case | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|
+| AUTH-RETURN-VALID | Đường UI/lang/trailing slash/near-prefix | Giữ đích hợp lệ | Raw primary88 |
+| AUTH-RETURN-UNSAFE | API/internal/percent/dot/control | Dùng dashboard fallback | Raw primary88;mounted4flow |
+| AUTH-RETURN-ACCOUNT | Sai mật khẩu→A→logout→B | Lỗi hiện,busy/secret sạch,A không còn | Actual mountedlocalhost,8ảnh |
+| AUTH-RETURN-HISTORY | Sửa/lặp/partial/đặt sai owner | Fail closed,unknown bytes giữ | Node120/Python120pressure |
+| AUTH-RETURN-DELIVERY | CI→merge→Webdeploy→source/assets/cache | Gate riêng,không suy LIVE từ200 | Release pending,phiên riêng |
+
 ## ADMIN-GUARD-CUSTOMER-COPY-20261127 — Issue689, ứng viên local
 
 | Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |

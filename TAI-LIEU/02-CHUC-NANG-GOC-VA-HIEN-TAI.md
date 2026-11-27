@@ -1,5 +1,22 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 28/11/2026 — AUTH-RETURN-01, không thay cơ chế đăng nhập
+
+AGC đã giao PR820/runtimefc9aef43; các câu “chưa phát hành AGC” bên dưới
+là lịch sử. Nguồn đối chiếu AUTH: hai `safeReturnPath`, các consumer
+`nextRoute`/`requestedPortalRoute`, spec R217-03 và Git BASEfc9aef43.
+
+| Hành vi trước | Ứng viên hiện tại | Giữ nguyên |
+|---|---|---|
+| Helper chấp nhận `/api`, `/internal` và hậu duệ | Trả rỗng để dùng trang chính dự phòng | API/session/OAuth/quyền phía máy chủ |
+| Path mã hóa, đoạn chấm và control ngoài NUL có thể lọt | Từ chối đúng các nhóm trong contract | Trim/trailing slash/lang và guard external/auth-loop/query cũ |
+| Đường tên gần giống API/nội bộ | `/api-tools`, `/apiary`, `/internal-tools` vẫn hợp lệ | Không mở allowlist mới hoặc đổi route |
+| Kiểm lịch sử khóa toàn bộ nguồn | Inverse QA hữu hạn đúng hai helper trước pin cũ | Hash/fixture/kỳ vọng cũ; primary đọc raw app |
+
+88 ca primary đạt; bốn luồng localhost thực đã kiểm API/nội bộ/dot và
+trang hợp lệ có lang, đăng xuất/A→B cùng context. Không phải provider,
+production, draft/race/AX/device/Safari hoặc motion PASS.
+
 ## 27/11/2026 — thông báo quản trị giữ chức năng, bỏ chữ kỹ thuật
 
 GSC đã giao PR819/runtime5f316f29; trạng thái GSC pending bên dưới là lịch sử.

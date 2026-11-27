@@ -1,5 +1,29 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 28/11/2026 — AGC đã phát hành; đang khép đường quay lại sau đăng nhập
+
+AGC bên dưới đã giao qua PR820: CI46039186914 hai job SUCCESS,
+456/456 bản ghi QA; Web-only deploy46043920049 SUCCESS.
+Runtime `fc9aef439d8fe7ecb00a2c68a167dad501f54eb9`, cây
+`642a89feab05f5422045139e7d3304970c55d7d3` đúng bản kiểm.
+Receipt Issue689/7224786017 và PR820/7224787056 đã đọc lại.
+Không dùng tài nguyên công khai thay bằng chứng phiên khách đăng nhập.
+
+Ứng viên AUTH-RETURN-01 chỉ giới hạn đích quay lại của hai giao diện
+đăng nhập: đường trang Web hợp lệ và `lang=vi/en/zh` vẫn giữ; đường
+API/nội bộ, percent trong pathname, đoạn `.`/`..` và ký tự điều khiển
+bị từ chối, dùng trang chính dự phòng hiện có. Không đổi đăng nhập,
+phiên, quyền, OAuth, API phía máy chủ hoặc hồ sơ người dùng.
+
+Local: 88/88 ca helper, cú pháp hai tệp và byte ngoài helper giữ nguyên.
+Ứng dụng thật chạy trên SQLite/asset tạm đã qua bốn luồng độc lập tại
+390×844: VI/API, EN/nội bộ, ZH/dot-segment, ZH/trang hợp lệ có lang;
+mỗi luồng sai mật khẩu → A → đăng xuất thật → B cùng trình duyệt,
+A không còn; tổng 8 ảnh, không lỗi trang/console/yêu cầu ngoài phạm vi.
+Ngôn ngữ trang đăng nhập VI/EN/ZH; hồ sơ tài khoản tạm ở trang đã đăng
+nhập vẫn VI. Không suy toàn bộ auth/draft/race/AX/device/Safari/motion.
+Ứng viên chưa phát hành; CI/merge/deploy có receipt riêng.
+
 ## 27/11/2026 — Gallery đã giao; thông báo quản trị là ứng viên local
 
 Gallery đã phát hành qua PR819: CI46021673561 hai SUCCESS, QA456/456;

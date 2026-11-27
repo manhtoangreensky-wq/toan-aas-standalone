@@ -5,6 +5,23 @@
 **Nhánh tài liệu:** `webapp-plan-r116` → push vào `webapp-checklist-r116`
 **Mục tiêu:** có một thứ tự thi công duy nhất, một checklist có trạng thái và các spec đủ cụ thể để người thực hiện không phải đoán.
 
+### Cập nhật28/11/2026 — AGC đã giao, AUTH-RETURN-01 đang khép
+
+AGC PR820 đã merge/deploy: CI46039186914 haiSUCCESS/456QA,
+Webdeploy46043920049SUCCESS;runtimefc9aef43/tree642a89fe.
+Receipt689/7224786017 vàPR820/7224787056 exact; các mốc AGC pending
+bên dưới giữ làm lịch sử, không còn là trạng thái hiện tại.
+
+AUTH-RETURN-01 có hai worker4ExtraHigh trả proposal đúng lượt1,
+chỉ hai helper;88primaryGREEN,syntax/protectedoutside exact.
+Mountedactualapp4flow/8ảnh390×844:VI/API,EN/internal,ZH/dot,ZH/validlang;
+wrongpassword→A→logout→B cùngcontext,0pageerror/console/unknownrequest.
+Finitehistory120Node/120PythonPASS;recovery3NodeFAIL khép với8selected
+PASS,Python2physicalreaderPASS;oldpin/fixture/assertions giữ nguyên.
+Spec/plan riêng2026-11-28-auth-return-html-targets;exactCI/release còn mở.
+Broaderauth/draft/race,AX/device/Safari/signedproduction vẫn mở;
+motion M-FINAL vẫn cuối, không Bot/engine/provider/tiền/data.
+
 ### Cập nhật27/11/2026 — GSC đã giao, AGC đang bàn giao
 
 PR819 đã merge và triển khai Web-only: CI46021673561 hai SUCCESS,
