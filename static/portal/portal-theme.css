@@ -24173,3 +24173,39 @@ html:not([data-portal-theme="dark"]) [data-portal-main][data-portal-presentation
 html:not([data-portal-theme="dark"]) [data-portal-main][data-portal-presentation-route="default"] > .portal-page:has(> .portal-feature-jumps) > .portal-hero .portal-eyebrow {
   color: var(--portal-text);
 }
+
+/* Gallery readability: scoped text, input sizing and truthful-count layout. */
+:root .portal-page.portal-free-prompt-gallery form[data-portal-action="free-prompt-gallery-filter"] :is(input, select, textarea) {
+  font-size: 16px;
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-free-prompt-gallery > .portal-hero .portal-eyebrow {
+  color: var(--portal-text);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-free-prompt-gallery > .portal-content-prompt-pack-intro :is(h2, p, dt, dd, .portal-section-kicker) {
+  color: var(--portal-text);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-free-prompt-gallery > .portal-content-prompt-pack-intro dl > div {
+  background: var(--portal-surface);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-free-prompt-gallery :is(.portal-field > label, .portal-field-help, .portal-form-note, .portal-empty p) {
+  color: var(--portal-text);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-free-prompt-gallery .portal-prompt-library-tags span {
+  color: var(--portal-text);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-free-prompt-gallery :is(.portal-content-prompt-pack-section, .portal-content-prompt-pack-section article, .portal-content-prompt-pack-section pre) {
+  background: var(--portal-surface);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-free-prompt-gallery .portal-content-prompt-pack-section :is(h3, pre) {
+  color: var(--portal-text);
+}
+html[data-portal-theme="dark"] .portal-page.portal-free-prompt-gallery > .portal-content-prompt-pack-intro :is(.portal-section-kicker, p) {
+  color: var(--portal-text);
+}
+html:not([data-portal-theme="dark"]) .portal-page.portal-free-prompt-gallery .portal-button--primary:not(:disabled) {
+  background: var(--portal-action) !important;
+  color: var(--portal-on-action) !important;
+}
+:root .portal-page.portal-free-prompt-gallery > .portal-content-prompt-pack-intro:not(:has(> dl)) {
+  grid-template-columns: minmax(0, 1fr);
+}

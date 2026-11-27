@@ -1,5 +1,30 @@
 # R218 — Checklist UI/UX toàn bộ sản phẩm WebApp
 
+## 27/11/2026 — PR816 đã giao; GPC/GPR đang nghiệm thu
+
+- [x] PR816: CI45945310401 hai SUCCESS; deploy45948237821 SUCCESS;
+  merge/runtime bf95e401, tree7e057484 bằng tested tree. VPS sạch,
+  ba dịch vụ/health/7+7assets/cache đúng; hai receipt đọc lại exact.
+- [x] GPC: 17 khóa/51 giá trị (16 Gallery +1 shell), 50 đổi/1 giữ;
+  56 record bất biến. Ba worker proposal R1, không tự viết lại app.
+- [x] Raw renderer104PASS; affected113PASS; Python leaf14PASS;
+  ngoài Gallery12route/localePASS. Review gộp GPC C0/I0/M0.
+- [x] Browser RED60view phát hiện lỗi màu/cỡ chữ có sẵn; BASE3view
+  tái hiện. Không suy gradient gaps thành PASS.
+- [x] GPR: bốn Antigravity4ExtraHigh proposal, 11rule+1countcondition;
+  RED26=14fail12pass → GREEN26. GPC source forward2PASS.
+- [x] GPR history/affected Node94PASS/Python51PASS; delta C0I0M0.
+  Browser corrected60view/2304mẫu,min5,21665/focus5,86008/input16/target44;
+  desktopmain1136px,0finding/error/tràn/egress/unmeasured;ảnhđãxem.
+- [x] CIrecovery cùngPR818:3snapshotcases→146PASS/reviewC0I0M0;
+  2FBCreader cases→closure117files3027PASS/0fail/skip. Appgiữ.
+  StaticGalleryPython4PASS/1exactBASEFAILline115,0NEW;khôngđổiassertion.
+- [ ] Docs/Tester/metadata/provenance/exactCI/merge/Webdeploy/runtime/
+  assets/cache/receipt. Chưa coi GPC/GPR là bản đã phát hành.
+- [ ] GPC-CATALOG theo static ID/version; sau đó Admin/actionBlockReason,
+  auth/draft, responsive/AX/device/Safari/signed-production.
+- [ ] Motion M-FINAL01..06 cuối cùng; WHOLE_GOAL_COMPLETE=NO.
+
 ## 27/11/2026 — PR815 đã giao; FCH/FCR local đạt, chưa phát hành
 
 - [x] PR815CI45878733080haiSUCCESS;merge/runtime363d6ca5,

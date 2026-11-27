@@ -1,5 +1,31 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 27/11/2026 — PR816 đã giao; đang nghiệm thu Thư viện
+
+PR816 đã giao tại runtime `bf95e4017717622d694cbef02fde07799a823a8a`.
+CI45945310401 có hai job SUCCESS; deploy45948237821 SUCCESS.
+Tree `7e0574849d4172789ee3858180769cbad3665ef5` bằng tree đã kiểm;
+nguồn VPS sạch, Web/Bot/nginx active, health đúng ứng dụng.
+7 tệp trực tiếp và 7 URL có phiên bản khớp; cache
+`local-780dbd9e3e3684897e17` đúng hash 15 tài nguyên.
+Biên nhận Issue689/7211048271 và PR816/7211048279 đọc lại đúng.
+Các ghi chú FCH/FCR “chưa phát hành” bên dưới là mốc lịch sử trước giao hàng.
+
+Ứng viên Thư viện câu lệnh miễn phí đổi 50 giá trị cố định, giữ một giá trị
+đúng: 16 khóa Gallery và một khóa tên trang, tổng 51 giá trị VI/EN/ZH.
+Bỏ hướng dẫn lặp trên từng thẻ, khung chi tiết chưa chọn và các ô giải thích
+cuối trang; giữ đầy đủ thao tác, dữ liệu và điều kiện xác nhận lưu.
+Chỉ hai câu cố định do Web cung cấp được đổi sang ngôn ngữ đang chọn;
+mọi chuỗi khác và nội dung khách giữ nguyên. Không dịch mù dữ liệu.
+
+Trình duyệt phát hiện lỗi màu chữ có sẵn ở cả BASE: cần ghép đúng màu
+chữ/nền theo giao diện sáng/tối, đặt ô lọc điện thoại 16px và không hiện
+số 0 thay cho danh mục chưa tải được. 11 rule và một điều kiện của worker
+đã ghép; chưa coi là bản đã phát hành hoặc toàn Gallery đã đúng ngôn ngữ.
+Phần danh mục tĩnh cần đối chiếu định danh/phiên bản ở GPC-CATALOG riêng.
+Auth/draft, toàn khung trang, thiết bị/Safari và signed-production còn mở;
+motion vẫn làm cuối. Không đổi backend, Bot, engine, provider hoặc tiền.
+
 ## 27/11/2026 — bộ chữ đầy đủ đã giao; ứng viên trang nhóm công cụ
 
 PR815 đã giao tại runtime `363d6ca55081eea4089ebf489cd183b09ba1aa96`.

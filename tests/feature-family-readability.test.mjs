@@ -2,8 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
+import {galleryReadabilityHistoricalSource} from "./helpers/gallery-readability-historical.mjs";
 const file="static/portal/portal-theme.css",base="363d6ca55081eea4089ebf489cd183b09ba1aa96";
-const read=()=>fs.readFileSync(file,"utf8").replace(/\r\n/g,"\n");
+// FCR now reads its historical input; the GPR acceptance reads physical CSS.
+const read=()=>galleryReadabilityHistoricalSource(fs.readFileSync(file,"utf8").replace(/\r\n/g,"\n"),file);
 const before=execFileSync("git",["show",base+":"+file],{encoding:"utf8",maxBuffer:8e6}).replace(/\r\n/g,"\n");
 const scope='[data-portal-main][data-portal-presentation-route="default"] > .portal-page:has(> .portal-feature-jumps)';
 const selectors=[

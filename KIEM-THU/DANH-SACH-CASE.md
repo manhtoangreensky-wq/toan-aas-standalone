@@ -1,5 +1,19 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## GALLERY-CUSTOMER-COPY-20261127 — Issue #689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| GPC-COPY | nặng | Đọc chữ cố định VI/EN/ZH | 51 giá trị đúng, không thuật ngữ triển khai | Raw renderer104PASS |
+| GPC-STRUCTURE | vừa | Mở danh sách/chưa chọn/chi tiết | Không ô dư; giữ mọi control và dữ liệu | Markup/control/DTO comparison |
+| GPC-BOUNDARY | nặng | Thử hai chuỗi Web và chuỗi lạ/gần giống | Chỉ exact known dịch; nội dung khách escape và giữ | Exact-known/unknown acceptance |
+| GPC-RECEIPT | nặng | Bốn mức ưu tiên, receipt sai/khác lựa chọn | Nhãn đúng locale; không báo lưu sai | Actual normalizer/render acceptance |
+| GPC-PROTECTED | nặng | So bốn route ngoài Gallery ×ba locale | Nguyên HTML/title/description | Protected12PASS |
+| GPR-COUNTS | nặng | Chưa tải, không quyền, tìm rỗng, có kết quả | Không 0 giả; số thật giữ; không cột trống | Raw/count26PASS + browser geometry |
+| GPR-READABLE | nặng | 375/1440 sáng/tối ×ba locale ×năm state | Chữ≥4,5/focus≥3/input16/target44; không tràn/lỗi | Browser topology-corrected gate |
+| GPR-HISTORY | nặng | Thiếu/sai/lặp/tách/đảo addition | Fail closed; unknown bytes giữ | Finite JS/Python pressure |
+| GPC-DELIVERY | nặng | CI→merge/tree→Webdeploy→runtime/assets/cache/receipt | Mỗi gate có bằng chứng riêng | Chưa phát hành; [phiên kiểm tra](PHIEN-GALLERY-CUSTOMER-COPY-20261127.md) |
+
 ## FAMILY-CHROME-NATIVE-20261127 — Issue #689
 
 | Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |

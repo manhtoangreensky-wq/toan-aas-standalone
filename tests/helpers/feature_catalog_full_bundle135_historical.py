@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 from tests.helpers.feature_family_native_chrome_historical import feature_family_native_chrome_historical_source
 from tests.helpers.feature_family_readability_historical import feature_family_readability_historical_source
+from tests.helpers.gallery_customer_copy_historical import gallery_customer_copy_historical_source
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW = (ROOT / "tests/fixtures/feature-catalog-full-bundle135.json").read_bytes().replace(b"\r\n", b"\n")
@@ -31,6 +32,7 @@ def feature_catalog_full_bundle135_historical_source(source: str, file: str) -> 
     )):
         assert source.count("  const FEATURE_CATALOG_MESSAGES = {") == 1, FAIL
         assert source.count("\n  // Media Studio follows") == 1, FAIL
+    source = gallery_customer_copy_historical_source(source, file)
     source = feature_family_native_chrome_historical_source(source, file)
     source = feature_family_readability_historical_source(source, file)
     if file != FILE:

@@ -1,0 +1,31 @@
+{
+  "base_sha": "bf95e4017717622d694cbef02fde07799a823a8a",
+  "cssBeforeLfSha256": "190fbd5865ff507e91642a3424cfaf6206875336cbd0818e52c2fa40994fb845",
+  "portalBeforeLfSha256": "5cbb91ed9f4dc6eba4d9067565c3260b43d5d8f6f1e8069e14da80335c46f4db",
+  "cssMarker": "/* Gallery readability: scoped text, input sizing and truthful-count layout. */",
+  "cssRules": [
+    ":root .portal-page.portal-free-prompt-gallery form[data-portal-action=\"free-prompt-gallery-filter\"] :is(input, select, textarea) {\n  font-size: 16px;\n}",
+    "html:not([data-portal-theme=\"dark\"]) .portal-page.portal-free-prompt-gallery > .portal-hero .portal-eyebrow {\n  color: var(--portal-text);\n}",
+    "html:not([data-portal-theme=\"dark\"]) .portal-page.portal-free-prompt-gallery > .portal-content-prompt-pack-intro :is(h2, p, dt, dd, .portal-section-kicker) {\n  color: var(--portal-text);\n}",
+    "html:not([data-portal-theme=\"dark\"]) .portal-page.portal-free-prompt-gallery > .portal-content-prompt-pack-intro dl > div {\n  background: var(--portal-surface);\n}",
+    "html:not([data-portal-theme=\"dark\"]) .portal-page.portal-free-prompt-gallery :is(.portal-field > label, .portal-field-help, .portal-form-note, .portal-empty p) {\n  color: var(--portal-text);\n}",
+    "html:not([data-portal-theme=\"dark\"]) .portal-page.portal-free-prompt-gallery .portal-prompt-library-tags span {\n  color: var(--portal-text);\n}",
+    "html:not([data-portal-theme=\"dark\"]) .portal-page.portal-free-prompt-gallery :is(.portal-content-prompt-pack-section, .portal-content-prompt-pack-section article, .portal-content-prompt-pack-section pre) {\n  background: var(--portal-surface);\n}",
+    "html:not([data-portal-theme=\"dark\"]) .portal-page.portal-free-prompt-gallery .portal-content-prompt-pack-section :is(h3, pre) {\n  color: var(--portal-text);\n}",
+    "html[data-portal-theme=\"dark\"] .portal-page.portal-free-prompt-gallery > .portal-content-prompt-pack-intro :is(.portal-section-kicker, p) {\n  color: var(--portal-text);\n}",
+    "html:not([data-portal-theme=\"dark\"]) .portal-page.portal-free-prompt-gallery .portal-button--primary:not(:disabled) {\n  background: var(--portal-action) !important;\n  color: var(--portal-on-action) !important;\n}",
+    ":root .portal-page.portal-free-prompt-gallery > .portal-content-prompt-pack-intro:not(:has(> dl)) {\n  grid-template-columns: minmax(0, 1fr);\n}"
+  ],
+  "portalRecord": {
+    "file": "static/portal/portal.js",
+    "owner": "renderFreePromptGallery",
+    "old": "<dl><div><dt>${safeText(String(categoryCount))}</dt><dd>${safeText(freePromptGalleryText(\"intro.stat.categories\", \"Nhóm mẫu\"))}</dd></div><div><dt>${safeText(String(industryCount))}</dt><dd>${safeText(freePromptGalleryText(\"intro.stat.industries\", \"Ngành\"))}</dd></div></dl>",
+    "new": "${canBrowse ? `<dl><div><dt>${safeText(String(categoryCount))}</dt><dd>${safeText(freePromptGalleryText(\"intro.stat.categories\", \"Nhóm mẫu\"))}</dd></div><div><dt>${safeText(String(industryCount))}</dt><dd>${safeText(freePromptGalleryText(\"intro.stat.industries\", \"Ngành\"))}</dd></div></dl>` : \"\"}"
+  },
+  "workerConversations": {
+    "GPR-FONT": "b4432e70-3805-4750-adee-6525ca84bdae",
+    "GPR-LIGHT": "0896989c-2882-4fcf-b382-f1a0a8db9a6d",
+    "GPR-STATE": "4ae1c65b-9f51-4bb9-a98c-53ba3dff1359",
+    "GPC-COUNT-TRUTH": "7b93d28b-eba3-457f-bb00-0b7bab1c222b"
+  }
+}

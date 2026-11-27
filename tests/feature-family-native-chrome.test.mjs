@@ -6,9 +6,11 @@ import {fileURLToPath} from "node:url";
 import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {fullBundleI18n} from "./helpers/feature-catalog-full-bundle135-render.mjs";
+import {galleryCustomerCopyHistoricalSource} from "./helpers/gallery-customer-copy-historical.mjs";
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
-const read=file=>fs.readFileSync(path.join(root,file),"utf8").replace(/\r\n/g,"\n");
+// FCH is historical input after Gallery; newest Gallery acceptance stays raw.
+const read=file=>galleryCustomerCopyHistoricalSource(fs.readFileSync(path.join(root,file),"utf8").replace(/\r\n/g,"\n"),file);
 const hash=value=>createHash("sha256").update(value).digest("hex");
 const fixtureRaw=read("tests/fixtures/feature-family-native-chrome.json");
 assert.equal(hash(fixtureRaw),"6da6b40e9a7a62b11363b3af067306e721fb51ddbdb6042b70ac5d601fc7cbff");
