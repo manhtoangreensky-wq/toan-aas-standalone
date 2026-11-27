@@ -24,6 +24,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import JSONResponse
 
 from copyfast_auth import envelope, require_account
+from copyfast_gallery_locale import gallery_copy, gallery_locale_text, gallery_taxonomy_label, localized_gallery_item
 
 
 router = APIRouter(prefix="/api/v1/free-prompt-gallery", tags=["Web Free Prompt Gallery"])
@@ -293,15 +294,16 @@ def _boundaries() -> dict[str, bool | str]:
     }
 
 
-def _catalog() -> dict[str, Any]:
+def _catalog(lang: str | None = None) -> dict[str, Any]:
+    description = SNAPSHOT_DESCRIPTION if lang is None else gallery_locale_text("description", lang)
     return {
         "snapshot_version": SNAPSHOT_VERSION,
-        "description": SNAPSHOT_DESCRIPTION,
+        "description": description,
         "total_items": len(EXPANDED_ITEMS),
         "categories": [
             {
                 "id": category.id,
-                "title": category.title,
+                "title": category.title if lang is None else gallery_copy("category", category.id, "title", lang),
                 "goals": list(category.goals),
                 "platforms": list(category.platforms),
                 "item_count": len(INDUSTRIES),
@@ -311,7 +313,7 @@ def _catalog() -> dict[str, Any]:
         "industries": [
             {
                 "id": industry.id,
-                "title": industry.title,
+                "title": industry.title if lang is None else gallery_copy("industry", industry.id, "title", lang),
                 "item_count": len(CATEGORIES),
             }
             for industry in INDUSTRIES
@@ -321,11 +323,25 @@ def _catalog() -> dict[str, Any]:
 
 
 @router.get("/catalog")
-def get_catalog(response: Response, _: dict[str, Any] = Depends(require_account)) -> dict[str, Any]:
+def get_catalog(
+    response: Response,
+    lang: str | None = Query(None, pattern="^(vi|en|zh)$"),
+    _: dict[str, Any] = Depends(require_account),
+) -> dict[str, Any]:
     """Return filter metadata for an authenticated Web account only."""
 
     _private_no_store(response)
-    return envelope(True, "Đã tải catalog Prompt Gallery chỉ đọc.", data=_catalog(), status_name="completed")
+    return envelope(True, "Đã tải catalog Prompt Gallery chỉ đọc.", data=_catalog(lang=lang), status_name="completed")
+
+
+def _matches_native_taxonomy(item: Mapping[str, Any], needle: str, lang: str) -> bool:
+    """Return whether any native goal or platform taxonomy label matches needle."""
+
+    for kind, key in (("goal", "goals"), ("platform", "platforms")):
+        for value in item[key]:
+            if needle in gallery_taxonomy_label(kind, str(value), lang).casefold():
+                return True
+    return False
 
 
 @router.get("/items")
@@ -338,6 +354,7 @@ def get_items(
     q: str = Query("", description="Từ khóa"),
     page: int = Query(1, ge=1, le=MAX_PAGE),
     page_size: int = Query(20, ge=1, le=MAX_PAGE_SIZE),
+    lang: str | None = Query(None, pattern="^(vi|en|zh)$"),
     _: dict[str, Any] = Depends(require_account),
 ) -> dict[str, Any]:
     """List a deterministic page of safe, read-only static prompt seeds."""
@@ -348,14 +365,35 @@ def get_items(
     safe_goal = _safe_identifier(goal, label="Goal", known=KNOWN_GOALS)
     safe_platform = _safe_identifier(platform, label="Platform", known=KNOWN_PLATFORMS)
     safe_query = _safe_query(q)
-    filtered = filter_free_prompt_items(
-        EXPANDED_ITEMS,
-        category_id=safe_category,
-        industry_id=safe_industry,
-        goal=safe_goal,
-        platform=safe_platform,
-        query=safe_query,
-    )
+    if lang is None:
+        filtered = filter_free_prompt_items(
+            EXPANDED_ITEMS,
+            category_id=safe_category,
+            industry_id=safe_industry,
+            goal=safe_goal,
+            platform=safe_platform,
+            query=safe_query,
+        )
+    else:
+        localized_items = tuple(localized_gallery_item(item, lang) for item in EXPANDED_ITEMS)
+        subset = filter_free_prompt_items(
+            localized_items,
+            category_id=safe_category,
+            industry_id=safe_industry,
+            goal=safe_goal,
+            platform=safe_platform,
+            query="",
+        )
+        if safe_query:
+            direct_refs = {id(item) for item in filter_free_prompt_items(subset, query=safe_query)}
+            needle = safe_query.casefold()
+            filtered = tuple(
+                item
+                for item in subset
+                if id(item) in direct_refs or _matches_native_taxonomy(item, needle, lang)
+            )
+        else:
+            filtered = subset
     page_items, pagination = paginate_free_prompt_items(filtered, page=page, page_size=page_size)
     return envelope(
         True,
@@ -378,7 +416,12 @@ def get_items(
 
 
 @router.get("/items/{prompt_id}", response_model=None)
-def get_item(prompt_id: str, response: Response, _: dict[str, Any] = Depends(require_account)) -> Any:
+def get_item(
+    prompt_id: str,
+    response: Response,
+    lang: str | None = Query(None, pattern="^(vi|en|zh)$"),
+    _: dict[str, Any] = Depends(require_account),
+) -> Any:
     """Return a single static prompt seed after strict ID validation."""
 
     _private_no_store(response)
@@ -392,13 +435,19 @@ def get_item(prompt_id: str, response: Response, _: dict[str, Any] = Depends(req
             status_code=404,
             headers={"Cache-Control": "private, no-store", "Pragma": "no-cache", "Vary": "Cookie"},
         )
+    resolved_item = item if lang is None else localized_gallery_item(item, lang)
+    copy_instruction = (
+        "Dùng seed này làm brief hoặc prompt; tự rà soát sự chính xác, quyền sử dụng và claim trước khi xuất bản."
+        if lang is None
+        else gallery_locale_text("copy_instruction", lang)
+    )
     return envelope(
         True,
         "Đã tải chi tiết prompt chỉ đọc.",
         data={
             "snapshot_version": SNAPSHOT_VERSION,
-            "item": _public_item(item),
-            "copy_instruction": "Dùng seed này làm brief hoặc prompt; tự rà soát sự chính xác, quyền sử dụng và claim trước khi xuất bản.",
+            "item": _public_item(resolved_item),
+            "copy_instruction": copy_instruction,
             "boundaries": _boundaries(),
         },
         status_name="completed",

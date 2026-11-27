@@ -1,5 +1,43 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 27/11/2026 — PR818 đã giao; danh mục theo ngôn ngữ đang nghiệm thu local
+
+PR818 đã giao tại runtime `29e0c154dfd247ac4b0a68cd6336ec83fb3af8ef`.
+CI45975827455 hai job SUCCESS; Web-only deploy45980538327 SUCCESS.
+Tree030b4507 khớp tested tree; VPS sạch, ba dịch vụ active và health đúng
+app.py;7tệp trực tiếp+7URL có phiên bản khớp. Cache
+`local-10112bf11daabdd9b68c` đúng hash15tài nguyên.
+Receipt Issue689/7215714422 và PR818/7215714594 đã đọc lại đúng.
+Các mục GPC/GPR “chưa phát hành” bên dưới là lịch sử trước lần giao này.
+
+Ứng viên GSC chưa phát hành:117hàng dữ liệu tĩnh/351giá trị VI/EN/ZH,
+7nhóm×20ngành=140mẫu mỗi ngôn ngữ;49VI/114EN/117ZH giá trị thay đổi.
+Danh mục, tìm kiếm, chi tiết và ghi chú mới dùng cùng native resolver;
+giao diện sao chép nguyên prompt đang hiển thị. IDs/filter values/snapshot
+giữ; không dịch arbitrary customer text hoặc viết lại ghi chú cũ.
+No-lang client cũ vẫn canonical; UI mới gửi langvi/en/zh.
+VI retry giữ fingerprint cũ;EN/ZH phân biệt locale. Browser giữ khóa
+yêu cầu lưu chưa rõ kết quả riêng từng locale, không tạo khóa VI mới chỉ
+vì người dùng đã sang EN rồi quay lại VI.
+
+Local đã có14backendPASS,54taxonomyPASS,55currentnessPASS sau worker sửa
+stale-finally và cached-reselection; đối chứng backend32PASS/2BASE-equivalent
+thiếu tzdata Windows, đã tái hiện với BASE. Browser54cảnh native/loading,
+390/768/1440,sáng/tối,0tràn/lỗi/egress. Gate mounted riêng dùng actualapp
+vàDB/secret giả child-only đã đạt3locale390×844:profilefirstsignedshell→
+filter→detail→clipboard→newprivateMemorynote;display/copy/note exact,
+mỗi account0→1note,0unexpected/pageerror/consoleerror,serverexit0.
+Không suy signed-production/device/Safari/motion/PWAcache hoặcenginePASS.
+Comparator lịch sử đã có70pressurePASS,135affectedPASS,51PythonhistoryPASS;
+transport75pressurePASS,static/mount/stale7PASS/1BASEFAIL;
+consumerclosure3121PASS giữ và40observedFAIL ở28file→40PASS sau
+finitehistoryQA169pressurePASS;không thayfixture/pin/assertion cũ,
+chưa push/PR/merge/deploy GSC.
+Runtimecontract7219170926 đã đăng vàoIssue689 sauOwnerduyệt riêng đúngfile,
+readbackexact16416ký tự;contractDATA7216006483 giữnguyên.
+Đang chuẩn bịsourcecommit/Web-onlyprovenance/exactheadCI,không coi local
+hoặcpublication là bằng chứngdeploy/LIVE.
+
 ## 27/11/2026 — PR816 đã giao; đang nghiệm thu Thư viện
 
 PR816 đã giao tại runtime `bf95e4017717622d694cbef02fde07799a823a8a`.

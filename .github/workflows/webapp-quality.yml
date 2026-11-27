@@ -125,6 +125,8 @@ jobs:
           node --test tests/feature-family-readability.test.mjs tests/feature-family-readability-history.test.mjs
           node --test tests/gallery-customer-copy.test.mjs tests/gallery-customer-copy-history.test.mjs tests/gallery-customer-copy-protected-routes.test.mjs
           node --test tests/gallery-readability.test.mjs tests/gallery-readability-history.test.mjs
+          node --test tests/gallery-native-taxonomy.test.mjs tests/gallery-native-currentness.test.mjs tests/gallery-native-history.test.mjs tests/gallery-native-runtime-history.test.mjs
+          python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_gallery_native_locale.py tests/test_gallery_native_transport_historical.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_gallery_customer_copy_historical.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_gallery_readability_historical.py
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_feature_family_readability_historical.py

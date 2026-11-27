@@ -1,10 +1,13 @@
 """Focused race-safety contracts for private plans, projects and prompts."""
 
 from pathlib import Path
+from tests.helpers.gallery_native_transport_historical import gallery_native_transport_historical_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
+INTEGRATION = gallery_native_transport_historical_source(
+    (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
+)
 
 
 def _source(name: str, next_name: str) -> str:

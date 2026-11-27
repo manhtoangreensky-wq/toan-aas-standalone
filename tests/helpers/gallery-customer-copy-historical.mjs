@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
 import {galleryReadabilityHistoricalSource} from "./gallery-readability-historical.mjs";
+import {galleryNativeHistoricalSource,galleryNativeHistoricalSnapshot} from "./gallery-native-historical.mjs";
 const raw=fs.readFileSync(new URL("../fixtures/gallery-customer-copy.json",import.meta.url),"utf8").replace(/\r\n/g,"\n");
 const fail="Unreviewed Gallery customer copy";
 assert.equal(createHash("sha256").update(raw).digest("hex"),"c376690961cee3c23c17d0c4479f311b93e16bfcc8fda9d6abf6d6f07264e1ef",fail);
@@ -13,6 +14,7 @@ const count=(source,part)=>source.split(part).length-1;
 const escape=value=>value.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
 export function galleryCustomerCopyHistoricalSource(source,file){
   assert.equal(typeof source,"string",fail);
+  source=galleryNativeHistoricalSource(source,file);
   source=galleryReadabilityHistoricalSource(source,file);
   if(!files.has(file))return source;
   const records=fixture.records.filter(row=>row.file===file);
@@ -55,6 +57,7 @@ const snapshotOrder=["shellNav.freePromptGallery",...fixture.copyRows.filter(row
 export function galleryCustomerCopyHistoricalSnapshot(entries,locale){
   const failure=fail+" snapshot";
   assert(Array.isArray(entries)&&["vi","en","zh"].includes(locale),failure+" input");
+  entries=galleryNativeHistoricalSnapshot(entries,locale);
   const values=entries.filter(row=>Array.isArray(row)&&snapshotRows.has(row[0]));
   if(!values.length)return entries;
   assert(values.every(row=>row.length===2),failure+" pair shape");

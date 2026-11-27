@@ -5,6 +5,36 @@
 **Nhánh tài liệu:** `webapp-plan-r116` → push vào `webapp-checklist-r116`
 **Mục tiêu:** có một thứ tự thi công duy nhất, một checklist có trạng thái và các spec đủ cụ thể để người thực hiện không phải đoán.
 
+### Cập nhật27/11/2026 — PR818DELIVERED, GSC vẫn mở
+
+- [x] GPC/GPR đã giao PR818/runtime29e0c154;CI45975827455 haiSUCCESS,
+ Webdeploy45980538327SUCCESS;tree/assets/cache/receipt readback đúng.
+- [x] GSC-DATA117row/351value và420native expansion đã khóa; không phải
+ tự dịch nội dung khách. Leaf/taxonomy/backend local có bằng chứng.
+- [x] GSC client55currentnessPASS sauworker/reviewgap;54taxonomyPASS;browser54native
+ cảnh390/768/1440,sáng/tối,0lỗi/tràn/egress. Local, chưa phát hành.
+- [x] GSC history QA:7failure đã đo→finiteleaf70PASS/composed135PASS,
+ Pythonhistory51PASS;fixture/pin/kỳ vọng giữ,không sửaappđể lùiUI.
+- [x] GSC mountedactualapp3locale390×844:profilefirstsignedshell→
+ filter/detail/clipboard/newMemorynote exact;0unexpected/pageerror/consoleerror,
+ serverexit0,DBtạm. Không phảiproduction/device/Safari/PWAcache/motion.
+- [x] Pythontransport75pressurePASS;static/mount/stale7PASS/1BASEFAIL
+ cùng immutableBASEproof;CIwiring chỉhai native runlines,YAML/byteguard0.
+- [x] Consumerclosure121file:3121PASS giữ;40observedFAIL ở28file→
+ 40PASS/0FAIL/0SKIP/0ERROR sau169finitepressure;không lặp3121PASS.
+- [x] RuntimecontractGSC7219170926 đã công bố đúngfile sauOwnerduyệt;
+ readbackexact16416ký tự,publicationblockerđãgỡ.
+- [ ] GSC sourcecommit/provenance/CI→PR→merge→Webdeploy→
+ runtime/assets/cache/receipt;chưa đẩy code hoặcdeploy lô này.
+- [ ] Signed-production/authdraft/Admin/actionBlockReason/AX/device/Safari
+ vẫn theo thứ tự checklist;không suy PASS từ asset parity.
+- [ ] MOTION M-FINAL vẫn làm cuối;không Bot/route-engine/provider/wallet/
+ PayOS/ENV/schema/production-data mutation.
+
+Chi tiết duy nhất của lô:
+`docs/superpowers/specs/2026-11-27-gallery-native-runtime.md`.
+Các trạng thái release cũ bên dưới là mốc lịch sử, không ghi đè delivery.
+
 ## 1. Phạm vi và hàng rào an toàn
 
 Phạm vi của plan là WebApp standalone gồm customer shell, product lanes, Admin shell,

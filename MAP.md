@@ -1,6 +1,7 @@
 # MAP — TOAN AAS standalone WebApp
 > Rà lại 20/11/2026 trên BASE `e49427e5` và thay đổi UI V07 đang nghiệm thu. FastAPI/Python + vanilla JS/CSS. Gốc: `_webapp-r218-voice`.
 > Bản đồ được đính kèm nguyên văn vào phiếu Builder; không thay việc đọc source.
+> Bổ sung27/11: GSC native đang local; khối máy sinh20/11 giữ mốc lịch sử, không quét lại phần ngoài scope.
 
 ## 1. Module và vai trò
 - `app.py`: ứng dụng FastAPI đang chạy; mount routes/API/static.
@@ -12,6 +13,7 @@
 - `static/portal/portal-i18n.js`: chữ cố định VI/EN/ZH.
 - `static/portal/portal.css`, `portal-theme.css`: bố cục và theme xanh/navy/ngọc.
 - `copyfast_*.py`: các workspace Web độc lập theo sản phẩm.
+- `copyfast_gallery_locale.py` + `gallery_static_locales.json`: static native VI/EN/ZH cho Gallery; không DB/API/provider.
 - `tests/`, `scripts/ci/`: contracts và QA DB tạm; không chứng minh provider LIVE.
 
 ## 2. Entry points
@@ -36,6 +38,7 @@
 - API options và history là hai nguồn khác nhau; không dùng history state làm options state.
 - Bản nháp: mã `feature_key` giữ nguyên; nhãn qua `featureCatalogText` theo locale, không đổi DTO.
 - Kho tệp: epoch/route/selection hiện có → kết quả đọc hiện tại → phản hồi đúng locale; phản hồi cũ im lặng.
+- Gallery: lang riêng → finite native catalogue/search/detail/new-note; clipboard nguyên prompt; canonical/ghi chú cũ giữ.
 
 ## 5. Điểm nhạy cảm
 - Auth/CSRF: `copyfast_auth.py`; session epoch guards trong `integration.js`.

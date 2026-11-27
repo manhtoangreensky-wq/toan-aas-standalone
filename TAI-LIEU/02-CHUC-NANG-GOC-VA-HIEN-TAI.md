@@ -1,5 +1,32 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 27/11/2026 — danh mục tĩnh có nội dung theo ngôn ngữ, ứng viên local
+
+GPC/GPR bên dưới đã giao quaPR818/runtime29e0c154; không còn là ứng viên.
+Đợt GSC hiện chưa phát hành. Nguồn gốc:
+`docs/migration/FREE_PROMPT_GALLERY_CONTRACT.md` và canonical snapshot
+2026-07-15.1;không suy khả năng chạy provider từ tên câu lệnh.
+
+| Chức năng gốc | Ứng viên GSC đã đo local | Ranh giới giữ |
+|---|---|---|
+| Danh mục140mẫu pha Việt/Anh |117row/351value,420bản mở rộng native đã kiểm |7nhóm/20ngành/IDs/order/snapshot |
+| Nhãn mục tiêu/nền tảng hiện enum |16key/48value và unknown text giữ nguyên |Option values/payload không dịch |
+| Tìm trên canonical text |Native fields và native taxonomy labels trước paginate |Tìm enum IDs cũ,filter guards |
+| Copy đọc item.prompt,save tự resolve ID |List/detail/native note dùng cùng nguồn;clipboard nguyên bytes |Body chỉ idempotency_key,không nhận prompt từ browser |
+| Ghi chú đã lưu chứa nội dung cũ |Không rewrite;legacyVI retry cùng note |SQL/schema/ownership/CSRF/receipt |
+| Cache chỉ kiểm shape/snapshot |Locale-owner RAM ngoài DTO,đổi locale phải nạp lại |DTO/route/generic API giữ |
+| Phản hồi muộn bật control lựa chọn mới/cached selection cũ chiếm lựa chọn mới |55ca currentness cuối đạt |Release/discard intent luôn thực hiện;savecapabilitygiữ |
+| Comparator nguồn khóa mốc trước |7failure→finiteleaf70PASS/135composedPASS |Fixture/pin/kỳ vọng cũ giữ,chỉ project input |
+| Comparator toàn nguồn backend/integration ở121consumerfiles |3121PASS giữ;40FAIL→40PASS sau169finitepressure |Đúng7backend/11integrationrecords;không chạy lại3121PASS |
+
+14ca backend mới đạt;34ca affected có32đạt và2BASE-equivalent do thiếu
+tzdata trên Windows;không đổi nhắc lịch để né môi trường.
+Browser54cảnh là actual renderer/normalizer/i18n/CSS qua localhost,
+không phải thao tác ghi production. Gate mounted riêng3locale390×844
+đã đi từsignedshell/profilelocale đếnfilter/detail/clipboard/newMemorynote
+trênDBtạm;display/copy/note exact,mỗi account0→1note,0lỗitrang/console/
+unexpected. Live/customer production session vẫn mở.
+
 ## 27/11/2026 — Thư viện: giữ thao tác, bỏ phần giải thích dư
 
 Nguồn đối chiếu: Gallery renderer, bộ chữ và CSS tại PR816
