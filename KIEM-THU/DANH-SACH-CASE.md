@@ -1,6 +1,19 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
-## GALLERY-NATIVE-20261127 — Issue689, đang local
+## ADMIN-GUARD-CUSTOMER-COPY-20261127 — Issue689, ứng viên local
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| AGC-ACTION | nặng | Đọc lý do thao tác bị khóa VI/EN/ZH |Chữ tự nhiên,không nới quyền/đổi thứ tự |129native ledger,36hero cases |
+| AGC-SUPPORT | vừa | Mở guarded/loading/ready |Giữ controls/ARIA,không khung giải thích dư |Actual renderer,108view matrix |
+| AGC-OPERATIONS | nặng | Mở disabled/loading/unavailable,đọc partial/manager copy |Không coi lỗi tải là rỗng,giữ quyền/role/count |Native literal/renderer |
+| AGC-ACTION-SET | nặng | Payment bị khóa với Web local-action set thật |Cùng nhánh ưu tiên BASE,không sửa logic ví |3targetedGREEN,BASE diagnostic |
+| AGC-HISTORY | nặng | Source thiếu/sai/lặp/đặt sai owner |Chỉ22record/5owner được inverse,unknown giữ |179Node source/198Python pressure |
+| AGC-SNAPSHOT | nặng | Bộ chữ full old/new,mixed/partial/foreign locale |19oldrow hoặc31newkeys exact,unknown giữ |34pressure,3consumer recovery |
+| AGC-MOBILE-KEYBOARD | vừa |390/768/1440,sáng/tối,Tab/tìm kiếm |Input16,target44,escaping,không tràn/lỗi |108uniqueviews/6ảnh |
+| AGC-DELIVERY | nặng |CI→merge→Webdeploy→runtime/assets/cache/receipt |Bằng chứng từng gate riêng |Chưa phát hành;PHIEN-ADMIN-GUARD-CUSTOMER-COPY-20261127.md |
+
+## GALLERY-NATIVE-20261127 — Issue689, đã giao PR819
 
 | Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
 |---|---|---|---|---|
@@ -14,7 +27,7 @@
 | GSC-MOUNTED | nặng |Profilelocale→signedshell→filter/detail/copy/save |Display/clipboard/newnote exact,mỗiaccount0→1note |3locale390×844PASS,0unexpected/pageerror/consoleerror |
 | GSC-CONSUMER | nặng |Runtime/backend inverse và28file lịch sử từngFAIL |Khôngđổiapp/pins;khéptoàn40failure |169pressurePASS;40FAIL→40PASS;3121PASSgiữ |
 | GSC-PYTHON-CI | nặng |Pythonconvergence5UI/11transport/7backend |Khôngđổiapp/pins;giữoldfailureclassification |187pressurePASS;255consumer253PASS/2BASEfail;warningtarget1GREEN |
-| GSC-DELIVERY | nặng |CI→merge→deploy→runtime→assets/cache/receipt |Mỗi gate có bằng chứng riêng |Chưa phát hành;[phiên kiểm tra](PHIEN-GALLERY-NATIVE-20261127.md) |
+| GSC-DELIVERY | nặng |CI→merge→deploy→runtime→assets/cache/receipt |Mỗi gate có bằng chứng riêng |PR819;CI46021673561;deploy46027449612;runtime5f316f29;receipt689/7222538286,PR819/7222538994 |
 
 ## GALLERY-CUSTOMER-COPY-20261127 — Issue #689
 

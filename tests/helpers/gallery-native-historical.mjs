@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {galleryNativeRuntimeHistoricalSource} from './gallery-native-runtime-historical.mjs';
+import {adminGuardCustomerCopyHistoricalSource,adminGuardCustomerCopyHistoricalSnapshot} from './admin-guard-customer-copy-historical.mjs';
 
 const failure='Unreviewed Gallery native history';
 const sha=value=>createHash('sha256').update(value).digest('hex');
@@ -39,6 +40,7 @@ function functionSlot(source,row,previous,next){
 
 export function galleryNativeHistoricalSource(source,file){
   assert.equal(typeof source,'string',failure+' source');
+  source=adminGuardCustomerCopyHistoricalSource(source,file);
   source=galleryNativeRuntimeHistoricalSource(source,file);
   if(!files.has(file))return source;
   const rows=fixture.records.filter(row=>row.file===file);
@@ -78,6 +80,7 @@ export function galleryNativeHistoricalSource(source,file){
 
 export function galleryNativeHistoricalSnapshot(entries,locale){
   assert(Array.isArray(entries)&&locales.includes(locale),failure+' snapshot input/locale');
+  entries=adminGuardCustomerCopyHistoricalSnapshot(entries,locale);
   const owned=entries.filter(row=>row!=null&&keySet.has(row[0]));
   if(!owned.length)return entries;
   assert(entries.every(row=>Array.isArray(row)&&row.length===2),failure+' snapshot pair shape');

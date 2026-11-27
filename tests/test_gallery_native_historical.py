@@ -8,6 +8,9 @@ import subprocess
 import pytest
 
 from tests.helpers.gallery_native_historical import gallery_native_historical_source as inverse
+from tests.helpers.admin_guard_customer_copy_historical import (
+    admin_guard_customer_copy_historical_source,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -69,6 +72,7 @@ def test_independent_git_base_is_exact_noop_identity(file):
 @pytest.mark.parametrize("file", FILES)
 def test_actual_full_source_is_exact_locked_construction_and_inverse_equals_git_base(file):
     actual = (ROOT / file).read_bytes().decode("utf-8").replace("\r\n", "\n")
+    actual = admin_guard_customer_copy_historical_source(actual, file)
     assert digest(actual) == digest(CURRENT[file])
     assert inverse(actual, file) == BASE[file]
 

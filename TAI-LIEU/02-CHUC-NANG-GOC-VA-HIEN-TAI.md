@@ -1,5 +1,25 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 27/11/2026 — thông báo quản trị giữ chức năng, bỏ chữ kỹ thuật
+
+GSC đã giao PR819/runtime5f316f29; trạng thái GSC pending bên dưới là lịch sử.
+Nguồn đối chiếu AGC: `actionBlockReason`, `renderSupportAdminBase`,
+`renderOperationsAdmin`, hai copy arrays tại GitBASE5f316f29 và
+masterR217/R218. Không suy chức năng provider từ các câu giới thiệu cũ.
+
+| Trước AGC | Ứng viên đã đo local | Giữ nguyên |
+|---|---|---|
+| Lý do khóa thao tác chứa tên cấu hình/cơ chế |12key×3locale, lời hướng dẫn ngắn qua uiText |Mọi điều kiện,thứ tự,canAct,capability |
+| Support giới thiệu/guard/loading có chữ triển khai |7row×3locale theo đúng ngôn ngữ |Bộ lọc,danh sách,form,ARIA,dữ liệu khách |
+| Khung cuối trang chỉ giải thích ranh giới kỹ thuật |Bỏ đúng một section,không ô thay thế |Summary,phân trang vàquyền |
+| Operations trộn trạng thái với cơ chế |12row×3locale,giữ nghĩa chưa bật/chờ/lỗi/partial/manager |Role,count,IDs,handlers |
+| Payment branch từng được QA giả định reachable |Dùng constant Web thực;BASE/current cùng disabled vàlocal-action precedence |Không sửa logic tiền hoặcđổi thứ tự |
+| Historical comparators khóa copy cũ |Finite22record/5owner source và31key snapshot inverse |Old pins/assertions nguyên vẹn;native primary đọc raw |
+
+129native,consumer222/Gallery130 đã khép;browser108componentviews/36guard
+đạt với0error/overflow/egress. Không thay thế bằng chứng mounted/auth,
+contrast toàn bộ,device/Safari hoặc signed-production. AGC chưa phát hành.
+
 ## 27/11/2026 — danh mục tĩnh có nội dung theo ngôn ngữ, ứng viên local
 
 GPC/GPR bên dưới đã giao quaPR818/runtime29e0c154; không còn là ứng viên.

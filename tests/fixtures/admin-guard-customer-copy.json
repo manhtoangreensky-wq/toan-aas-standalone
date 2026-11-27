@@ -1,0 +1,39 @@
+{
+  "action": [
+    ["telegramUnavailable", "Chưa thể liên kết Telegram. Hãy thử lại sau.", "Telegram linking is not available right now. Try again later.", "暂时无法关联 Telegram，请稍后重试。"],
+    ["adminRequired", "Bạn cần quyền truy cập để thực hiện thao tác này.", "You need access permission to perform this action.", "您需要相应权限才能执行此操作。"],
+    ["signInRequired", "Vui lòng đăng nhập để tiếp tục.", "Sign in to continue.", "请登录后继续。"],
+    ["supportRetry", "Chưa thể gửi thay đổi hỗ trợ. Hãy tải lại trang rồi thử lại.", "Support changes cannot be sent right now. Reload the page and try again.", "暂时无法提交支持更改，请刷新页面后重试。"],
+    ["planRetry", "Chưa thể lưu thay đổi. Hãy tải lại trang rồi thử lại.", "Changes cannot be saved right now. Reload the page and try again.", "暂时无法保存更改，请刷新页面后重试。"],
+    ["supportUnavailable", "Bạn chưa thể xử lý yêu cầu hỗ trợ lúc này. Hãy thử lại sau.", "You cannot handle support requests right now. Try again later.", "您暂时无法处理支持请求，请稍后重试。"],
+    ["planUnavailable", "Bạn chưa thể lập kế hoạch lúc này. Hãy thử lại sau.", "You cannot create a plan right now. Try again later.", "您暂时无法创建计划，请稍后重试。"],
+    ["telegramLinkRequired", "Hãy liên kết Telegram trong mục Tài khoản để tiếp tục.", "Link Telegram in Account settings to continue.", "请在账户设置中关联 Telegram 后继续。"],
+    ["temporarilyUnavailable", "Chưa thể thực hiện thao tác lúc này. Hãy thử lại sau.", "This action cannot be performed right now. Try again later.", "暂时无法执行此操作，请稍后重试。"],
+    ["retrySession", "Chưa thể gửi yêu cầu. Hãy tải lại trang rồi thử lại.", "The request cannot be sent right now. Reload the page and try again.", "暂时无法提交请求，请刷新页面后重试。"],
+    ["topupUnavailable", "Chưa tải được các mức nạp tiền. Hãy thử lại sau.", "Top-up amounts could not be loaded. Try again later.", "暂时无法加载充值金额，请稍后重试。"],
+    ["unavailable", "Bạn chưa thể dùng thao tác này. Hãy thử lại sau.", "You cannot use this action right now. Try again later.", "您暂时无法使用此操作，请稍后重试。"]
+  ],
+  "support": [
+    ["page.list.description", "Theo dõi và xử lý các yêu cầu hỗ trợ của khách hàng.", "Track and handle customer support requests.", "查看并处理客户支持请求。"],
+    ["page.detail.description", "Xem nội dung, phân loại và phản hồi yêu cầu hỗ trợ.", "Read, categorize, and reply to a support request.", "查看、分类并回复支持请求。"],
+    ["guard.body", "Bạn cần quyền hỗ trợ để xem và xử lý yêu cầu của khách hàng.", "You need Support permission to view and handle customer requests.", "您需要支持权限才能查看和处理客户请求。"],
+    ["loading.body", "Đang kiểm tra quyền truy cập và tải yêu cầu hỗ trợ.", "Checking your access and loading support requests.", "正在检查访问权限并加载支持请求。"],
+    ["intro.body", "Phân loại, phân công và phản hồi yêu cầu ngay tại đây.", "Categorize, assign, and reply to requests here.", "在此分类、分配并回复请求。"],
+    ["role.verified", "Quyền hỗ trợ hiện tại", "Your current Support access", "您当前的支持权限"],
+    ["filter.note", "Chọn bộ lọc để tìm đúng yêu cầu cần xử lý.", "Choose filters to find the requests you need to handle.", "选择筛选条件，查找需要处理的请求。"]
+  ],
+  "operations": [
+    ["disabled.body", "Điều hành tự động chưa được bật. Chưa có thao tác nào được thực hiện.", "Automated operations is not enabled. No action has been performed.", "自动化运营尚未启用，未执行任何操作。"],
+    ["unavailable.title", "Chưa tải được dữ liệu điều hành", "Operations data could not be loaded", "暂时无法加载运营数据"],
+    ["unavailable.body", "Chưa tải được dữ liệu. Hãy làm mới hoặc thử lại sau.", "Data could not be loaded. Refresh or try again later.", "暂时无法加载数据，请刷新或稍后重试。"],
+    ["page.description", "Theo dõi hoạt động, sự cố và các đề xuất đang chờ quyết định.", "Monitor activity, incidents, and proposals awaiting a decision.", "查看活动、事件以及等待决定的提案。"],
+    ["loading.body", "Đang kiểm tra quyền truy cập và tải dữ liệu điều hành.", "Checking your access and loading Operations data.", "正在检查访问权限并加载运营数据。"],
+    ["guard.body", "Bạn cần quyền điều hành để xem dữ liệu tại đây.", "You need Operations permission to view this data.", "您需要运营权限才能查看此处的数据。"],
+    ["queue.guarded.body", "Chưa tải được hàng chờ này. Hãy làm mới hoặc thử lại sau.", "This queue could not be loaded. Refresh or try again later.", "暂时无法加载此队列，请刷新或稍后重试。"],
+    ["partial.title", "Một số hàng chờ chưa tải xong", "Some queues have not loaded", "部分队列尚未加载"],
+    ["partial.body", "Bạn vẫn có thể xem phần đã tải. Hãy làm mới để thử tải lại các hàng chờ còn thiếu.", "You can still view the loaded sections. Refresh to try loading the remaining queues.", "您仍可查看已加载的部分，请刷新以重试加载其余队列。"],
+    ["intro.body", "Quyền hiện tại: {role}. Theo dõi dữ liệu và xem các đề xuất trong phạm vi được phép.", "Current access: {role}. Monitor data and review proposals within your permissions.", "当前权限：{role}。查看权限范围内的数据和提案。"],
+    ["approval.managerOnly.body", "Chỉ quản lý hỗ trợ mới được xem và quyết định các đề xuất trong hàng chờ này.", "Only Support managers can view and decide on proposals in this queue.", "只有支持经理可以查看并决定此队列中的提案。"],
+    ["role.verified", "Quyền điều hành hiện tại", "Your current Operations access", "您当前的运营权限"]
+  ]
+}

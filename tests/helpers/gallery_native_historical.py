@@ -8,6 +8,9 @@ import re
 from tests.helpers.gallery_native_transport_historical import (
     gallery_native_transport_historical_source,
 )
+from tests.helpers.admin_guard_customer_copy_historical import (
+    admin_guard_customer_copy_historical_source,
+)
 
 
 _FAIL = "Unreviewed Gallery native history"
@@ -158,6 +161,7 @@ def _ui_inverse(source: str, file: str) -> str:
 def gallery_native_historical_source(source: str, file: str) -> str:
     """Reverse only the five UI, eleven transport, or seven backend records."""
     _require(isinstance(source, str), "string source")
+    source = admin_guard_customer_copy_historical_source(source, file)
     source = gallery_native_transport_historical_source(source, file)
     if file in _BACKEND_FILES and _BACKEND_SIGNALS.search(source):
         for row in reversed([row for row in _BACKEND["records"] if row["file"] == file]):
