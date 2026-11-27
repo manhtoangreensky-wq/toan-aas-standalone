@@ -4,6 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 import re
+from tests.helpers.feature_family_native_chrome_historical import feature_family_native_chrome_historical_source
+from tests.helpers.feature_family_readability_historical import feature_family_readability_historical_source
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW = (ROOT / "tests/fixtures/feature-catalog-full-bundle135.json").read_bytes().replace(b"\r\n", b"\n")
@@ -23,6 +25,14 @@ assert len(ADDED) == 78 and len(EXPECTED) == 270, FAIL
 
 
 def feature_catalog_full_bundle135_historical_source(source: str, file: str) -> str:
+    # Keep the original shared-owner failure classification before the new leaf.
+    if file == FILE and any(key in ADDED for key in re.findall(
+        r'^[ \t]*"(featureCatalog\.entry\.[a-z0-9_]+\.(?:title|description))":', source, re.MULTILINE
+    )):
+        assert source.count("  const FEATURE_CATALOG_MESSAGES = {") == 1, FAIL
+        assert source.count("\n  // Media Studio follows") == 1, FAIL
+    source = feature_family_native_chrome_historical_source(source, file)
+    source = feature_family_readability_historical_source(source, file)
     if file != FILE:
         return source
     declarations = re.findall(r'^[ \t]*"(featureCatalog\.entry\.[a-z0-9_]+\.(?:title|description))":', source, re.MULTILINE)

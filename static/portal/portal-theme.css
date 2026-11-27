@@ -24159,3 +24159,17 @@ html[data-portal-theme="dark"] .portal-page.portal-free-tools .portal-free-tool-
   display: none !important;
 }
 
+
+/* Keep family-directory text readable without changing surfaces or motion. */
+html:not([data-portal-theme="dark"]) [data-portal-main][data-portal-presentation-route="default"] > .portal-page:has(> .portal-feature-jumps) > .portal-feature-jumps a.portal-feature-jump:is(:hover, :focus-visible) {
+  color: var(--portal-text);
+}
+html[data-portal-theme="dark"] [data-portal-main][data-portal-presentation-route="default"] > .portal-page:has(> .portal-feature-jumps) > .portal-feature-jumps .portal-feature-jump--current {
+  color: var(--portal-text);
+}
+html:not([data-portal-theme="dark"]) [data-portal-main][data-portal-presentation-route="default"] > .portal-page:has(> .portal-feature-jumps) > .portal-feature-catalog > .portal-empty p {
+  color: var(--portal-text);
+}
+html:not([data-portal-theme="dark"]) [data-portal-main][data-portal-presentation-route="default"] > .portal-page:has(> .portal-feature-jumps) > .portal-hero .portal-eyebrow {
+  color: var(--portal-text);
+}

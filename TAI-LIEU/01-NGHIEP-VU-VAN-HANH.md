@@ -1,5 +1,38 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 27/11/2026 — bộ chữ đầy đủ đã giao; ứng viên trang nhóm công cụ
+
+PR815 đã giao tại runtime `363d6ca55081eea4089ebf489cd183b09ba1aa96`.
+CI45878733080 hai job SUCCESS; deploy45883173277 SUCCESS; nguồn sạch,
+ba dịch vụ/health và7tệp trực tiếp+7URL có phiên bản khớp.
+Cache công khai đổi sang `local-51a084b6f92683d45a0f`; biên nhận
+Issue689/7201561348 vàPR815/7201561707 đã đọc lại đúng. Các ghi chú
+FBC135 chưa phát hành bên dưới là lịch sử, không phải trạng thái hiện tại.
+
+Ứng viên FCH giản lược chữ chung trên bảy trang nhóm công cụ theo
+Việt-Anh-Trung:20giá trị đổi/một giá trị giữ; bỏ đúng hai phần giới thiệu
+lặp dưới tiêu đề. Giữ tên, mô tả chính, chuyển nhóm, thẻ, liên kết và
+mọi điều kiện hoạt động. Nhóm rỗng có hướng dẫn quay lại danh mục,
+không diễn giải cách triển khai hoặc hứa kết quả chưa được chứng minh.
+
+Kiểm tra bằng trình duyệt đã phát hiện bốn vai trò chữ quá nhạt có sẵn.
+Bốn session Antigravity4.0ExtraHigh trả bốn rule màu; chỉ đổi chữ theo
+token của giao diện, không đổi nền/bố cục/chuyển động. Sau ghép:
+96cảnh/5196mẫu chữ, min4,9871:1; focus5,4095:1; vùng bấm≥44px;
+không lỗi/tràn/request ngoài. Bốn cảnh root `/features` không match
+rule mới. Đây là full family renderer qua HTTP với dữ liệu giả, chưa
+phải toàn sidebar/header/auth hydration hoặc UIproduction sau đăng nhập.
+
+Nhóm541Node vàclosure110tệp/2533ca đều đạt; phần CSS mới5source,
+12Nodehistory/9Pythonhistory và19consumer đạt. Không cộng các lượt
+chồng nhau thành tổng giả. Ledger Python ảnh hưởng181ca phân biệt:
+180đạt,một lỗi BASE-equivalent đòi câu kỹ thuật đã bỏ; không có lỗi mới.
+Không sửa ứng dụng hoặc kỳ vọng để trả lại câu kỹ thuật đó.
+
+Ứng viên chưa phát hành; phải khép exactHEAD CI, merge, Web-only deploy,
+runtime/assets/cache và biên nhận riêng. Gallery/Admin/actionBlockReason,
+auth/draft, thiết bị/Safari, signedproduction vàmotioncuối vẫn mở.
+
 ## 27/11/2026 — root danh mục đã giao; đồng bộ bộ chữ đầy đủ
 
 VPS đã đối chiếu tại `fdfe2f753e641c5a5ecc7d6a19305fa3c42b7b30`

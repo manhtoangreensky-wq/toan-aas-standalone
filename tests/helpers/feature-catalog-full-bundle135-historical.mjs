@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
+import {featureFamilyNativeChromeHistoricalSource,featureFamilyNativeChromeHistoricalSnapshot} from "./feature-family-native-chrome-historical.mjs";
+import {featureFamilyReadabilityHistoricalSource} from "./feature-family-readability-historical.mjs";
 
 const raw=fs.readFileSync(new URL("../fixtures/feature-catalog-full-bundle135.json",import.meta.url),"utf8").replace(/\r\n/g,"\n");
 assert.equal(createHash("sha256").update(raw).digest("hex"),"bcde5343c0494c81f7deefeb9fcae35293f2ecee4e35e4a35ff4d84ae0f08d28");
@@ -18,6 +20,13 @@ assert.equal(added.size,78);assert.equal(expectedKeys.size,270);
 const failure="Unreviewed full-bundle135 historical";
 
 export function featureCatalogFullBundle135HistoricalSource(source,target){
+  // Preserve the prior leaf's classification for its shared owner boundaries.
+  if(target===file&&[...source.matchAll(/^[ \t]*"(featureCatalog\.entry\.[a-z0-9_]+\.(?:title|description))":/gm)].some(row=>added.has(row[1]))){
+    assert.equal(source.split("  const FEATURE_CATALOG_MESSAGES = {").length-1,1,failure);
+    assert.equal(source.split("\n  // Media Studio follows").length-1,1,failure);
+  }
+  source=featureFamilyNativeChromeHistoricalSource(source,target);
+  source=featureFamilyReadabilityHistoricalSource(source,target);
   if(target!==file)return source;
   const declarations=[...source.matchAll(/^[ \t]*"(featureCatalog\.entry\.[a-z0-9_]+\.(?:title|description))":/gm)];
   // Without new owned keys, preserve OLD/unknown edits for the original pin.
@@ -47,6 +56,7 @@ export function featureCatalogFullBundle135HistoricalSource(source,target){
 
 export function featureCatalogFullBundle135HistoricalSnapshot(entries,locale){
   assert(locales.includes(locale)&&Array.isArray(entries),failure);
+  entries=featureFamilyNativeChromeHistoricalSnapshot(entries,locale);
   if(!entries.some(row=>Array.isArray(row)&&added.has(row[0])))return entries;
   const owned=entries.filter(row=>Array.isArray(row)&&expectedKeys.has(row[0]));
   const expectedOrder=[...added,...Object.keys(fixture.beforeCatalog[locale])];
