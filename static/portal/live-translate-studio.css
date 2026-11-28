@@ -163,3 +163,73 @@
   color: var(--portal-ink);
   opacity: 0.88;
 }
+
+.portal-lt-ext-details {
+  border-top: 1px dashed var(--portal-border);
+  padding-top: 10px;
+  font-size: 13px;
+  color: var(--portal-ink);
+}
+
+.portal-lt-ext-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--portal-ink);
+  user-select: none;
+}
+
+.portal-lt-ext-body {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.portal-lt-ext-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  opacity: 0.88;
+}
+
+/* Focused standalone Live SubDub window (?focus=live): hides dashboard sidebar & marketing clutter */
+html.portal-lt-focus-mode .portal-sidebar,
+html.portal-lt-focus-mode .portal-header,
+html.portal-lt-focus-mode .portal-mobile-nav,
+html.portal-lt-focus-mode .portal-backdrop,
+html.portal-lt-focus-mode .portal-command-palette {
+  display: none !important;
+}
+
+html.portal-lt-focus-mode .portal-shell {
+  grid-template-columns: minmax(0, 1fr) !important;
+  display: block !important;
+}
+
+html.portal-lt-focus-mode .portal-workspace {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 100vh;
+}
+
+html.portal-lt-focus-mode .portal-main {
+  padding: 12px !important;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+html.portal-lt-focus-mode .portal-subdub-extension-card > :not([data-lt-studio]),
+html.portal-lt-focus-mode [data-portal-main] > :not(:has(.portal-subdub-extension-card)) {
+  display: none !important;
+}
+
+html.portal-lt-focus-mode .portal-subdub-extension-card {
+  margin: 0 !important;
+  padding: 16px !important;
+}
+
+html.portal-lt-focus-mode .portal-lt-studio {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border-top: none !important;
+}

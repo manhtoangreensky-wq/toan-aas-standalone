@@ -45,6 +45,19 @@
     return clean === "/subdub";
   }
 
+  function isFocusLiveMode() {
+    try {
+      return isSubdubRoute() && new URLSearchParams(window.location.search).get("focus") === "live";
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function syncFocusModeClass() {
+    if (typeof document === "undefined" || !document.documentElement) return;
+    document.documentElement.classList.toggle("portal-lt-focus-mode", isFocusLiveMode());
+  }
+
   function isStandaloneChromeApp() {
     return (
       window.matchMedia("(display-mode: standalone)").matches ||
@@ -61,7 +74,7 @@
         btn.textContent = "Thêm ứng dụng TOAN AAS vào Chrome";
         btn.disabled = false;
       } else {
-        btn.textContent = "Cài đặt ứng dụng Chrome (Hướng dẫn nhanh)";
+        btn.textContent = "Mở qua ứng dụng Chrome";
         btn.disabled = false;
       }
     });
@@ -85,7 +98,7 @@
     if (statusEl) {
       statusEl.textContent = isStandaloneChromeApp()
         ? "Bạn đang sử dụng ứng dụng TOAN AAS độc lập trên Chrome."
-        : "Bấm biểu tượng cài đặt (màn hình có dấu mũi tên) ở góc phải thanh địa chỉ Chrome → Cài đặt TOAN AAS. Hoặc mở menu ⋮ → Truyền, lưu và chia sẻ → Cài đặt trang...";
+        : "Bấm biểu tượng cài đặt ở góc phải thanh địa chỉ Chrome → Cài đặt TOAN AAS, hoặc bấm 'Mở cửa sổ CHỈ Phụ đề & Lồng tiếng'.";
     }
   }
 
@@ -100,9 +113,10 @@
       if (acctBadge) acctBadge.textContent = "Chưa đăng nhập";
       if (balBadge) balBadge.textContent = "Số dư: — Xu";
       if (noticeEl) {
+        const nextPath = encodeURIComponent(isFocusLiveMode() ? "/subdub?focus=live" : "/subdub");
         noticeEl.hidden = false;
         noticeEl.innerHTML =
-          'Cần đăng nhập tài khoản <strong>app.toanaas.vn</strong> để liên kết Xu và dịch trực tiếp. <a href="/login?next=/subdub">Đăng nhập ngay</a>';
+          `Cần đăng nhập tài khoản <strong>app.toanaas.vn</strong> để liên kết Xu và dịch trực tiếp. <a href="/login?next=${nextPath}">Đăng nhập ngay</a>`;
       }
       if (startBtn) startBtn.disabled = false;
       return;
@@ -171,11 +185,12 @@
       const acct = data.account || {};
       STATE.account = acct;
       STATE.csrfToken = data.csrf_token || "";
-      STATE.isAdmin = acct.role === "admin";
+      STATE.isAdmin = String(acct.role || acct.role_cache || "").trim().toLowerCase() === "admin";
       STATE.walletLinked = Boolean(acct.telegram_linked || acct.canonical_user_id);
 
       let balanceXu = 0;
       let walletOk = false;
+      let hasWalletBalance = false;
       if (STATE.walletLinked) {
         let bridgeReady = null;
         const portalBridge = portalCtx && portalCtx.bridge;
@@ -198,8 +213,10 @@
             const wData = wJson.data || {};
             if (typeof wData.balance_xu === "number") {
               balanceXu = wData.balance_xu;
+              hasWalletBalance = true;
             } else if (typeof wData.balance === "number") {
               balanceXu = wData.balance;
+              hasWalletBalance = true;
             }
             if (!wJson.ok && wJson.error_code === "ACCOUNT_TELEGRAM_UNLINKED") {
               STATE.walletLinked = false;
@@ -210,7 +227,7 @@
       }
       STATE.balanceXu = balanceXu;
 
-      if (STATE.walletLinked && walletOk) {
+      if (STATE.walletLinked && (walletOk || (STATE.isAdmin && hasWalletBalance))) {
         try {
           const vpRes = await fetch("/api/v1/voice/profiles", { credentials: "include" });
           if (vpRes.ok) {
@@ -300,6 +317,36 @@
     return pcm;
   }
 
+  function ensurePlaybackCtxUnlocked() {
+    try {
+      if (!STATE.playbackCtx || STATE.playbackCtx.state === "closed") {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          STATE.playbackCtx = new AudioCtx();
+          STATE.nextPlaybackTime = 0;
+        }
+      }
+      if (STATE.playbackCtx && STATE.playbackCtx.state === "suspended") {
+        STATE.playbackCtx.resume().catch(() => {});
+      }
+    } catch (_) {}
+  }
+
+  function syncMuteUi(studioEl) {
+    const muteBtn = studioEl.querySelector("[data-lt-mute]");
+    if (muteBtn) {
+      muteBtn.textContent = STATE.dubMuted
+        ? "🔇 Âm thanh lồng tiếng: Tắt"
+        : "🔊 Âm thanh lồng tiếng: Bật";
+    }
+    if (STATE.pipWindow && !STATE.pipWindow.closed) {
+      const pipMute = STATE.pipWindow.document.getElementById("pip-mute");
+      if (pipMute) {
+        pipMute.textContent = STATE.dubMuted ? "🔇 Tắt dub" : "🔊 Lồng tiếng";
+      }
+    }
+  }
+
   async function openPipOverlay(studioEl) {
     if (!("documentPictureInPicture" in window)) {
       STATE.lastStatus = "Trình duyệt không hỗ trợ Document Picture-in-Picture; xem phụ đề trực tiếp bên dưới.";
@@ -307,14 +354,40 @@
       return;
     }
     try {
-      const pipWin = await window.documentPictureInPicture.requestWindow({ width: 460, height: 210 });
+      const pipWin = await window.documentPictureInPicture.requestWindow({ width: 460, height: 225 });
       STATE.pipWindow = pipWin;
       const doc = pipWin.document;
       doc.body.style.cssText =
         "margin:0;padding:14px;background:#071b21;color:#f0fdfa;font-family:system-ui,sans-serif;display:flex;flex-direction:column;gap:8px;";
+      const hdrRow = doc.createElement("div");
+      hdrRow.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:8px;";
       const hdr = doc.createElement("div");
       hdr.style.cssText = "font-size:12px;font-weight:700;color:#51d5bc;";
-      hdr.textContent = "TOAN AAS · Dịch & Lồng tiếng trực tiếp (2x SubDub)";
+      hdr.textContent = "TOAN AAS · Phụ đề & Lồng tiếng (2x SubDub)";
+      const pipControls = doc.createElement("div");
+      pipControls.style.cssText = "display:flex;gap:6px;";
+      const pipMute = doc.createElement("button");
+      pipMute.id = "pip-mute";
+      pipMute.type = "button";
+      pipMute.style.cssText =
+        "padding:4px 8px;border-radius:6px;border:1px solid #1e4e57;background:#0f2e36;color:#f0fdfa;font-size:11px;cursor:pointer;";
+      pipMute.textContent = STATE.dubMuted ? "🔇 Tắt dub" : "🔊 Lồng tiếng";
+      pipMute.addEventListener("click", () => {
+        STATE.dubMuted = !STATE.dubMuted;
+        syncMuteUi(studioEl);
+      });
+      const pipStop = doc.createElement("button");
+      pipStop.id = "pip-stop";
+      pipStop.type = "button";
+      pipStop.style.cssText =
+        "padding:4px 8px;border-radius:6px;border:1px solid #991b1b;background:#dc2626;color:#fff;font-size:11px;cursor:pointer;";
+      pipStop.textContent = "⏹ Dừng";
+      pipStop.addEventListener("click", () => {
+        stopStudioSession(studioEl, { userInitiated: true });
+      });
+      pipControls.append(pipMute, pipStop);
+      hdrRow.append(hdr, pipControls);
+
       const orig = doc.createElement("div");
       orig.id = "pip-orig";
       orig.style.cssText = "font-size:13px;color:#cbd5e1;line-height:1.4;";
@@ -323,7 +396,7 @@
       trans.id = "pip-trans";
       trans.style.cssText = "font-size:17px;font-weight:700;color:#ffffff;line-height:1.4;";
       trans.textContent = STATE.lastTrans;
-      doc.body.append(hdr, orig, trans);
+      doc.body.append(hdrRow, orig, trans);
     } catch (_) {}
   }
 
@@ -366,18 +439,24 @@
     if (startBtn) startBtn.hidden = false;
     if (stopBtn) stopBtn.hidden = true;
     updateStage(studioEl);
+    STATE.accountLoaded = false;
     refreshAccountAndWallet(studioEl);
   }
 
   async function startStudioSession(studioEl) {
+    // Unlock audio context synchronously on user gesture so delayed TTS playback works smoothly
+    ensurePlaybackCtxUnlocked();
+
     const mode = studioEl.querySelector("[data-lt-mode]")?.value || "LIVE_DUB_BILINGUAL";
+    const sourceLang = studioEl.querySelector("[data-lt-source-lang]")?.value || "auto";
     const targetLang = studioEl.querySelector("[data-lt-lang]")?.value || "vi";
     const voiceRaw = studioEl.querySelector("[data-lt-voice]")?.value || "male";
     const voiceProfileId = voiceRaw.startsWith("vault:") ? voiceRaw.slice(6) : null;
     const genderPreference = voiceRaw.startsWith("vault:") ? "male" : voiceRaw;
 
     if (!STATE.account) {
-      window.location.href = "/login?next=/subdub";
+      const nextPath = encodeURIComponent(isFocusLiveMode() ? "/subdub?focus=live" : "/subdub");
+      window.location.href = `/login?next=${nextPath}`;
       return;
     }
 
@@ -397,7 +476,7 @@
       credentials: "include",
       headers,
       body: JSON.stringify({
-        source_language: "auto",
+        source_language: sourceLang,
         target_language: targetLang,
         mode,
         voice_profile_id: voiceProfileId,
@@ -436,6 +515,7 @@
           noiseSuppression: false,
           autoGainControl: false,
         },
+        systemAudio: "include",
       });
     } catch (err) {
       STATE.lastStatus = "Bạn đã đóng cửa sổ chọn Tab Chrome.";
@@ -455,6 +535,7 @@
     STATE.mediaStream = stream;
     STATE.active = true;
     STATE.seqCounter = 0;
+    let ackCount = 0;
     if (startBtn) startBtn.hidden = true;
     if (stopBtn) stopBtn.hidden = false;
     if (exportBtn) exportBtn.hidden = false;
@@ -524,11 +605,20 @@
         const msg = JSON.parse(ev.data);
         if (msg.type === "stt.final") {
           const txt = msg.source_text || msg.text || "";
-          if (txt) STATE.lastOrig = txt;
+          if (txt) {
+            STATE.lastOrig = txt;
+            STATE.lastStatus = "Đang dịch & tổng hợp giọng nói...";
+          }
         } else if (msg.type === "translation.final") {
-          if (msg.translated_text) STATE.lastTrans = msg.translated_text;
+          if (msg.translated_text) {
+            STATE.lastTrans = msg.translated_text;
+            STATE.lastStatus = "Đang phát lồng tiếng & cập nhật phụ đề...";
+          }
         } else if (msg.type === "tts.audio") {
           if (msg.audio_b64) playTtsBase64(msg.audio_b64);
+        } else if (msg.type === "ack") {
+          ackCount += 1;
+          STATE.lastStatus = `Đang hoạt động · đã xử lý ${ackCount} đoạn âm thanh.`;
         } else if (msg.type === "settlement.updated" || msg.type === "usage.updated") {
           if (typeof msg.total_xu_consumed === "number") {
             STATE.spentXu = msg.total_xu_consumed;
@@ -557,10 +647,12 @@
   }
 
   function mountStudioIfReady() {
+    syncFocusModeClass();
     if (!isSubdubRoute()) return;
     const card = document.querySelector(".portal-subdub-extension-card");
     if (!card || card.querySelector("[data-lt-studio]")) return;
 
+    const focusMode = isFocusLiveMode();
     const el = document.createElement("div");
     el.className = "portal-lt-studio";
     el.setAttribute("data-lt-studio", "true");
@@ -572,14 +664,17 @@
           <span class="portal-lt-pill">Cước: 2x SubDub</span>
         </div>
         <div class="portal-lt-actions">
-          <button type="button" class="portal-lt-btn portal-lt-btn--accent" data-lt-install-chrome>Thêm ứng dụng TOAN AAS vào Chrome</button>
-          <button type="button" class="portal-lt-btn" data-lt-copy-ext-url>Copy chrome://extensions</button>
+          ${
+            focusMode
+              ? '<a class="portal-lt-btn" href="/subdub">↩ Trang đầy đủ</a>'
+              : '<button type="button" class="portal-lt-btn" data-lt-open-focus>🗗 Mở cửa sổ CHỈ Phụ đề &amp; Lồng tiếng</button>'
+          }
         </div>
       </div>
       <div class="portal-lt-notice" data-lt-auth-notice hidden></div>
       <div class="portal-lt-controls">
         <div class="portal-lt-field">
-          <label for="lt-mode-select">Chế độ dịch trực tiếp ngay trên Chrome</label>
+          <label for="lt-mode-select">Chế độ</label>
           <select id="lt-mode-select" data-lt-mode>
             <option value="LIVE_DUB_BILINGUAL" selected>Lồng tiếng + Phụ đề song ngữ</option>
             <option value="CAPTION_TRANSLATE">Chỉ phụ đề dịch (Không lồng tiếng)</option>
@@ -587,7 +682,17 @@
           </select>
         </div>
         <div class="portal-lt-field">
-          <label for="lt-lang-select">Ngôn ngữ đích</label>
+          <label for="lt-source-lang-select">Ngôn ngữ video gốc</label>
+          <select id="lt-source-lang-select" data-lt-source-lang>
+            <option value="auto" selected>Tự động nhận diện</option>
+            <option value="zh">Tiếng Trung (zh)</option>
+            <option value="en">Tiếng Anh (en)</option>
+            <option value="ja">Tiếng Nhật (ja)</option>
+            <option value="ko">Tiếng Hàn (ko)</option>
+          </select>
+        </div>
+        <div class="portal-lt-field">
+          <label for="lt-lang-select">Dịch sang</label>
           <select id="lt-lang-select" data-lt-lang>
             <option value="vi" selected>Tiếng Việt (vi)</option>
             <option value="en">English (en)</option>
@@ -604,9 +709,9 @@
         </div>
       </div>
       <div class="portal-lt-actions">
-        <button type="button" class="portal-lt-btn portal-lt-btn--accent" data-lt-start>▶ Dịch &amp; Lồng tiếng Tab Chrome ngay (Không cần cài Extension)</button>
+        <button type="button" class="portal-lt-btn portal-lt-btn--accent" data-lt-start>▶ Dịch &amp; Lồng tiếng Tab Chrome ngay</button>
         <button type="button" class="portal-lt-btn portal-lt-btn--danger" data-lt-stop hidden>⏹ Dừng phiên dịch</button>
-        <button type="button" class="portal-lt-btn" data-lt-pip>❐ Mở phụ đề nổi (Picture-in-Picture)</button>
+        <button type="button" class="portal-lt-btn" data-lt-pip>❐ Phụ đề nổi (PiP)</button>
         <button type="button" class="portal-lt-btn" data-lt-mute>🔊 Âm thanh lồng tiếng: Bật</button>
         <button type="button" class="portal-lt-btn" data-lt-export hidden>⬇ Tải phụ đề (.srt)</button>
       </div>
@@ -614,16 +719,44 @@
         <div class="portal-lt-caption-orig" data-lt-orig></div>
         <div class="portal-lt-caption-trans" data-lt-trans></div>
         <div class="portal-lt-status-row">
-          <span data-lt-status>Sẵn sàng chạy trực tiếp trên Chrome hoặc qua Extension .zip.</span>
+          <span data-lt-status>Sẵn sàng chạy trực tiếp trên Tab Chrome.</span>
           <span data-lt-fee>Đã khấu trừ phiên này: 0 Xu</span>
         </div>
       </div>
+      <details class="portal-lt-ext-details">
+        <summary>Cài đặt Chrome Extension / Ứng dụng Chrome độc lập (Tùy chọn)</summary>
+        <div class="portal-lt-ext-body">
+          <p class="portal-lt-ext-note">
+            Chrome không cho phép trang web tự nhét tiện ích chưa lên Chrome Web Store vào menu Tiện ích.
+            Bạn có thể dùng ngay nút <strong>▶ Dịch &amp; Lồng tiếng Tab Chrome ngay</strong> ở trên, hoặc cài Extension thủ công 1 lần qua <code>chrome://extensions</code> (bật Developer mode → Load unpacked → chọn thư mục đã giải nén).
+          </p>
+          <div class="portal-lt-actions">
+            <a class="portal-lt-btn" href="/api/v1/live-translate/extension-download" download="toan-aas-chrome-live-translate.zip">⬇ Tải Extension (.zip)</a>
+            <button type="button" class="portal-lt-btn" data-lt-copy-ext-url>Copy chrome://extensions</button>
+            <button type="button" class="portal-lt-btn" data-lt-install-chrome>Mở qua ứng dụng Chrome</button>
+          </div>
+        </div>
+      </details>
     `;
 
     card.appendChild(el);
     updateInstallButtons();
     updateStage(el);
     refreshAccountAndWallet(el);
+
+    const openFocusBtn = el.querySelector("[data-lt-open-focus]");
+    if (openFocusBtn) {
+      openFocusBtn.addEventListener("click", function () {
+        const w = window.open(
+          "/subdub?focus=live",
+          "toanaas_live_subdub",
+          "popup=yes,width=490,height=660,menubar=no,toolbar=no,location=no,status=no"
+        );
+        if (!w) {
+          window.location.href = "/subdub?focus=live";
+        }
+      });
+    }
 
     el.querySelector("[data-lt-install-chrome]").addEventListener("click", function () {
       triggerChromeAppInstall(el.querySelector("[data-lt-status]"));
@@ -654,11 +787,9 @@
       openPipOverlay(el);
     });
 
-    el.querySelector("[data-lt-mute]").addEventListener("click", function (ev) {
+    el.querySelector("[data-lt-mute]").addEventListener("click", function () {
       STATE.dubMuted = !STATE.dubMuted;
-      ev.currentTarget.textContent = STATE.dubMuted
-        ? "🔇 Âm thanh lồng tiếng: Tắt"
-        : "🔊 Âm thanh lồng tiếng: Bật";
+      syncMuteUi(el);
     });
 
     el.querySelector("[data-lt-export]").addEventListener("click", async function () {
@@ -684,6 +815,7 @@
   });
 
   function boot() {
+    syncFocusModeClass();
     mountStudioIfReady();
     const root = document.getElementById("portal-main") || document.body;
     if (root) {
