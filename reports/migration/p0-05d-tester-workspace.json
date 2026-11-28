@@ -133,7 +133,16 @@
     "tester_metadata_passed": 32,
     "tester_metadata_windows_baseline_failures": 1,
     "tester_metadata_new_failures": 0,
-    "linux_posix_permission_case_required": true
+    "linux_posix_permission_case_required": true,
+    "ci1": {
+      "run": 46147192160,
+      "head": "03c1915004521e3019039abf62b599370840761a",
+      "failed_case": "zh: login copy removes protocol jargon but keeps same-account warning and confirmation",
+      "cause": "Historical section finder selected new hero wording before the methods heading",
+      "failed_only_recovered": 1,
+      "application_changes_for_recovery": 0,
+      "old_assertions_and_shared_test_helper_held": true
+    }
   },
   "prior_gallery_customer_copy_verification_session": {
     "id": "GALLERY-CUSTOMER-COPY-20261127",
@@ -1114,9 +1123,9 @@
     },
     {
       "path": "KIEM-THU/PHIEN-CUSTOMER-LANGUAGE-CLEANUP-20261128.md",
-      "lines": 72,
-      "bytes": 4660,
-      "sha256": "db61f706b91db4558238077c885ae5a76eb470bcf53245805ba101e189ba8abb"
+      "lines": 78,
+      "bytes": 5061,
+      "sha256": "d66a99e581a85aba16641c089e063dd4d3b5dcb8b6dc69ee549e7bb350c826b9"
     },
     {
       "path": "KIEM-THU/PHIEN-CUSTOMER-NATURAL-20261128.md",
@@ -1360,9 +1369,9 @@
     },
     {
       "path": "docs/superpowers/specs/2026-11-28-customer-language-cleanup.md",
-      "lines": 163,
-      "bytes": 10566,
-      "sha256": "766bbd1add14e3140e0aa5775382fc4ab0e51dde17d2b56eb51f7d3ea979250f"
+      "lines": 176,
+      "bytes": 11461,
+      "sha256": "e97b65d12ba9061efe666fcdb5ea5185f0d98cd2b3955dac1631cb055b716ac0"
     },
     {
       "path": "docs/superpowers/specs/2026-11-28-customer-natural-followup.md",
@@ -1384,9 +1393,9 @@
     },
     {
       "path": "reports/prepush/CUSTOMER-LANGUAGE-CLEANUP-20261128.md",
-      "lines": 68,
-      "bytes": 3840,
-      "sha256": "fc6438782f8e9a20ac486c09bff419fc7df8c99394cfe1d5dd4666d3b07a92ad"
+      "lines": 74,
+      "bytes": 4214,
+      "sha256": "35c8a118e404494446dbfbed6822ddf0c7abc34720257d79d393236cf968bc35"
     },
     {
       "path": "reports/prepush/CUSTOMER-NATURAL-20261128.md",
@@ -1477,6 +1486,12 @@
       "lines": 137,
       "bytes": 6861,
       "sha256": "2c5b355596f5b65cba8df36f526ad449817f102ea49ff521ec077949a026fe46"
+    },
+    {
+      "path": "tests/account-dashboard-plain-language.test.mjs",
+      "lines": 83,
+      "bytes": 7073,
+      "sha256": "da5e05e83e69120e35f38ddbd97fe3f779808b9a4e9fc8f9283f41e06a30ba46"
     },
     {
       "path": "tests/account-plain-language-snapshot.test.mjs",

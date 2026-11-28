@@ -161,3 +161,16 @@ ràhistoryđãAPPROVE,khôngfinding,khôngràlạiứngdụnghoặclặptests.
 Cúpháphaitệpứngdụng,py_compileappvànămtest/helper,diffcheckmã0.
 Haihashứngdụngvẫnbằngbảnghépđãkiểm;C6vẫnchờbảnkiểmtrênkho/
 gộp/cậpnhậtWeb/đốichiếuvàreceipt,khôngcoitoàngoalxong.
+
+## PR825 — đầu vào Account/Dashboard cũ
+
+Run46147192160/HEAD03c1915004521e3019039abf62b599370840761a
+dừng ở đúng một caseZH của `tests/account-dashboard-plain-language.test.mjs`:
+helpersectionWithlấy lần xuất hiện đầu của“登录方式”,nay trùng trong
+herođãđổilời,nên trả sectiongiới thiệu thay vì mục phương thức đăng nhập.
+Không phải mất nút hoặc đổi quyền.Thay sharedsectionWithsẽmởrộng
+phạmvi không cần thiết;chỉ cho phép I18N đầu vào của filetestnàyqua
+leafmớiđểgiữepochcũ,khôngđổiassertion/renderer/dữliệu/nút hoặc
+haiappfile. Chỉ chạy lại caseZHfail;những case cũ đã đạt giữ kết quả.
+Tài liệu phiên/prepush/metadata ghi lượt lỗi;haiWebprovenance tạo lại
+sau chốt nguồn. Bản kiểm mới đúngHEADvẫn bắt buộc trước gộp.

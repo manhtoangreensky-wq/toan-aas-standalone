@@ -66,6 +66,12 @@ thìkhôngmởpush;Linuxtrênkhovẫnphảiquađủtrướckhigộp.
 
 ## Giới hạn còn mở
 
+PR825lượt46147192160/HEAD03c19150dừng ở đúng một caseZH của
+account-dashboard-plain-language. Helpertest chọn lần xuất hiện đầu
+của“登录方式”trongherođãđổichữ,khôngphảimụcphươngthứcđăngnhập.
+ChỉI18Nđầuvàofiletestcũnhậnleafmới;renderer/sectionWith/assertion/
+haiappfilegiữ.Failed-onlyZH1/1đạt;bảnkiểmHEADmớivẫnbắtbuộc.
+
 Chưa lưu thật hoặc mở phiên khách production. Không suy toàn bộ auth/
 bản nháp/race/accessibility/thiết bị/Safari/offline/motion từ42ảnh.
 Ghi chú workspace là đợt tiếp theo;motion vẫn cuối,toàn goal chưa xong.

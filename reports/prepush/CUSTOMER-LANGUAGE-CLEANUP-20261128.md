@@ -64,5 +64,11 @@ Chỉ ghi cập nhật máy chủ khi có bản đã gộp,workflowWeb-onlythàn
 runtime/cây/dịch vụ/tài nguyên đúngnguồn vàreceiptđã đọc lại. Bản nháp/
 vòng đời/thiết bị/Safari/offline/phiên khách thật vẫn mở;motion cuối.
 
-Metadata:88tệpđãđo;32PASS/1WindowsPOSIXbaseline/0newfailure.
+Metadata:89tệpđãđo;32PASS/1WindowsPOSIXbaseline/0newfailure.
 Test/scriptđồngbộgiữBASEbyte-exact;Linuxtrênkhophảiqua,cấmweakenassertion.
+
+PR825CI1run46147192160/HEAD03c19150dừngđúngmộtcaseZHoldaccount.
+Newhero trùng chữmethodsTitlekhiếnsectionWithtestchọnnhầmsection;
+chỉneoI18Nđầuvàocủafiletestcũqualeafmới.Failed-only1/1đạt.
+Khôngđổihaiappfile,sharedtesthelper,pin hoặcassertion.BảnkiểmHEAD
+mới vẫnphảiđạt;khôngdùngrecoverycụcbộđểbỏgatemerge/deploy.
