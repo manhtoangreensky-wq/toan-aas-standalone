@@ -1061,7 +1061,7 @@ async def _settle_realtime_slice(
         )
         if not isinstance(res, dict):
             return None
-        data = res.get("data") if isinstance(res.get("data"), dict) and "ok" not in res else res
+        data = res.get("data") if isinstance(res.get("data"), dict) and "amount_xu" not in res else res
         if res.get("ok"):
             charged = int(data.get("amount_xu") or 0)
             _SESSION_UNBILLED_CHARS[sid] = 0
@@ -1071,10 +1071,18 @@ async def _settle_realtime_slice(
             if isinstance(bal_after, (int, float)):
                 _SESSION_LAST_BALANCE_AFTER[sid] = int(bal_after)
             _persist_realtime_session(session)
+            settle_status = str(data.get("status") or "").strip()
+            if settle_status in ("", "failed", "completed"):
+                if data.get("exempt"):
+                    settle_status = "exempt"
+                elif charged > 0:
+                    settle_status = "settled"
+                else:
+                    settle_status = "no_billable_usage"
             return {
                 "type": "settlement.updated",
                 "session_id": sid,
-                "status": data.get("status", "settled"),
+                "status": settle_status,
                 "xu_charged": charged,
                 "total_xu_consumed": session.settled_xu,
                 "balance_after": bal_after,
