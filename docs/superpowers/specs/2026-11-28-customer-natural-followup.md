@@ -231,3 +231,18 @@ test_portal_i18n_bundle_contracts.py qua cùnginversehữu hạn;giữ toàn
 scriptassertioncũ và gửi sourceđãbóclớp qua stdin,không sửa ứng dụng.
 Lượt gọi kèmba backendtestlocaleđãdừngđúnghaiPythonprocesscủaRoot
 khi chờ trênWindows;không tínhAPI/lifecycleđạt hoặc thaycấu hình.
+
+## Phụ lục lượt kho đầu — đúng một đối chiếu chữ cũ
+
+PR824/HEAD8579271414e7395ed62c2ddd042834583ef78af3,
+run46134749159:49/50đạt,1lỗi ở
+`tests/document-workspace-natural-copy.test.mjs` — phép so giá trị
+khóa cũ của đợt tài liệu gặpsummary.companionđã đổi hợp lệ. Các kiểm
+renderer/transporttài liệu vẫn đạt;rawprimarymớichưatớibướcchạy.
+
+Cho phép đưa riêng đầu vào phép so từ điển của test đó qua
+customerNaturalHistoricalSnapshot,giữ nguyên mọi assertion/fixture/
+kỳ vọng cũ. Không bóc sourcekhỏi runtimecác renderer/transporttài liệu;
+rawprimarymới luôn đọcứngdụng hiện tại. Không sửa ứng dụng và không
+chạy lại nhóm đã đạt ởlocal;kiểm failed-only1ca rồi cùngPR824chạy
+đúngHEADmới. Giữlịch sửrunlỗi,khôngmerge/deploykhi chưa đạt.

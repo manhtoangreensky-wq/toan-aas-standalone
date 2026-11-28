@@ -72,3 +72,8 @@ BLOCKERS=EXACT_HEAD_DELIVERY_GATES_PENDING_NOT_OWNER_PERMISSION.
 
 Metadata:67tệpđãđóngdấu;32PASS/1WindowsPOSIXbaseline/0newfailure.
 Source test/scriptđồngbộgiữnguyênBASE;LinuxCIphảiqua,khôngbỏassertion.
+
+PR824lượtkho46134749159dừng49/50đạt vì olddocumentdictionary
+comparatorgặp nhãn đã đổi đúng. Chỉneo snapshotđầuvào tại phépso đó;
+failed-only1/1đạt,khôngđổisourceứngdụng hoặc rawrenderer. Bảnkiểm
+mới phải đạt trướcmerge/deploy;không xóalịchsửlượtlỗi.

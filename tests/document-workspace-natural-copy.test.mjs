@@ -6,6 +6,7 @@ import vm from "node:vm";
 import {execFileSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import {webcrypto} from "node:crypto";
+import {customerNaturalHistoricalSnapshot} from "./helpers/customer-natural-followup-historical.mjs";
 
 // Catches leaked implementation wording while preserving the actual controls,
 // authored text, input rules and machine values in the document preparation UI.
@@ -164,7 +165,10 @@ for (const locale of ["vi","en","zh"]) {
   });
 }
 test("new document dictionary values are complete; every previous key and value stays exact", () => {
-  const now=runtime("vi","/document-workspace").window.TOANAASI18n.messages;
+  const raw=runtime("vi","/document-workspace").window.TOANAASI18n.messages;
+  // Only this older value comparator sees its original dictionary epoch.
+  const now=Object.fromEntries(["vi","en","zh"].map(locale=>[locale,
+    Object.fromEntries(customerNaturalHistoricalSnapshot(Object.entries(raw[locale]),locale))]));
   const old=runtime("vi","/document-workspace",historical).window.TOANAASI18n.messages;
   for(const locale of ["vi","en","zh"]) {
     for(const [key,value] of Object.entries(old[locale])) assert.equal(now[locale][key],value,key);

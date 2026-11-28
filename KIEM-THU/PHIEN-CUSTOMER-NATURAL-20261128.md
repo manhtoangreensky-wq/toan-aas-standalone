@@ -46,6 +46,11 @@ giữ đúng lỗi nền đã đo trước. Filetest/scriptđồng bộ không �
 bỏ assertion hoặc sửa quyền máy. LinuxCIvẫn phải qua ca này trước gộp.
 Runtimei18nbundlecũ failed-only1/1đạt sau neo sourcequa inverse/stdin.
 
+Lượt kho46134749159/HEAD85792714dừng49/50đạt ở đối chiếu từ điển
+tài liệu cũ. Chỉ phép so giá trị của test đó nhận snapshotđã bóc đúng
+413khóa;renderer/transportvẫn đọc raw hiện tại. Failed-only1/1đạt.
+Không đổi hai tệpứngdụng,fixture/pin/assertioncũ hoặc rawprimarymới.
+
 ## Giới hạn và mục còn mở
 
 Ảnh chỉ renderer/kiểu dáng vật lý quaHTTP cục bộ và điều khiển native;
