@@ -9050,7 +9050,7 @@
     },
     {
       "file": "copyfast_bridge.py",
-      "line": 369,
+      "line": 370,
       "name": "INTERNAL_MANUAL_ADMIN_TOKEN"
     },
     {
@@ -18855,7 +18855,7 @@
   "schema_version": "2.0",
   "source_files_discovered": 749,
   "source_files_scanned": 749,
-  "source_fingerprint_sha256": "1598dbee281dced30d04012d3b008e3f87a0b04439dc502650039f397023166c",
+  "source_fingerprint_sha256": "a5d4435e7ec4f1f6327d1b2b5f8bc1c04e2364517edba8ea3fca02428e338927",
   "source_root": "repository-root",
   "ui_path_references": [
     {
