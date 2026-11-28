@@ -347,6 +347,7 @@ def _sanitize_envelope(value: dict, *, fallback_code: str | None = None) -> dict
         "draft", "awaiting_confirm", "queued", "processing", "completed",
         "failed", "failed_no_charge", "guarded", "cancelled", "refunded",
         "read_only", "pending_admin_review", "approved", "rejected",
+        "settled", "exempt", "no_billable_usage",
         "unverified", "unlinked", "conflict",
         "prepared_provider_disabled", "PREPARED_PROVIDER_DISABLED",
     }

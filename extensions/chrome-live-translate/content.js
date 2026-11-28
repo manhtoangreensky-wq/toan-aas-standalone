@@ -67,6 +67,7 @@
   `;
 
   document.body.appendChild(container);
+  container.style.display = "none";
 
   // Element Selectors
   const pill = container.querySelector("#toan-aas-pill");
@@ -175,8 +176,14 @@
   header.addEventListener("mousedown", (e) => {
     if (e.target.tagName === "BUTTON") return;
     isDragging = true;
-    dragOffsetX = e.clientX - win.getBoundingClientRect().left;
-    dragOffsetY = e.clientY - win.getBoundingClientRect().top;
+    const rect = win.getBoundingClientRect();
+    win.style.left = rect.left + "px";
+    win.style.top = rect.top + "px";
+    win.style.right = "auto";
+    win.style.bottom = "auto";
+    win.style.transform = "none";
+    dragOffsetX = e.clientX - rect.left;
+    dragOffsetY = e.clientY - rect.top;
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
   });
@@ -188,6 +195,8 @@
     win.style.left = x + "px";
     win.style.top = y + "px";
     win.style.right = "auto";
+    win.style.bottom = "auto";
+    win.style.transform = "none";
   }
 
   function onMouseUp() {
@@ -226,6 +235,14 @@
       if (data.type === "translation.final" && data.translated_text) {
         transText.textContent = data.translated_text;
         historySegments.push(data);
+      }
+
+      if (data.type === "tts.audio" && !data.audio_b64 && !data.audio_base64 && data.error) {
+        origText.textContent = `⚠ Lỗi tạo giọng lồng tiếng: ${data.error}`;
+      }
+
+      if ((data.type === "error" || data.type === "session.error") && data.message) {
+        transText.textContent = `⚠ ${data.message}`;
       }
     }
   });

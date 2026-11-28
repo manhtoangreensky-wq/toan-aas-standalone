@@ -227,6 +227,19 @@ def test_focus_live_mode_and_extension_admin_guards():
     studio_js = (root / "static" / "portal" / "live-translate-studio.js").read_text(encoding="utf-8")
     studio_css = (root / "static" / "portal" / "live-translate-studio.css").read_text(encoding="utf-8")
     popup_js = (root / "extensions" / "chrome-live-translate" / "popup.js").read_text(encoding="utf-8")
+    content_js = (root / "extensions" / "chrome-live-translate" / "content.js").read_text(encoding="utf-8")
+    content_css = (root / "extensions" / "chrome-live-translate" / "content.css").read_text(encoding="utf-8")
+    offscreen_js = (root / "extensions" / "chrome-live-translate" / "offscreen.js").read_text(encoding="utf-8")
     assert "focus=live" in studio_js
     assert "portal-lt-focus-mode" in studio_css
     assert "_isAdminUser" in popup_js
+    assert 'container.style.display = "none";' in content_js
+    assert "bottom: 48px;" in content_css
+    assert "nextTtsPlayTime" in offscreen_js and "activeTtsSources" in offscreen_js
+
+    for st in ("settled", "exempt", "no_billable_usage"):
+        res = copyfast_bridge._sanitize_envelope({"ok": True, "status": st, "data": {"amount_xu": 0}})
+        assert res["status"] == st
+
+    buf = rt.RealtimeAudioIngressBuffer()
+    assert buf.max_segment_duration_ms <= 4000

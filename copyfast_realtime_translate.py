@@ -704,7 +704,7 @@ class RealtimeAudioIngressBuffer:
         silence_threshold_rms: float = 350.0,
         silence_duration_trigger_ms: int = 600,
         min_speech_duration_ms: int = 600,
-        max_segment_duration_ms: int = 7000,
+        max_segment_duration_ms: int = 4000,
     ):
         self.sample_rate = sample_rate
         self.bytes_per_second = sample_rate * 2
