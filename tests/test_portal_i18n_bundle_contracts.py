@@ -15,6 +15,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from tests.helpers.customer_natural_followup_historical import customer_natural_historical_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,7 +46,7 @@ def _node_i18n_snapshot() -> dict:
 const fs = require("fs");
 const vm = require("vm");
 const sourcePath = process.argv[1];
-const source = fs.readFileSync(sourcePath, "utf8");
+const source = fs.readFileSync(0, "utf8");
 
 const documentElement = {
   lang: "vi",
@@ -437,6 +438,9 @@ process.stdout.write(JSON.stringify({
             check=False,
             capture_output=True,
             text=True,
+            input=customer_natural_historical_source(
+                BUNDLE.read_text(encoding="utf-8"), "static/portal/portal-i18n.js"
+            ),
             timeout=20,
         )
     except OSError as exc:

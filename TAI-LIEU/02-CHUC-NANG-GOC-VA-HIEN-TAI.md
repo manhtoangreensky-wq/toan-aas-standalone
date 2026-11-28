@@ -1,5 +1,25 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 28/11/2026 — lời tài khoản và bắt đầu sử dụng
+
+Nguồn gốc đã đối chiếu:WORKSPACE_SETUP_PROFILE_CONTRACT,
+WORKSPACE_STARTER_KITS_CONTRACT,DATA_CONTROLS_CONTRACT và thiết kế
+Account Center Locale Clarity03/08;sourcecủaBASE469f7006.
+
+| Chức năng theo hợp đồng gốc | Hiện trạng và thay đổi lời | Phần giữ nguyên |
+|---|---|---|
+| Thiết lập cách làm việc,tối đa3nhóm |Gọi bằng vai trò/mục tiêu/nhóm chức năng,không“studio”chung |Giá trị lựa chọn,giới hạn,lưu/bỏ qua,quyền |
+| Bộ mẫu tạo dự án,tài liệu,mục việc |Nói rõ chưa tạo ảnh/âm thanh/video hoặc thu phí |8khóa mẫu,phiên bản,xác nhận,trạng thái |
+| Hồ sơ,phương thức đăng nhập,Telegram riêng |Lời tự nhiên và hướng dẫn gửi lệnh qua trợ lý Telegram |Tên riêng,lệnh thật,đường dẫn,liên kết,quyền |
+| Xác thực hai bước và mã khôi phục |Không hứa mọi mã luôn ẩn;kèm hướng dẫn giữ mã |Mật khẩu,mã thật,cách xác nhận,thời hạn |
+| Tải dữ liệu hoặc yêu cầu xem xét xóa |Không gọi yêu cầu xem xét là xóa ngay;không lộ mô tả nội bộ |Phạm vi ứng dụng;không gồmTelegram,tiền,công việc xử lý hoặc tệp |
+
+Hai recordứng dụng/413khóa cũ;không có chức năng mới,tắt cảnh báo,
+đổi enginehoặc mở ví. Tài liệu gốc vẫn đúng về khả năng thực tế nhưng
+những câu diễn tả chi tiết triển khai không còn là lời hiển thị cho khách.
+PR822đã giao;ứng viên này chưa phát hành. Chi tiết số đo ởphiên
+CUSTOMER-NATURAL-20261128;toàn goal vàmotioncuối vẫn mở.
+
 ## 28/11/2026 — phần yêu cầu tài liệu: đổi chữ, giữ chức năng
 
 Nguồn đối chiếu: phần tài liệu riêng trong copyfast_document_workspace.py,

@@ -10,7 +10,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const BASE='051096fb1e48223034ee3cc81674e18e8e63c003';
 const helper=path.join(ROOT,'tests/helpers/publishing-child-render.mjs');
-const {renderChild}=await import(pathToFileURL(helper).href);
+const {renderChild}=await import("./helpers/customer-natural-historical-render.mjs");
 let source=fs.readFileSync(helper,'utf8');
 const replacements=[["const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');",'const root='+JSON.stringify(ROOT)+';']];
 for(const [variable,file]of [['portal','static/portal/portal.js'],['i18n','static/portal/portal-i18n.js']])replacements.push([`const ${variable}=fs.readFileSync(path.join(root,'${file}'),'utf8');`,'const '+variable+'='+JSON.stringify(execFileSync('git',['show',BASE+':'+file],{cwd:ROOT,encoding:'utf8',maxBuffer:25e6}))+';']);

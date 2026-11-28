@@ -3,10 +3,12 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {execFileSync} from "node:child_process";
 import {documentNaturalHistoricalSource as inverse,documentNaturalHistoricalSnapshot as snapshot} from "./helpers/document-natural-copy-historical.mjs";
+import {customerNaturalHistoricalSource} from "./helpers/customer-natural-followup-historical.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/document-natural-copy-history.json",import.meta.url),"utf8"));
 const files=["static/portal/portal.js","static/portal/integration.js","static/portal/portal-i18n.js"];
 for(const file of files){
-  const source=fs.readFileSync(new URL("../"+file,import.meta.url),"utf8").replace(/\r\n/g,"\n");
+  // Old assertions keep their original source epoch; newest primary is raw.
+  const source=customerNaturalHistoricalSource(fs.readFileSync(new URL("../"+file,import.meta.url),"utf8").replace(/\r\n/g,"\n"),file);
   const base=execFileSync("git",["show",fixture.base_sha+":"+file],{encoding:"utf8",maxBuffer:30e6}).replace(/\r\n/g,"\n");
   test(`${file}: finite inverse equals immutable baseline while raw current source differs`,()=>{
     assert.notEqual(source,base);assert.equal(inverse(source,file),base);assert.equal(inverse(base,file),base);

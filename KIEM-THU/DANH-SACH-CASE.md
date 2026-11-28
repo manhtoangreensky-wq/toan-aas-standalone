@@ -1,5 +1,15 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## CUSTOMER-NATURAL-20261128 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| CN-WORDING | nặng |Bắt đầu/bộ mẫu/tài khoản/bảo mật/dữ liệu/dự án39trạng tháiVI/EN/ZH |Lời tự nhiên,không mô tả triển khai;giữ nội dung khách |134đề mục theoledger gộp/recovery |
+| CN-CONTROLS | nặng |So trước/sau và chọn/gõ native |Nút/quyền/tên/giá trị/giới hạn/lệnh/dữ liệu giữ |Rawrenderer và ảnh đúngkhung |
+| CN-CODE-GUIDANCE | nặng |Mã liên kết hoạt động/8mã khôi phục mẫu |Không cam kết sai;không ẩn mã để làm câu đúng |Rawprimary/ảnhcục bộ |
+| CN-HISTORY | nặng |Thiếu/đổi/lặp record/khóa và nội dung lạ |Chỉ2record/413giá trị đúng được bóc;lịch sử không bị nới |7pressure cuối,595lịch sử trước,18Pythonliên quan |
+| CN-DELIVERY | nặng |Đúng nguồn→gộp→Webdeploy→runtime/tài nguyên |Mỗi bước có bằng chứng;không suy phiên production |Chưa phát hành;PHIEN-CUSTOMER-NATURAL-20261128 |
+
 ## DOCUMENT-NATURAL-20261128 — Issue689, kiểm tại máy
 
 | Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
