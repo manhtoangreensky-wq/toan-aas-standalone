@@ -62,3 +62,8 @@ Metadata Tester có32PASS/1FAIL chỉ ở chế độ quyền tệp POSIX trên 
 Frozen BASE tái hiện đúng1FAIL/0666 thay0600; nguồn test và script sync
 không đổi. Không tính lỗi này thành hồi quy ứng dụng, không bỏ test và
 vẫn yêu cầu Linux CI đạt. Chốt hash tài liệu được đo lại sau phụ lục này.
+
+Lượt kho46113947927:205/208đạt,3lỗi reader auth-return cũ so toàn
+integration với epoch cũ. Bổ sung input inverse hữu hạn đúng60record
+trước assertions ở Node/Python; không đổi fixture/pin/assertion hay app.
+120Node/120Python recovery đạt; workflow chạy raw34+pressure16 mới.

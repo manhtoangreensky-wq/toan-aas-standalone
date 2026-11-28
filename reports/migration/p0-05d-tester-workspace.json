@@ -125,7 +125,17 @@
     "tester_metadata_passed": 32,
     "tester_metadata_windows_baseline_failures": 1,
     "tester_metadata_new_failures": 0,
-    "linux_posix_permission_case_required": true
+    "linux_posix_permission_case_required": true,
+    "ci1": {
+      "run": 46113947927,
+      "head": "8dd3ea28d226143e416978ba2085ac5a1da9a9ed",
+      "passed": 205,
+      "failed": 3,
+      "reason": "Historical auth-return reader needs approved newer copy epoch inverse",
+      "node_recovery_passed": 120,
+      "python_recovery_passed": 120,
+      "application_changes_for_recovery": 0
+    }
   },
   "prior_gallery_customer_copy_verification_session": {
     "id": "GALLERY-CUSTOMER-COPY-20261127",
@@ -1100,9 +1110,9 @@
     },
     {
       "path": "KIEM-THU/PHIEN-DOCUMENT-NATURAL-20261128.md",
-      "lines": 64,
-      "bytes": 4207,
-      "sha256": "d239f8615534329ae691f7462361341a2d5593cfbbdab14022e4aecfb0f035bc"
+      "lines": 69,
+      "bytes": 4521,
+      "sha256": "93d7a90de6c9355072195a9b1b1658a3e2d11659c986d9271b6c02b16bbb5f0d"
     },
     {
       "path": "KIEM-THU/PHIEN-FAMILY-CHROME-NATIVE-20261127.md",
@@ -1328,9 +1338,9 @@
     },
     {
       "path": "reports/prepush/DOCUMENT-NATURAL-20261128.md",
-      "lines": 52,
-      "bytes": 3108,
-      "sha256": "2568605cef0b2c579f329919d5fb17ee801160837a1c97daccd9d964d2e77c27"
+      "lines": 62,
+      "bytes": 3747,
+      "sha256": "3266e12a266e253b168a18dd67189990e987104c31ba2a6d304c2e85ed343581"
     },
     {
       "path": "reports/tester/ADMIN-GUARD-CUSTOMER-COPY-20261127.md",

@@ -50,3 +50,13 @@ Metadata Tester:32/33đạt; một ca quyền tệp POSIX0600 trả0666 trên Wi
 Đã chạy đúng ca đó bằng ba tệp frozen BASE trong thư mục tạm riêng:
 cùng1FAIL/0666, test và script sync giữ đúng hash, NEW_FAILURES=0.
 Không sửa/bỏ test; Linux CI phải chạy và đạt ca này trước merge.
+
+## Lượt kiểm tra kho đầu tiên và phần đối chiếu cần bổ sung
+
+Run46113947927 tại8dd3ea28 dừng ở nhóm208ca:205đạt/3lỗi trong
+auth-return-historical integration source epoch. Reader cũ đang đòi toàn
+tệp đúng bản trước khi đổi chữ. Đã đưa đúng input qua inverse60record
+trước bài so sánh cũ trong hai tệp Node/Python, giữ fixture/hash/assertions
+nguyên. Local recovery120Node/120Python đạt.
+Ứng dụng không đổi; workflow bổ sung raw34 và pressure16 của đợt này
+trước kiểm lịch sử. Không bỏ gate, không sửa auth/runtime để chiều test.

@@ -87,6 +87,7 @@ jobs:
 
       - name: Video Studio locale and navigation presentation regressions
         run: |
+          node --test tests/document-workspace-natural-copy.test.mjs tests/document-natural-copy-history.test.mjs
           node --test tests/auth-return-html-targets.test.mjs tests/auth-return-historical.test.mjs
           python -m pytest --noconftest -o addopts= -p no:cacheprovider -q tests/test_auth_return_historical.py
           node --test tests/pdf-customer-cleanup.test.mjs

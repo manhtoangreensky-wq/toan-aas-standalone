@@ -7,6 +7,7 @@ import subprocess
 import pytest
 
 from tests.helpers.auth_return_historical import auth_return_historical_source as inverse
+from tests.helpers.document_natural_copy_historical import document_natural_historical_source
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = (ROOT / "tests/fixtures/auth-return-history.json").read_bytes().decode().replace("\r\n", "\n")
@@ -16,7 +17,7 @@ ROWS = FIXTURE["records"]
 SOURCES = {
     row["file"]: (
         subprocess.check_output(["git", "show", f'{BASE}:{row["file"]}'], cwd=ROOT).decode().replace("\r\n", "\n"),
-        (ROOT / row["file"]).read_bytes().decode().replace("\r\n", "\n"),
+        document_natural_historical_source((ROOT / row["file"]).read_bytes().decode().replace("\r\n", "\n"), row["file"]),
     ) for row in ROWS
 }
 FAIL = "Unreviewed auth return history"
