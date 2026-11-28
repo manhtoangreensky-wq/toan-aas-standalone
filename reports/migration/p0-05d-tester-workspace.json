@@ -45,55 +45,55 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-28",
-  "local_files_refresh_scope": "DOCUMENT-NATURAL:3appfiles;60records;304keys912values;34raw/176Node/9uniquePython;12rendererViews+2correctedVIformViews;priorVoiceMusic6docs;no app behavior/credentials/money/provider/data changes.",
+  "local_files_refresh_scope": "CUSTOMER-NATURAL:2apprecords;413existingkeys;134unique-primary-ledger;7finalpressure;18+1affectedPython;36native+2correctedcaptures;no behavior/credentials/money/provider/data change.",
   "current_verification_session": {
-    "id": "DOCUMENT-NATURAL-20261128",
-    "base_sha": "cf94b23e6a26010e88ebcd33b36623204c784c9a",
-    "branch": "codex/auth-draft-isolation-20261128",
+    "id": "CUSTOMER-NATURAL-20261128",
+    "base_sha": "469f70063217814522b674272185227d93c8a08c",
+    "branch": "codex/customer-natural-followup-20261128",
     "tracker_issue": 689,
-    "build_contract": 7234371401,
-    "amendments": [
-      7234470992,
-      7234531168
-    ],
-    "manifest": "KIEM-THU/PHIEN-DOCUMENT-NATURAL-20261128.md",
+    "build_contract": 7235804418,
+    "manifest": "KIEM-THU/PHIEN-CUSTOMER-NATURAL-20261128.md",
     "case_ids": [
-      "DOC-WORDING",
-      "DOC-CONTROLS",
-      "DOC-REPLY",
-      "DOC-HISTORY",
-      "DOC-DELIVERY"
+      "CN-WORDING",
+      "CN-CONTROLS",
+      "CN-CODE-GUIDANCE",
+      "CN-HISTORY",
+      "CN-DELIVERY"
     ],
-    "status": "LOCAL_TARGETED_PASS_CI_PENDING",
+    "status": "LOCAL_TARGETED_PASS_EXACT_HEAD_CI_PENDING",
     "model": "gemini-4-hydrogen-xhigh",
-    "worker_sessions": 4,
-    "worker_invocations": 8,
-    "worker_code_failures": 0,
-    "root_spec_missing_read_action_list": 1,
-    "exact_proposal_records": 60,
-    "application_files": 3,
-    "coordinator_application_logic_authored": 0,
-    "application_lf_sha256": {
-      "static/portal/portal.js": "498f7f7569622e43656c61f204271239aa3a02345abcf349ef36077381ec8c51",
-      "static/portal/integration.js": "61b491d11b10bfc59df60371a856107d579a600f4702f407038a91eeeb23a5ff",
-      "static/portal/portal-i18n.js": "fd9e00face3a94b28f60a1bb69c2543a3948dae9a458c6d556ce2bc0ca3a895e"
+    "application_files": 2,
+    "exact_application_records": 2,
+    "existing_message_keys": 413,
+    "proposal_locale_values": 1239,
+    "new_message_keys": 0,
+    "actual_changed_locale_values": {
+      "vi": 406,
+      "en": 331,
+      "zh": 340
     },
-    "new_message_keys": 304,
-    "new_locale_values": 912,
-    "primary_passed": 34,
-    "related_history_and_pressure_node_passed": 176,
-    "python_initial_passed": 5,
-    "python_initial_failed": 4,
-    "python_failed_only_recovered": 4,
-    "python_unique_cases_with_pass": 9,
-    "source_syntax_files": 3,
-    "python_compile_files": 4,
-    "diff_check_passed": true,
-    "independent_static_review": "APPROVE_NO_FINDINGS",
-    "newest_acceptance": "RAW_PHYSICAL",
-    "old_pins_fixtures_expectations_held": true,
+    "application_lf_sha256": {
+      "static/portal/portal-i18n.js": "0443094e0b4ca473c18aeb790dcf13e6be67e3ad0d236cc6575e6bc0f964d2f8",
+      "static/portal/portal.js": "d2ed8b7be246cfd292f24d340161a3f533c97fb27b5c05df05e0e4afcf577604"
+    },
+    "coordinator_application_logic_authored": 0,
+    "primary_declared_states": 39,
+    "primary_unique_latest_applicable_passed": 134,
+    "primary_is_one_fresh_full_run": false,
+    "primary_ledger_method": "Latest applicable outcome per test identity across one aggregate run and affected-only recoveries; not one current full-suite run.",
     "counts_overlap_do_not_sum": true,
-    "rendered_http_views": 12,
+    "historical_node_passed_at_prior_composition": 595,
+    "new_finite_pressure_final_passed": 7,
+    "python_initial_passed": 35,
+    "python_initial_failed": 9,
+    "python_affected_final_passed": 18,
+    "python_extra_i18n_runtime_initial_failed": 1,
+    "python_extra_i18n_runtime_failed_only_recovered": 1,
+    "unrelated_windows_backend_tests_stopped_not_claimed": true,
+    "new_history_fixture_sha256": "d74a68658d1dedb5dc986debc874f45dfe50355175414e64f1d4fff68bb68eb6",
+    "old_pins_fixtures_assertions_held": true,
+    "independent_initial_review": "12_KEYS_IMPORTANT_CORRECTED",
+    "independent_failed_only_final_review": "APPROVE_NO_FINDINGS",
     "rendered_locales": [
       "vi",
       "en",
@@ -103,16 +103,37 @@
       390,
       1440
     ],
-    "corrected_vi_dark_form_views": 2,
+    "rendered_native_views": 36,
     "rendered_errors": 0,
-    "browser_scope": "Physical renderer/styles and native controls; not full signed application submission",
-    "initial_browser_wrapper_limit": "Incorrect theme attribute and scroll-clipped screenshots; not contrast/full-page proof",
-    "ci": "EXACT_NEW_HEAD_PENDING",
-    "deploy": "NOT_DEPLOYED",
+    "rendered_horizontal_overflows": 0,
+    "rendered_external_requests": 0,
+    "corrected_first_viewport_captures": 2,
+    "capture_recovery_method": "One VI390 passing capture plus one failed-only EN1440 recovery; images inspected",
+    "browser_scope": "Physical renderer and real CSS through local HTTP; not signed production or full application submission",
+    "root_browser_checker_failures_not_builder_failures": [
+      "sandbox launch",
+      "hidden selector",
+      "missing shell wrapper",
+      "nested scroll reset"
+    ],
+    "remote_revalidation": {
+      "date": "2026-11-28",
+      "repo": "manhtoangreensky-wq/toan-aas-standalone",
+      "visibility": "public",
+      "main_sha": "469f70063217814522b674272185227d93c8a08c",
+      "issue": 689,
+      "state": "OPEN",
+      "label_count": 23,
+      "required_labels_present": "12/12",
+      "new_project_or_auth_scope_created": false
+    },
+    "ci": "PENDING_EXACT_HEAD",
+    "merge": "NO",
+    "deploy": "NO",
     "signed_production_ui": "NOT_TESTED",
-    "prior_voice_draft_cases_at_base": 3,
-    "prior_music_draft_cases_at_base": 3,
-    "prior_drafts_not_rerun": true,
+    "remaining_account_web_terms": "NEXT_BATCH",
+    "language_navigator_page": "OPEN",
+    "generic_workspace_notes": "OPEN",
     "full_auth_draft_race_lifecycle": "OPEN",
     "remaining_responsive_ax": "OPEN",
     "device_safari": "OPEN",
@@ -126,33 +147,9 @@
     "tester_metadata_windows_baseline_failures": 1,
     "tester_metadata_new_failures": 0,
     "linux_posix_permission_case_required": true,
-    "ci1": {
-      "run": 46113947927,
-      "head": "8dd3ea28d226143e416978ba2085ac5a1da9a9ed",
-      "passed": 205,
-      "failed": 3,
-      "reason": "Historical auth-return reader needs approved newer copy epoch inverse",
-      "node_recovery_passed": 120,
-      "python_recovery_passed": 120,
-      "application_changes_for_recovery": 0
-    },
-    "ci2": {
-      "run": 46114374438,
-      "head": "2cf8a03198faf5f9558c2209c9f273054ae8f621",
-      "first_new_checks_passed": 50,
-      "auth_checks_passed": 208,
-      "document_python_group_passed": 45,
-      "document_python_group_failed": 1,
-      "source_python_files": 20,
-      "source_python_group_passed": 737,
-      "source_python_group_failed": 9,
-      "failed_only_recovered": 9,
-      "source_python_type_guard_order_failures_by_root": 3,
-      "node_physical_reader_failed_only_recovered": 11,
-      "application_changes_for_recovery": 0,
-      "old_fixture_hashes_and_assertions_held": true,
-      "broad_run_included_unchanged_backend_and_was_aborted": true
-    }
+    "source_syntax_files": 2,
+    "python_compile_passed": true,
+    "diff_check_passed": true
   },
   "prior_gallery_customer_copy_verification_session": {
     "id": "GALLERY-CUSTOMER-COPY-20261127",
@@ -1085,15 +1082,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 2239,
-      "bytes": 232410,
-      "sha256": "ebfe87c5d67f288254e295d89403373783fbf7c241f559e81d370e75d17b0268"
+      "lines": 2249,
+      "bytes": 233537,
+      "sha256": "7bc8595c277278f3102be118ad38f5944734514cdc44d9e7d75894e3b427775c"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 801,
-      "bytes": 61088,
-      "sha256": "1792aabcc9e59b76a9f74a757f1d6b6c17efbfc31e4caaa57d70951488664149"
+      "lines": 811,
+      "bytes": 61778,
+      "sha256": "231f901a39c1d6efcc909d71252ca095dfd266e23ee5587fc0061a936789e510"
     },
     {
       "path": "KIEM-THU/PHIEN-ADMIN-GUARD-CUSTOMER-COPY-20261127.md",
@@ -1124,6 +1121,12 @@
       "lines": 82,
       "bytes": 4489,
       "sha256": "2f7ce428bef7d41c1d1f49b08635ca291ed9e24c11a68ea0323b6744a490426d"
+    },
+    {
+      "path": "KIEM-THU/PHIEN-CUSTOMER-NATURAL-20261128.md",
+      "lines": 67,
+      "bytes": 4799,
+      "sha256": "998da007bf741686226ee815792f7eeebfe0910fba80ab1746594f385ad6d9cb"
     },
     {
       "path": "KIEM-THU/PHIEN-DOCUMENT-NATURAL-20261128.md",
@@ -1193,9 +1196,9 @@
     },
     {
       "path": "docs/superpowers/plans/2026-10-16-webapp-uiux-product-parity-master-plan-r217.md",
-      "lines": 294,
-      "bytes": 17762,
-      "sha256": "bb85f3eff3b1449f4e0eab07f92f0d554d0ce99c361f4001cdb40b0efcb6b19c"
+      "lines": 313,
+      "bytes": 19010,
+      "sha256": "9c5b1652d7a3df79192090104c8f89e2d7e59e0a63202b6bfbd42b3c638ee174"
     },
     {
       "path": "docs/superpowers/plans/2026-11-26-feature-catalog-descriptions108.md",
@@ -1342,6 +1345,12 @@
       "sha256": "35c63f68233f4dda6b82c8cc6037e8926467d8e9f81e7fe23044ef1522352400"
     },
     {
+      "path": "docs/superpowers/specs/2026-11-28-customer-natural-followup.md",
+      "lines": 233,
+      "bytes": 16484,
+      "sha256": "258ca664cae66a014dd3b23c99031958f9f45ccb739c5efd9c65057aa34ae3cc"
+    },
+    {
       "path": "docs/superpowers/specs/2026-11-28-document-natural-wording.md",
       "lines": 125,
       "bytes": 9199,
@@ -1352,6 +1361,12 @@
       "lines": 61,
       "bytes": 3030,
       "sha256": "64e6be6076627204cccce4900076f09c805e742ba263a77a3f4c06c29956f8c2"
+    },
+    {
+      "path": "reports/prepush/CUSTOMER-NATURAL-20261128.md",
+      "lines": 74,
+      "bytes": 4217,
+      "sha256": "ddb530fbad25f60b86e625880b9e2e9660a5c4bb43fe1f4b0dbd85c4082859cb"
     },
     {
       "path": "reports/prepush/DOCUMENT-NATURAL-20261128.md",
@@ -1420,6 +1435,36 @@
       "sha256": "7f621362e137ee6d2db3518da0ca8ad84c8e368c792b25faec8d6450a42f43c6"
     },
     {
+      "path": "tests/customer-natural-followup-copy.test.mjs",
+      "lines": 189,
+      "bytes": 17051,
+      "sha256": "a69fc8c032fb79047d2279d3d565d1110b4e166d36f9e75849f7ee6633f38d03"
+    },
+    {
+      "path": "tests/customer-natural-followup-history.test.mjs",
+      "lines": 40,
+      "bytes": 2909,
+      "sha256": "378844c757bf163b0b1c6aeacd39d02bfc1150d23d0666ad99d1b78e36fbcdad"
+    },
+    {
+      "path": "tests/fixtures/customer-natural-followup-history.json",
+      "lines": 5392,
+      "bytes": 412618,
+      "sha256": "d74a68658d1dedb5dc986debc874f45dfe50355175414e64f1d4fff68bb68eb6"
+    },
+    {
+      "path": "tests/helpers/customer-natural-followup-historical.mjs",
+      "lines": 43,
+      "bytes": 2663,
+      "sha256": "f0b2aef058d92ca53937a385e8e68c5923959771bee3ed8e91e586778ce604eb"
+    },
+    {
+      "path": "tests/helpers/customer_natural_followup_historical.py",
+      "lines": 32,
+      "bytes": 1550,
+      "sha256": "aa3a7ff8ac3723b8f84af27c0a9160cd0e631ba5f8dd50a5f11f15ca1108ee18"
+    },
+    {
       "path": "tests/test_p0_05d_tester_workspace.py",
       "lines": 385,
       "bytes": 17905,
@@ -1434,20 +1479,20 @@
     "github_mutations": 0
   },
   "active_release": {
-    "id": "DOCUMENT-NATURAL-20261128",
-    "base_sha": "cf94b23e6a26010e88ebcd33b36623204c784c9a",
+    "id": "CUSTOMER-NATURAL-20261128",
+    "base_sha": "469f70063217814522b674272185227d93c8a08c",
     "case_count": 5,
     "case_ids": [
-      "DOC-WORDING",
-      "DOC-CONTROLS",
-      "DOC-REPLY",
-      "DOC-HISTORY",
-      "DOC-DELIVERY"
+      "CN-WORDING",
+      "CN-CONTROLS",
+      "CN-CODE-GUIDANCE",
+      "CN-HISTORY",
+      "CN-DELIVERY"
     ],
-    "status": "LOCAL_TARGETED_PASS_CI_PENDING",
-    "manifest": "KIEM-THU/PHIEN-DOCUMENT-NATURAL-20261128.md",
+    "status": "LOCAL_TARGETED_PASS_EXACT_HEAD_CI_PENDING",
+    "manifest": "KIEM-THU/PHIEN-CUSTOMER-NATURAL-20261128.md",
     "signed_ui_live": "NOT_TESTED",
-    "legacy_push_gate_field": "Historical snapshot retained; DOCUMENT-NATURAL prepush defines current release."
+    "legacy_push_gate_field": "Historical snapshot retained; CUSTOMER-NATURAL prepush defines the current release."
   },
   "prior_media_audio_read_feedback_session": {
     "id": "MEDIA-AUDIO-READ-FEEDBACK-20261121",
@@ -2494,5 +2539,142 @@
     "manifest": "KIEM-THU/PHIEN-AUTH-RETURN-20261128.md",
     "signed_ui_live": "NOT_TESTED",
     "legacy_push_gate_field": "Historical snapshot retained; AUTH-RETURN prepush report defines current release."
+  },
+  "prior_document_natural_verification_session": {
+    "id": "DOCUMENT-NATURAL-20261128",
+    "base_sha": "cf94b23e6a26010e88ebcd33b36623204c784c9a",
+    "branch": "codex/auth-draft-isolation-20261128",
+    "tracker_issue": 689,
+    "build_contract": 7234371401,
+    "amendments": [
+      7234470992,
+      7234531168
+    ],
+    "manifest": "KIEM-THU/PHIEN-DOCUMENT-NATURAL-20261128.md",
+    "case_ids": [
+      "DOC-WORDING",
+      "DOC-CONTROLS",
+      "DOC-REPLY",
+      "DOC-HISTORY",
+      "DOC-DELIVERY"
+    ],
+    "status": "LOCAL_TARGETED_PASS_CI_PENDING",
+    "model": "gemini-4-hydrogen-xhigh",
+    "worker_sessions": 4,
+    "worker_invocations": 8,
+    "worker_code_failures": 0,
+    "root_spec_missing_read_action_list": 1,
+    "exact_proposal_records": 60,
+    "application_files": 3,
+    "coordinator_application_logic_authored": 0,
+    "application_lf_sha256": {
+      "static/portal/portal.js": "498f7f7569622e43656c61f204271239aa3a02345abcf349ef36077381ec8c51",
+      "static/portal/integration.js": "61b491d11b10bfc59df60371a856107d579a600f4702f407038a91eeeb23a5ff",
+      "static/portal/portal-i18n.js": "fd9e00face3a94b28f60a1bb69c2543a3948dae9a458c6d556ce2bc0ca3a895e"
+    },
+    "new_message_keys": 304,
+    "new_locale_values": 912,
+    "primary_passed": 34,
+    "related_history_and_pressure_node_passed": 176,
+    "python_initial_passed": 5,
+    "python_initial_failed": 4,
+    "python_failed_only_recovered": 4,
+    "python_unique_cases_with_pass": 9,
+    "source_syntax_files": 3,
+    "python_compile_files": 4,
+    "diff_check_passed": true,
+    "independent_static_review": "APPROVE_NO_FINDINGS",
+    "newest_acceptance": "RAW_PHYSICAL",
+    "old_pins_fixtures_expectations_held": true,
+    "counts_overlap_do_not_sum": true,
+    "rendered_http_views": 12,
+    "rendered_locales": [
+      "vi",
+      "en",
+      "zh"
+    ],
+    "rendered_widths": [
+      390,
+      1440
+    ],
+    "corrected_vi_dark_form_views": 2,
+    "rendered_errors": 0,
+    "browser_scope": "Physical renderer/styles and native controls; not full signed application submission",
+    "initial_browser_wrapper_limit": "Incorrect theme attribute and scroll-clipped screenshots; not contrast/full-page proof",
+    "ci": "EXACT_NEW_HEAD_PENDING",
+    "deploy": "NOT_DEPLOYED",
+    "signed_production_ui": "NOT_TESTED",
+    "prior_voice_draft_cases_at_base": 3,
+    "prior_music_draft_cases_at_base": 3,
+    "prior_drafts_not_rerun": true,
+    "full_auth_draft_race_lifecycle": "OPEN",
+    "remaining_responsive_ax": "OPEN",
+    "device_safari": "OPEN",
+    "client_offline_cache": "OPEN",
+    "motion": "LAST_STEP_OPEN",
+    "whole_goal_complete": false,
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "production_data_writes": 0,
+    "tester_metadata_passed": 32,
+    "tester_metadata_windows_baseline_failures": 1,
+    "tester_metadata_new_failures": 0,
+    "linux_posix_permission_case_required": true,
+    "ci1": {
+      "run": 46113947927,
+      "head": "8dd3ea28d226143e416978ba2085ac5a1da9a9ed",
+      "passed": 205,
+      "failed": 3,
+      "reason": "Historical auth-return reader needs approved newer copy epoch inverse",
+      "node_recovery_passed": 120,
+      "python_recovery_passed": 120,
+      "application_changes_for_recovery": 0
+    },
+    "ci2": {
+      "run": 46114374438,
+      "head": "2cf8a03198faf5f9558c2209c9f273054ae8f621",
+      "first_new_checks_passed": 50,
+      "auth_checks_passed": 208,
+      "document_python_group_passed": 45,
+      "document_python_group_failed": 1,
+      "source_python_files": 20,
+      "source_python_group_passed": 737,
+      "source_python_group_failed": 9,
+      "failed_only_recovered": 9,
+      "source_python_type_guard_order_failures_by_root": 3,
+      "node_physical_reader_failed_only_recovered": 11,
+      "application_changes_for_recovery": 0,
+      "old_fixture_hashes_and_assertions_held": true,
+      "broad_run_included_unchanged_backend_and_was_aborted": true
+    },
+    "final_delivery": {
+      "pr": 822,
+      "tested_head": "2a31d3c772afffd0b860a282f63017478461102a",
+      "runtime_sha": "469f70063217814522b674272185227d93c8a08c",
+      "tree": "798ae1dfd6c521ef78252b4071add54f375e92ce",
+      "ci": "46116572440",
+      "deploy": "46119482936",
+      "authenticated_records_passed": 456,
+      "png_hashes_verified": 456,
+      "issue_receipt": 7234371401,
+      "pr_receipt": 7235734862,
+      "signed_production_ui": "NOT_TESTED"
+    }
+  },
+  "prior_document_natural_active_release": {
+    "id": "DOCUMENT-NATURAL-20261128",
+    "base_sha": "cf94b23e6a26010e88ebcd33b36623204c784c9a",
+    "case_count": 5,
+    "case_ids": [
+      "DOC-WORDING",
+      "DOC-CONTROLS",
+      "DOC-REPLY",
+      "DOC-HISTORY",
+      "DOC-DELIVERY"
+    ],
+    "status": "LOCAL_TARGETED_PASS_CI_PENDING",
+    "manifest": "KIEM-THU/PHIEN-DOCUMENT-NATURAL-20261128.md",
+    "signed_ui_live": "NOT_TESTED",
+    "legacy_push_gate_field": "Historical snapshot retained; DOCUMENT-NATURAL prepush defines current release."
   }
 }

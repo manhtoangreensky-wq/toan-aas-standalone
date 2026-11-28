@@ -1,5 +1,25 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 28/11/2026 — lời tài khoản, bắt đầu dùng và dự án đang khép
+
+Đợt tài liệu bên dưới đã giao PR822:CI46116572440hai nhóm đạt,
+Webdeploy46119482936thành công;runtime469f70063217814522b674272185227d93c8a08c,
+cây798ae1dfd6c521ef78252b4071add54f375e92ceđúng nguồn đã kiểm.
+456/456bản ghi và ảnh được đối chiếu;receiptIssue689/7234371401,
+PR822/7235734862đã đọc lại. Các dòng“tài liệu chưa phát hành”ở dưới là lịch sử.
+
+Ứng viên CUSTOMER-NATURAL chỉ đổi chữ ở bắt đầu dùng,tài khoản,bảo
+mật,dữ liệu và dự án:413khóa cũ,đổi thật406VI/331EN/340ZH,không
+thêm khóa;ngoài bảng chữ chỉ có một nhãn viết tắt dùng khóa đã có.
+Khách được hướng dẫn việc cần làm,bỏ mô tả triển khai;giữ cảnh báo thật
+về bộ mẫu,chờ liên kết,yêu cầu xem xét xóa và bảo vệ tài khoản.
+
+Chưa phát hành đợt này. Bằng chứng tại máy và giới hạn ở
+KIEM-THU/PHIEN-CUSTOMER-NATURAL-20261128.md. Không kiểm dữ liệu thật,
+không mở dịch vụ xử lý,và không coi toàn goal đã hoàn thành. Màn hình
+ngôn ngữ riêng,các ghi chú mặc định,lifecycle/thiết bị/offline vàmotion
+vẫn là việc tiếp theo có thứ tự.
+
 ## 28/11/2026 — chữ hướng dẫn tài liệu đã kiểm tại máy, chưa phát hành
 
 Lần phát hành trước AUTH-RETURN đã giao qua PR821: runtime

@@ -5,6 +5,25 @@
 **Nhánh tài liệu:** `webapp-plan-r116` → push vào `webapp-checklist-r116`
 **Mục tiêu:** có một thứ tự thi công duy nhất, một checklist có trạng thái và các spec đủ cụ thể để người thực hiện không phải đoán.
 
+### Cập nhật28/11/2026 — tài liệu đã giao;đang chốt lời tài khoản
+
+DOCUMENT-NATURALđã giao PR822/CI46116572440/Webdeploy46119482936,
+runtime469f7006/cây798ae1dfđúngnguồn;456bản ghi/ảnh đạt,receipt
+Issue689/7234371401 vàPR822/7235734862đọc lại. Không làm lại đợt này.
+
+CUSTOMER-NATURALkhóa hai recordứng dụng:413khóa cũVI/EN/ZH và một
+nhãn xác thực hai bước. Antigravity4ExtraHighchỉ trả đề xuất;Root ghép
+cơ học,không tự viết logic. Checklist/spec/Tester riêng cùng28/11
+giữ mọi lỗi đã tìm và các lượt kiểm gộp/recovery,không reset số lần sai
+hoặc tính thiếuphiếu củaRootcho worker. Đang khép ảnh đúngkhung,
+ràsoát,tài liệu/provenancevàphát hành;mục này chưa tickdeployed.
+
+Thứ tự sau giao đợt này:ngôn ngữ riêng/ghi chú mặc định và tên giá trị
+máy chỉ khi xác nhậnđường hiển thị thật→bản nháp Phụ đề&Lồng tiếng/
+lifecycle/race/AX/responsive cònthiếu→thiết bị/Safari/offline/phiên
+production→motionM-FINALcuối. KhôngBot/route-engine/provider/tiền/
+ENV/dữ liệu thật. Khôngđóng toàngoal bằng riêng134đề mục lời hoặcCIxanh.
+
 ### Cập nhật28/11/2026 — lời hướng dẫn tài liệu đã kiểm tại máy
 
 AUTH-RETURN đã giao PR821/runtimeCF94, CI46056807355 và

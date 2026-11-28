@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
+import {customerNaturalHistoricalSource,customerNaturalHistoricalSnapshot} from "./customer-natural-followup-historical.mjs";
 const fail="Unreviewed document natural-copy history";
 const sha=s=>createHash("sha256").update(s).digest("hex");
 const raw=fs.readFileSync(new URL("../fixtures/document-natural-copy-history.json",import.meta.url),"utf8").replace(/\r\n/g,"\n");
@@ -20,6 +21,7 @@ assert.equal(keys.length,304);assert.equal(owned.size,304);
 for(const locale of locales)assert.deepEqual(fixture.snapshots[locale].map(row=>row[0]),keys,fail+" locale keys");
 export function documentNaturalHistoricalSource(source,file){
   assert.equal(typeof source,"string",fail+" source");
+  source=customerNaturalHistoricalSource(source,file);
   if(!files.has(file)||!source.includes("docPlain"))return source;
   const ending=source.includes("\r\n")?"\r\n":"\n";
   for(const row of [...fixture.records].reverse().filter(row=>row.file===file)){
@@ -32,6 +34,7 @@ export function documentNaturalHistoricalSource(source,file){
 }
 export function documentNaturalHistoricalSnapshot(entries,locale){
   assert(Array.isArray(entries)&&locales.includes(locale),fail+" snapshot input");
+  entries=customerNaturalHistoricalSnapshot(entries,locale);
   const found=entries.filter(row=>Array.isArray(row)&&owned.has(row[0]));
   if(!found.length)return entries;
   assert.deepEqual(found,fixture.snapshots[locale],fail+" complete exact ordered values");

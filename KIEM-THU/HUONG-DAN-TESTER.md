@@ -1,5 +1,15 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Lời tài khoản và bắt đầu sử dụng — 28/11/2026
+
+Dùng PHIEN-CUSTOMER-NATURAL-20261128 và5caseCNtrong danh sách.
+Đọc cả câu như khách bình thường,không chỉ tìm vài từ khóa. Mã liên
+kết cần gửi quaTelegram;mã khôi phục được hiển thị một lần,không được
+ẩn để lời hứa sai thành đúng. Dữ liệu khách có từ tiếng Anh phải giữ
+nguyên. Không gửi yêu cầu thật,xóa thông tin hoặc đổi cài đặt bảo mật.
+Ghi riêng những gì đã xem trênmáy và những gì đã mở bằng tài khoản
+khách trênweb thật;chỉtickphát hành khi đúngbản vàbằng chứng đầyđủ.
+
 ## Lời hướng dẫn tài liệu — 28/11/2026
 
 Dùng PHIEN-DOCUMENT-NATURAL-20261128 và năm case DOC trong danh sách.
