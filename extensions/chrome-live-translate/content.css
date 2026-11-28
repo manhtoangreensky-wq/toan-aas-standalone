@@ -16,16 +16,16 @@
 /* Collapsed Pill Button */
 .toan-aas-pill {
   position: fixed;
-  top: 24px;
-  right: 24px;
+  bottom: 48px;
+  right: 18px;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: rgba(15, 23, 42, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(9, 13, 22, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 9999px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
   cursor: pointer;
   transition: all 0.2s ease-in-out;
@@ -34,8 +34,8 @@
 
 .toan-aas-pill:hover {
   transform: translateY(-2px);
-  background: rgba(30, 41, 59, 0.95);
-  border-color: #3b82f6;
+  background: rgba(15, 23, 42, 0.96);
+  border-color: #38bdf8;
 }
 
 .toan-aas-pill-icon {
@@ -53,19 +53,19 @@
   color: #f1f5f9;
 }
 
-/* Expanded Floating Widget Window */
+/* Expanded Floating Subtitle Overlay Bar (Bottom-Center Video Subtitle UX) */
 .toan-aas-window {
   position: fixed;
-  top: 24px;
-  right: 24px;
-  width: 440px;
-  min-height: 180px;
-  max-width: 90vw;
-  background: rgba(15, 23, 42, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(640px, 90vw);
+  min-height: 112px;
+  background: rgba(9, 13, 22, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 14px;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(16px);
+  box-shadow: 0 18px 36px -10px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(14px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
