@@ -1,5 +1,26 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 28/11/2026 — chữ hướng dẫn tài liệu đã kiểm tại máy, chưa phát hành
+
+Lần phát hành trước AUTH-RETURN đã giao qua PR821: runtime
+`cf94b23e6a26010e88ebcd33b36623204c784c9a`, CI46056807355,
+Webdeploy46059896569; receipt Issue689/7226125049 và PR821/7227030166.
+Những dòng “AUTH chưa phát hành” ở dưới là mốc lịch sử trước lần giao đó.
+
+Ứng viên DOCUMENT-NATURAL sửa chữ của phần yêu cầu tài liệu: tên, trường
+nhập, lựa chọn, lời nhắc, lịch sử và thông báo theo VI/EN/ZH. Trang vẫn
+chỉ ghi yêu cầu và bước xử lý; muốn tạo/chuyển tệp phải mở công cụ riêng.
+Không đổi quyền, chức năng, dữ liệu khách, xác thực hoặc cách gửi/lưu.
+
+Đã đo:34raw primary;176Node lịch sử/liên quan;9Python theo ledger
+5đạt+4recovery;12lượt render trình duyệt cục bộ+2biểu mẫu VI tối.
+Không dùng ảnh wrapper sai thuộc tính nền hoặc vùng cuộn làm bằng chứng
+tương phản/toàn trang. Không có nghiệm thu phiên production trong đợt này.
+Chi tiết và các bước phát hành còn mở ở PHIEN-DOCUMENT-NATURAL-20261128.
+
+Voice và Music trước đó mỗi phần có3ca bản nháp ở nguồn CF94 đã đạt;
+đây là bằng chứng cũ được ghi lại, không phải kiểm lại sau đổi chữ này.
+
 ## 28/11/2026 — AGC đã phát hành; đang khép đường quay lại sau đăng nhập
 
 AGC bên dưới đã giao qua PR820: CI46039186914 hai job SUCCESS,

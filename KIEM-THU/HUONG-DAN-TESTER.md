@@ -1,5 +1,14 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Lời hướng dẫn tài liệu — 28/11/2026
+
+Dùng PHIEN-DOCUMENT-NATURAL-20261128 và năm case DOC trong danh sách.
+Kiểm ba ngôn ngữ riêng, không sửa nội dung khách có chữ trùng thuật ngữ.
+Lưu yêu cầu/bước xử lý không được báo là đã tạo tệp. Nút chưa dùng được
+không tự bật; lỗi vẫn phải là lỗi và hướng dẫn khách làm gì tiếp theo.
+Chỉ tick phát hành khi đã đối chiếu bản đang chạy; ảnh cục bộ không thay
+cho việc mở bằng tài khoản khách trên web thật.
+
 ## Thông báo thao tác và quản trị — 27/11/2026
 
 Dùng `PHIEN-ADMIN-GUARD-CUSTOMER-COPY-20261127.md`,támcaseAGC trong

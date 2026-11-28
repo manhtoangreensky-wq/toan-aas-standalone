@@ -10111,6 +10111,9 @@
     if (path === "/documents") {
       return uiText("workspaceMenu.card.documents.title", fallback);
     }
+    if (path === "/document-workspace" || path === "/document-workspace/new" || (page && page.layout === "document-workspace-detail")) {
+      return uiText("docPlainForm.page.title", "Yêu cầu tài liệu");
+    }
     if (path === "/asset-vault") return uiText("vaultPageUiTitle", "Kho tệp");
     if (path === "/image/resize") return uiText("imageResizeMetaUiTitle", "Đổi kích thước ảnh");
     if (path === "/documents/ocr") return uiText("docOcrImageUiTitle", "Đọc chữ từ ảnh");
@@ -10258,6 +10261,9 @@
     }
     if (path === "/documents") {
       return uiText("featureCatalog.entry.documents.description", fallback);
+    }
+    if (path === "/document-workspace" || path === "/document-workspace/new" || (page && page.layout === "document-workspace-detail")) {
+      return uiText("docPlainForm.page.description", "Ghi yêu cầu, sắp xếp các bước và rà soát trước khi xử lý tài liệu.");
     }
     if (path === "/asset-vault") return uiText("vaultPageUiDescription", "Lưu, tìm và quản lý các tệp của bạn. Xem thông tin tệp và tải lại khi cần.");
     if (path === "/image/resize") return uiText("imageResizeMetaUiDescription", "Chọn ảnh đã lưu, đặt kích thước và tạo bản PNG mới. Tệp gốc được giữ nguyên.");
@@ -12267,6 +12273,7 @@
     const route = normalizePath(page && (page.routePath || page.path) || "/");
     if (["image-studio-detail", "image-hub-detail"].includes(page && page.layout)) return imageStudioDetailText("page.detailSection", "Thiết kế ảnh");
     if (page && page.layout === "chat-workspace-detail") return uiText("chatPageMetaUiTitle", "Trò chuyện");
+    if (page && ["document-workspace", "document-workspace-detail"].includes(page.layout)) return uiText("docPlainForm.page.title", "Yêu cầu tài liệu");
     if (route === "/media-workspace/music-prompt-composer") return musicPromptComposerUiText("page.kicker", "Lập kế hoạch âm nhạc");
     if (["media-workspace", "media-workspace-detail"].includes(page && page.layout)) return audioWorkspaceText("workspace.libraryLabel", "Thư viện âm thanh");
     if (["audio-hub", "audio-hub-detail"].includes(page && page.layout)) return audioWorkspaceText("workspace.hubLabel", "Trung tâm sản xuất âm thanh");
@@ -20044,19 +20051,19 @@ function renderAutoPostHub(page, context) {
   // file work and delivery behind an independent contract.
   const DOCUMENT_WORKSPACE_LIST_LIMIT = 50;
   const DOCUMENT_WORKSPACE_FILTERS = Object.freeze([
-    ["active", "Đang hoạt động"], ["draft", "Bản nháp"], ["review", "Đang self-review"],
-    ["approved", "Self-review hoàn tất"], ["archived", "Đã archive"]
+    ["active", "Đang hoạt động"], ["draft", "Bản nháp"], ["review", "Đang rà soát"],
+    ["approved", "Rà soát xong"], ["archived", "Đã lưu trữ"]
   ]);
   const DOCUMENT_WORKSPACE_TYPES = Object.freeze([
-    ["pdf", "PDF"], ["office", "Office document"], ["text", "Text document"],
-    ["image", "Ảnh / scan"], ["scan", "Tài liệu scan"], ["mixed", "Nhiều loại tài liệu"]
+    ["pdf", "PDF"], ["office", "Tài liệu văn phòng"], ["text", "Tệp văn bản"],
+    ["image", "Hình ảnh"], ["scan", "Tài liệu quét"], ["mixed", "Nhiều loại tài liệu"]
   ]);
   const DOCUMENT_WORKSPACE_OPERATIONS = Object.freeze([
-    ["organize", "Tổ chức / QA"], ["split", "Tách PDF · planned"], ["merge", "Gộp PDF · planned"],
-    ["optimize", "Tối ưu PDF · planned"], ["image_to_pdf", "Ảnh → PDF · planned"],
-    ["pdf_to_images", "PDF → ảnh · planned"], ["pdf_to_word", "PDF text → Word · planned"],
-    ["ocr", "OCR intent · guarded"], ["translate", "Dịch intent · guarded"],
-    ["convert", "Convert intent · guarded"], ["other", "Khác"]
+    ["organize", "Sắp xếp và rà soát"], ["split", "Tách PDF (dự kiến)"], ["merge", "Gộp PDF (dự kiến)"],
+    ["optimize", "Tối ưu PDF (dự kiến)"], ["image_to_pdf", "Ảnh sang PDF (dự kiến)"],
+    ["pdf_to_images", "PDF sang ảnh (dự kiến)"], ["pdf_to_word", "Chữ trong PDF sang Word (dự kiến)"],
+    ["ocr", "Đọc chữ từ ảnh hoặc PDF (tạm giới hạn)"], ["translate", "Dịch tài liệu (tạm giới hạn)"],
+    ["convert", "Chuyển đổi định dạng (tạm giới hạn)"], ["other", "Khác"]
   ]);
   // The policy server and integration both validate this same closed map.
   // Rendering validates it again so a plan can never turn an arbitrary
@@ -20071,7 +20078,7 @@ function renderAutoPostHub(page, context) {
   });
   const DOCUMENT_WORKSPACE_HANDOFF_AVAILABILITY = new Set(["available", "guarded", "guidance"]);
   const DOCUMENT_WORKSPACE_STATES = Object.freeze({
-    draft: "Bản nháp", review: "Đang self-review", approved: "Self-review hoàn tất", archived: "Đã archive"
+    draft: "Bản nháp", review: "Đang rà soát", approved: "Rà soát xong", archived: "Đã lưu trữ"
   });
 
   function validDocumentWorkspaceId(value) { return validProjectId(value); }
@@ -20086,7 +20093,16 @@ function renderAutoPostHub(page, context) {
   }
   function documentWorkspaceStateBadge(value) {
     const state = documentWorkspaceState(value);
-    return '<span class="portal-badge" data-status="' + safeText(state) + '">' + safeText(DOCUMENT_WORKSPACE_STATES[state] || "Được bảo vệ") + "</span>";
+    const label = state === "draft"
+      ? uiText("docPlainForm.state.draft", "Bản nháp")
+      : state === "review"
+        ? uiText("docPlainForm.state.review", "Đang rà soát")
+        : state === "approved"
+          ? uiText("docPlainForm.state.approved", "Rà soát xong")
+          : state === "archived"
+            ? uiText("docPlainForm.state.archived", "Đã lưu trữ")
+            : uiText("docPlainForm.state.guarded", "Tạm khóa");
+    return '<span class="portal-badge" data-status="' + safeText(state) + '">' + safeText(label) + "</span>";
   }
   function documentWorkspaceTags(value) {
     return Array.isArray(value) ? value.filter((tag) => typeof tag === "string" && tag.trim()).slice(0, 20) : [];
@@ -20097,11 +20113,30 @@ function renderAutoPostHub(page, context) {
   }
   function documentWorkspaceTypeLabel(value) {
     const item = DOCUMENT_WORKSPACE_TYPES.find((entry) => entry[0] === String(value || ""));
-    return item ? item[1] : "Tài liệu";
+    if (!item) return uiText("docPlainForm.type.fallback", "Tài liệu");
+    if (item[0] === "pdf") return uiText("docPlainForm.type.pdf", "PDF");
+    if (item[0] === "office") return uiText("docPlainForm.type.office", "Tài liệu văn phòng");
+    if (item[0] === "text") return uiText("docPlainForm.type.text", "Tệp văn bản");
+    if (item[0] === "image") return uiText("docPlainForm.type.image", "Hình ảnh");
+    if (item[0] === "scan") return uiText("docPlainForm.type.scan", "Tài liệu quét");
+    if (item[0] === "mixed") return uiText("docPlainForm.type.mixed", "Nhiều loại tài liệu");
+    return item[1];
   }
   function documentWorkspaceOperationLabel(value) {
     const item = DOCUMENT_WORKSPACE_OPERATIONS.find((entry) => entry[0] === String(value || ""));
-    return item ? item[1] : "Processing plan";
+    if (!item) return uiText("docPlainForm.operation.fallback", "Bước xử lý");
+    if (item[0] === "organize") return uiText("docPlainForm.operation.organize", "Sắp xếp và rà soát");
+    if (item[0] === "split") return uiText("docPlainForm.operation.split", "Tách PDF (dự kiến)");
+    if (item[0] === "merge") return uiText("docPlainForm.operation.merge", "Gộp PDF (dự kiến)");
+    if (item[0] === "optimize") return uiText("docPlainForm.operation.optimize", "Tối ưu PDF (dự kiến)");
+    if (item[0] === "image_to_pdf") return uiText("docPlainForm.operation.imageToPdf", "Ảnh sang PDF (dự kiến)");
+    if (item[0] === "pdf_to_images") return uiText("docPlainForm.operation.pdfToImages", "PDF sang ảnh (dự kiến)");
+    if (item[0] === "pdf_to_word") return uiText("docPlainForm.operation.pdfToWord", "Chữ trong PDF sang Word (dự kiến)");
+    if (item[0] === "ocr") return uiText("docPlainForm.operation.ocr", "Đọc chữ từ ảnh hoặc PDF (tạm giới hạn)");
+    if (item[0] === "translate") return uiText("docPlainForm.operation.translate", "Dịch tài liệu (tạm giới hạn)");
+    if (item[0] === "convert") return uiText("docPlainForm.operation.convert", "Chuyển đổi định dạng (tạm giới hạn)");
+    if (item[0] === "other") return uiText("docPlainForm.operation.other", "Khác");
+    return item[1];
   }
   function documentWorkspaceReferences(context) {
     return context && context.documentWorkspaceReferences && typeof context.documentWorkspaceReferences === "object" ? context.documentWorkspaceReferences : {};
@@ -20109,7 +20144,7 @@ function renderAutoPostHub(page, context) {
   function documentWorkspaceProjectOptions(context) {
     const refs = documentWorkspaceReferences(context);
     return (Array.isArray(refs.projects) ? refs.projects : []).filter((item) => item && validDocumentWorkspaceId(item.id)).slice(0, 100)
-      .map((item) => ({ value: String(item.id), label: String(item.title || "Project Web riêng tư") }));
+      .map((item) => ({ value: String(item.id), label: String(item.title || uiText("docPlainForm.option.projectFallback", "Dự án riêng")) }));
   }
   function documentWorkspaceAssetOptions(context) {
     const refs = documentWorkspaceReferences(context);
@@ -20117,7 +20152,7 @@ function renderAutoPostHub(page, context) {
     // The API intentionally returns owner-scoped display metadata only. No
     // filename/path/blob/url fallback is acceptable in this selector.
     return assets.filter((item) => item && validDocumentWorkspaceId(item.id)).slice(0, 100).map((item) => {
-      const label = String(item.display_name || "Asset Vault document").replace(/\s+/g, " ").trim().slice(0, 160);
+      const label = String(item.display_name || uiText("docPlainForm.option.assetFallback", "Tài liệu trong Kho tệp")).replace(/\s+/g, " ").trim().slice(0, 160);
       const extension = String(item.extension || "").replace(/^\./, "").toUpperCase();
       return { value: String(item.id), label: extension ? label + " · " + extension : label };
     });
@@ -20126,7 +20161,7 @@ function renderAutoPostHub(page, context) {
     const id = String(assetId || "");
     const assets = documentWorkspaceAssetOptions(context);
     const asset = assets.find((item) => item.value === id);
-    return asset ? asset.label : (id ? "Asset Vault reference đã chọn" : "Không gắn asset");
+    return asset ? asset.label : (id ? uiText("docPlainForm.option.assetSelected", "Tệp đã chọn trong Kho tệp") : uiText("docPlainForm.option.assetNone", "Không gắn tệp"));
   }
   function documentWorkspaceHandoffText(value, maximum) {
     const text = String(value || "").replace(/\s+/g, " ").trim();
@@ -20159,24 +20194,39 @@ function renderAutoPostHub(page, context) {
   function renderDocumentPlanHandoff(plan, context) {
     const handoff = documentWorkspaceHandoffForPlan(context, plan && plan.operation);
     if (!handoff) {
-      return '<aside class="portal-document-plan-handoff is-guarded"><div><span class="portal-section-kicker">Independent tool handoff</span><h4>Chưa có handoff đã được xác minh</h4><p>Workspace giữ plan này ở chế độ review; không tạo link, request, output hoặc trạng thái thành công thay cho một tool độc lập.</p></div>' + badge("guarded") + "</aside>";
+      return '<aside class="portal-document-plan-handoff is-guarded"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainDetail.handoff.kicker", "Công cụ liên quan")) + "</span><h4>" + safeText(uiText("docPlainDetail.handoff.missingTitle", "Chưa có công cụ hỗ trợ")) + "</h4><p>" + safeText(uiText("docPlainDetail.handoff.unavailable", "Bạn chưa thể mở công cụ này. Hãy quay lại sau.")) + "</p></div>" + badge("guarded") + "</aside>";
     }
+    const operations = {
+      organize: ["docPlainDetail.handoff.op.organize.title", "Sắp xếp trang PDF", "docPlainDetail.handoff.op.organize.summary", "Ghi lại thứ tự trang và những điểm cần chỉnh sửa trước khi chọn công cụ phù hợp."],
+      split: ["docPlainDetail.handoff.op.split.title", "Tách tệp PDF", "docPlainDetail.handoff.op.split.summary", "Tạo một tệp PDF mới từ một trang hoặc một dải trang liên tiếp mà bạn chọn."],
+      merge: ["docPlainDetail.handoff.op.merge.title", "Gộp nhiều tệp PDF", "docPlainDetail.handoff.op.merge.summary", "Ghép nhiều tệp PDF thành một tài liệu hoàn chỉnh."],
+      optimize: ["docPlainDetail.handoff.op.optimize.title", "Tối ưu dung lượng PDF", "docPlainDetail.handoff.op.optimize.summary", "Giảm dung lượng tệp PDF khi có thể để dễ gửi và lưu trữ."],
+      image_to_pdf: ["docPlainDetail.handoff.op.imageToPdf.title", "Chuyển ảnh sang PDF", "docPlainDetail.handoff.op.imageToPdf.summary", "Ghép các tệp ảnh thành một tài liệu PDF."],
+      pdf_to_images: ["docPlainDetail.handoff.op.pdfToImages.title", "Xuất trang PDF thành ảnh", "docPlainDetail.handoff.op.pdfToImages.summary", "Lưu từng trang trong tệp PDF thành tệp ảnh."],
+      pdf_to_word: ["docPlainDetail.handoff.op.pdfToWord.title", "Chuyển PDF sang Word", "docPlainDetail.handoff.op.pdfToWord.summary", "Chuyển phần chữ có thể chọn trong PDF sang Word; không đọc chữ trong ảnh hoặc giữ nguyên cách dàn trang."],
+      ocr: ["docPlainDetail.handoff.op.ocr.title", "Nhận dạng chữ trong tài liệu", "docPlainDetail.handoff.op.ocr.summary", "Nhận dạng và trích xuất chữ từ ảnh hoặc tài liệu quét."],
+      translate: ["docPlainDetail.handoff.op.translate.title", "Dịch nội dung tài liệu", "docPlainDetail.handoff.op.translate.summary", "Dịch nội dung tài liệu sang ngôn ngữ bạn cần."],
+      convert: ["docPlainDetail.handoff.op.convert.title", "Chuyển đổi định dạng tài liệu", "docPlainDetail.handoff.op.convert.summary", "Chuyển tài liệu sang định dạng phù hợp để chỉnh sửa hoặc chia sẻ."],
+      other: ["docPlainDetail.handoff.op.other.title", "Xử lý tài liệu theo yêu cầu riêng", "docPlainDetail.handoff.op.other.summary", "Ghi chú yêu cầu xử lý riêng cho tài liệu."]
+    };
+    const opKey = String(plan && plan.operation || "");
+    const opCopy = Object.prototype.hasOwnProperty.call(operations, opKey) ? operations[opKey] : operations.other;
     const status = handoff.availability === "available" ? "ready" : "guarded";
     const action = handoff.availability === "available" && handoff.route
-      ? '<a class="portal-button portal-button--quiet" href="' + safeText(handoff.route) + '">Mở công cụ riêng <span aria-hidden="true">→</span></a>'
-      : '<span class="portal-form-note">Chưa có tool độc lập an toàn để mở.</span>';
-    return '<aside class="portal-document-plan-handoff is-' + safeText(handoff.availability) + '"><div><span class="portal-section-kicker">Independent tool handoff</span><h4>' + safeText(handoff.title) + '</h4><p>' + safeText(handoff.summary) + '</p><small>Không chuyển brief, plan, Asset Vault ID, file, khoảng trang, profile, token hoặc output. Công cụ đích sẽ yêu cầu chọn lại input và kiểm tra quyền riêng.</small></div><div class="portal-document-plan-handoff-action">' + badge(status) + action + "</div></aside>";
+      ? '<a class="portal-button portal-button--quiet" href="' + safeText(handoff.route) + '">' + safeText(uiText("docPlainDetail.handoff.openTool", "Mở công cụ riêng")) + ' <span aria-hidden="true">→</span></a>'
+      : '<span class="portal-form-note">' + safeText(uiText("docPlainDetail.handoff.unavailable", "Bạn chưa thể mở công cụ này. Hãy quay lại sau.")) + "</span>";
+    return '<aside class="portal-document-plan-handoff is-' + safeText(handoff.availability) + '"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainDetail.handoff.kicker", "Công cụ liên quan")) + "</span><h4>" + safeText(uiText(opCopy[0], opCopy[1])) + "</h4><p>" + safeText(uiText(opCopy[2], opCopy[3])) + "</p><small>" + safeText(uiText("docPlainDetail.handoff.note", "Bạn sẽ chọn tệp trực tiếp khi thao tác trên công cụ xử lý riêng.")) + '</small></div><div class="portal-document-plan-handoff-action">' + badge(status) + action + "</div></aside>";
   }
   function documentWorkspaceFields(context) {
     return [
-      { name: "title", label: "Tên document brief", placeholder: "Ví dụ: Hồ sơ sản phẩm tháng 7", required: true, minLength: 2, maxLength: 180 },
-      { name: "document_type", label: "Loại tài liệu", control: "select", required: true, options: DOCUMENT_WORKSPACE_TYPES },
-      { name: "language", label: "Ngôn ngữ nguồn / review", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
-      { name: "target_language", label: "Ngôn ngữ đích (tùy chọn)", placeholder: "en", maxLength: 100, help: "Chỉ là metadata review, không gọi dịch máy hoặc tạo bản dịch." },
-      { name: "source_summary", label: "Scope, nguồn & trang dự kiến", control: "textarea", placeholder: "Mô tả phạm vi, loại trang, giới hạn đầu vào và những điều cần kiểm tra…", required: true, minLength: 3, maxLength: 6000, wide: true },
-      { name: "objective", label: "Mục tiêu, target format & QA checklist", control: "textarea", placeholder: "Mục tiêu xử lý, định dạng dự kiến, tiêu chí QA và điều không được tự suy diễn…", required: true, minLength: 3, maxLength: 6000, wide: true },
-      { name: "tags", label: "Tags", placeholder: "contract, pdf, qa", maxLength: 1000 },
-      { name: "project_id", label: "Project (tùy chọn)", control: "select", options: documentWorkspaceProjectOptions(context), emptyLabel: "Không liên kết Project" }
+      { name: "title", label: uiText("docPlainForm.briefField.title.label", "Tên yêu cầu tài liệu"), placeholder: uiText("docPlainForm.briefField.title.placeholder", "Ví dụ: Hồ sơ sản phẩm tháng 7"), required: true, minLength: 2, maxLength: 180 },
+      { name: "document_type", label: uiText("docPlainForm.briefField.type.label", "Loại tài liệu"), control: "select", required: true, options: DOCUMENT_WORKSPACE_TYPES.map((entry) => [entry[0], documentWorkspaceTypeLabel(entry[0])]) },
+      { name: "language", label: uiText("docPlainForm.briefField.language.label", "Ngôn ngữ tài liệu"), placeholder: uiText("docPlainForm.briefField.language.placeholder", "Tiếng Việt"), required: true, minLength: 1, maxLength: 100 },
+      { name: "target_language", label: uiText("docPlainForm.briefField.targetLanguage.label", "Ngôn ngữ đích (không bắt buộc)"), placeholder: uiText("docPlainForm.briefField.targetLanguage.placeholder", "Tiếng Anh"), maxLength: 100, help: uiText("docPlainForm.briefField.targetLanguage.help", "Chỉ ghi chú để tham khảo; trang này không tự dịch tài liệu.") },
+      { name: "source_summary", label: uiText("docPlainForm.briefField.sourceSummary.label", "Nội dung và phạm vi"), control: "textarea", placeholder: uiText("docPlainForm.briefField.sourceSummary.placeholder", "Ghi rõ tài liệu gồm những gì, số trang dự kiến và điểm cần lưu ý…"), required: true, minLength: 3, maxLength: 6000, wide: true },
+      { name: "objective", label: uiText("docPlainForm.briefField.objective.label", "Mục tiêu và yêu cầu"), control: "textarea", placeholder: uiText("docPlainForm.briefField.objective.placeholder", "Nêu kết quả mong muốn, định dạng cần có và những điểm cần rà soát…"), required: true, minLength: 3, maxLength: 6000, wide: true },
+      { name: "tags", label: uiText("docPlainForm.briefField.tags.label", "Nhãn"), placeholder: uiText("docPlainForm.briefField.tags.placeholder", "hợp đồng, PDF, rà soát"), maxLength: 1000 },
+      { name: "project_id", label: uiText("docPlainForm.briefField.project.label", "Dự án (không bắt buộc)"), control: "select", options: documentWorkspaceProjectOptions(context), emptyLabel: uiText("docPlainForm.briefField.project.emptyLabel", "Không gắn dự án") }
     ];
   }
   function documentWorkspaceValues(value) {
@@ -20195,12 +20245,12 @@ function renderAutoPostHub(page, context) {
   }
   function documentPlanFields(context) {
     return [
-      { name: "title", label: "Tên processing plan", placeholder: "Ví dụ: Rà soát trước khi tách trang", required: true, minLength: 2, maxLength: 180 },
-      { name: "operation", label: "Intent / planned operation", control: "select", required: true, options: DOCUMENT_WORKSPACE_OPERATIONS, help: "Lưu intent để review; không gọi utility, OCR, converter, dịch, provider hoặc job." },
-      { name: "source_asset_id", label: "Asset Vault source metadata", control: "select", options: documentWorkspaceAssetOptions(context), emptyLabel: "Không gắn source metadata", help: "Chỉ gửi UUID owner-scoped; workspace không đọc file, blob, path hoặc preview." },
-      { name: "reference_asset_id", label: "Asset Vault reference metadata", control: "select", options: documentWorkspaceAssetOptions(context), emptyLabel: "Không gắn reference metadata" },
-      { name: "instructions", label: "Scope, pages & kiểm tra dự kiến", control: "textarea", placeholder: "Phạm vi trang, thứ tự, tiêu chí QA và fallback cần tự review…", maxLength: 6000, wide: true },
-      { name: "tags", label: "Tags", placeholder: "pages, legal, review", maxLength: 1000 }
+      { name: "title", label: uiText("docPlainForm.planField.title.label", "Tên bước xử lý"), placeholder: uiText("docPlainForm.planField.title.placeholder", "Ví dụ: Rà soát trước khi tách trang"), required: true, minLength: 2, maxLength: 180 },
+      { name: "operation", label: uiText("docPlainForm.planField.operation.label", "Việc dự kiến thực hiện"), control: "select", required: true, options: DOCUMENT_WORKSPACE_OPERATIONS.map((entry) => [entry[0], documentWorkspaceOperationLabel(entry[0])]), help: uiText("docPlainForm.planField.operation.help", "Chỉ lưu lại để rà soát; trang này không tự xử lý, đọc chữ, dịch hay chuyển đổi tệp.") },
+      { name: "source_asset_id", label: uiText("docPlainForm.planField.sourceAsset.label", "Tài liệu chính trong Kho tệp"), control: "select", options: documentWorkspaceAssetOptions(context), emptyLabel: uiText("docPlainForm.planField.sourceAsset.emptyLabel", "Không chọn tài liệu chính"), help: uiText("docPlainForm.planField.sourceAsset.help", "Chỉ lưu tên tệp tham chiếu của bạn; trang này không mở xem hay đọc nội dung tệp.") },
+      { name: "reference_asset_id", label: uiText("docPlainForm.planField.referenceAsset.label", "Tài liệu tham khảo trong Kho tệp"), control: "select", options: documentWorkspaceAssetOptions(context), emptyLabel: uiText("docPlainForm.planField.referenceAsset.emptyLabel", "Không chọn tài liệu tham khảo") },
+      { name: "instructions", label: uiText("docPlainForm.planField.instructions.label", "Phạm vi trang và ghi chú kiểm tra"), control: "textarea", placeholder: uiText("docPlainForm.planField.instructions.placeholder", "Ghi rõ các trang cần xử lý, thứ tự sắp xếp và điểm cần rà soát…"), maxLength: 6000, wide: true },
+      { name: "tags", label: uiText("docPlainForm.planField.tags.label", "Nhãn"), placeholder: uiText("docPlainForm.planField.tags.placeholder", "chọn trang, pháp lý, rà soát"), maxLength: 1000 }
     ];
   }
   function documentPlanValues(value) {
@@ -20217,30 +20267,44 @@ function renderAutoPostHub(page, context) {
   }
   function documentWorkspaceEventLabel(value) {
     const labels = {
-      workspace_created: "Đã tạo document brief", workspace_updated: "Đã lưu document brief",
-      workspace_state_changed: "Đã đổi trạng thái self-review", workspace_version_restored: "Đã khôi phục version brief",
-      workspace_review: "Đã bắt đầu self-review", workspace_approved: "Đã hoàn tất self-review",
-      workspace_archived: "Đã archive brief", workspace_draft: "Đã trả brief về Draft",
-      plan_created: "Đã thêm processing plan", plan_updated: "Đã lưu processing plan",
-      plan_archived: "Đã archive processing plan", plan_restored: "Đã khôi phục processing plan",
-      plan_version_restored: "Đã khôi phục version processing plan", plans_reordered: "Đã đổi thứ tự processing plan"
+      workspace_created: ["docPlainDetail.events.workspaceCreated", "Đã tạo yêu cầu tài liệu"],
+      workspace_updated: ["docPlainDetail.events.workspaceUpdated", "Đã lưu yêu cầu tài liệu"],
+      workspace_state_changed: ["docPlainDetail.events.workspaceStateChanged", "Đã đổi trạng thái yêu cầu tài liệu"],
+      workspace_version_restored: ["docPlainDetail.events.workspaceVersionRestored", "Đã khôi phục phiên bản yêu cầu"],
+      workspace_review: ["docPlainDetail.events.workspaceReview", "Đã bắt đầu rà soát"],
+      workspace_approved: ["docPlainDetail.events.workspaceApproved", "Đã đánh dấu đã rà soát"],
+      workspace_archived: ["docPlainDetail.events.workspaceArchived", "Đã lưu trữ yêu cầu tài liệu"],
+      workspace_draft: ["docPlainDetail.events.workspaceDraft", "Đã đưa yêu cầu về bản nháp"],
+      plan_created: ["docPlainDetail.events.planCreated", "Đã thêm bước xử lý"],
+      plan_updated: ["docPlainDetail.events.planUpdated", "Đã lưu bước xử lý"],
+      plan_archived: ["docPlainDetail.events.planArchived", "Đã lưu trữ bước xử lý"],
+      plan_restored: ["docPlainDetail.events.planRestored", "Đã khôi phục bước xử lý"],
+      plan_version_restored: ["docPlainDetail.events.planVersionRestored", "Đã khôi phục phiên bản bước xử lý"],
+      plans_reordered: ["docPlainDetail.events.plansReordered", "Đã đổi thứ tự bước xử lý"]
     };
-    return labels[String(value || "")] || String(value || "document_workspace_updated").replace(/_/g, " ");
+    const key = String(value || "");
+    const entry = Object.prototype.hasOwnProperty.call(labels, key) ? labels[key] : null;
+    return entry ? uiText(entry[0], entry[1]) : uiText("docPlainDetail.events.unknown", "Đã cập nhật yêu cầu");
   }
   function renderDocumentWorkspaceBoundary() {
-    return '<aside class="portal-card portal-card-pad portal-document-workspace-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Authoring boundary</span><h2 class="portal-card-title">Brief & processing plan, không xử lý file</h2><p class="portal-card-subtitle">Workspace chỉ lưu metadata review và opaque Asset Vault reference. Không upload/đọc file, tạo preview/output, gọi OCR/dịch/provider/Bot job hay trừ Xu/khởi tạo thanh toán.</p></div>' + badge("guarded") + '</div><div class="portal-document-workspace-guard-list"><p class="portal-form-note">OCR, dịch, chuyển đổi, provider, Bot job, ví và thanh toán chỉ mở ở công cụ có capability server tương ứng.</p></div></aside>';
+    return '<aside class="portal-card portal-card-pad portal-document-workspace-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainForm.boundary.kicker", "Lưu ý sử dụng")) + '</span><h2 class="portal-card-title">' + safeText(uiText("docPlainForm.boundary.title", "Chỉ lưu yêu cầu và bước xử lý, không xử lý tệp")) + '</h2><p class="portal-card-subtitle">' + safeText(uiText("docPlainForm.boundary.subtitle", "Trang này chỉ lưu ghi chú yêu cầu và tên tệp tham chiếu để bạn rà soát. Không tải tệp lên, không đọc nội dung, không tạo tệp kết quả và không phát sinh giao dịch.")) + '</p></div>' + badge("guarded") + '</div><div class="portal-document-workspace-guard-list"><p class="portal-form-note">' + safeText(uiText("docPlainForm.boundary.note", "Khi cần đọc chữ, tách, gộp hay chuyển đổi tệp, hãy mở các công cụ xử lý tài liệu riêng sau khi rà soát xong.")) + "</p></div></aside>";
   }
   function renderDocumentWorkspaceCards(items, context) {
     const canView = Boolean(context.capabilities && context.capabilities["document-workspace-view"] === true);
-    if (!items.length) return renderEmpty("Chưa có document brief", "Tạo brief đầu tiên để tổ chức scope, target format, QA checklist và processing plan. Workspace không tạo file hoặc output thay thế.", ICONS.document);
+    if (!items.length) return renderEmpty(uiText("docPlainForm.list.emptyTitle", "Chưa có yêu cầu tài liệu"), uiText("docPlainForm.list.emptyBody", "Tạo yêu cầu đầu tiên để ghi rõ nội dung, các bước xử lý và điểm cần rà soát. Trang này không xử lý tệp hay tạo tệp kết quả."), ICONS.document);
     return '<div class="portal-document-workspace-grid">' + items.map((item) => {
       const id = String(item.id || "");
       const state = documentWorkspaceState(item.lifecycle || item.state);
       const planCount = Number(item.plan_count || 0);
       const href = "/document-workspace/" + encodeURIComponent(id);
       const button = canView && validDocumentWorkspaceId(id)
-        ? '<a class="portal-button portal-button--quiet" href="' + safeText(href) + '">Mở brief <span aria-hidden="true">→</span></a>' : "";
-      return '<article class="portal-card portal-card-pad portal-document-workspace-card"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(documentWorkspaceTypeLabel(item.document_type)) + "</span><h3 class=\"portal-card-title\">" + safeText(String(item.title || "Document brief")) + "</h3><p class=\"portal-card-subtitle\">" + safeText(String(item.objective_excerpt || item.objective || item.source_excerpt || item.source_summary || "Chưa có scope hiển thị.")) + "</p></div>" + documentWorkspaceStateBadge(state) + '</div><div class="portal-document-workspace-meta"><span>' + safeText(String(planCount)) + " plans</span><span>" + safeText(String(item.language || "—")) + "</span><span>v" + safeText(String(item.revision || 1)) + "</span></div>" + renderDocumentWorkspaceTags(item.tags) + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(state === "approved" ? "Self-review đã đánh dấu" : state === "archived" ? "Đã archive · chỉ đọc" : "Đang biên tập") + "</span>" + button + "</div></article>";
+        ? '<a class="portal-button portal-button--quiet" href="' + safeText(href) + '">' + safeText(uiText("docPlainForm.list.openButton", "Mở yêu cầu")) + ' <span aria-hidden="true">→</span></a>' : "";
+      const footerNote = state === "approved"
+        ? uiText("docPlainForm.list.noteApproved", "Rà soát xong")
+        : state === "archived"
+          ? uiText("docPlainForm.list.noteArchived", "Đã lưu trữ · chỉ xem")
+          : uiText("docPlainForm.list.noteEditing", "Đang soạn");
+      return '<article class="portal-card portal-card-pad portal-document-workspace-card"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(documentWorkspaceTypeLabel(item.document_type)) + '</span><h3 class="portal-card-title">' + safeText(String(item.title || uiText("docPlainForm.list.untitled", "Yêu cầu tài liệu"))) + '</h3><p class="portal-card-subtitle">' + safeText(String(item.objective_excerpt || item.objective || item.source_excerpt || item.source_summary || uiText("docPlainForm.list.noSummary", "Chưa có mô tả nội dung."))) + "</p></div>" + documentWorkspaceStateBadge(state) + '</div><div class="portal-document-workspace-meta"><span>' + safeText(String(planCount)) + " " + safeText(uiText("docPlainForm.list.stepsUnit", "bước xử lý")) + "</span><span>" + safeText(String(item.language || "—")) + "</span><span>" + safeText(uiText("docPlainForm.list.versionLabel", "Phiên bản")) + " " + safeText(String(item.revision || 1)) + "</span></div>" + renderDocumentWorkspaceTags(item.tags) + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(footerNote) + "</span>" + button + "</div></article>";
     }).join("") + "</div>";
   }
   function documentWorkspaceFilterState(context) {
@@ -20259,7 +20323,7 @@ function renderAutoPostHub(page, context) {
     };
   }
   function renderDocumentWorkspacePagination(listing) {
-    return renderMemoryPagination(listing, "document brief", "document-workspace-page", "/document-workspace", "data-document-workspace-offset", "portal-document-workspace-pagination");
+    return renderMemoryPagination(listing, uiText("docPlainForm.list.itemLabel", "yêu cầu tài liệu"), "document-workspace-page", "/document-workspace", "data-document-workspace-offset", "portal-document-workspace-pagination");
   }
   function renderDocumentWorkspaceLibrary(items, context) {
     const listing = documentWorkspaceListing(context);
@@ -20268,29 +20332,41 @@ function renderAutoPostHub(page, context) {
     const activityEvents = Array.isArray(context.documentWorkspaceEvents)
       ? context.documentWorkspaceEvents.filter((item) => item && typeof item === "object" && validDocumentWorkspaceRevision(item.revision)).slice(0, 12)
       : [];
+    const filterOptions = DOCUMENT_WORKSPACE_FILTERS.map((entry) => {
+      const value = entry[0];
+      if (value === "active") return [value, uiText("docPlainForm.filter.active", "Đang hoạt động")];
+      if (value === "draft") return [value, uiText("docPlainForm.filter.draft", "Bản nháp")];
+      if (value === "review") return [value, uiText("docPlainForm.filter.review", "Đang rà soát")];
+      if (value === "approved") return [value, uiText("docPlainForm.filter.approved", "Rà soát xong")];
+      if (value === "archived") return [value, uiText("docPlainForm.filter.archived", "Đã lưu trữ")];
+      return [value, entry[1]];
+    });
     const filterFields = [
-      { name: "q", label: "Tìm document brief", placeholder: "Tên, scope, mục tiêu hoặc tag…", maxLength: 180 },
-      { name: "state", label: "Trạng thái", control: "select", options: DOCUMENT_WORKSPACE_FILTERS }
+      { name: "q", label: uiText("docPlainForm.filter.query.label", "Tìm yêu cầu tài liệu"), placeholder: uiText("docPlainForm.filter.query.placeholder", "Tên, nội dung, mục tiêu hoặc nhãn…"), maxLength: 180 },
+      { name: "state", label: uiText("docPlainForm.filter.state.label", "Trạng thái"), control: "select", options: filterOptions }
     ];
     const activity = renderDocumentWorkspaceActivity(activityEvents);
-    return '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Brief library</span><h2 class="portal-card-title">Tiếp tục self-review</h2><p class="portal-card-subtitle">Danh sách chỉ hiển thị metadata/excerpt thuộc signed account. Mở brief để server owner-check processing plan, history và Asset Vault reference an toàn.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-refresh" data-portal-route="/document-workspace">Làm mới</button></div><form class="portal-document-workspace-filter" data-portal-form data-portal-no-transient data-portal-action="document-workspace-filter" data-portal-route="/document-workspace" data-document-workspace-filter="' + safeText(filter.state) + '" novalidate>' + renderFields(filterFields, canFilter, context, filter) + '<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ dùng signed API trong phiên hiện tại; không lưu bền trên trình duyệt, Telegram hay provider.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-filter-clear" data-portal-route="/document-workspace" data-document-workspace-filter="active"' + (canFilter ? "" : " disabled") + '>Xóa lọc</button><button class="portal-button portal-button--primary" type="submit"' + (canFilter ? "" : " disabled") + '>Tìm brief</button></div></div></form>' + renderDocumentWorkspaceCards(items, context) + renderDocumentWorkspacePagination(listing) + "</section>" + activity;
+    return '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainForm.library.kicker", "Danh sách đã lưu")) + '</span><h2 class="portal-card-title">' + safeText(uiText("docPlainForm.library.title", "Tiếp tục rà soát")) + '</h2><p class="portal-card-subtitle">' + safeText(uiText("docPlainForm.library.subtitle", "Danh sách chỉ hiển thị các yêu cầu thuộc tài khoản của bạn. Mở từng mục để xem các bước xử lý, lịch sử chỉnh sửa và tệp đã gắn.")) + '</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-refresh" data-portal-route="/document-workspace">' + safeText(uiText("docPlainForm.library.refresh", "Làm mới")) + '</button></div><form class="portal-document-workspace-filter" data-portal-form data-portal-no-transient data-portal-action="document-workspace-filter" data-portal-route="/document-workspace" data-document-workspace-filter="' + safeText(filter.state) + '" novalidate>' + renderFields(filterFields, canFilter, context, filter) + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(uiText("docPlainForm.library.filterNote", "Bộ lọc chỉ áp dụng trong lần xem này và không tự lưu lại khi tải lại trang.")) + '</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-filter-clear" data-portal-route="/document-workspace" data-document-workspace-filter="active"' + (canFilter ? "" : " disabled") + ">" + safeText(uiText("docPlainForm.library.clearFilter", "Xóa lọc")) + '</button><button class="portal-button portal-button--primary" type="submit"' + (canFilter ? "" : " disabled") + ">" + safeText(uiText("docPlainForm.library.submitFilter", "Tìm yêu cầu")) + "</button></div></div></form>" + renderDocumentWorkspaceCards(items, context) + renderDocumentWorkspacePagination(listing) + "</section>" + activity;
   }
   function renderDocumentWorkspace(page, context) {
     const canView = Boolean(context.capabilities && context.capabilities["document-workspace-view"] === true);
     const enabled = context.documentWorkspaceEnabled === true;
     if (!canView) {
+      const emptyTitle = enabled
+        ? uiText("docPlainForm.guarded.signInTitle", "Đăng nhập để mở Yêu cầu tài liệu")
+        : uiText("docPlainForm.guarded.disabledTitle", "Mục Yêu cầu tài liệu đang tạm khóa");
       const copy = enabled
-        ? "Đăng nhập bằng signed session để mở document brief thuộc account hiện tại. Route native này không đọc legacy document-operation history."
-        : "Document & PDF Workspace đang được server giữ ở chế độ guarded. Khi feature flag chưa bật, Web không hiển thị converter, OCR, file preview hay output giả.";
-      return '<article class="portal-page portal-document-workspace">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty("Document & PDF Workspace đang được bảo vệ", copy, ICONS.document) + "</section></article>";
+        ? uiText("docPlainForm.guarded.signInCopy", "Hãy đăng nhập để xem và tạo các yêu cầu tài liệu trên tài khoản của bạn.")
+        : uiText("docPlainForm.guarded.disabledCopy", "Tính năng lập kế hoạch tài liệu hiện đang tạm khóa. Để tách, gộp, nén, chuyển đổi hoặc đọc chữ từ tệp, hãy dùng các công cụ tài liệu riêng.");
+      return '<article class="portal-page portal-document-workspace">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty(emptyTitle, copy, ICONS.document) + "</section></article>";
     }
     const summary = context.documentWorkspaceSummary && typeof context.documentWorkspaceSummary === "object" ? context.documentWorkspaceSummary : {};
     const workspaceSummary = summary.workspaces && typeof summary.workspaces === "object" ? summary.workspaces : {};
     const workspaces = Array.isArray(context.documentWorkspaces) ? context.documentWorkspaces.filter((item) => item && validDocumentWorkspaceId(item.id)).slice(0, DOCUMENT_WORKSPACE_LIST_LIMIT) : [];
     const values = documentWorkspaceValues(transientFormValues(page.routePath || page.path));
     const canCreate = Boolean(context.capabilities && context.capabilities["document-workspace-create"] === true);
-    const intro = '<section class="portal-document-workspace-intro"><div><span class="portal-section-kicker">Web-native document planning</span><h2>Rõ scope, target format và QA trước khi chọn công cụ phù hợp.</h2><p>Quản lý document brief, processing plan và Asset Vault metadata theo signed account. Các số liệu là metadata review; không phải file, trang, preview hay output đã được tạo.</p></div><dl><div><dt>' + safeText(String(Number(workspaceSummary.total || workspaces.length))) + '</dt><dd>Document briefs</dd></div><div><dt>' + safeText(String(Number(workspaceSummary.review || 0))) + '</dt><dd>Đang review</dd></div><div><dt>' + safeText(String(Number(workspaceSummary.approved || 0))) + "</dt><dd>Self-review xong</dd></div></dl></section>";
-    const form = '<section class="portal-card portal-card-pad portal-document-workspace-create"><div class="portal-card-header"><div><span class="portal-section-kicker">New document brief</span><h2 class="portal-card-title">Lập scope & QA checklist</h2><p class="portal-card-subtitle">Bắt đầu bằng loại tài liệu, scope, target format, language và checklist review. Server kiểm tra session, CSRF, ownership, revision và idempotency cho mỗi lần ghi.</p></div>' + badge(canCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="document-workspace-create" data-portal-route="' + safeText(page.routePath || page.path) + '" novalidate>' + renderFields(documentWorkspaceFields(context), canCreate, context, values) + '<div class="portal-form-footer"><span class="portal-form-note">Không nhập URL, file/path/blob, provider/job ID, secret, OTP/CVV hoặc chứng từ thanh toán.</span><button class="portal-button portal-button--primary" type="submit"' + (canCreate ? "" : " disabled") + ">Tạo document brief</button></div></form></section>";
+    const intro = '<section class="portal-document-workspace-intro"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainForm.intro.kicker", "Chuẩn bị tài liệu")) + "</span><h2>" + safeText(uiText("docPlainForm.intro.heading", "Làm rõ nội dung và các bước xử lý trước khi dùng công cụ phù hợp.")) + "</h2><p>" + safeText(uiText("docPlainForm.intro.body", "Lưu yêu cầu tài liệu, các bước xử lý dự kiến và tệp tham chiếu trong tài khoản của bạn. Số liệu bên cạnh chỉ thống kê số yêu cầu đã ghi, không phải tệp kết quả đã tạo.")) + "</p></div><dl><div><dt>" + safeText(String(Number(workspaceSummary.total || workspaces.length))) + "</dt><dd>" + safeText(uiText("docPlainForm.intro.statTotal", "Yêu cầu tài liệu")) + "</dd></div><div><dt>" + safeText(String(Number(workspaceSummary.review || 0))) + "</dt><dd>" + safeText(uiText("docPlainForm.intro.statReview", "Đang rà soát")) + "</dd></div><div><dt>" + safeText(String(Number(workspaceSummary.approved || 0))) + "</dt><dd>" + safeText(uiText("docPlainForm.intro.statApproved", "Rà soát xong")) + "</dd></div></dl></section>";
+    const form = '<section class="portal-card portal-card-pad portal-document-workspace-create"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainForm.create.kicker", "Tạo mới")) + '</span><h2 class="portal-card-title">' + safeText(uiText("docPlainForm.create.title", "Tạo yêu cầu tài liệu")) + '</h2><p class="portal-card-subtitle">' + safeText(uiText("docPlainForm.create.subtitle", "Chọn loại tài liệu, ngôn ngữ, nội dung và mục tiêu cần rà soát trước khi chuyển sang công cụ xử lý.")) + "</p></div>" + badge(canCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="document-workspace-create" data-portal-route="' + safeText(page.routePath || page.path) + '" novalidate>' + renderFields(documentWorkspaceFields(context), canCreate, context, values) + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(uiText("docPlainForm.create.footerNote", "Không nhập mật khẩu, mã xác thực, số thẻ ngân hàng, chứng từ thanh toán hoặc đường dẫn tệp.")) + '</span><button class="portal-button portal-button--primary" type="submit"' + (canCreate ? "" : " disabled") + ">" + safeText(uiText("docPlainForm.create.submit", "Tạo yêu cầu tài liệu")) + "</button></div></form></section>";
     const library = renderDocumentWorkspaceLibrary(workspaces, context);
     return '<article class="portal-page portal-document-workspace">' + renderHero(page, context) + intro + '<div class="portal-document-workspace-layout">' + form + renderDocumentWorkspaceBoundary() + "</div>" + library + "</article>";
   }
@@ -20299,7 +20375,7 @@ function renderAutoPostHub(page, context) {
     const active = Number(source.active_plan_count ?? source.plan_count ?? plans.length);
     const withAsset = Number(source.asset_reference_count ?? source.referenced_asset_count ?? plans.filter((item) => String(item.source_asset_id || item.reference_asset_id || "")).length);
     const guarded = Number(source.guarded_intent_count ?? plans.filter((item) => ["ocr", "translate", "convert"].includes(String(item.operation || ""))).length);
-    return '<section class="portal-card portal-card-pad portal-document-workspace-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Review estimate</span><h2 class="portal-card-title">Tổng hợp plan để rà soát</h2><p class="portal-card-subtitle">Estimate chỉ đếm metadata plan/reference. Nó không đọc file, đếm trang, chạy OCR/dịch, gọi provider, tạo output hoặc xác nhận delivery.</p></div>' + badge("read_only") + '</div><div class="portal-document-workspace-estimate-grid"><span><strong>' + safeText(String(active)) + "</strong> plans active</span><span><strong>" + safeText(String(withAsset)) + "</strong> Asset Vault refs</span><span><strong>" + safeText(String(guarded)) + "</strong> guarded intents</span></div></section>";
+    return '<section class="portal-card portal-card-pad portal-document-workspace-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainDetail.estimate.kicker", "Tóm tắt rà soát")) + '</span><h2 class="portal-card-title">' + safeText(uiText("docPlainDetail.estimate.title", "Tổng hợp bước xử lý để rà soát")) + '</h2><p class="portal-card-subtitle">' + safeText(uiText("docPlainDetail.estimate.subtitle", "Bảng này chỉ thống kê số bước xử lý và tệp đính kèm bạn đã ghi nhận, chưa thực hiện xử lý hay tạo tệp mới.")) + "</p></div>" + badge("read_only") + '</div><div class="portal-document-workspace-estimate-grid"><span><strong>' + safeText(String(active)) + "</strong> " + safeText(uiText("docPlainDetail.estimate.activePlans", "bước xử lý đang dùng")) + "</span><span><strong>" + safeText(String(withAsset)) + "</strong> " + safeText(uiText("docPlainDetail.estimate.assetRefs", "bước có gắn tệp")) + "</span><span><strong>" + safeText(String(guarded)) + "</strong> " + safeText(uiText("docPlainDetail.estimate.guardedIntents", "bước cần xem xét riêng")) + "</span></div></section>";
   }
   function documentWorkspaceDataAttrs(workspace, plan) {
     const baseAttrs = ' data-document-workspace-id="' + safeText(String(workspace.id)) + '" data-document-workspace-revision="' + safeText(String(workspace.revision)) + '"';
@@ -20316,19 +20392,20 @@ function renderAutoPostHub(page, context) {
     const attrs = documentWorkspaceDataAttrs(workspace, plan);
     const routeAttr = ' data-portal-route="' + safeText(route) + '"';
     const archiveButton = active
-      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-archive"' + routeAttr + attrs + ' data-portal-confirm="Archive processing plan này? Metadata và history riêng tư vẫn được giữ."' + (canArchive ? "" : " disabled") + ">Archive</button>"
-      : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-restore"' + routeAttr + attrs + (canRestore ? "" : " disabled") + ">Khôi phục</button>";
-    const moves = active ? '<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-reorder" data-document-plan-direction="up"' + routeAttr + attrs + (canReorder && position > 0 ? "" : " disabled") + '>Lên</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-reorder" data-document-plan-direction="down"' + routeAttr + attrs + (canReorder && position < total - 1 ? "" : " disabled") + ">Xuống</button></div>" : "";
-    const sources = '<div class="portal-document-plan-meta"><span>Source: ' + safeText(documentWorkspaceAssetName(context, plan.source_asset_id)) + "</span><span>Ref: " + safeText(documentWorkspaceAssetName(context, plan.reference_asset_id)) + "</span><span>v" + safeText(String(plan.revision || 1)) + "</span></div>";
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-archive"' + routeAttr + attrs + ' data-portal-confirm="' + safeText(uiText("docPlainDetail.plan.archiveConfirm", "Lưu trữ bước xử lý này? Thông tin và lịch sử phiên bản vẫn được giữ lại.")) + '"' + (canArchive ? "" : " disabled") + ">" + safeText(uiText("docPlainDetail.plan.archiveButton", "Lưu trữ")) + "</button>"
+      : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-restore"' + routeAttr + attrs + (canRestore ? "" : " disabled") + ">" + safeText(uiText("docPlainDetail.plan.restoreButton", "Khôi phục")) + "</button>";
+    const moves = active ? '<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-reorder" data-document-plan-direction="up"' + routeAttr + attrs + (canReorder && position > 0 ? "" : " disabled") + ">" + safeText(uiText("docPlainDetail.plan.moveUp", "Lên")) + '</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-reorder" data-document-plan-direction="down"' + routeAttr + attrs + (canReorder && position < total - 1 ? "" : " disabled") + ">" + safeText(uiText("docPlainDetail.plan.moveDown", "Xuống")) + "</button></div>" : "";
+    const sources = '<div class="portal-document-plan-meta"><span>' + safeText(uiText("docPlainDetail.plan.sourceLabel", "Tệp nguồn")) + ": " + safeText(documentWorkspaceAssetName(context, plan.source_asset_id)) + "</span><span>" + safeText(uiText("docPlainDetail.plan.referenceLabel", "Tệp tham khảo")) + ": " + safeText(documentWorkspaceAssetName(context, plan.reference_asset_id)) + "</span><span>" + safeText(uiText("docPlainDetail.common.versionLabel", "Phiên bản {version}", { version: safeText(String(plan.revision || 1)) })) + "</span></div>";
     const versions = Array.isArray(plan.versions) ? plan.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 20) : [];
     const canRestoreVersion = Boolean(context.capabilities && context.capabilities["document-plan-restore-version"] === true && active && writable);
     const history = versions.length ? '<div class="portal-document-plan-version-list">' + versions.map((version) => {
       const current = Number(version.revision) === Number(plan.revision);
-      const restore = current ? '<span class="portal-form-note">Đang mở</span>' : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-restore-version" data-document-plan-version="' + safeText(String(version.revision)) + '"' + routeAttr + attrs + ' data-portal-confirm="Khôi phục v' + safeText(String(version.revision)) + ' thành revision plan mới?"' + (canRestoreVersion ? "" : " disabled") + '>Khôi phục v' + safeText(String(version.revision)) + '</button>';
-      return '<article><span><strong>v' + safeText(String(version.revision)) + '</strong><small>' + safeText(String(version.instructions_excerpt || "")) + '</small></span>' + restore + '</article>';
-    }).join("") + '</div>' : "";
-    const form = '<form class="portal-form portal-document-plan-form" data-portal-form data-portal-action="document-plan-update"' + routeAttr + attrs + " novalidate>" + renderFields(documentPlanFields(context), canUpdate, context, documentPlanValues(plan)) + '<div class="portal-form-footer"><span class="portal-form-note">Lưu plan không đọc Asset Vault blob, không chạy utility/OCR/dịch và không tạo output.</span><button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + ">Lưu revision plan</button></div></form>";
-    return '<article class="portal-document-plan-card' + (active ? "" : " is-archived") + '"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(documentWorkspaceOperationLabel(plan.operation)) + "</span><h3 class=\"portal-card-title\">" + safeText(String(plan.title || "Processing plan")) + "</h3><p class=\"portal-card-subtitle\">" + safeText(String(plan.instructions_excerpt || plan.instructions || "Chưa có scope plan hiển thị.")) + "</p></div>" + badge(active ? "ready" : "archived") + "</div>" + sources + renderDocumentWorkspaceTags(plan.tags) + renderDocumentPlanHandoff(plan, context) + '<div class="portal-inline-actions">' + archiveButton + moves + "</div>" + history + form + "</article>";
+      const rev = safeText(String(version.revision));
+      const restore = current ? '<span class="portal-form-note">' + safeText(uiText("docPlainDetail.common.currentVersion", "Đang mở")) + "</span>" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-restore-version" data-document-plan-version="' + rev + '"' + routeAttr + attrs + ' data-portal-confirm="' + safeText(uiText("docPlainDetail.common.restoreVersionConfirm", "Khôi phục phiên bản {version} thành phiên bản mới? Các phiên bản trước vẫn được giữ lại.", { version: rev })) + '"' + (canRestoreVersion ? "" : " disabled") + ">" + safeText(uiText("docPlainDetail.common.restoreVersionButton", "Khôi phục phiên bản {version}", { version: rev })) + "</button>";
+      return "<article><span><strong>" + safeText(uiText("docPlainDetail.common.versionLabel", "Phiên bản {version}", { version: rev })) + "</strong><small>" + safeText(String(version.instructions_excerpt || "")) + "</small></span>" + restore + "</article>";
+    }).join("") + "</div>" : "";
+    const form = '<form class="portal-form portal-document-plan-form" data-portal-form data-portal-action="document-plan-update"' + routeAttr + attrs + " novalidate>" + renderFields(documentPlanFields(context), canUpdate, context, documentPlanValues(plan)) + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(uiText("docPlainDetail.plan.saveNote", "Lưu bước xử lý chỉ lưu ghi chú của bạn, chưa xử lý hay tạo tệp mới.")) + '</span><button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + ">" + safeText(uiText("docPlainDetail.plan.saveButton", "Lưu bước xử lý")) + "</button></div></form>";
+    return '<article class="portal-document-plan-card' + (active ? "" : " is-archived") + '"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(documentWorkspaceOperationLabel(plan.operation)) + '</span><h3 class="portal-card-title">' + safeText(String(plan.title || uiText("docPlainDetail.plan.untitled", "Bước xử lý"))) + '</h3><p class="portal-card-subtitle">' + safeText(String(plan.instructions_excerpt || plan.instructions || uiText("docPlainDetail.plan.noInstructions", "Chưa có mô tả cho bước xử lý này."))) + "</p></div>" + badge(active ? "ready" : "archived") + "</div>" + sources + renderDocumentWorkspaceTags(plan.tags) + renderDocumentPlanHandoff(plan, context) + '<div class="portal-inline-actions">' + archiveButton + moves + "</div>" + history + form + "</article>";
   }
 
   function documentWorkspaceStateActions(workspace, state, context, route) {
@@ -20336,38 +20413,39 @@ function renderAutoPostHub(page, context) {
     const attrs = documentWorkspaceDataAttrs(workspace, null);
     const routeAttr = ' data-portal-route="' + safeText(route) + '"';
     if (state === "archived") {
-      return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-state" data-document-workspace-state="draft"' + routeAttr + attrs + ' data-portal-confirm="Khôi phục document brief về Draft để tiếp tục biên tập?"' + (canLifecycle ? "" : " disabled") + ">Khôi phục về Draft</button>";
+      return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-state" data-document-workspace-state="draft"' + routeAttr + attrs + ' data-portal-confirm="' + safeText(uiText("docPlainDetail.state.backToDraftConfirm", "Đưa yêu cầu tài liệu về bản nháp để tiếp tục chỉnh sửa?")) + '"' + (canLifecycle ? "" : " disabled") + ">" + safeText(uiText("docPlainDetail.state.backToDraftButton", "Đưa về bản nháp")) + "</button>";
     }
     const reviewTarget = state === "draft" ? "review" : "draft";
-    const reviewLabel = state === "draft" ? "Bắt đầu self-review" : "Trả về Draft";
-    const reviewConfirm = state === "draft" ? "Chuyển document brief sang Self-review?" : "Trả document brief về Draft để tiếp tục biên tập?";
-    return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-state" data-document-workspace-state="' + reviewTarget + '"' + routeAttr + attrs + ' data-portal-confirm="' + reviewConfirm + '"' + (canLifecycle ? "" : " disabled") + ">" + reviewLabel + '</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-state" data-document-workspace-state="approved"' + routeAttr + attrs + ' data-portal-confirm="Đánh dấu self-review hoàn tất? Điều này không đọc file, tạo output, job hoặc delivery."' + (canLifecycle && state === "review" ? "" : " disabled") + '>Đánh dấu review xong</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-state" data-document-workspace-state="archived"' + routeAttr + attrs + ' data-portal-confirm="Archive document brief? Processing plan và history riêng tư vẫn được giữ."' + (canLifecycle ? "" : " disabled") + ">Archive brief</button>";
+    const reviewLabel = state === "draft" ? uiText("docPlainDetail.state.startReviewButton", "Bắt đầu rà soát") : uiText("docPlainDetail.state.backToDraftButton", "Đưa về bản nháp");
+    const reviewConfirm = state === "draft" ? uiText("docPlainDetail.state.startReviewConfirm", "Chuyển yêu cầu tài liệu sang trạng thái rà soát?") : uiText("docPlainDetail.state.backToDraftConfirm", "Đưa yêu cầu tài liệu về bản nháp để tiếp tục chỉnh sửa?");
+    return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-state" data-document-workspace-state="' + reviewTarget + '"' + routeAttr + attrs + ' data-portal-confirm="' + safeText(reviewConfirm) + '"' + (canLifecycle ? "" : " disabled") + ">" + safeText(reviewLabel) + '</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-state" data-document-workspace-state="approved"' + routeAttr + attrs + ' data-portal-confirm="' + safeText(uiText("docPlainDetail.state.markReviewedConfirm", "Đánh dấu yêu cầu tài liệu này đã được rà soát xong? Thao tác này chỉ cập nhật trạng thái, chưa xử lý tệp.")) + '"' + (canLifecycle && state === "review" ? "" : " disabled") + ">" + safeText(uiText("docPlainDetail.state.markReviewedButton", "Đánh dấu đã rà soát")) + '</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-state" data-document-workspace-state="archived"' + routeAttr + attrs + ' data-portal-confirm="' + safeText(uiText("docPlainDetail.state.archiveConfirm", "Lưu trữ yêu cầu tài liệu này? Các bước xử lý và lịch sử phiên bản vẫn được giữ lại.")) + '"' + (canLifecycle ? "" : " disabled") + ">" + safeText(uiText("docPlainDetail.state.archiveButton", "Lưu trữ")) + "</button>";
   }
   function renderDocumentWorkspaceVersions(workspace, versions, context, route) {
-    if (!versions.length) return renderEmpty("Chưa có history", "Version đầu tiên xuất hiện khi document brief được lưu.", "↺");
+    if (!versions.length) return renderEmpty(uiText("docPlainDetail.versions.emptyTitle", "Chưa có lịch sử phiên bản"), uiText("docPlainDetail.versions.emptyBody", "Phiên bản đầu tiên sẽ xuất hiện sau khi bạn lưu yêu cầu tài liệu."), "↺");
     const canRestore = Boolean(context.capabilities && context.capabilities["document-workspace-restore-version"] === true && documentWorkspaceState(workspace.lifecycle || workspace.state) === "draft");
     const attrs = documentWorkspaceDataAttrs(workspace, null);
     return '<div class="portal-document-version-list">' + versions.map((version) => {
       const current = Number(version.revision) === Number(workspace.revision);
-      const restore = current ? '<span class="portal-form-note">Đang mở</span>' : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-restore-version" data-portal-route="' + safeText(route) + '"' + attrs + ' data-document-workspace-version="' + safeText(String(version.revision)) + '" data-portal-confirm="Khôi phục revision này thành một version mới?"' + (canRestore ? "" : " disabled") + ">Khôi phục v" + safeText(String(version.revision)) + "</button>";
-      return "<article><div><strong>v" + safeText(String(version.revision)) + " · " + safeText(String(version.title || "Document brief")) + "</strong><p>" + safeText(String(version.objective_excerpt || version.objective || version.source_excerpt || version.source_summary || "")) + "</p><small>" + safeText(String(version.created_at || "—")) + "</small></div>" + restore + "</article>";
+      const rev = safeText(String(version.revision));
+      const restore = current ? '<span class="portal-form-note">' + safeText(uiText("docPlainDetail.common.currentVersion", "Đang mở")) + "</span>" : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-restore-version" data-portal-route="' + safeText(route) + '"' + attrs + ' data-document-workspace-version="' + rev + '" data-portal-confirm="' + safeText(uiText("docPlainDetail.common.restoreVersionConfirm", "Khôi phục phiên bản {version} thành phiên bản mới? Các phiên bản trước vẫn được giữ lại.", { version: rev })) + '"' + (canRestore ? "" : " disabled") + ">" + safeText(uiText("docPlainDetail.common.restoreVersionButton", "Khôi phục phiên bản {version}", { version: rev })) + "</button>";
+      return "<article><div><strong>" + safeText(uiText("docPlainDetail.common.versionLabel", "Phiên bản {version}", { version: rev })) + " · " + safeText(String(version.title || uiText("docPlainDetail.request.untitled", "Yêu cầu tài liệu"))) + "</strong><p>" + safeText(String(version.objective_excerpt || version.objective || version.source_excerpt || version.source_summary || "")) + "</p><small>" + safeText(String(version.created_at || "—")) + "</small></div>" + restore + "</article>";
     }).join("") + "</div>";
   }
   function renderDocumentWorkspaceEvents(events) {
-    if (!events.length) return '<p class="portal-form-note">Chưa có hoạt động được ghi nhận.</p>';
-    return '<div class="portal-document-workspace-events">' + events.map((item) => '<div><span aria-hidden="true">•</span><span><strong>' + safeText(documentWorkspaceEventLabel(item.action)) + "</strong><small>v" + safeText(String(item.revision || 1)) + " · " + safeText(String(item.created_at || "—")) + "</small></span></div>").join("") + "</div>";
+    if (!events.length) return '<p class="portal-form-note">' + safeText(uiText("docPlainDetail.activity.empty", "Chưa có hoạt động được ghi nhận.")) + "</p>";
+    return '<div class="portal-document-workspace-events">' + events.map((item) => '<div><span aria-hidden="true">•</span><span><strong>' + safeText(documentWorkspaceEventLabel(item.action)) + "</strong><small>" + safeText(uiText("docPlainDetail.common.versionLabel", "Phiên bản {version}", { version: safeText(String(item.revision || 1)) })) + " · " + safeText(String(item.created_at || "—")) + "</small></span></div>").join("") + "</div>";
   }
   function renderDocumentWorkspaceActivity(events) {
-    return '<section class="portal-card portal-card-pad portal-document-workspace-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Feed chỉ hiển thị nhãn, revision và thời điểm; không chứa source text, asset path, URL, provider hay payment data.</p></div></div>' + renderDocumentWorkspaceEvents(events) + "</section>";
+    return '<section class="portal-card portal-card-pad portal-document-workspace-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainDetail.activity.kicker", "Nhật ký thao tác")) + '</span><h2 class="portal-card-title">' + safeText(uiText("docPlainDetail.activity.title", "Hoạt động gần đây")) + '</h2><p class="portal-card-subtitle">' + safeText(uiText("docPlainDetail.activity.subtitle", "Theo dõi các thay đổi và mốc thời gian đã lưu của yêu cầu tài liệu này.")) + "</p></div></div>" + renderDocumentWorkspaceEvents(events) + "</section>";
   }
   function renderDocumentWorkspaceDetail(page, context) {
     const detail = context.documentWorkspaceDetail && typeof context.documentWorkspaceDetail === "object" ? context.documentWorkspaceDetail : {};
     const workspace = detail.workspace && typeof detail.workspace === "object" && validDocumentWorkspaceId(detail.workspace.id) && String(detail.workspace.id) === String(page.recordId || "") ? detail.workspace : null;
     const canView = Boolean(context.capabilities && context.capabilities["document-workspace-view"] === true);
     if (!canView || !workspace) {
-      const title = canView ? "Không tìm thấy document brief" : "Document & PDF Workspace đang được bảo vệ";
-      const copy = canView ? "Server cần xác minh owner trước khi hiển thị brief, processing plan và history; dữ liệu cũ không được giữ trong browser." : "Đăng nhập bằng signed session và chờ feature flag server-side để mở brief của account hiện tại.";
-      return '<article class="portal-page portal-document-workspace-detail">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty(title, copy, ICONS.document) + '<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/document-workspace">Về Document Workspace</a></div></section></article>';
+      const title = canView ? uiText("docPlainDetail.missing.title", "Không tìm thấy yêu cầu tài liệu") : uiText("docPlainDetail.guarded.title", "Chưa thể mở yêu cầu tài liệu");
+      const copy = canView ? uiText("docPlainDetail.missing.body", "Yêu cầu này không tồn tại hoặc không thuộc tài khoản đang đăng nhập.") : uiText("docPlainDetail.guarded.body", "Bạn chưa thể xem yêu cầu này. Hãy kiểm tra tài khoản đang đăng nhập hoặc quay lại sau.");
+      return '<article class="portal-page portal-document-workspace-detail">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty(title, copy, ICONS.document) + '<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/document-workspace">' + safeText(uiText("docPlainDetail.common.backToWorkspace", "Quay lại danh sách yêu cầu")) + "</a></div></section></article>";
     }
     const route = page.routePath || page.path;
     const state = documentWorkspaceState(workspace.lifecycle || workspace.state);
@@ -20380,16 +20458,24 @@ function renderAutoPostHub(page, context) {
     const events = Array.isArray(detail.events) ? detail.events.filter((item) => item && typeof item === "object").slice(0, 24) : [];
     const estimate = detail.estimate && typeof detail.estimate === "object" ? detail.estimate : (context.documentWorkspaceEstimate && typeof context.documentWorkspaceEstimate === "object" ? context.documentWorkspaceEstimate : {});
     const attrs = documentWorkspaceDataAttrs(workspace, null);
-    const summary = '<section class="portal-document-workspace-detail-summary"><div><span class="portal-section-kicker">' + safeText(documentWorkspaceTypeLabel(workspace.document_type)) + " · " + safeText(String(workspace.language || "—")) + "</span><h2>" + safeText(String(workspace.title || "Document brief")) + "</h2><p>" + safeText(String(workspace.objective || workspace.objective_excerpt || workspace.source_summary || workspace.source_excerpt || "Chưa có mục tiêu hiển thị.")) + "</p>" + renderDocumentWorkspaceTags(workspace.tags) + "</div><dl><div><dt>Trạng thái</dt><dd>" + safeText(DOCUMENT_WORKSPACE_STATES[state] || "Được bảo vệ") + "</dd></div><div><dt>Revision</dt><dd>v" + safeText(String(workspace.revision || 1)) + "</dd></div><div><dt>Plans</dt><dd>" + safeText(String(activePlans.length)) + "</dd></div></dl></section>";
-    const editor = '<section class="portal-card portal-card-pad portal-document-workspace-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Document brief editor</span><h2 class="portal-card-title">Scope, target format & QA</h2><p class="portal-card-subtitle">Lưu bằng optimistic revision; self-review và archive là trạng thái server-side, không do browser tự suy diễn.</p></div>' + documentWorkspaceStateBadge(state) + '</div><form class="portal-form" data-portal-form data-portal-action="document-workspace-update" data-portal-route="' + safeText(route) + '"' + attrs + " novalidate>" + renderFields(documentWorkspaceFields(context), canUpdate, context, documentWorkspaceValues(workspace)) + '<div class="portal-form-footer"><span class="portal-form-note">Chỉ Draft có thể biên tập. Review, approved hoặc archived khóa plan và brief cho đến khi server trả về Draft.</span><div class="portal-inline-actions">' + documentWorkspaceStateActions(workspace, state, context, route) + '<button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + ">Lưu revision brief</button></div></div></form></section>";
+    const stateLabels = {
+      draft: ["docPlainDetail.state.draftLabel", "Bản nháp"],
+      review: ["docPlainDetail.state.reviewLabel", "Đang rà soát"],
+      approved: ["docPlainDetail.state.approvedLabel", "Đã rà soát"],
+      archived: ["docPlainDetail.state.archivedLabel", "Đã lưu trữ"]
+    };
+    const stateEntry = Object.prototype.hasOwnProperty.call(stateLabels, state) ? stateLabels[state] : null;
+    const stateLabel = stateEntry ? uiText(stateEntry[0], stateEntry[1]) : uiText("docPlainDetail.state.guarded", "Chưa thể chỉnh sửa");
+    const summary = '<section class="portal-document-workspace-detail-summary"><div><span class="portal-section-kicker">' + safeText(documentWorkspaceTypeLabel(workspace.document_type)) + " · " + safeText(String(workspace.language || "—")) + "</span><h2>" + safeText(String(workspace.title || uiText("docPlainDetail.request.untitled", "Yêu cầu tài liệu"))) + "</h2><p>" + safeText(String(workspace.objective || workspace.objective_excerpt || workspace.source_summary || workspace.source_excerpt || uiText("docPlainDetail.request.noObjective", "Chưa có mô tả mục tiêu."))) + "</p>" + renderDocumentWorkspaceTags(workspace.tags) + "</div><dl><div><dt>" + safeText(uiText("docPlainDetail.summary.statusLabel", "Trạng thái")) + "</dt><dd>" + safeText(stateLabel) + "</dd></div><div><dt>" + safeText(uiText("docPlainDetail.summary.versionLabel", "Phiên bản")) + "</dt><dd>" + safeText(String(workspace.revision || 1)) + "</dd></div><div><dt>" + safeText(uiText("docPlainDetail.summary.stepsLabel", "Bước xử lý")) + "</dt><dd>" + safeText(String(activePlans.length)) + "</dd></div></dl></section>";
+    const editor = '<section class="portal-card portal-card-pad portal-document-workspace-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainDetail.editor.kicker", "Thông tin yêu cầu")) + '</span><h2 class="portal-card-title">' + safeText(uiText("docPlainDetail.editor.title", "Chỉnh sửa yêu cầu tài liệu")) + '</h2><p class="portal-card-subtitle">' + safeText(uiText("docPlainDetail.editor.subtitle", "Cập nhật mục tiêu, định dạng mong muốn rồi lưu lại yêu cầu của bạn.")) + "</p></div>" + documentWorkspaceStateBadge(state) + '</div><form class="portal-form" data-portal-form data-portal-action="document-workspace-update" data-portal-route="' + safeText(route) + '"' + attrs + " novalidate>" + renderFields(documentWorkspaceFields(context), canUpdate, context, documentWorkspaceValues(workspace)) + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(uiText("docPlainDetail.editor.draftOnlyNote", "Chỉ chỉnh sửa được khi đang ở bản nháp. Khi chuyển sang rà soát hoặc lưu trữ, nội dung sẽ tạm khóa.")) + '</span><div class="portal-inline-actions">' + documentWorkspaceStateActions(workspace, state, context, route) + '<button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + ">" + safeText(uiText("docPlainDetail.editor.saveButton", "Lưu yêu cầu")) + "</button></div></div></form></section>";
     const estimateCard = state !== "draft"
-      ? '<section class="portal-card portal-card-pad portal-document-workspace-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Review estimate</span><h2 class="portal-card-title">Estimate đã được khóa</h2><p class="portal-card-subtitle">Document brief đang ở trạng thái self-review hoặc archive nên server không tính checklist lại. Trả về Draft khi bạn muốn tiếp tục chỉnh plan và review.</p></div>' + documentWorkspaceStateBadge(state) + "</div></section>"
+      ? '<section class="portal-card portal-card-pad portal-document-workspace-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainDetail.estimate.kicker", "Tóm tắt rà soát")) + '</span><h2 class="portal-card-title">' + safeText(uiText("docPlainDetail.estimate.lockedTitle", "Tóm tắt đã tạm khóa")) + '</h2><p class="portal-card-subtitle">' + safeText(uiText("docPlainDetail.estimate.lockedSubtitle", "Yêu cầu đang ở trạng thái rà soát hoặc lưu trữ. Hãy đưa về bản nháp nếu bạn muốn tiếp tục chỉnh sửa các bước xử lý.")) + "</p></div>" + documentWorkspaceStateBadge(state) + "</div></section>"
       : documentWorkspaceEstimateMarkup(estimate, activePlans);
-    const planCreate = '<section class="portal-card portal-card-pad portal-document-plan-create"><div class="portal-card-header"><div><span class="portal-section-kicker">Processing plan board</span><h2 class="portal-card-title">Thêm processing plan</h2><p class="portal-card-subtitle">Mỗi plan có intent, scope, Asset Vault metadata và history riêng. OCR, dịch và convert chỉ được ghi intent guarded, không chạy engine.</p></div>' + badge(canPlanCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="document-plan-create" data-portal-route="' + safeText(route) + '"' + attrs + " novalidate>" + renderFields(documentPlanFields(context), canPlanCreate, context, { operation: "organize" }) + '<div class="portal-form-footer"><span class="portal-form-note">Chỉ Asset Vault UUID metadata được gửi. Không có raw upload, file path, preview, provider/OCR/translation call hoặc output.</span><button class="portal-button portal-button--primary" type="submit"' + (canPlanCreate ? "" : " disabled") + ">Thêm processing plan</button></div></form></section>";
-    const tools = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Separate deterministic utilities</span><h2 class="portal-card-title">Cần xử lý file đã được kiểm chứng?</h2><p class="portal-card-subtitle">Các utility PDF dưới đây là workflow Web-native riêng với input/output, history và policy riêng. Chúng không khởi chạy từ plan, không chia sẻ lifecycle và không biến brief thành output.</p></div>' + badge("read_only") + '</div><div class="portal-document-workspace-tool-links"><a class="portal-button portal-button--quiet" href="/documents/split">Tách PDF</a><a class="portal-button portal-button--quiet" href="/documents/merge">Gộp PDF</a><a class="portal-button portal-button--quiet" href="/documents/compress">Tối ưu PDF</a><a class="portal-button portal-button--quiet" href="/documents/image-to-pdf">Ảnh → PDF</a><a class="portal-button portal-button--quiet" href="/documents/pdf-to-images">PDF → ảnh</a><a class="portal-button portal-button--quiet" href="/documents/pdf-to-word">PDF text → Word</a></div></section>';
-    const planCards = plans.length ? plans.map((plan, index) => renderDocumentPlanCard(plan, workspace, context, route, index, plans.length)).join("") : renderEmpty("Chưa có processing plan", "Thêm plan thủ công để tách scope và thứ tự review. Workspace không tự chạy tiện ích hoặc tạo file.", ICONS.document);
-    const planLibrary = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Plan library</span><h2 class="portal-card-title">Thứ tự & review notes</h2><p class="portal-card-subtitle">Mọi card là metadata authoring. Asset name được hiển thị từ owner-scoped metadata, không phải file preview, path hay URL.</p></div></div><div class="portal-document-plan-grid">' + planCards + "</div></section>";
-    const history = '<div class="portal-document-workspace-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử document brief</h2><p class="portal-card-subtitle">Khôi phục version tạo revision mới, không xóa history cũ.</p></div></div>' + renderDocumentWorkspaceVersions(workspace, versions, context, route) + "</section>" + renderDocumentWorkspaceActivity(events) + "</div>";
+    const planCreate = '<section class="portal-card portal-card-pad portal-document-plan-create"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainDetail.planCreate.kicker", "Các bước xử lý")) + '</span><h2 class="portal-card-title">' + safeText(uiText("docPlainDetail.planCreate.title", "Thêm bước xử lý")) + '</h2><p class="portal-card-subtitle">' + safeText(uiText("docPlainDetail.planCreate.subtitle", "Ghi rõ công việc cần làm, tệp nguồn và tệp tham khảo cho từng bước để dễ theo dõi.")) + "</p></div>" + badge(canPlanCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="document-plan-create" data-portal-route="' + safeText(route) + '"' + attrs + " novalidate>" + renderFields(documentPlanFields(context), canPlanCreate, context, { operation: "organize" }) + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(uiText("docPlainDetail.planCreate.note", "Thêm bước xử lý chỉ lưu ghi chú của bạn, chưa xử lý hay tạo tệp mới.")) + '</span><button class="portal-button portal-button--primary" type="submit"' + (canPlanCreate ? "" : " disabled") + ">" + safeText(uiText("docPlainDetail.planCreate.submitButton", "Thêm bước xử lý")) + "</button></div></form></section>";
+    const tools = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainDetail.tools.kicker", "Công cụ tài liệu")) + '</span><h2 class="portal-card-title">' + safeText(uiText("docPlainDetail.tools.title", "Mở nhanh công cụ xử lý PDF")) + '</h2><p class="portal-card-subtitle">' + safeText(uiText("docPlainDetail.tools.subtitle", "Các công cụ dưới đây mở ở trang riêng và hoạt động độc lập với yêu cầu này.")) + "</p></div>" + badge("read_only") + '</div><div class="portal-document-workspace-tool-links"><a class="portal-button portal-button--quiet" href="/documents/split">' + safeText(uiText("docPlainDetail.tools.split", "Tách PDF")) + '</a><a class="portal-button portal-button--quiet" href="/documents/merge">' + safeText(uiText("docPlainDetail.tools.merge", "Gộp PDF")) + '</a><a class="portal-button portal-button--quiet" href="/documents/compress">' + safeText(uiText("docPlainDetail.tools.compress", "Tối ưu PDF")) + '</a><a class="portal-button portal-button--quiet" href="/documents/image-to-pdf">' + safeText(uiText("docPlainDetail.tools.imageToPdf", "Ảnh → PDF")) + '</a><a class="portal-button portal-button--quiet" href="/documents/pdf-to-images">' + safeText(uiText("docPlainDetail.tools.pdfToImages", "PDF → ảnh")) + '</a><a class="portal-button portal-button--quiet" href="/documents/pdf-to-word">' + safeText(uiText("docPlainDetail.tools.pdfToWord", "Chữ trong PDF → Word")) + "</a></div></section>";
+    const planCards = plans.length ? plans.map((plan, index) => renderDocumentPlanCard(plan, workspace, context, route, index, plans.length)).join("") : renderEmpty(uiText("docPlainDetail.plans.emptyTitle", "Chưa có bước xử lý nào"), uiText("docPlainDetail.plans.emptyBody", "Thêm các bước xử lý để ghi chú công việc cần làm và theo dõi thứ tự thực hiện."), ICONS.document);
+    const planLibrary = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainDetail.planList.kicker", "Danh sách bước xử lý")) + '</span><h2 class="portal-card-title">' + safeText(uiText("docPlainDetail.planList.title", "Thứ tự và ghi chú xử lý")) + '</h2><p class="portal-card-subtitle">' + safeText(uiText("docPlainDetail.planList.subtitle", "Xem lại mô tả, tệp đính kèm và sắp xếp thứ tự các bước xử lý cho tài liệu.")) + '</p></div></div><div class="portal-document-plan-grid">' + planCards + "</div></section>";
+    const history = '<div class="portal-document-workspace-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(uiText("docPlainDetail.history.kicker", "Lịch sử phiên bản")) + '</span><h2 class="portal-card-title">' + safeText(uiText("docPlainDetail.history.title", "Các phiên bản đã lưu")) + '</h2><p class="portal-card-subtitle">' + safeText(uiText("docPlainDetail.history.subtitle", "Khôi phục nội dung trước đây sẽ tạo một phiên bản mới; các phiên bản cũ vẫn được giữ lại.")) + "</p></div></div>" + renderDocumentWorkspaceVersions(workspace, versions, context, route) + "</section>" + renderDocumentWorkspaceActivity(events) + "</div>";
     return '<article class="portal-page portal-document-workspace-detail">' + renderHero(page, context) + summary + '<div class="portal-document-workspace-detail-grid">' + editor + estimateCard + "</div>" + planCreate + tools + planLibrary + history + renderDocumentWorkspaceBoundary() + "</article>";
   }
 

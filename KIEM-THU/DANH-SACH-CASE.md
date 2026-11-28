@@ -1,5 +1,15 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## DOCUMENT-NATURAL-20261128 — Issue689, kiểm tại máy
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| DOC-WORDING | nặng | Mở danh sách/tạo/thiếu quyền/thiếu bản ghi/chi tiết4trạng thái VI/EN/ZH | Chữ tự nhiên, không từ triển khai | Raw34 |
+| DOC-CONTROLS | nặng | Đọc biểu mẫu, chọn loại và gõ nội dung | Nút/quyền/tên/giá trị/giới hạn/data khách giữ | Raw34;12browser+2VI-dark |
+| DOC-REPLY | nặng | Lưu giả lập và phản hồi lỗi409 | Lời hiển thị tự nhiên, raw result/data/error giữ | Actual helper/transport giả tại máy, không HTTP thật |
+| DOC-HISTORY | nặng | Nguồn/khóa thiếu/đổi/lặp và nội dung lạ | Chỉ60record/304giá trị đúng được đưa về lịch sử |176Node;9Python theo ledger |
+| DOC-DELIVERY | nặng | CI→merge→Webdeploy→runtime/assets | Bằng chứng từng bước, không suy phiênproduction | Chưa phát hành;PHIEN-DOCUMENT-NATURAL-20261128 |
+
 ## AUTH-RETURN-01 — Issue689, phiên AUTH-RETURN-20261128
 
 | Case | Thao tác | Điều kiện đạt | Bằng chứng |

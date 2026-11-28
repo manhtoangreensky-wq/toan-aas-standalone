@@ -5,11 +5,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import subprocess
+from tests.helpers.document_natural_copy_historical import document_natural_historical_source
 
 
 ROOT = Path(__file__).parents[1]
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+PORTAL = document_natural_historical_source(PORTAL, "static/portal/portal.js")
+INTEGRATION = document_natural_historical_source(INTEGRATION, "static/portal/integration.js")
 
 
 def _workspace_helpers() -> str:
