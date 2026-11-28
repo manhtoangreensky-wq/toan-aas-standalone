@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import vm from 'node:vm';
 import {adminGuardCustomerCopyHistoricalSource as inverse,adminGuardCustomerCopyHistoricalSnapshot as snapshot} from './helpers/admin-guard-customer-copy-historical.mjs';
+import {documentNaturalHistoricalSource} from './helpers/document-natural-copy-historical.mjs';
 
 const fixture=JSON.parse(fs.readFileSync(new URL('./fixtures/admin-guard-customer-copy-history.json',import.meta.url),'utf8'));
 const base='5f316f29c9b8657c4018f5174c4c4ce4f16c1e5f';
@@ -20,7 +21,7 @@ const current=new Map(files.map(file=>{
   return[file,source];
 }));
 const owners=file=>fixture.owners.filter(row=>row.file===file);
-const physical=file=>lf(fs.readFileSync(new URL('../'+file,import.meta.url),'utf8'));
+const physical=file=>documentNaturalHistoricalSource(lf(fs.readFileSync(new URL('../'+file,import.meta.url),'utf8')),file);
 const reject=(source,file)=>assert.throws(()=>inverse(source,file),/Unreviewed Admin guard customer copy history/);
 function recordPiece(row){
   if(row.after==='')return fixture.owners.find(owner=>owner.file===row.file&&owner.name==='renderSupportAdminBase').after;

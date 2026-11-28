@@ -45,62 +45,74 @@
   },
   "partial_remote_revalidated_at": "2026-09-12",
   "local_files_refreshed_at": "2026-11-28",
-  "local_files_refresh_scope": "AUTH-RETURN-01:2exacthelperpairs;88primary;253source;120Node/120Pythonpressure;8selectedhistoryrecovery/2Pythonphysical;4mountedflows8PNG;CI46053422969metadataFAILcorrected;applicationunchanged.",
+  "local_files_refresh_scope": "DOCUMENT-NATURAL:3appfiles;60records;304keys912values;34raw/176Node/9uniquePython;12rendererViews+2correctedVIformViews;priorVoiceMusic6docs;no app behavior/credentials/money/provider/data changes.",
   "current_verification_session": {
-    "id": "AUTH-RETURN-20261128",
-    "base_sha": "fc9aef439d8fe7ecb00a2c68a167dad501f54eb9",
-    "branch": "codex/auth-lifecycle-20261128",
+    "id": "DOCUMENT-NATURAL-20261128",
+    "base_sha": "cf94b23e6a26010e88ebcd33b36623204c784c9a",
+    "branch": "codex/auth-draft-isolation-20261128",
     "tracker_issue": 689,
-    "build_contract": 7225293077,
-    "manifest": "KIEM-THU/PHIEN-AUTH-RETURN-20261128.md",
-    "case_ids": [
-      "AUTH-RETURN-VALID",
-      "AUTH-RETURN-UNSAFE",
-      "AUTH-RETURN-ACCOUNT",
-      "AUTH-RETURN-HISTORY",
-      "AUTH-RETURN-DELIVERY"
+    "build_contract": 7234371401,
+    "amendments": [
+      7234470992,
+      7234531168
     ],
-    "status": "LOCAL_GATES_PASS_CI_METADATA_RECOVERY",
+    "manifest": "KIEM-THU/PHIEN-DOCUMENT-NATURAL-20261128.md",
+    "case_ids": [
+      "DOC-WORDING",
+      "DOC-CONTROLS",
+      "DOC-REPLY",
+      "DOC-HISTORY",
+      "DOC-DELIVERY"
+    ],
+    "status": "LOCAL_TARGETED_PASS_CI_PENDING",
     "model": "gemini-4-hydrogen-xhigh",
-    "worker_sessions": 2,
+    "worker_sessions": 4,
+    "worker_invocations": 8,
     "worker_code_failures": 0,
-    "exact_proposal_records": 2,
-    "application_files": 2,
+    "root_spec_missing_read_action_list": 1,
+    "exact_proposal_records": 60,
+    "application_files": 3,
     "coordinator_application_logic_authored": 0,
     "application_lf_sha256": {
-      "static/portal/portal-auth.js": "dc147df3f031b4f7c5b83196ac827017081ae4382109a803a407f953d0ef3cd2",
-      "static/portal/integration.js": "9d1d5b516ead61c04623b8a4e8be2beca0ca1a03388667de7a9a3ead5ebf57bb"
+      "static/portal/portal.js": "498f7f7569622e43656c61f204271239aa3a02345abcf349ef36077381ec8c51",
+      "static/portal/integration.js": "61b491d11b10bfc59df60371a856107d579a600f4702f407038a91eeeb23a5ff",
+      "static/portal/portal-i18n.js": "fd9e00face3a94b28f60a1bb69c2543a3948dae9a458c6d556ce2bc0ca3a895e"
     },
-    "primary_passed": 88,
-    "source_consumers_passed": 253,
-    "history_node_pressure_passed": 120,
-    "history_python_pressure_passed": 120,
-    "historical_initial_passed": 238,
-    "historical_initial_failed": 3,
-    "historical_recovery_selected_passed": 8,
-    "python_physical_recovery_passed": 2,
-    "raw_safety_baseline_equivalent_failures": 15,
-    "counts_overlap_do_not_sum": true,
-    "old_pins_fixtures_expectations_held": true,
+    "new_message_keys": 304,
+    "new_locale_values": 912,
+    "primary_passed": 34,
+    "related_history_and_pressure_node_passed": 176,
+    "python_initial_passed": 5,
+    "python_initial_failed": 4,
+    "python_failed_only_recovered": 4,
+    "python_unique_cases_with_pass": 9,
+    "source_syntax_files": 3,
+    "python_compile_files": 4,
+    "diff_check_passed": true,
+    "independent_static_review": "APPROVE_NO_FINDINGS",
     "newest_acceptance": "RAW_PHYSICAL",
-    "mounted_flows": 4,
-    "mounted_screenshots": 8,
-    "mounted_viewport": "390x844",
-    "mounted_errors": 0,
-    "mounted_public_locales": [
+    "old_pins_fixtures_expectations_held": true,
+    "counts_overlap_do_not_sum": true,
+    "rendered_http_views": 12,
+    "rendered_locales": [
       "vi",
       "en",
       "zh"
     ],
-    "mounted_signed_profile_locale": "vi",
-    "mounted_wrong_login_logout_account_switch": true,
-    "mounted_server_exit": 0,
-    "previous_ci": 46053422969,
-    "previous_ci_critical_passed": 294,
-    "previous_ci_critical_failed": 1,
+    "rendered_widths": [
+      390,
+      1440
+    ],
+    "corrected_vi_dark_form_views": 2,
+    "rendered_errors": 0,
+    "browser_scope": "Physical renderer/styles and native controls; not full signed application submission",
+    "initial_browser_wrapper_limit": "Incorrect theme attribute and scroll-clipped screenshots; not contrast/full-page proof",
     "ci": "EXACT_NEW_HEAD_PENDING",
     "deploy": "NOT_DEPLOYED",
     "signed_production_ui": "NOT_TESTED",
+    "prior_voice_draft_cases_at_base": 3,
+    "prior_music_draft_cases_at_base": 3,
+    "prior_drafts_not_rerun": true,
     "full_auth_draft_race_lifecycle": "OPEN",
     "remaining_responsive_ax": "OPEN",
     "device_safari": "OPEN",
@@ -109,7 +121,38 @@
     "whole_goal_complete": false,
     "provider_calls": 0,
     "wallet_mutations": 0,
-    "production_data_writes": 0
+    "production_data_writes": 0,
+    "tester_metadata_passed": 32,
+    "tester_metadata_windows_baseline_failures": 1,
+    "tester_metadata_new_failures": 0,
+    "linux_posix_permission_case_required": true,
+    "ci1": {
+      "run": 46113947927,
+      "head": "8dd3ea28d226143e416978ba2085ac5a1da9a9ed",
+      "passed": 205,
+      "failed": 3,
+      "reason": "Historical auth-return reader needs approved newer copy epoch inverse",
+      "node_recovery_passed": 120,
+      "python_recovery_passed": 120,
+      "application_changes_for_recovery": 0
+    },
+    "ci2": {
+      "run": 46114374438,
+      "head": "2cf8a03198faf5f9558c2209c9f273054ae8f621",
+      "first_new_checks_passed": 50,
+      "auth_checks_passed": 208,
+      "document_python_group_passed": 45,
+      "document_python_group_failed": 1,
+      "source_python_files": 20,
+      "source_python_group_passed": 737,
+      "source_python_group_failed": 9,
+      "failed_only_recovered": 9,
+      "source_python_type_guard_order_failures_by_root": 3,
+      "node_physical_reader_failed_only_recovered": 11,
+      "application_changes_for_recovery": 0,
+      "old_fixture_hashes_and_assertions_held": true,
+      "broad_run_included_unchanged_backend_and_was_aborted": true
+    }
   },
   "prior_gallery_customer_copy_verification_session": {
     "id": "GALLERY-CUSTOMER-COPY-20261127",
@@ -1042,15 +1085,15 @@
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
-      "lines": 2229,
-      "bytes": 231359,
-      "sha256": "ede934c9d8e8113a472f40dfe65a0c1d39f8fbd8f88ee6cd05cc0e17e87f2b65"
+      "lines": 2239,
+      "bytes": 232410,
+      "sha256": "ebfe87c5d67f288254e295d89403373783fbf7c241f559e81d370e75d17b0268"
     },
     {
       "path": "KIEM-THU/HUONG-DAN-TESTER.md",
-      "lines": 792,
-      "bytes": 60513,
-      "sha256": "08bb915b81023f252f1dee8ba8ae610be11b410cb6c39badafab5da6ab00b0fc"
+      "lines": 801,
+      "bytes": 61088,
+      "sha256": "1792aabcc9e59b76a9f74a757f1d6b6c17efbfc31e4caaa57d70951488664149"
     },
     {
       "path": "KIEM-THU/PHIEN-ADMIN-GUARD-CUSTOMER-COPY-20261127.md",
@@ -1081,6 +1124,12 @@
       "lines": 82,
       "bytes": 4489,
       "sha256": "2f7ce428bef7d41c1d1f49b08635ca291ed9e24c11a68ea0323b6744a490426d"
+    },
+    {
+      "path": "KIEM-THU/PHIEN-DOCUMENT-NATURAL-20261128.md",
+      "lines": 77,
+      "bytes": 5146,
+      "sha256": "603d645f27af830dfb16e106509949a513c060824d61cc651745c9d01a3b348b"
     },
     {
       "path": "KIEM-THU/PHIEN-FAMILY-CHROME-NATIVE-20261127.md",
@@ -1143,6 +1192,12 @@
       "sha256": "f304dafb20d5e9ae2139f84881db2c599216f3c4c8537cd5e8009f3fbd18945e"
     },
     {
+      "path": "docs/superpowers/plans/2026-10-16-webapp-uiux-product-parity-master-plan-r217.md",
+      "lines": 294,
+      "bytes": 17762,
+      "sha256": "bb85f3eff3b1449f4e0eab07f92f0d554d0ce99c361f4001cdb40b0efcb6b19c"
+    },
+    {
       "path": "docs/superpowers/plans/2026-11-26-feature-catalog-descriptions108.md",
       "lines": 30,
       "bytes": 2060,
@@ -1189,6 +1244,18 @@
       "lines": 61,
       "bytes": 3448,
       "sha256": "544585a08603f39d11f7d8410f7b21e5d10e2aeb00b29277456899e15a622030"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-11-28-auth-draft-music-mounted.md",
+      "lines": 19,
+      "bytes": 1267,
+      "sha256": "00166b41542ca600862ac12ce02fb40d7a772ce31fd2651d214ba3a76544984c"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-11-28-auth-draft-voice-mounted.md",
+      "lines": 30,
+      "bytes": 2004,
+      "sha256": "f9f16996b3c7d6b769c8e2bb0f9df4d3bba98db33a36233c3c2b54c8e9eab95f"
     },
     {
       "path": "docs/superpowers/plans/2026-11-28-auth-return-html-targets.md",
@@ -1257,10 +1324,28 @@
       "sha256": "1d45e72105ba427606e807b54eba2e9715a18ae26a4553f71a8080410189538a"
     },
     {
+      "path": "docs/superpowers/specs/2026-11-28-auth-draft-music-mounted.md",
+      "lines": 70,
+      "bytes": 4242,
+      "sha256": "52047db47749795ffe470685143f460aa6890def43b0cffc3d472aa1c5b7112a"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-28-auth-draft-voice-mounted.md",
+      "lines": 103,
+      "bytes": 6348,
+      "sha256": "8bc98c5b7fa4e49d00ecee9b7b6d97e58819286348d30011583a4996e781e597"
+    },
+    {
       "path": "docs/superpowers/specs/2026-11-28-auth-return-html-targets.md",
       "lines": 126,
       "bytes": 7282,
       "sha256": "35c63f68233f4dda6b82c8cc6037e8926467d8e9f81e7fe23044ef1522352400"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-11-28-document-natural-wording.md",
+      "lines": 125,
+      "bytes": 9199,
+      "sha256": "76dec8a50f88ad27aefd0b6b81ee93383d345899e9a7a07f656a575b5b751564"
     },
     {
       "path": "reports/prepush/AUTH-RETURN-20261128.md",
@@ -1269,10 +1354,28 @@
       "sha256": "64e6be6076627204cccce4900076f09c805e742ba263a77a3f4c06c29956f8c2"
     },
     {
+      "path": "reports/prepush/DOCUMENT-NATURAL-20261128.md",
+      "lines": 82,
+      "bytes": 5243,
+      "sha256": "a03ea5b331fe3a248ac129cd4cc44fb7e8fc5fd29d8e3563429fcd7caef0c922"
+    },
+    {
       "path": "reports/tester/ADMIN-GUARD-CUSTOMER-COPY-20261127.md",
       "lines": 42,
       "bytes": 2376,
       "sha256": "d8505b0821a3a6c657767c0627ba4c2a2ae27608eb58d700eefe20d9488d7916"
+    },
+    {
+      "path": "reports/tester/AUTH-DRAFT-MUSIC-20261128.md",
+      "lines": 43,
+      "bytes": 2339,
+      "sha256": "13064dd6a290b36b88b7865f54021a97164cb254b4838426c8dd8f8f1be875cc"
+    },
+    {
+      "path": "reports/tester/AUTH-DRAFT-VOICE-20261128.md",
+      "lines": 51,
+      "bytes": 2900,
+      "sha256": "37e4fa89e50e5d6f85cc6c858372fc5916a844beb79ce7764df69a228e73050e"
     },
     {
       "path": "reports/tester/CATALOGUE-DESCRIPTIONS108-20261126.md",
@@ -1331,20 +1434,20 @@
     "github_mutations": 0
   },
   "active_release": {
-    "id": "AUTH-RETURN-20261128",
-    "base_sha": "fc9aef439d8fe7ecb00a2c68a167dad501f54eb9",
+    "id": "DOCUMENT-NATURAL-20261128",
+    "base_sha": "cf94b23e6a26010e88ebcd33b36623204c784c9a",
     "case_count": 5,
     "case_ids": [
-      "AUTH-RETURN-VALID",
-      "AUTH-RETURN-UNSAFE",
-      "AUTH-RETURN-ACCOUNT",
-      "AUTH-RETURN-HISTORY",
-      "AUTH-RETURN-DELIVERY"
+      "DOC-WORDING",
+      "DOC-CONTROLS",
+      "DOC-REPLY",
+      "DOC-HISTORY",
+      "DOC-DELIVERY"
     ],
-    "status": "LOCAL_GATES_PASS_CI_METADATA_RECOVERY",
-    "manifest": "KIEM-THU/PHIEN-AUTH-RETURN-20261128.md",
+    "status": "LOCAL_TARGETED_PASS_CI_PENDING",
+    "manifest": "KIEM-THU/PHIEN-DOCUMENT-NATURAL-20261128.md",
     "signed_ui_live": "NOT_TESTED",
-    "legacy_push_gate_field": "Historical snapshot retained; AUTH-RETURN prepush report defines current release."
+    "legacy_push_gate_field": "Historical snapshot retained; DOCUMENT-NATURAL prepush defines current release."
   },
   "prior_media_audio_read_feedback_session": {
     "id": "MEDIA-AUDIO-READ-FEEDBACK-20261121",
@@ -2299,5 +2402,97 @@
     "manifest": "KIEM-THU/PHIEN-ADMIN-GUARD-CUSTOMER-COPY-20261127.md",
     "signed_ui_live": "NOT_TESTED",
     "legacy_push_gate_field": "Historical snapshot retained; the AGC prepush report defines the current gate."
+  },
+  "prior_auth_return_verification_session": {
+    "id": "AUTH-RETURN-20261128",
+    "base_sha": "fc9aef439d8fe7ecb00a2c68a167dad501f54eb9",
+    "branch": "codex/auth-lifecycle-20261128",
+    "tracker_issue": 689,
+    "build_contract": 7225293077,
+    "manifest": "KIEM-THU/PHIEN-AUTH-RETURN-20261128.md",
+    "case_ids": [
+      "AUTH-RETURN-VALID",
+      "AUTH-RETURN-UNSAFE",
+      "AUTH-RETURN-ACCOUNT",
+      "AUTH-RETURN-HISTORY",
+      "AUTH-RETURN-DELIVERY"
+    ],
+    "status": "LOCAL_GATES_PASS_CI_METADATA_RECOVERY",
+    "model": "gemini-4-hydrogen-xhigh",
+    "worker_sessions": 2,
+    "worker_code_failures": 0,
+    "exact_proposal_records": 2,
+    "application_files": 2,
+    "coordinator_application_logic_authored": 0,
+    "application_lf_sha256": {
+      "static/portal/portal-auth.js": "dc147df3f031b4f7c5b83196ac827017081ae4382109a803a407f953d0ef3cd2",
+      "static/portal/integration.js": "9d1d5b516ead61c04623b8a4e8be2beca0ca1a03388667de7a9a3ead5ebf57bb"
+    },
+    "primary_passed": 88,
+    "source_consumers_passed": 253,
+    "history_node_pressure_passed": 120,
+    "history_python_pressure_passed": 120,
+    "historical_initial_passed": 238,
+    "historical_initial_failed": 3,
+    "historical_recovery_selected_passed": 8,
+    "python_physical_recovery_passed": 2,
+    "raw_safety_baseline_equivalent_failures": 15,
+    "counts_overlap_do_not_sum": true,
+    "old_pins_fixtures_expectations_held": true,
+    "newest_acceptance": "RAW_PHYSICAL",
+    "mounted_flows": 4,
+    "mounted_screenshots": 8,
+    "mounted_viewport": "390x844",
+    "mounted_errors": 0,
+    "mounted_public_locales": [
+      "vi",
+      "en",
+      "zh"
+    ],
+    "mounted_signed_profile_locale": "vi",
+    "mounted_wrong_login_logout_account_switch": true,
+    "mounted_server_exit": 0,
+    "previous_ci": 46053422969,
+    "previous_ci_critical_passed": 294,
+    "previous_ci_critical_failed": 1,
+    "ci": "EXACT_NEW_HEAD_PENDING",
+    "deploy": "NOT_DEPLOYED",
+    "signed_production_ui": "NOT_TESTED",
+    "full_auth_draft_race_lifecycle": "OPEN",
+    "remaining_responsive_ax": "OPEN",
+    "device_safari": "OPEN",
+    "client_offline_cache": "OPEN",
+    "motion": "LAST_STEP_OPEN",
+    "whole_goal_complete": false,
+    "provider_calls": 0,
+    "wallet_mutations": 0,
+    "production_data_writes": 0,
+    "final_delivery": {
+      "pr": 821,
+      "ci": 46056807355,
+      "deploy": 46059896569,
+      "runtime_sha": "cf94b23e6a26010e88ebcd33b36623204c784c9a",
+      "tested_head": "001eb75fcdf4adb9040e7aa15aa0ad813ce77a45",
+      "issue_receipt": 7226125049,
+      "pr_receipt": 7227030166,
+      "receipt_readback_exact": true,
+      "signed_production_ui": "NOT_TESTED"
+    }
+  },
+  "prior_auth_return_active_release": {
+    "id": "AUTH-RETURN-20261128",
+    "base_sha": "fc9aef439d8fe7ecb00a2c68a167dad501f54eb9",
+    "case_count": 5,
+    "case_ids": [
+      "AUTH-RETURN-VALID",
+      "AUTH-RETURN-UNSAFE",
+      "AUTH-RETURN-ACCOUNT",
+      "AUTH-RETURN-HISTORY",
+      "AUTH-RETURN-DELIVERY"
+    ],
+    "status": "LOCAL_GATES_PASS_CI_METADATA_RECOVERY",
+    "manifest": "KIEM-THU/PHIEN-AUTH-RETURN-20261128.md",
+    "signed_ui_live": "NOT_TESTED",
+    "legacy_push_gate_field": "Historical snapshot retained; AUTH-RETURN prepush report defines current release."
   }
 }

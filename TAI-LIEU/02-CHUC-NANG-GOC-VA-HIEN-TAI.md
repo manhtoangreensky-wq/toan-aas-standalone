@@ -1,5 +1,22 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 28/11/2026 — phần yêu cầu tài liệu: đổi chữ, giữ chức năng
+
+Nguồn đối chiếu: phần tài liệu riêng trong copyfast_document_workspace.py,
+test_document_workspace_portal_contracts.py và BASE CF94 đã giao PR821.
+
+| Trước | Ứng viên đã đo tại máy | Giữ nguyên |
+|---|---|---|
+| Nhãn pha QA/brief/plan/metadata | Yêu cầu tài liệu, bước xử lý, rà soát và lời hướng dẫn tự nhiên | Tên trường, giá trị, giới hạn, quyền, dữ liệu khách |
+| Lưu kế hoạch được giải thích bằng chi tiết triển khai | Nói rõ chỉ ghi yêu cầu, xử lý tệp ở công cụ riêng | Không chạy đọc chữ/dịch/chuyển tệp từ kế hoạch |
+| Lời báo máy chủ có thể lộ từ nội bộ | Bản sao hiển thị dùng câu theo ngôn ngữ đang chọn | Kết quả/data gốc, lỗi/status/payload và thao tác gửi |
+| Kiểm tra cũ khóa chữ cũ | Input lịch sử hữu hạn theo đúng60record/304giá trị | Pin, fixture, assertion cũ; raw primary vẫn đọc app thật |
+
+34primary,176Node liên quan/lịch sử và9Python theo ledger đã đạt.
+Ứng viên chưa phát hành; không suy chức năng xử lý tệp thật hoặc toàn goal
+đã hoàn thành từ việc đổi chữ. Nguồn ban đầu nói về chuẩn bị tài liệu,
+không phải một bộ thực thi mọi loại công việc tài liệu.
+
 ## 28/11/2026 — AUTH-RETURN-01, không thay cơ chế đăng nhập
 
 AGC đã giao PR820/runtimefc9aef43; các câu “chưa phát hành AGC” bên dưới

@@ -11331,24 +11331,35 @@
     const normalized = String(path || "").split("?")[0];
     return normalized === "/document-workspace" || normalized === "/document-workspace/new" || Boolean(documentWorkspaceIdFromPath(normalized));
   }
+  function documentWorkspaceFeedbackText(key, fallback, params) {
+    const fullKey = "docPlainFeedback." + key;
+    const i18n = typeof window !== "undefined" && window ? window.TOANAASI18n : null;
+    if (i18n && typeof i18n.t === "function") {
+      const translated = i18n.t(fullKey, params);
+      const text = typeof translated === "string" ? translated.trim() : "";
+      if (text && text !== fullKey && text !== key) return text;
+    }
+    return fallback;
+  }
   function documentWorkspaceSafetyError(...values) {
     const text = values.map((value) => String(value || "")).join("\n");
-    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Document & PDF Workspace không nhận ký tự điều khiển không an toàn.";
+    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return documentWorkspaceFeedbackText("safetyControl", "Nội dung có chứa ký tự ẩn không hợp lệ, vui lòng xóa rồi thử lại.");
     const sensitiveKind = supportSensitiveContentKind(text);
-    if (sensitiveKind === "manual-payment") return "Document & PDF Workspace không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
-    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "Document & PDF Workspace không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
-    if (/(?:file|javascript|data):|https?:\/\/|\bwww\./i.test(text)) return "Document & PDF Workspace không nhận URL hoặc scheme tệp; hãy chọn Asset Vault reference đã được kiểm tra quyền sở hữu.";
-    if (/\b(?:(?:provider|engine|telegram|bot|job|worker)[ _-]*(?:id|ref(?:erence)?|token|handle)|storage[ _-]*key)\b\s*(?::|=|\bis\b)\s*\S+/i.test(text)) return "Document & PDF Workspace không nhận provider, Bot, job, worker hoặc file handle trong metadata.";
+    if (sensitiveKind === "manual-payment") return documentWorkspaceFeedbackText("safetySensitive", "Vui lòng không nhập thông tin đăng nhập, mã xác nhận, thông tin thẻ hoặc chứng từ thanh toán.");
+    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return documentWorkspaceFeedbackText("safetySensitive", "Vui lòng không nhập thông tin đăng nhập, mã xác nhận, thông tin thẻ hoặc chứng từ thanh toán.");
+    if (/(?:file|javascript|data):|https?:\/\/|\bwww\./i.test(text)) return documentWorkspaceFeedbackText("safetyLink", "Vui lòng không dán liên kết hoặc đường dẫn tệp vào đây; hãy chọn tệp từ danh sách của bạn.");
+    if (/\b(?:(?:provider|engine|telegram|bot|job|worker)[ _-]*(?:id|ref(?:erence)?|token|handle)|storage[ _-]*key)\b\s*(?::|=|\bis\b)\s*\S+/i.test(text)) return documentWorkspaceFeedbackText("safetySystemCode", "Vui lòng chỉ nhập yêu cầu tài liệu của bạn vào đây.");
     return "";
   }
   function documentWorkspaceLine(value, label, minimum, maximum, allowEmpty) {
     const text = String(value || "").replace(/\s+/g, " ").trim();
-    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(label + " cần từ " + minimum + " đến " + maximum + " ký tự hợp lệ.");
+    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(documentWorkspaceFeedbackText("lineLength", label + " cần từ " + minimum + " đến " + maximum + " ký tự.", { label, min: minimum, max: maximum }));
     return text;
   }
   function documentWorkspaceBody(value, label, maximum, allowEmpty) {
     const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
-    if (text.length > maximum || (!allowEmpty && !text) || text.includes("\u0000")) throw new Error(label + " tối đa " + maximum.toLocaleString("vi-VN") + " ký tự hợp lệ.");
+    const maxText = String(maximum);
+    if (text.length > maximum || (!allowEmpty && !text) || text.includes("\u0000")) throw new Error(documentWorkspaceFeedbackText("bodyLength", label + " cần nhập nội dung phù hợp, tối đa " + maxText + " ký tự.", { label, max: maxText }));
     return text;
   }
   function documentWorkspaceTags(value) {
@@ -11357,41 +11368,41 @@
     const seen = new Set();
     raw.forEach((candidate) => {
       if (!String(candidate || "").trim()) return;
-      const tag = documentWorkspaceLine(candidate, "Tag", 1, 48, false);
+      const tag = documentWorkspaceLine(candidate, documentWorkspaceFeedbackText("fieldTag", "Nhãn"), 1, 48, false);
       const fingerprint = tag.toLocaleLowerCase("vi-VN");
       if (!seen.has(fingerprint)) { seen.add(fingerprint); result.push(tag); }
     });
-    if (result.length > 20) throw new Error("Tối đa 20 tags cho mỗi document brief hoặc processing plan.");
+    if (result.length > 20) throw new Error(documentWorkspaceFeedbackText("tooManyTags", "Chỉ được thêm tối đa 20 nhãn cho mỗi yêu cầu hoặc bước xử lý."));
     return result;
   }
   function documentWorkspaceReference(value, label, allowEmpty) {
     const id = String(value || "").trim();
     if (!id && allowEmpty) return "";
-    if (!validDocumentWorkspaceId(id)) throw new Error(label + " phải là Project/Asset Vault UUID hợp lệ do server cấp.");
+    if (!validDocumentWorkspaceId(id)) throw new Error(documentWorkspaceFeedbackText("invalidSelection", label + " chưa hợp lệ, vui lòng chọn lại từ danh sách.", { label }));
     return id;
   }
   function documentWorkspacePayload(fields) {
-    const title = documentWorkspaceLine(fields.title, "Tên document brief", 2, 180, false);
-    const documentType = documentWorkspaceLine(fields.document_type || "mixed", "Loại tài liệu", 1, 32, false).toLowerCase();
-    const sourceSummary = documentWorkspaceBody(fields.source_summary, "Scope, nguồn & trang dự kiến", 8000, false);
-    const objective = documentWorkspaceBody(fields.objective, "Mục tiêu, target format & QA checklist", 8000, false);
-    const language = documentWorkspaceLine(fields.language || "vi", "Ngôn ngữ nguồn", 1, 100, false);
-    const targetLanguage = documentWorkspaceLine(fields.target_language, "Ngôn ngữ đích", 1, 100, true);
+    const title = documentWorkspaceLine(fields.title, documentWorkspaceFeedbackText("fieldRequestTitle", "Tên yêu cầu"), 2, 180, false);
+    const documentType = documentWorkspaceLine(fields.document_type || "mixed", documentWorkspaceFeedbackText("fieldDocumentType", "Loại tài liệu"), 1, 32, false).toLowerCase();
+    const sourceSummary = documentWorkspaceBody(fields.source_summary, documentWorkspaceFeedbackText("fieldContentScope", "Nội dung và phạm vi"), 8000, false);
+    const objective = documentWorkspaceBody(fields.objective, documentWorkspaceFeedbackText("fieldGoalRequirements", "Mục tiêu và yêu cầu"), 8000, false);
+    const language = documentWorkspaceLine(fields.language || "vi", documentWorkspaceFeedbackText("fieldSourceLanguage", "Ngôn ngữ nguồn"), 1, 100, false);
+    const targetLanguage = documentWorkspaceLine(fields.target_language, documentWorkspaceFeedbackText("fieldTargetLanguage", "Ngôn ngữ đích"), 1, 100, true);
     const tags = documentWorkspaceTags(fields.tags);
-    if (!DOCUMENT_WORKSPACE_TYPES.has(documentType)) throw new Error("Loại tài liệu Document Workspace không hợp lệ.");
+    if (!DOCUMENT_WORKSPACE_TYPES.has(documentType)) throw new Error(documentWorkspaceFeedbackText("invalidDocumentType", "Loại tài liệu đã chọn chưa hợp lệ, vui lòng chọn lại từ danh sách."));
     const safety = documentWorkspaceSafetyError(title, documentType, sourceSummary, objective, language, targetLanguage, ...tags);
     if (safety) throw new Error(safety);
-    return { title, document_type: documentType, source_summary: sourceSummary, objective, language, target_language: targetLanguage, tags, project_id: documentWorkspaceReference(fields.project_id, "Project liên kết", true) || null };
+    return { title, document_type: documentType, source_summary: sourceSummary, objective, language, target_language: targetLanguage, tags, project_id: documentWorkspaceReference(fields.project_id, documentWorkspaceFeedbackText("fieldLinkedProject", "Dự án liên kết"), true) || null };
   }
   function documentPlanPayload(fields) {
-    const title = documentWorkspaceLine(fields.title, "Tên processing plan", 2, 180, false);
-    const operation = documentWorkspaceLine(fields.operation || "organize", "Intent / planned operation", 1, 32, false).toLowerCase();
-    const instructions = documentWorkspaceBody(fields.instructions, "Scope, pages & kiểm tra dự kiến", 12000, true);
-    const sourceAssetId = documentWorkspaceReference(fields.source_asset_id, "Source Asset Vault", true);
-    const referenceAssetId = documentWorkspaceReference(fields.reference_asset_id, "Reference Asset Vault", true);
+    const title = documentWorkspaceLine(fields.title, documentWorkspaceFeedbackText("fieldStepTitle", "Tên bước xử lý"), 2, 180, false);
+    const operation = documentWorkspaceLine(fields.operation || "organize", documentWorkspaceFeedbackText("fieldPlannedWork", "Công việc dự kiến"), 1, 32, false).toLowerCase();
+    const instructions = documentWorkspaceBody(fields.instructions, documentWorkspaceFeedbackText("fieldStepInstructions", "Hướng dẫn xử lý"), 12000, true);
+    const sourceAssetId = documentWorkspaceReference(fields.source_asset_id, documentWorkspaceFeedbackText("fieldSourceFile", "Tệp nguồn"), true);
+    const referenceAssetId = documentWorkspaceReference(fields.reference_asset_id, documentWorkspaceFeedbackText("fieldReferenceFile", "Tệp tham khảo"), true);
     const tags = documentWorkspaceTags(fields.tags);
-    if (!DOCUMENT_WORKSPACE_OPERATIONS.has(operation)) throw new Error("Intent Document Workspace không hợp lệ.");
-    if (sourceAssetId && sourceAssetId === referenceAssetId) throw new Error("Source Asset Vault và Reference Asset Vault phải khác nhau.");
+    if (!DOCUMENT_WORKSPACE_OPERATIONS.has(operation)) throw new Error(documentWorkspaceFeedbackText("invalidPlannedWork", "Công việc dự kiến đã chọn chưa hợp lệ, vui lòng chọn lại từ danh sách."));
+    if (sourceAssetId && sourceAssetId === referenceAssetId) throw new Error(documentWorkspaceFeedbackText("duplicateFiles", "Tệp nguồn và tệp tham khảo cần là hai tệp khác nhau."));
     const safety = documentWorkspaceSafetyError(title, operation, instructions, ...tags);
     if (safety) throw new Error(safety);
     return { title, operation, instructions, source_asset_id: sourceAssetId || null, reference_asset_id: referenceAssetId || null, tags };
@@ -20013,9 +20024,9 @@
 
   function documentWorkspaceFilterPayload(value) {
     const source = value && typeof value === "object" ? value : {};
-    const q = documentWorkspaceLine(source.q, "Từ khóa document brief", 0, 180, true);
+    const q = documentWorkspaceLine(source.q, documentWorkspaceReadText("searchKeyword", "Từ khóa tìm kiếm"), 0, 180, true);
     const state = String(source.state || "active").trim().toLowerCase();
-    if (!DOCUMENT_WORKSPACE_FILTER_STATES.has(state)) throw new Error("Bộ lọc trạng thái document brief không hợp lệ.");
+    if (!DOCUMENT_WORKSPACE_FILTER_STATES.has(state)) throw new Error(documentWorkspaceReadText("invalidFilter", "Bộ lọc chưa hợp lệ. Hãy chọn lại."));
     const safety = documentWorkspaceSafetyError(q, state);
     if (safety) throw new Error(safety);
     return { q, state };
@@ -20099,7 +20110,7 @@
       const policy = documentWorkspacePolicyProjection(rawPolicy);
       const events = documentWorkspaceEventsProjection(eventData);
       if (![summary, workspaceData, references].every(documentWorkspaceBoundaryIsSafe) || !policy || !events) {
-        throw new Error("Boundary Document & PDF Workspace chưa được máy chủ xác nhận.");
+        throw new Error(documentWorkspaceReadText("workspaceDataUnavailable", "Chưa thể tải dữ liệu yêu cầu. Vui lòng thử lại."));
       }
       const workspaces = Array.isArray(workspaceData.items)
         ? workspaceData.items.filter((item) => item && validDocumentWorkspaceId(item.id) && validDocumentWorkspaceRevision(item.revision)).slice(0, DOCUMENT_WORKSPACE_LIST_LIMIT) : [];
@@ -20126,7 +20137,7 @@
   }
 
   async function hydrateDocumentWorkspaceDetail(workspaceId) {
-    if (!validDocumentWorkspaceId(workspaceId)) throw new Error("Mã Document Workspace không hợp lệ.");
+    if (!validDocumentWorkspaceId(workspaceId)) throw new Error(documentWorkspaceReadText("invalidRequestCode", "Mã yêu cầu không hợp lệ."));
     const route = "/document-workspace/" + encodeURIComponent(String(workspaceId));
     const requestEpoch = ++documentWorkspaceDetailHydrationEpoch;
     const sessionEpoch = documentWorkspaceSessionEpoch;
@@ -20142,7 +20153,7 @@
       const policy = documentWorkspacePolicyProjection(rawPolicy);
       const workspace = data.workspace && typeof data.workspace === "object" ? data.workspace : null;
       if (!documentWorkspaceBoundaryIsSafe(data) || !documentWorkspaceBoundaryIsSafe(references) || !policy || !workspace || !validDocumentWorkspaceId(workspace.id) || String(workspace.id) !== String(workspaceId) || !validDocumentWorkspaceRevision(workspace.revision)) {
-        throw new Error("Document workspace không còn khả dụng cho Web account hiện tại.");
+        throw new Error(documentWorkspaceReadText("requestUnavailableForAccount", "Yêu cầu này không còn khả dụng cho tài khoản của bạn."));
       }
       if (!documentWorkspaceDetailRequestIsCurrent(requestEpoch, sessionEpoch, route)) return null;
       const writable = String(workspace.state || workspace.lifecycle || "") === "draft";
@@ -20150,7 +20161,7 @@
       if (writable) {
         const estimateResult = await api("/document-workspace/workspaces/" + encodeURIComponent(String(workspaceId)) + "/estimate");
         estimate = estimateResult.data && typeof estimateResult.data === "object" ? estimateResult.data : {};
-        if (!documentWorkspaceBoundaryIsSafe(estimate)) throw new Error("Máy chủ chưa xác nhận document plan checklist an toàn.");
+        if (!documentWorkspaceBoundaryIsSafe(estimate)) throw new Error(documentWorkspaceReadText("requestDetailsUnavailable", "Chưa thể tải chi tiết yêu cầu. Vui lòng thử lại."));
       }
       const plans = Array.isArray(data.plans)
         ? data.plans.filter((item) => item && validDocumentPlanId(item.id) && String(item.workspace_id || "") === String(workspaceId) && validDocumentWorkspaceRevision(item.revision)).slice(0, 250) : [];
@@ -27948,12 +27959,42 @@
     }
   }
 
+  function documentWorkspaceReadText(key, fallback, params) {
+    const fullKey = "docPlainRead." + String(key || "");
+    const i18n = typeof window !== "undefined" && window ? window.TOANAASI18n : null;
+    if (!i18n || typeof i18n.t !== "function") return fallback;
+    const translated = i18n.t(fullKey, params);
+    if (typeof translated !== "string") return fallback;
+    const trimmed = translated.trim();
+    if (!trimmed || trimmed === fullKey || trimmed === String(key || "")) return fallback;
+    return translated;
+  }
+
+  function documentWorkspaceResponseText(action) {
+    const messages = {
+      "document-workspace-create": ["responseWorkspaceCreate", "Đã tạo yêu cầu tài liệu."],
+      "document-workspace-update": ["responseWorkspaceUpdate", "Đã lưu thay đổi của yêu cầu."],
+      "document-workspace-state": ["responseWorkspaceState", "Đã cập nhật trạng thái rà soát."],
+      "document-workspace-restore-version": ["responseWorkspaceRestoreVersion", "Đã khôi phục nội dung thành phiên bản mới."],
+      "document-plan-create": ["responsePlanCreate", "Đã thêm bước xử lý."],
+      "document-plan-update": ["responsePlanUpdate", "Đã lưu thay đổi của bước xử lý."],
+      "document-plan-archive": ["responsePlanArchive", "Đã lưu trữ bước xử lý."],
+      "document-plan-restore": ["responsePlanRestore", "Đã khôi phục bước xử lý."],
+      "document-plan-restore-version": ["responsePlanRestoreVersion", "Đã khôi phục bước xử lý thành phiên bản mới."],
+      "document-plan-reorder": ["responsePlanReorder", "Đã lưu thứ tự các bước xử lý."]
+    };
+    const key = typeof action === "string" ? action : "";
+    const entry = Object.prototype.hasOwnProperty.call(messages, key) ? messages[key] : null;
+    if (entry) return documentWorkspaceReadText(entry[0], entry[1]);
+    return documentWorkspaceReadText("responseDefault", "Đã lưu thay đổi.");
+  }
+
   async function documentWorkspaceMutation({ action, route, scope, path, method, payload, onSuccess }) {
     // CSRF is injected by api(), and each write has an account-scoped
     // idempotency key. No client-side response synthesizes a file/result.
     const submission = acquireSubmission(scope, JSON.stringify(payload));
     if (!submission) {
-      toast("Thao tác Document & PDF Workspace đang chờ máy chủ xác nhận.", "error");
+      toast(documentWorkspaceReadText("mutationBusy", "Yêu cầu đang được lưu. Vui lòng chờ."), "error");
       return null;
     }
     let acknowledged = false;
@@ -27965,10 +28006,20 @@
         body: JSON.stringify({ ...payload, idempotency_key: submission.key })
       });
       acknowledged = true;
-      if (typeof onSuccess === "function") await onSuccess(result);
+      if (typeof onSuccess === "function") await onSuccess({ ...result, message: documentWorkspaceResponseText(action) });
       return result;
     } catch (error) {
       acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      if (error && typeof error === "object" && typeof error.message === "string") {
+        const errorCode = error.payload && typeof error.payload === "object" ? error.payload.error_code : "";
+        if (errorCode === "WEB_DOCUMENT_WORKSPACE_REVISION_CONFLICT") {
+          error.message = documentWorkspaceReadText("errorRevisionConflict", "Nội dung đã thay đổi ở nơi khác. Hãy tải lại trang trước khi lưu tiếp.");
+        } else if (error.status === 401 || error.status === 403) {
+          error.message = documentWorkspaceReadText("errorSessionExpired", "Hãy đăng nhập lại để tiếp tục.");
+        } else {
+          error.message = documentWorkspaceReadText("errorSaveFailed", "Chưa thể lưu thay đổi. Vui lòng tải lại trang rồi thử lại.");
+        }
+      }
       throw error;
     } finally {
       releaseSubmission(submission);
@@ -33279,32 +33330,32 @@
         return;
       }
       if (action === "document-workspace-filter") {
-        if (!(base().capabilities && base().capabilities["document-workspace-filter"] === true)) throw new Error("Cần signed Web session để tìm document brief riêng tư.");
+        if (!(base().capabilities && base().capabilities["document-workspace-filter"] === true)) throw new Error(documentWorkspaceReadText("authRequired", "Hãy đăng nhập để xem yêu cầu của bạn."));
         const filter = documentWorkspaceFilterPayload({ q: fields.q, state: fields.state || fields.__documentWorkspaceFilter });
         const refreshed = await hydrateDocumentWorkspace(filter, 0);
-        if (!refreshed) throw new Error("Không thể tải document brief an toàn. Hãy thử lại.");
-        toast(filter.q || filter.state !== "active" ? "Đã áp dụng bộ lọc Document Workspace." : "Đã hiển thị document brief đang hoạt động của Web account hiện tại.");
+        if (!refreshed) throw new Error(documentWorkspaceReadText("loadListFailed", "Chưa thể tải danh sách. Vui lòng thử lại."));
+        toast(filter.q || filter.state !== "active" ? documentWorkspaceReadText("filterApplied", "Đã áp dụng bộ lọc.") : documentWorkspaceReadText("filterActiveShown", "Đã hiển thị các yêu cầu đang hoạt động."));
         return;
       }
       if (action === "document-workspace-filter-clear") {
-        if (!(base().capabilities && base().capabilities["document-workspace-filter-clear"] === true)) throw new Error("Cần signed Web session để tìm document brief riêng tư.");
+        if (!(base().capabilities && base().capabilities["document-workspace-filter-clear"] === true)) throw new Error(documentWorkspaceReadText("authRequired", "Hãy đăng nhập để xem yêu cầu của bạn."));
         const refreshed = await hydrateDocumentWorkspace({ q: "", state: "active" }, 0);
-        if (!refreshed) throw new Error("Không thể tải document brief an toàn. Hãy thử lại.");
-        toast("Đã hiển thị document brief đang hoạt động của Web account hiện tại.");
+        if (!refreshed) throw new Error(documentWorkspaceReadText("loadListFailed", "Chưa thể tải danh sách. Vui lòng thử lại."));
+        toast(documentWorkspaceReadText("filterActiveShown", "Đã hiển thị các yêu cầu đang hoạt động."));
         return;
       }
       if (action === "document-workspace-page") {
-        if (!(base().capabilities && base().capabilities["document-workspace-page"] === true)) throw new Error("Cần signed Web session để xem trang document brief riêng tư.");
+        if (!(base().capabilities && base().capabilities["document-workspace-page"] === true)) throw new Error(documentWorkspaceReadText("authRequired", "Hãy đăng nhập để xem yêu cầu của bạn."));
         const refreshed = await hydrateDocumentWorkspace(undefined, documentWorkspaceListOffset(fields.__documentWorkspaceOffset));
-        if (!refreshed) throw new Error("Không thể tải trang document brief an toàn. Hãy thử lại.");
-        toast("Đã tải trang document brief từ API owner-scoped.");
+        if (!refreshed) throw new Error(documentWorkspaceReadText("loadListFailed", "Chưa thể tải danh sách. Vui lòng thử lại."));
+        toast(documentWorkspaceReadText("pageLoaded", "Đã tải trang danh sách."));
         return;
       }
       if (action === "document-workspace-refresh") {
         const workspaceId = documentWorkspaceIdFromPath(route);
         if (workspaceId) await hydrateDocumentWorkspaceDetail(workspaceId);
         else await hydrateDocumentWorkspace();
-        toast("Đã làm mới Document & PDF Workspace của Web account hiện tại.");
+        toast(documentWorkspaceReadText("listRefreshed", "Đã làm mới danh sách."));
         return;
       }
       if (action === "document-workspace-create") {
@@ -33316,10 +33367,10 @@
             const receipt = data.workspace && typeof data.workspace === "object" ? data.workspace : null;
             const workspaceId = receipt && validDocumentWorkspaceId(receipt.id) ? String(receipt.id) : "";
             if (!documentWorkspaceBoundaryIsSafe(data) || !workspaceId || !validDocumentWorkspaceRevision(receipt.revision)) {
-              throw new Error("Máy chủ chưa trả receipt document brief Web-native hợp lệ.");
+              throw new Error(documentWorkspaceFeedbackText("requestVerifyFailed", "Chưa thể xác nhận yêu cầu đã được lưu. Vui lòng tải lại trang rồi kiểm tra lại."));
             }
             await hydrateDocumentWorkspace();
-            toast(result.message || "Đã tạo document brief riêng tư.");
+            toast(result.message || documentWorkspaceFeedbackText("requestSaved", "Đã lưu yêu cầu của bạn."));
             window.location.assign(`/document-workspace/${encodeURIComponent(workspaceId)}`);
           }
         });
@@ -33328,16 +33379,16 @@
       if (action === "document-workspace-update") {
         const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
         const expectedRevision = validDocumentWorkspaceRevision(fields.__documentWorkspaceRevision);
-        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision) throw new Error("Mã hoặc revision document brief không hợp lệ.");
+        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision) throw new Error(documentWorkspaceFeedbackText("requestStale", "Không thể lưu thay đổi vì dữ liệu yêu cầu đã cũ hoặc chưa hợp lệ. Vui lòng tải lại trang rồi thử lại."));
         const payload = { ...documentWorkspacePayload(fields), expected_revision: expectedRevision };
         await documentWorkspaceMutation({
           action, route, scope: `document-workspace:${workspaceId}:update`, method: "PATCH",
           path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}`, payload,
           onSuccess: async (result) => {
-            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision document brief an toàn.");
+            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error(documentWorkspaceFeedbackText("requestSaveVerifyFailed", "Chưa thể xác nhận thay đổi đã được lưu. Vui lòng tải lại trang rồi thử lại."));
             await hydrateDocumentWorkspace();
             await hydrateDocumentWorkspaceDetail(workspaceId);
-            toast(result.message || "Đã lưu revision document brief mới.");
+            toast(result.message || documentWorkspaceFeedbackText("requestUpdated", "Đã lưu thay đổi của yêu cầu."));
           }
         });
         return;
@@ -33346,20 +33397,20 @@
         const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
         const expectedRevision = validDocumentWorkspaceRevision(fields.__documentWorkspaceRevision);
         const state = String(fields.__documentWorkspaceState || "").trim().toLowerCase();
-        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision || !DOCUMENT_WORKSPACE_STATES.has(state)) throw new Error("Trạng thái hoặc revision document brief không hợp lệ.");
+        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision || !DOCUMENT_WORKSPACE_STATES.has(state)) throw new Error(documentWorkspaceFeedbackText("requestStateInvalid", "Không thể cập nhật trạng thái vì dữ liệu yêu cầu đã cũ hoặc chưa hợp lệ. Vui lòng tải lại trang rồi thử lại."));
         const current = base().documentWorkspaceDetail && base().documentWorkspaceDetail.workspace;
         const currentState = current && String(current.id || "") === workspaceId ? String(current.state || current.lifecycle || "") : "";
-        if (currentState === "archived" && state !== "draft") throw new Error("Document brief đã archive chỉ có thể được khôi phục về Draft.");
-        if (currentState === "approved" && !["draft", "archived"].includes(state)) throw new Error("Document brief đã approved cần về Draft trước khi thay đổi review.");
+        if (currentState === "archived" && state !== "draft") throw new Error(documentWorkspaceFeedbackText("requestArchivedDraftOnly", "Không thể đổi trạng thái: yêu cầu đã lưu trữ chỉ có thể khôi phục về bản nháp trước."));
+        if (currentState === "approved" && !["draft", "archived"].includes(state)) throw new Error(documentWorkspaceFeedbackText("requestReadyNeedsDraft", "Yêu cầu đã rà soát xong. Hãy đưa về bản nháp trước khi thay đổi."));
         await documentWorkspaceMutation({
           action, route, scope: `document-workspace:${workspaceId}:state:${state}`,
           path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/lifecycle`, payload: { state, expected_revision: expectedRevision },
           onSuccess: async (result) => {
             const receipt = result.data && result.data.workspace && typeof result.data.workspace === "object" ? result.data.workspace : null;
-            if (!documentWorkspaceBoundaryIsSafe(result.data) || !receipt || !validDocumentWorkspaceRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận trạng thái document brief an toàn.");
+            if (!documentWorkspaceBoundaryIsSafe(result.data) || !receipt || !validDocumentWorkspaceRevision(receipt.revision)) throw new Error(documentWorkspaceFeedbackText("requestStateVerifyFailed", "Chưa thể xác nhận trạng thái mới đã được lưu. Vui lòng tải lại trang rồi thử lại."));
             await hydrateDocumentWorkspace();
             await hydrateDocumentWorkspaceDetail(workspaceId);
-            toast(result.message || "Đã cập nhật trạng thái self-review.");
+            toast(result.message || documentWorkspaceFeedbackText("requestStateSaved", "Đã cập nhật trạng thái rà soát."));
           }
         });
         return;
@@ -33368,15 +33419,15 @@
         const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
         const expectedRevision = validDocumentWorkspaceRevision(fields.__documentWorkspaceRevision);
         const targetRevision = validDocumentWorkspaceRevision(fields.__documentWorkspaceVersion);
-        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision || !targetRevision) throw new Error("Version hoặc revision document brief không hợp lệ.");
+        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision || !targetRevision) throw new Error(documentWorkspaceFeedbackText("requestVersionInvalid", "Không thể khôi phục phiên bản yêu cầu vì dữ liệu đã cũ hoặc chưa hợp lệ. Vui lòng tải lại trang rồi thử lại."));
         await documentWorkspaceMutation({
           action, route, scope: `document-workspace:${workspaceId}:restore-version:${targetRevision}`,
           path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/restore-version`, payload: { expected_revision: expectedRevision, target_revision: targetRevision },
           onSuccess: async (result) => {
-            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version document brief an toàn.");
+            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error(documentWorkspaceFeedbackText("requestVersionVerifyFailed", "Chưa thể xác nhận phiên bản đã được khôi phục. Vui lòng tải lại trang rồi kiểm tra lại."));
             await hydrateDocumentWorkspace();
             await hydrateDocumentWorkspaceDetail(workspaceId);
-            toast(result.message || "Đã khôi phục version brief thành revision mới.");
+            toast(result.message || documentWorkspaceFeedbackText("requestVersionRestored", "Đã lưu bản khôi phục mới cho yêu cầu."));
           }
         });
         return;
@@ -33384,7 +33435,7 @@
       if (action === "document-plan-create") {
         const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
         const expectedRevision = validDocumentWorkspaceRevision(fields.__documentWorkspaceRevision);
-        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision) throw new Error("Mã hoặc revision document brief không hợp lệ.");
+        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision) throw new Error(documentWorkspaceFeedbackText("stepParentStale", "Không thể thêm bước xử lý vì dữ liệu yêu cầu đã cũ hoặc chưa hợp lệ. Vui lòng tải lại trang rồi thử lại."));
         const payload = { ...documentPlanPayload(fields), expected_revision: expectedRevision };
         await documentWorkspaceMutation({
           action, route, scope: `document-workspace:${workspaceId}:plan:create`,
@@ -33392,11 +33443,11 @@
           onSuccess: async (result) => {
             const receipt = result.data && result.data.plan && typeof result.data.plan === "object" ? result.data.plan : null;
             if (!documentWorkspaceBoundaryIsSafe(result.data) || !receipt || !validDocumentPlanId(receipt.id) || String(receipt.workspace_id || "") !== workspaceId) {
-              throw new Error("Máy chủ chưa trả receipt processing plan hợp lệ.");
+              throw new Error(documentWorkspaceFeedbackText("stepVerifyFailed", "Chưa thể xác nhận bước xử lý đã được lưu. Vui lòng tải lại trang rồi thử lại."));
             }
             await hydrateDocumentWorkspace();
             await hydrateDocumentWorkspaceDetail(workspaceId);
-            toast(result.message || "Đã thêm processing plan riêng tư.");
+            toast(result.message || documentWorkspaceFeedbackText("stepSaved", "Đã lưu bước xử lý mới."));
           }
         });
         return;
@@ -33405,15 +33456,15 @@
         const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
         const planId = String(fields.__documentPlanId || "").trim();
         const expectedRevision = validDocumentWorkspaceRevision(fields.__documentPlanRevision);
-        if (!validDocumentWorkspaceId(workspaceId) || !validDocumentPlanId(planId) || !expectedRevision) throw new Error("Mã hoặc revision processing plan không hợp lệ.");
+        if (!validDocumentWorkspaceId(workspaceId) || !validDocumentPlanId(planId) || !expectedRevision) throw new Error(documentWorkspaceFeedbackText("stepStale", "Không thể lưu bước xử lý vì dữ liệu đã cũ hoặc chưa hợp lệ. Vui lòng tải lại trang rồi thử lại."));
         const payload = { ...documentPlanPayload(fields), expected_revision: expectedRevision };
         await documentWorkspaceMutation({
           action, route, scope: `document-workspace:${workspaceId}:plan:${planId}:update`, method: "PATCH",
           path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/plans/${encodeURIComponent(planId)}`, payload,
           onSuccess: async (result) => {
-            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision processing plan an toàn.");
+            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error(documentWorkspaceFeedbackText("stepSaveVerifyFailed", "Chưa thể xác nhận thay đổi của bước xử lý đã được lưu. Vui lòng tải lại trang rồi thử lại."));
             await hydrateDocumentWorkspaceDetail(workspaceId);
-            toast(result.message || "Đã lưu revision processing plan mới.");
+            toast(result.message || documentWorkspaceFeedbackText("stepUpdated", "Đã lưu thay đổi của bước xử lý."));
           }
         });
         return;
@@ -33422,17 +33473,17 @@
         const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
         const planId = String(fields.__documentPlanId || "").trim();
         const expectedRevision = validDocumentWorkspaceRevision(fields.__documentPlanRevision);
-        if (!validDocumentWorkspaceId(workspaceId) || !validDocumentPlanId(planId) || !expectedRevision) throw new Error("Mã hoặc revision processing plan không hợp lệ.");
+        if (!validDocumentWorkspaceId(workspaceId) || !validDocumentPlanId(planId) || !expectedRevision) throw new Error(documentWorkspaceFeedbackText("stepStale", "Không thể lưu bước xử lý vì dữ liệu đã cũ hoặc chưa hợp lệ. Vui lòng tải lại trang rồi thử lại."));
         const operation = action.replace("document-plan-", "");
         await documentWorkspaceMutation({
           action, route, scope: `document-workspace:${workspaceId}:plan:${planId}:${operation}`,
           path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/plans/${encodeURIComponent(planId)}/${encodeURIComponent(operation)}`,
           payload: { expected_revision: expectedRevision },
           onSuccess: async (result) => {
-            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận trạng thái processing plan an toàn.");
+            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error(documentWorkspaceFeedbackText("stepStateVerifyFailed", "Chưa thể xác nhận trạng thái mới của bước xử lý. Vui lòng tải lại trang rồi thử lại."));
             await hydrateDocumentWorkspace();
             await hydrateDocumentWorkspaceDetail(workspaceId);
-            toast(result.message || "Đã cập nhật processing plan.");
+            toast(result.message || documentWorkspaceFeedbackText("stepStatusSaved", "Đã lưu trạng thái bước xử lý."));
           }
         });
         return;
@@ -33442,14 +33493,14 @@
         const planId = String(fields.__documentPlanId || "").trim();
         const expectedRevision = validDocumentWorkspaceRevision(fields.__documentPlanRevision);
         const targetRevision = validDocumentWorkspaceRevision(fields.__documentPlanVersion);
-        if (!validDocumentWorkspaceId(workspaceId) || !validDocumentPlanId(planId) || !expectedRevision || !targetRevision) throw new Error("Version hoặc revision processing plan không hợp lệ.");
+        if (!validDocumentWorkspaceId(workspaceId) || !validDocumentPlanId(planId) || !expectedRevision || !targetRevision) throw new Error(documentWorkspaceFeedbackText("stepVersionInvalid", "Không thể khôi phục phiên bản bước xử lý vì dữ liệu đã cũ hoặc chưa hợp lệ. Vui lòng tải lại trang rồi thử lại."));
         await documentWorkspaceMutation({
           action, route, scope: `document-workspace:${workspaceId}:plan:${planId}:restore-version:${targetRevision}`,
           path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/plans/${encodeURIComponent(planId)}/restore-version`, payload: { expected_revision: expectedRevision, target_revision: targetRevision },
           onSuccess: async (result) => {
-            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version processing plan an toàn.");
+            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error(documentWorkspaceFeedbackText("stepVersionVerifyFailed", "Chưa thể xác nhận phiên bản bước xử lý đã được khôi phục. Vui lòng tải lại trang rồi kiểm tra lại."));
             await hydrateDocumentWorkspaceDetail(workspaceId);
-            toast(result.message || "Đã khôi phục version processing plan thành revision mới.");
+            toast(result.message || documentWorkspaceFeedbackText("stepVersionRestored", "Đã lưu bản khôi phục mới cho bước xử lý."));
           }
         });
         return;
@@ -33459,23 +33510,23 @@
         const expectedRevision = validDocumentWorkspaceRevision(fields.__documentWorkspaceRevision);
         const planId = String(fields.__documentPlanId || "").trim();
         const direction = String(fields.__documentPlanDirection || "").trim().toLowerCase();
-        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision || !validDocumentPlanId(planId) || !["up", "down"].includes(direction)) throw new Error("Yêu cầu sắp xếp processing plan không hợp lệ.");
+        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision || !validDocumentPlanId(planId) || !["up", "down"].includes(direction)) throw new Error(documentWorkspaceFeedbackText("stepReorderInvalid", "Không thể đổi thứ tự bước xử lý vì dữ liệu đã cũ hoặc chưa hợp lệ. Vui lòng tải lại trang rồi thử lại."));
         const workspaceDetail = base().documentWorkspaceDetail && typeof base().documentWorkspaceDetail === "object" ? base().documentWorkspaceDetail : {};
         const activePlans = Array.isArray(workspaceDetail.plans)
           ? workspaceDetail.plans.filter((item) => item && String(item.workspace_id || "") === workspaceId && String(item.state || "active") === "active" && validDocumentPlanId(item.id))
           : [];
         const index = activePlans.findIndex((item) => String(item.id) === planId);
         const target = direction === "up" ? index - 1 : index + 1;
-        if (index < 0 || target < 0 || target >= activePlans.length) throw new Error("Không thể đổi thứ tự processing plan ở vị trí này.");
+        if (index < 0 || target < 0 || target >= activePlans.length) throw new Error(documentWorkspaceFeedbackText("stepReorderBoundary", "Không thể đổi thứ tự bước xử lý ở vị trí này. Vui lòng tải lại trang rồi thử lại."));
         const planIds = activePlans.map((item) => String(item.id));
         [planIds[index], planIds[target]] = [planIds[target], planIds[index]];
         await documentWorkspaceMutation({
           action, route, scope: `document-workspace:${workspaceId}:plans:reorder`,
           path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/plans/reorder`, payload: { expected_revision: expectedRevision, plan_ids: planIds },
           onSuccess: async (result) => {
-            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận thứ tự processing plan an toàn.");
+            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error(documentWorkspaceFeedbackText("stepReorderVerifyFailed", "Chưa thể xác nhận thứ tự mới của bước xử lý. Vui lòng tải lại trang rồi thử lại."));
             await hydrateDocumentWorkspaceDetail(workspaceId);
-            toast(result.message || "Đã cập nhật thứ tự processing plan.");
+            toast(result.message || documentWorkspaceFeedbackText("stepOrderSaved", "Đã lưu thứ tự các bước xử lý."));
           }
         });
         return;

@@ -5,6 +5,7 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {galleryNativeRuntimeHistoricalSource as inverse} from './helpers/gallery-native-runtime-historical.mjs';
 import {authReturnHistoricalSource} from './helpers/auth-return-historical.mjs';
+import {documentNaturalHistoricalSource} from './helpers/document-natural-copy-historical.mjs';
 
 const base='29e0c154dfd247ac4b0a68cd6336ec83fb3af8ef',integration='static/portal/integration.js';
 const lf=value=>value.replace(/\r\n/g,'\n'),sha=value=>createHash('sha256').update(value).digest('hex');
@@ -13,7 +14,7 @@ const transport=read('gallery-native-transport-history.json'),backend=read('gall
 const files=[integration,'copyfast_free_prompt_gallery.py','copyfast_memory.py'];
 const records=file=>file===integration?transport.records:backend.records.filter(row=>row.file===file);
 const baseline=new Map(files.map(file=>[file,lf(execFileSync('git',['show',base+':'+file],{encoding:'utf8',maxBuffer:12e6}))]));
-const physical=new Map(files.map(file=>[file,authReturnHistoricalSource(lf(fs.readFileSync(new URL('../'+file,import.meta.url),'utf8')),file)]));
+const physical=new Map(files.map(file=>[file,authReturnHistoricalSource(documentNaturalHistoricalSource(lf(fs.readFileSync(new URL('../'+file,import.meta.url),'utf8')),file),file)]));
 const current=new Map(files.map(file=>{
   let source=baseline.get(file);
   for(const row of records(file)){

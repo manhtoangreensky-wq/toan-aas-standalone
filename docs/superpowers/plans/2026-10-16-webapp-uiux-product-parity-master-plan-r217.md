@@ -5,6 +5,26 @@
 **Nhánh tài liệu:** `webapp-plan-r116` → push vào `webapp-checklist-r116`
 **Mục tiêu:** có một thứ tự thi công duy nhất, một checklist có trạng thái và các spec đủ cụ thể để người thực hiện không phải đoán.
 
+### Cập nhật28/11/2026 — lời hướng dẫn tài liệu đã kiểm tại máy
+
+AUTH-RETURN đã giao PR821/runtimeCF94, CI46056807355 và
+Webdeploy46059896569; mốc “đang khép AUTH” bên dưới giữ làm lịch sử.
+Voice3ca vàMusic3ca bản nháp đã đạt ở đúng nguồn CF94, không kiểm lại.
+
+Theo yêu cầu lời tự nhiên, DOCUMENT-NATURAL chặn phần việc kế tiếp:
+bốn phiếu Antigravity4ExtraHigh độc lập,60record/304khóa/912giá trị,
+ba tệp ứng dụng; Root không tự viết logic ứng dụng.34raw primary,
+176Node lịch sử/liên quan,9Python theo ledger,12lượt trình duyệt và
+2lượt VI tối đạt trong phạm vi. Reviewer độc lập không có finding.
+Spec2026-11-28-document-natural-wording và manifest cùng ngày là nguồn
+checklist; đang chuẩn bị phát hành, không coi đã chạy trên production.
+
+Sau khi giao đợt này mới tiếp tục các chữ còn xác nhận ở ghi chú mặc định
+và thiết lập, rồi bản nháp Phụ đề & Lồng tiếng/các mục còn mở. Không sửa
+khóa dịch chết hoặc trang studio cũ khi chưa có đường hiển thị thật.
+Không đóng toàn goal; auth/lifecycle/AX/thiết bị/Safari/offline/phiên
+production còn mở, motion giữ cuối. Không Bot/engine/provider/tiền/data.
+
 ### Cập nhật28/11/2026 — AGC đã giao, AUTH-RETURN-01 đang khép
 
 AGC PR820 đã merge/deploy: CI46039186914 haiSUCCESS/456QA,

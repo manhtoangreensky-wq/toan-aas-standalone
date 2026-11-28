@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import {documentNaturalHistoricalSource} from "./document-natural-copy-historical.mjs";
 import {resizePlainHistoricalI18nSource,resizePlainHistoricalSnapshot} from "./image-resize-plain-copy-snapshot.mjs";
 import {imageSharedHistoricalPortalSource} from "./image-shared-plain-copy-snapshot.mjs";
 import {resizeControlHeightHistoricalThemeSource} from "./image-resize-control-height-snapshot.mjs";
@@ -10,6 +11,7 @@ const count=(source,part)=>source.split(part).length-1;
 const editsFor=file=>fixture.changes.filter(e=>e.file===file);
 const once=(source,old,next)=>{assert.equal(count(source,old),1,failure+" missing/changed/duplicate chunk");return source.replace(old,()=>next);};
 export function resizePolishHistoricalPortalSource(source){
+  source=documentNaturalHistoricalSource(source,"static/portal/portal.js");
   source=imageSharedHistoricalPortalSource(source);
   assert.equal(typeof source,"string",failure);
   const edits=editsFor("static/portal/portal.js"),footer=edits.find(e=>e.new==="");

@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import runpy
+from tests.helpers.document_natural_copy_historical import document_natural_historical_source
 
 ROOT = Path(__file__).resolve().parents[2]
 shared_select_inverse = runpy.run_path(str(ROOT / "tests/helpers/shared_select_historical_static.py"))["historical_shared_select_portal"]
@@ -18,6 +19,7 @@ FAIL = "Unreviewed document customer historical source"
 
 def historical_customer_portal(source: str) -> str:
     assert isinstance(source, str), FAIL
+    source = document_natural_historical_source(source, "static/portal/portal.js")
     source = shared_select_inverse(source)
     for filename, digest in AUTHORITIES:
         raw = (ROOT / "tests/fixtures" / filename).read_bytes()

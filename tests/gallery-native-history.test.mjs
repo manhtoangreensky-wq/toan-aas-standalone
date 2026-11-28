@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
+import {documentNaturalHistoricalSource} from './helpers/document-natural-copy-historical.mjs';
 import {galleryNativeHistoricalSource as inverse,galleryNativeHistoricalSnapshot as snapshot} from './helpers/gallery-native-historical.mjs';
 import {adminGuardCustomerCopyHistoricalSource} from './helpers/admin-guard-customer-copy-historical.mjs';
 
@@ -32,7 +33,7 @@ for(const file of files){
     assert.ok(inverse(current.get(file),file)===baseline.get(file),'Inverse did not restore git BASE bytes');
   });
   test(file+': current raw app matches exactly five owned edits, not an expanded mask',()=>{
-    const source=adminGuardCustomerCopyHistoricalSource(lf(fs.readFileSync(new URL('../'+file,import.meta.url),'utf8')),file);
+    const source=adminGuardCustomerCopyHistoricalSource(documentNaturalHistoricalSource(lf(fs.readFileSync(new URL('../'+file,import.meta.url),'utf8')),file),file);
     const metadata=fixture.application_sources.find(row=>row.file===file);
     assert.equal(hash(source),metadata.five_edit_lf_sha256);
     assert.ok(inverse(source,file)===baseline.get(file));

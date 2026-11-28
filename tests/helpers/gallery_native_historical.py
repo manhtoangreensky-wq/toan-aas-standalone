@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+from tests.helpers.document_natural_copy_historical import document_natural_historical_source
 
 from tests.helpers.gallery_native_transport_historical import (
     gallery_native_transport_historical_source,
@@ -161,6 +162,7 @@ def _ui_inverse(source: str, file: str) -> str:
 def gallery_native_historical_source(source: str, file: str) -> str:
     """Reverse only the five UI, eleven transport, or seven backend records."""
     _require(isinstance(source, str), "string source")
+    source = document_natural_historical_source(source, file)
     source = admin_guard_customer_copy_historical_source(source, file)
     source = gallery_native_transport_historical_source(source, file)
     if file in _BACKEND_FILES and _BACKEND_SIGNALS.search(source):

@@ -11,6 +11,7 @@ from tests.helpers.gallery_native_transport_historical import (
     gallery_native_transport_historical_source as inverse,
 )
 from tests.helpers.auth_return_historical import auth_return_historical_source
+from tests.helpers.document_natural_copy_historical import document_natural_historical_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -62,6 +63,7 @@ def test_eleven_record_inverse_restores_independently_read_git_base() -> None:
 
 def test_physical_integration_is_exact_approved_final_and_restores_base() -> None:
     physical = (ROOT / TARGET).read_bytes().decode("utf-8").replace("\r\n", "\n")
+    physical = document_natural_historical_source(physical, TARGET)
     physical = auth_return_historical_source(physical, TARGET)
     assert digest(physical) == "15fa2ba31745ccb4316f8d8c88b9a4d5fccf8a086273cce347780846667c28f1"
     assert digest(physical) == digest(CURRENT)
