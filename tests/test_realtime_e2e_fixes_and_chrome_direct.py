@@ -227,6 +227,38 @@ def test_focus_live_mode_and_extension_admin_guards():
     studio_js = (root / "static" / "portal" / "live-translate-studio.js").read_text(encoding="utf-8")
     studio_css = (root / "static" / "portal" / "live-translate-studio.css").read_text(encoding="utf-8")
     popup_js = (root / "extensions" / "chrome-live-translate" / "popup.js").read_text(encoding="utf-8")
+    content_js = (root / "extensions" / "chrome-live-translate" / "content.js").read_text(encoding="utf-8")
+    content_css = (root / "extensions" / "chrome-live-translate" / "content.css").read_text(encoding="utf-8")
+    offscreen_js = (root / "extensions" / "chrome-live-translate" / "offscreen.js").read_text(encoding="utf-8")
     assert "focus=live" in studio_js
     assert "portal-lt-focus-mode" in studio_css
     assert "_isAdminUser" in popup_js
+    assert 'container.style.display = "none";' in content_js
+    assert "bottom: 48px;" in content_css
+    assert "nextTtsPlayTime" in offscreen_js and "activeTtsSources" in offscreen_js
+
+    buf = rt.RealtimeAudioIngressBuffer()
+    assert buf.max_segment_duration_ms <= 4000
+
+    async def _check_exempt_status():
+        sess = rt.RealtimeTranslateSession(
+            "rts_exempt_check",
+            rt.RealtimeSessionConfig(owner_id="web_admin", mode=rt.RealtimeTranslateMode.LIVE_DUB_BILINGUAL),
+        )
+        rt._SESSION_CANONICAL_ACTORS[sess.session_id] = "7126457028"
+        rt._SESSION_UNBILLED_CHARS[sess.session_id] = 42
+        rt._SESSION_BOT_BRIDGE_OK[sess.session_id] = 1
+        orig_cfg = copyfast_bridge.CoreBridgeClient.configured
+        orig_req = copyfast_bridge.bridge_request
+        try:
+            copyfast_bridge.CoreBridgeClient.configured = property(lambda self: True)
+            async def fake_settle(*args, **kwargs):
+                # Emulate _sanitize_envelope overwriting unknown 'exempt' status with 'failed'
+                return {"ok": True, "status": "failed", "data": {"exempt": True, "amount_xu": 0, "balance_after": 500}}
+            copyfast_bridge.bridge_request = fake_settle
+            ev = await rt._settle_realtime_slice(sess, block_count=0, is_final=True)
+            assert ev is not None and ev["status"] == "exempt"
+        finally:
+            copyfast_bridge.CoreBridgeClient.configured = orig_cfg
+            copyfast_bridge.bridge_request = orig_req
+    asyncio.run(_check_exempt_status())

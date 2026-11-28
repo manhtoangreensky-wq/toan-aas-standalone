@@ -358,7 +358,7 @@
       STATE.pipWindow = pipWin;
       const doc = pipWin.document;
       doc.body.style.cssText =
-        "margin:0;padding:14px;background:#071b21;color:#f0fdfa;font-family:system-ui,sans-serif;display:flex;flex-direction:column;gap:8px;";
+        "margin:0;padding:12px 14px;background:rgba(9,13,22,0.96);color:#f8fafc;font-family:system-ui,sans-serif;display:flex;flex-direction:column;gap:6px;";
       const hdrRow = doc.createElement("div");
       hdrRow.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:8px;";
       const hdr = doc.createElement("div");
@@ -615,7 +615,11 @@
             STATE.lastStatus = "Đang phát lồng tiếng & cập nhật phụ đề...";
           }
         } else if (msg.type === "tts.audio") {
-          if (msg.audio_b64) playTtsBase64(msg.audio_b64);
+          if (msg.audio_b64) {
+            playTtsBase64(msg.audio_b64);
+          } else if (msg.error) {
+            STATE.lastStatus = `⚠ Lỗi tạo giọng đọc: ${msg.error}`;
+          }
         } else if (msg.type === "ack") {
           ackCount += 1;
           STATE.lastStatus = `Đang hoạt động · đã xử lý ${ackCount} đoạn âm thanh.`;

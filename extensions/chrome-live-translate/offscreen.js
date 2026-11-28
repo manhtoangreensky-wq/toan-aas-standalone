@@ -22,6 +22,8 @@ let isReplaying = false;
 let isReconnecting = false;
 let isDubMuted = false;
 let stopConfirmationResolver = null;
+let nextTtsPlayTime = 0;
+let activeTtsSources = 0;
 
 const MAX_RECONNECT_ATTEMPTS = 5;
 const INITIAL_RECONNECT_DELAY_MS = 500;
@@ -77,6 +79,8 @@ async function startCapture(streamId, config) {
   reconnectAttempts = 0;
   isReplaying = false;
   isReconnecting = false;
+  nextTtsPlayTime = 0;
+  activeTtsSources = 0;
   unackedFrames.clear();
   currentConfig = config;
   isCapturing = true;
@@ -382,13 +386,20 @@ async function handleDownstreamEvent(rawData) {
       ttsSource.buffer = audioBuffer;
       ttsSource.connect(audioContext.destination);
 
+      const now = Number(audioContext.currentTime) || 0;
+      const startAt = Math.max(now, nextTtsPlayTime || now);
+      const dur = Number(audioBuffer?.duration) || 0;
+      nextTtsPlayTime = startAt + dur;
+      activeTtsSources += 1;
+
       ttsSource.onended = () => {
-        if (originalGainNode && audioContext) {
+        activeTtsSources = Math.max(0, activeTtsSources - 1);
+        if (activeTtsSources === 0 && originalGainNode && audioContext) {
           originalGainNode.gain.cancelScheduledValues(audioContext.currentTime);
           originalGainNode.gain.setValueAtTime(1.0, audioContext.currentTime);
         }
       };
-      ttsSource.start();
+      ttsSource.start(startAt);
     }
 
     // Relay to content script for subtitle rendering
@@ -617,6 +628,8 @@ if (typeof module !== "undefined" && module.exports) {
       originalGainNode = null;
       scriptProcessor = null;
       mediaStream = null;
+      nextTtsPlayTime = 0;
+      activeTtsSources = 0;
     },
   };
 }

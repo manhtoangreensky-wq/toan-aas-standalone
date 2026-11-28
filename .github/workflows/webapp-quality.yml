@@ -230,15 +230,15 @@ jobs:
         run: |
           git clone https://github.com/manhtoangreensky-wq/bot.git /tmp/bot_core
           cd /tmp/bot_core
-          git checkout 2dc39cb695030cc3ea837c78e194661e4a06baa7
+          git checkout 1319fcc68890d3713e2d66e043d353ad64c410e4
           ACTUAL_BOT_SHA=$(git rev-parse HEAD)
           echo "Canonical Bot checkout at $ACTUAL_BOT_SHA"
-          test "$ACTUAL_BOT_SHA" = "2dc39cb695030cc3ea837c78e194661e4a06baa7"
+          test "$ACTUAL_BOT_SHA" = "1319fcc68890d3713e2d66e043d353ad64c410e4"
 
       - name: Realtime Translate & Dub Acceptance Matrix
         env:
           TOAN_AAS_BOT_REPO_ROOT: /tmp/bot_core
-          EXPECTED_BOT_SHA: 2dc39cb695030cc3ea837c78e194661e4a06baa7
+          EXPECTED_BOT_SHA: 1319fcc68890d3713e2d66e043d353ad64c410e4
         run: |
           python tests/test_p0_realtime_translate_acceptance_matrix.py
 
