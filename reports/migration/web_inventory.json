@@ -10701,7 +10701,7 @@
         "copyfast_music_library_bridge.py",
         "copyfast_music_media.py"
       ],
-      "occurrences": 2117,
+      "occurrences": 2116,
       "provider": "Telegram"
     }
   ],
@@ -18853,39 +18853,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 743,
-  "source_files_scanned": 743,
-  "source_fingerprint_sha256": "5126b32a00ba6917dfc53c529adfad0f2a344c88636460b2534c26b7945aa0a4",
+  "source_files_discovered": 747,
+  "source_files_scanned": 747,
+  "source_fingerprint_sha256": "7080487175cacf2f4f80df45e8a36529bae988a8c45112b11f49585c7c73d4ca",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 36158,
+      "line": 36244,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36474,
+      "line": 36560,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35822,
+      "line": 35908,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36071,
+      "line": 36157,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35443,
+      "line": 35529,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35735,
+      "line": 35821,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -19125,7 +19125,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 37594,
+      "line": 37680,
       "path": "/features"
     },
     {
