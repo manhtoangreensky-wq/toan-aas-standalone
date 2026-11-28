@@ -174,3 +174,13 @@ leafmớiđểgiữepochcũ,khôngđổiassertion/renderer/dữliệu/nút hoặ
 haiappfile. Chỉ chạy lại caseZHfail;những case cũ đã đạt giữ kết quả.
 Tài liệu phiên/prepush/metadata ghi lượt lỗi;haiWebprovenance tạo lại
 sau chốt nguồn. Bản kiểm mới đúngHEADvẫn bắt buộc trước gộp.
+
+## 29/11 — giữ nguyên thay đổi đồng thời trên main
+
+MainđãnhậnPR826/a75ad840ca145e9a733febe012dd78b43df2772b.
+AmendmentIssue689/7245441432ghi trước khi ghép:chỉhaiJSONWeb
+do máy tạo cóxungđột.Tám tệp nguồn/testcủaPR826được giữ đúng
+blobGitvàhashLF;workflowgiữnguồnmainchỉthêmhai lệnh testđã khai.
+HaiappfilecủađợtlờivàBASEfixturebấtbiếnkhôngđổi;khôngsửalại
+realtime/extension/settlementhoặcBot.Nguồnđãghép72374faf491f9e4dbbb9b1c66dfb46e060b2706c;
+hiệuchỉnhtài liệu/metadatađãđorồitạolạihaibáocáoWeb.C6vẫnmở.

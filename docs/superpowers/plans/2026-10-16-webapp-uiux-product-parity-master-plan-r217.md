@@ -25,6 +25,10 @@ trìnhduyệtđúngkhungđạt,0lỗi/tràn/kếtnốingoài;ràđộclậpứng
 phầnhistorymớikhôngfinding.10Nodepressure/4Pythonleafvàcác
 readerliênquanđãkhépđúngphầnsai,khôngđổipin/assertioncũ.
 Đangchốttàiliệu/nguồntrướcbảnkiểmtrênkho,gộpvàcậpnhậtWeb.
+PR825CI1chỉcònmộtoldZHsectionfinderđãfailed-onlykhép;khôngđổiapp.
+29/11mainnhậnPR826/a75ad840:đãgiữtámfileupstreamblobexact,
+workflowmain+hailệnhtest,haiJSONgeneratedtạolại;khôngsửaphần
+realtime/extension/tiền.Haifilecâuchữgiữnguyênhashđãkiểm;C6vẫnmở.
 
 Bướcsau:ghichúmặcđịnhworkspaceđãcóđườnghiểnthịthật,rồicác
 bảnnháp/lifecycle/race/AX/responsive/thiếtbị/Safari/offline/phiên

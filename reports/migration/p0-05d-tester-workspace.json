@@ -44,7 +44,7 @@
     "note": "Earlier tracker/remote_revalidation fields are historical snapshots; no issue was reopened or created."
   },
   "partial_remote_revalidated_at": "2026-09-12",
-  "local_files_refreshed_at": "2026-11-28",
+  "local_files_refreshed_at": "2026-11-29",
   "local_files_refresh_scope": "CUSTOMER-LANGUAGE-CLEANUP:2appfiles/48records/16rows;22primary-ledger;42nativeviews;finite history and affected-only recovery;no auth/provider/money/data/motion behavior change.",
   "current_verification_session": {
     "id": "CUSTOMER-LANGUAGE-CLEANUP-20261128",
@@ -60,7 +60,7 @@
       "CLC-HISTORY",
       "CLC-DELIVERY"
     ],
-    "status": "LOCAL_TARGETED_PASS_EXACT_HEAD_CI_PENDING",
+    "status": "LOCAL_INPUTS_CLOSED_CONCURRENT_MAIN_MERGED_EXACT_HEAD_CI_PENDING",
     "model": "gemini-4-hydrogen-xhigh",
     "proposal_streams": 3,
     "worker_invocations": 4,
@@ -142,6 +142,16 @@
       "failed_only_recovered": 1,
       "application_changes_for_recovery": 0,
       "old_assertions_and_shared_test_helper_held": true
+    },
+    "concurrent_main": {
+      "sha": "a75ad840ca145e9a733febe012dd78b43df2772b",
+      "pr": 826,
+      "preserved_source_test_files": 8,
+      "workflow_preserved_with_only_two_declared_test_commands": true,
+      "generated_conflicts_regenerated_only": 2,
+      "merge_source": "72374faf491f9e4dbbb9b1c66dfb46e060b2706c",
+      "copy_application_hashes_unchanged": true,
+      "realtime_financial_implementation_authored_by_this_batch": false
     }
   },
   "prior_gallery_customer_copy_verification_session": {
@@ -1077,7 +1087,7 @@
       "path": ".github/workflows/webapp-quality.yml",
       "lines": 409,
       "bytes": 28294,
-      "sha256": "4e2933d23c9e4b3d53cf4f86300fdaa6a14538eb3f6b2170e716a2efc89b551a"
+      "sha256": "f76413f67edfbc778c47543db50c9e7523291eab0ca477e801b192988776735f"
     },
     {
       "path": "KIEM-THU/DANH-SACH-CASE.md",
@@ -1123,9 +1133,9 @@
     },
     {
       "path": "KIEM-THU/PHIEN-CUSTOMER-LANGUAGE-CLEANUP-20261128.md",
-      "lines": 78,
-      "bytes": 5061,
-      "sha256": "d66a99e581a85aba16641c089e063dd4d3b5dcb8b6dc69ee549e7bb350c826b9"
+      "lines": 86,
+      "bytes": 5579,
+      "sha256": "0bf385398cd4c07bc2bc11a64a19ed07d7b541bdea25dc0e7228751ce447bc29"
     },
     {
       "path": "KIEM-THU/PHIEN-CUSTOMER-NATURAL-20261128.md",
@@ -1213,9 +1223,9 @@
     },
     {
       "path": "docs/superpowers/plans/2026-10-16-webapp-uiux-product-parity-master-plan-r217.md",
-      "lines": 339,
-      "bytes": 20724,
-      "sha256": "c0534a818126bc66a6819bda214a66a34417e5e5743df505cde7d67f042ab094"
+      "lines": 343,
+      "bytes": 21022,
+      "sha256": "0da6ba6fe9f832a989b83c42189cab4cce19424beed1a0c3001666479a708c08"
     },
     {
       "path": "docs/superpowers/plans/2026-11-26-feature-catalog-descriptions108.md",
@@ -1369,9 +1379,9 @@
     },
     {
       "path": "docs/superpowers/specs/2026-11-28-customer-language-cleanup.md",
-      "lines": 176,
-      "bytes": 11461,
-      "sha256": "e97b65d12ba9061efe666fcdb5ea5185f0d98cd2b3955dac1631cb055b716ac0"
+      "lines": 186,
+      "bytes": 12078,
+      "sha256": "9d07a009388c4b6d5cbbc2c41adb04e12569c2fb852fe0be36b0f0811e1deeab"
     },
     {
       "path": "docs/superpowers/specs/2026-11-28-customer-natural-followup.md",
@@ -1393,9 +1403,9 @@
     },
     {
       "path": "reports/prepush/CUSTOMER-LANGUAGE-CLEANUP-20261128.md",
-      "lines": 74,
-      "bytes": 4214,
-      "sha256": "35c8a118e404494446dbfbed6822ddf0c7abc34720257d79d393236cf968bc35"
+      "lines": 82,
+      "bytes": 4706,
+      "sha256": "418cd39cd5ba916a229c674102ae654075af8c2a7b8da889fff377c11b2ed0cd"
     },
     {
       "path": "reports/prepush/CUSTOMER-NATURAL-20261128.md",
@@ -1614,7 +1624,7 @@
       "CLC-HISTORY",
       "CLC-DELIVERY"
     ],
-    "status": "LOCAL_TARGETED_PASS_EXACT_HEAD_CI_PENDING",
+    "status": "LOCAL_INPUTS_CLOSED_CONCURRENT_MAIN_MERGED_EXACT_HEAD_CI_PENDING",
     "manifest": "KIEM-THU/PHIEN-CUSTOMER-LANGUAGE-CLEANUP-20261128.md",
     "signed_ui_live": "NOT_TESTED",
     "legacy_push_gate_field": "Historical snapshot retained; CUSTOMER-LANGUAGE-CLEANUP prepush defines the current release."
