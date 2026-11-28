@@ -4,11 +4,12 @@ import fs from "node:fs";
 import vm from "node:vm";
 import {execFileSync} from "node:child_process";
 import {customerNaturalHistoricalSource as inverse,customerNaturalHistoricalSnapshot as snapshot} from "./helpers/customer-natural-followup-historical.mjs";
+import {customerLanguageHistoricalSource} from "./helpers/customer-language-cleanup-historical.mjs";
 const fixture=JSON.parse(fs.readFileSync(new URL("./fixtures/customer-natural-followup-history.json",import.meta.url),"utf8"));
 const lf=value=>value.replace(/\r\n/g,"\n");
 const baseline=file=>lf(execFileSync("git",["show",fixture.base_sha+":"+file],{encoding:"utf8",maxBuffer:30e6}));
 for(const row of fixture.records){
-  const raw=lf(fs.readFileSync(new URL("../"+row.file,import.meta.url),"utf8")),base=baseline(row.file);
+  const raw=customerLanguageHistoricalSource(lf(fs.readFileSync(new URL("../"+row.file,import.meta.url),"utf8")),row.file),base=baseline(row.file);
   test(row.file+": finite inverse exactly recovers immutable source and preserves unknown bytes",()=>{
     assert.equal(raw,base.replace(row.before,()=>row.after));
     assert.equal(inverse(raw,row.file),base);

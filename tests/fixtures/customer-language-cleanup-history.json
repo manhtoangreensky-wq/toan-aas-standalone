@@ -1,0 +1,603 @@
+{
+  "base_sha": "2817dd9d221e04aa45945165ae60d5838cf9d920",
+  "records": [
+    {
+      "file": "static/portal/portal.js",
+      "before": "      accountRow(copy(\"profileDefaultsLabel\", \"Mặc định hồ sơ\"), `${profile.locale || \"vi\"} · ${profile.timezone || \"Asia/Ho_Chi_Minh\"} · ${profile.avatarStyle || \"gradient\"}`),\n      accountRow(copy(\"signInLabel\", \"Đăng nhập\"), methodSummary || copy(\"emailPassword\", \"Email + mật khẩu (có thể dùng Gmail)\")),",
+      "after": "\n      accountRow(copy(\"signInLabel\", \"Đăng nhập\"), methodSummary || copy(\"emailPassword\", \"Email + mật khẩu (có thể dùng Gmail)\")),",
+      "before_sha256": "aa6e8101a78c4117f97409932430b6eaaee8001ce9314c27cef8219b1aab4117",
+      "after_sha256": "e22182ef165b6174bf60274091ca8cdf17512c116eae357810cca411ec945423",
+      "spec": "CL-ACCOUNT-DEFAULT-ROW"
+    },
+    {
+      "file": "static/portal/portal.js",
+      "before": "  function renderInterfaceLocaleNavigator(page, context) {\n    const profile = context.profile && typeof context.profile === \"object\" ? context.profile : {};\n    const canUpdate = Boolean(context.capabilities && context.capabilities[\"update-profile\"] === true);\n    const knownLocale = (value) => INTERFACE_LOCALE_OPTIONS.some((item) => item.value === value);\n    const currentLocale = knownLocale(String(profile.locale || \"\").trim().toLowerCase())\n      ? String(profile.locale).trim().toLowerCase()\n      : \"vi\";\n    const timezone = String(profile.timezone || \"\") === \"UTC\" ? \"UTC\" : \"Asia/Ho_Chi_Minh\";\n    const localeMetadata = Object.freeze({\n      vi: { name: uiText(\"locale.vi\", \"Tiếng Việt\"), subtitle: \"Việt Nam\", lang: \"vi\" },\n      en: { name: uiText(\"locale.en\", \"English\"), subtitle: \"English\", lang: \"en\" },\n      zh: { name: uiText(\"locale.zh\", \"中文\"), subtitle: \"简体中文\", lang: \"zh-CN\" }\n    });\n    const unsupportedLocales = Object.freeze([\n      { code: \"ja\", name: \"日本語\", lang: \"ja\" },\n      { code: \"ko\", name: \"한국어\", lang: \"ko\" },\n      { code: \"th\", name: \"ไทย\", lang: \"th\" },\n      { code: \"ar\", name: \"العربية\", lang: \"ar\" }\n    ]);\n    const localeOptions = INTERFACE_LOCALE_OPTIONS.map((entry) => {\n      const meta = localeMetadata[entry.value];\n      const current = entry.value === currentLocale;\n      const id = `portal-interface-locale-${entry.value}`;\n      return `<label class=\"portal-interface-locale-choice\" for=\"${safeText(id)}\">\n        <input class=\"portal-interface-locale-input\" id=\"${safeText(id)}\" type=\"radio\" name=\"locale\" value=\"${safeText(entry.value)}\"${current ? \" checked\" : \"\"}${canUpdate ? \"\" : \" disabled\"}${entry.value === \"vi\" ? \" required\" : \"\"}>\n        <span class=\"portal-interface-locale-choice-body\"><span class=\"portal-interface-locale-choice-head\"><span class=\"portal-interface-locale-choice-mark\" aria-hidden=\"true\">${portalIcon(ICONS.check)}</span><span class=\"portal-interface-locale-choice-state\">${safeText(current ? uiText(\"interfaceLocale.current\", \"Đang dùng\") : uiText(\"interfaceLocale.selectable\", \"Có thể chọn\"))}</span></span><strong lang=\"${safeText(meta.lang)}\">${safeText(meta.name)}</strong><small lang=\"${safeText(meta.lang)}\">${safeText(meta.subtitle)}</small><em>${safeText(uiText(\"interfaceLocale.reviewed\", \"Catalogue Web đã được review\"))}</em></span>\n      </label>`;\n    }).join(\"\");\n    const unsupported = unsupportedLocales.map((entry) => `<li><span class=\"portal-interface-locale-unsupported-code\" lang=\"${safeText(entry.lang)}\">${safeText(entry.name)}</span><span><strong>${safeText(entry.code.toUpperCase())} · ${safeText(uiText(\"interfaceLocale.unavailable\", \"Chưa có catalogue Web\"))}</strong><small>${safeText(uiText(\"interfaceLocale.unsupportedHelp\", \"Hiển thị minh bạch theo phạm vi hiện tại; không thể chọn hoặc tự fallback thành một preference khác.\"))}</small></span></li>`).join(\"\");\n    const settingsNav = renderAccountSettingsNav(\"/account/interface-language\");\n    return `<article class=\"portal-page portal-interface-locale-navigator\">${renderHero(page, context)}${settingsNav}\n      <section class=\"portal-interface-locale-intro\"><div><span class=\"portal-section-kicker\">${safeText(uiText(\"interfaceLocale.kicker\", \"Web profile preference\"))}</span><h2>${safeText(uiText(\"interfaceLocale.title\", \"Chọn ngôn ngữ giao diện\"))}</h2><p>${safeText(uiText(\"interfaceLocale.description\", \"Lựa chọn này chỉ thay đổi catalogue UI cố định của Web App. Nó không sao chép lựa chọn ngôn ngữ, menu hay identity từ Telegram Bot.\"))}</p></div><div class=\"portal-interface-locale-current\" role=\"status\"><span aria-hidden=\"true\">${portalIcon(ICONS.account)}</span><span><strong>${safeText(uiText(\"interfaceLocale.current\", \"Đang dùng\"))}</strong><small>${safeText(localeMetadata[currentLocale].name)} · ${safeText(timezone)}</small></span></div></section>\n      <form class=\"portal-interface-locale-form\" data-portal-form data-portal-action=\"update-interface-locale\" data-portal-route=\"/account/interface-language\" novalidate><section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(uiText(\"interfaceLocale.supportedHeading\", \"Supported Web catalogues\"))}</span><h2 class=\"portal-card-title\">${safeText(uiText(\"interfaceLocale.formLegend\", \"Chọn một catalogue đã được review\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"interfaceLocale.formHelp\", \"Lưu bằng signed session và CSRF. Thay đổi chỉ xuất hiện sau khi máy chủ xác nhận preference của chính account này.\"))}</p></div>${badge(canUpdate ? \"ready\" : \"guarded\")}</div><fieldset class=\"portal-interface-locale-fieldset\" aria-describedby=\"portal-interface-locale-save-help\"><legend class=\"portal-sr-only\">${safeText(uiText(\"interfaceLocale.formLegend\", \"Chọn một catalogue đã được review\"))}</legend><div class=\"portal-interface-locale-grid\">${localeOptions}</div></fieldset><div class=\"portal-form-footer\"><span id=\"portal-interface-locale-save-help\" class=\"portal-form-note\">${safeText(uiText(\"interfaceLocale.saveHelp\", \"Không lưu Telegram ID hoặc Bot locale. Nếu phiên/CSRF chưa sẵn sàng, lựa chọn giữ ở trạng thái được bảo vệ.\"))}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${canUpdate ? \"\" : \" disabled title=\\\"Cần signed session và CSRF hợp lệ.\\\"\"}>${safeText(uiText(\"interfaceLocale.save\", \"Lưu ngôn ngữ giao diện\"))}</button></div></section></form>\n      <section class=\"portal-interface-locale-boundary\" aria-label=\"${safeText(uiText(\"interfaceLocale.boundaryHeading\", \"Ranh giới preference Web\"))}\"><article><span aria-hidden=\"true\">${portalIcon(ICONS.check)}</span><div><strong>${safeText(uiText(\"interfaceLocale.changesHeading\", \"Điều sẽ thay đổi\"))}</strong><p>${safeText(uiText(\"interfaceLocale.changesBody\", \"Chrome, label cố định, metadata ngôn ngữ tài liệu và các renderer đã opt-in cho catalog này.\"))}</p></div></article><article><span aria-hidden=\"true\">${portalIcon(ICONS.shield)}</span><div><strong>${safeText(uiText(\"interfaceLocale.noBotState\", \"Không chuyển state Telegram\"))}</strong><p>${safeText(uiText(\"interfaceLocale.noBotStateBody\", \"Không có Telegram ID, Bot locale, menu callback, translation mode hoặc pending state đi vào browser.\"))}</p></div></article><article><span aria-hidden=\"true\">${portalIcon(ICONS.document)}</span><div><strong>${safeText(uiText(\"interfaceLocale.noWorkflow\", \"Không đổi workflow content\"))}</strong><p>${safeText(uiText(\"interfaceLocale.noWorkflowBody\", \"Prompt, brief, file, source/target language và provider input giữ nguyên contract hiện có.\"))}</p></div></article><article><span aria-hidden=\"true\">${portalIcon(ICONS.payments)}</span><div><strong>${safeText(uiText(\"interfaceLocale.noPayments\", \"Không có workflow tài chính hoặc job\"))}</strong><p>${safeText(uiText(\"interfaceLocale.noPaymentsBody\", \"Trang không gọi bridge, provider, job, wallet, Xu, PayOS, payment hoặc delivery action.\"))}</p></div></article></section>\n      <section class=\"portal-card portal-card-pad portal-interface-locale-support\"><div class=\"portal-card-header\"><div><span class=\"portal-section-kicker\">${safeText(uiText(\"interfaceLocale.supportMatrix\", \"Coverage disclosure\"))}</span><h2 class=\"portal-card-title\">${safeText(uiText(\"interfaceLocale.supportHeading\", \"Ngôn ngữ đang có trong Bot nhưng chưa là catalogue Web\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"interfaceLocale.supportDescription\", \"Các locale này được hiển thị để phạm vi sản phẩm rõ ràng. Không có option chọn, không có fallback ngầm và không có hành động Telegram được phát lại từ Web.\"))}</p></div>${badge(\"read_only\")}</div><ul>${unsupported}</ul><div class=\"portal-form-footer\"><a class=\"portal-button portal-button--quiet\" href=\"/account\">${safeText(uiText(\"interfaceLocale.backAccount\", \"Về Tài khoản\"))}</a><a class=\"portal-button portal-button--quiet\" href=\"/account/security\">${safeText(uiText(\"interfaceLocale.openSecurity\", \"Mở Bảo mật tài khoản\"))}</a></div></section>\n    </article>`;\n  }\n\n",
+      "after": "  function renderInterfaceLocaleNavigator(page, context) {\n    const profile = context.profile && typeof context.profile === \"object\" ? context.profile : {};\n    const canUpdate = Boolean(context.capabilities && context.capabilities[\"update-profile\"] === true);\n    const knownLocale = (value) => INTERFACE_LOCALE_OPTIONS.some((item) => item.value === value);\n    const currentLocale = knownLocale(String(profile.locale || \"\").trim().toLowerCase())\n      ? String(profile.locale).trim().toLowerCase()\n      : \"vi\";\n    const localeMetadata = Object.freeze({\n      vi: { name: \"Tiếng Việt\", lang: \"vi\" },\n      en: { name: \"English\", lang: \"en\" },\n      zh: { name: \"中文\", lang: \"zh-CN\" }\n    });\n    const localeOptions = INTERFACE_LOCALE_OPTIONS.map((entry) => {\n      const meta = localeMetadata[entry.value];\n      const current = entry.value === currentLocale;\n      const id = `portal-interface-locale-${entry.value}`;\n      return `<label class=\"portal-interface-locale-choice\" for=\"${safeText(id)}\">\n        <input class=\"portal-interface-locale-input\" id=\"${safeText(id)}\" type=\"radio\" name=\"locale\" value=\"${safeText(entry.value)}\"${current ? \" checked\" : \"\"}${canUpdate ? \"\" : \" disabled\"}${entry.value === \"vi\" ? \" required\" : \"\"}>\n        <span class=\"portal-interface-locale-choice-body\"><span class=\"portal-interface-locale-choice-head\"><span class=\"portal-interface-locale-choice-mark\" aria-hidden=\"true\">${portalIcon(ICONS.check)}</span><span class=\"portal-interface-locale-choice-state\">${safeText(current ? uiText(\"interfaceLocale.current\", \"Đang dùng\") : uiText(\"interfaceLocale.selectable\", \"Có thể chọn\"))}</span></span><strong lang=\"${safeText(meta.lang)}\">${safeText(meta.name)}</strong></span>\n      </label>`;\n    }).join(\"\");\n    const settingsNav = renderAccountSettingsNav(\"/account/interface-language\");\n    const saveDisabledAttr = canUpdate\n      ? \"\"\n      : ` disabled title=\"${safeText(uiText(\"interfaceLocale.saveBlocked\", \"Chưa thể lưu lựa chọn. Hãy tải lại trang và thử lại.\"))}\"`;\n    return `<article class=\"portal-page portal-interface-locale-navigator\">${renderHero(page, context)}${settingsNav}\n      <form class=\"portal-interface-locale-form\" data-portal-form data-portal-action=\"update-interface-locale\" data-portal-route=\"/account/interface-language\" novalidate><section class=\"portal-card portal-card-pad\"><div class=\"portal-card-header\"><div><h2 class=\"portal-card-title\">${safeText(uiText(\"interfaceLocale.formLegend\", \"Ngôn ngữ hiển thị\"))}</h2><p class=\"portal-card-subtitle\">${safeText(uiText(\"interfaceLocale.formHelp\", \"Chọn một ngôn ngữ rồi bấm Lưu ngôn ngữ.\"))}</p></div>${badge(canUpdate ? \"ready\" : \"guarded\")}</div><fieldset class=\"portal-interface-locale-fieldset\" aria-describedby=\"portal-interface-locale-save-help\"><legend class=\"portal-sr-only\">${safeText(uiText(\"interfaceLocale.formLegend\", \"Ngôn ngữ hiển thị\"))}</legend><div class=\"portal-interface-locale-grid\">${localeOptions}</div></fieldset><div class=\"portal-form-footer\"><span id=\"portal-interface-locale-save-help\" class=\"portal-form-note\">${safeText(uiText(\"interfaceLocale.saveHelp\", \"Lựa chọn này không dịch hoặc thay đổi nội dung bạn đã nhập.\"))}</span><button class=\"portal-button portal-button--primary\" type=\"submit\"${saveDisabledAttr}>${safeText(uiText(\"interfaceLocale.save\", \"Lưu ngôn ngữ\"))}</button></div></section></form>\n      <div class=\"portal-form-footer\"><a class=\"portal-button portal-button--quiet\" href=\"/account\">${safeText(uiText(\"interfaceLocale.backAccount\", \"Về Tài khoản\"))}</a><a class=\"portal-button portal-button--quiet\" href=\"/account/security\">${safeText(uiText(\"interfaceLocale.openSecurity\", \"Mở Bảo mật tài khoản\"))}</a></div>\n    </article>`;\n  }\n\n",
+      "before_sha256": "6784820c2848c9a55db11dbca81ce7b56206e84228c6a60eca335a23bb4b517e",
+      "after_sha256": "4b73de22d4f20a958bb2a71668152e7f84d899991ebf82fe65d8a1eb84d4e39b",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"page.account.description\": \"Quản lý hồ sơ, bảo mật và các phương thức truy cập của tài khoản Web.\",",
+      "after": "      \"page.account.description\": \"Quản lý hồ sơ, cách đăng nhập và bảo vệ tài khoản của bạn.\",",
+      "before_sha256": "146a4a31b394ebd1b7f8a732e299c8dcaddb8cef5903b42740cab28906316d76",
+      "after_sha256": "e4e05b0724764fa178deb814b6ca8de132238554ce9a2455bd01e2577aba99ce",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"page.account.description\": \"Manage your Web account profile, security and access methods.\",",
+      "after": "      \"page.account.description\": \"Manage your profile, sign-in options, and account protection.\",",
+      "before_sha256": "e93c09cb4f6bb865a5400082bad98c3b6d5cbd4becc5eeec0c671d0cac019664",
+      "after_sha256": "4ddd74b39099e69a5dbc9d749370d7cd6d38b385fff4d8d7675b4be3f56e6cbe",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"page.account.description\": \"管理您的 Web 账户资料、安全性和访问方式。\",",
+      "after": "      \"page.account.description\": \"管理您的个人资料、登录方式和账户保护。\",",
+      "before_sha256": "8a8a86b466aabb30cab73637cf76a90bc126e8ee1874424c0c19d52eb68c9c62",
+      "after_sha256": "dd4f85fb42ac8883c911db252761e8576abb8c4cec711b004b7d26be288af64e",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"page.workspaceSetup.description\": \"Thiết lập các tùy chọn trên web để không gian làm việc phù hợp hơn với cách bạn làm việc.\",",
+      "after": "    \"page.workspaceSetup.description\": \"Chọn mục tiêu và cách làm việc để nhận gợi ý phù hợp. Bạn có thể thay đổi sau.\",",
+      "before_sha256": "60dca3d45a82d7fc21607b7bbdd4c29d230d8ff49cb2867b3b39e1d070a047a3",
+      "after_sha256": "b38f240934e3eecc1565acf7519e5ac9ad6c76102a35662c76b028169d67f5d5",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"page.workspaceSetup.description\": \"Set your web preferences so the workspace better fits how you work.\",",
+      "after": "    \"page.workspaceSetup.description\": \"Choose your goals and how you work to get tailored suggestions. You can change this later.\",",
+      "before_sha256": "f6ff2c574b6c6ce4462b21a067e09f7ede1b0fbbbcd8d563f13cf4df3b421ef9",
+      "after_sha256": "4b1c41f19d703da455dbb1a61bd43445c72d1d3b907e514644ebc619c3c2301f",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"page.workspaceSetup.description\": \"设置网页端偏好，让工作台更符合您的工作方式。\",",
+      "after": "    \"page.workspaceSetup.description\": \"选择您的目标和工作方式，以获取合适的建议。您可以稍后更改。\",",
+      "before_sha256": "b76480b1788257163e69d85c0e69ceea4400247cced16f45204fad8f588c6603",
+      "after_sha256": "2f90072f33eabd05e2f503f62fdd76025f230270890bc4079bc44df85219c220",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"setup.webNative\": \"Tùy chọn trên web\",",
+      "after": "    \"setup.webNative\": \"Tùy chọn của bạn\",",
+      "before_sha256": "72c61e8cb1df227816b51f243929c85247bf65769129c91ccbe89feeb47bad6b",
+      "after_sha256": "43c60ee88f5b0328044e82d9358c0365b020ae391adde388cdcd14a93b2045d0",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"setup.webNative\": \"Web preference\",",
+      "after": "    \"setup.webNative\": \"Your preferences\",",
+      "before_sha256": "0568de3b2ef25edd7411ab1f4462ce0c0fdb403407854f6e6cb89caf1fd4e725",
+      "after_sha256": "1cb8860bd1b1e2e8943068574c203c948ccc3577d6def4dafb03642890b5e02c",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"setup.webNative\": \"网页端偏好\",",
+      "after": "    \"setup.webNative\": \"您的偏好\",",
+      "before_sha256": "b267f05808d7761c263644ee4fd27574260ce75836868c90317a5123680da2f2",
+      "after_sha256": "b92d0d709c7089859bd2fbc130594bbdf079c78fbf10634245ab2991752ba7e8",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.upgradeEmailHelp\": \"Thêm Email + mật khẩu vào đúng tài khoản Telegram đang đăng nhập; không ghép tự động với tài khoản Web khác.\",",
+      "after": "      \"accountCenter.profile.upgradeEmailHelp\": \"Thêm email và mật khẩu cho tài khoản Telegram bạn đang dùng. Email phải chưa được sử dụng và không làm gộp tài khoản khác.\",",
+      "before_sha256": "4e6257476028e0d69889b6217ae2d63b1457fcae40b43a7e2e1ed8fd915df2af",
+      "after_sha256": "ac041b953ec14cdb1bfaec9f4bc18066af3127614356970bf286fbd4845247c5",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.upgradeEmailHelp\": \"Adds email + password to the signed-in Telegram account only; it never automatically joins a different Web account.\",",
+      "after": "      \"accountCenter.profile.upgradeEmailHelp\": \"Add an email and password to the Telegram account you are using. The email must not already be in use, and this will not merge another account.\",",
+      "before_sha256": "e0c993c331d23475478962b8804a6a6e00a11ca0e19f33e51b43473d387a7577",
+      "after_sha256": "b47365115fd9e9d11d80f49b8abea95751feb04f7faf08eff29584a872245c74",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.upgradeEmailHelp\": \"仅为当前登录的 Telegram 账户添加邮箱 + 密码；绝不会自动合并其他 Web 账户。\",",
+      "after": "      \"accountCenter.profile.upgradeEmailHelp\": \"为您当前使用的 Telegram 账户添加邮箱和密码。该邮箱必须尚未被使用，且不会合并其他账户。\",",
+      "before_sha256": "0174bba0acd564e3f5beb1d01e8665874b72718733d1d34b2391f035088cfa93",
+      "after_sha256": "b1326bd8c3a04e392578e0e3220a54860b612363baa52e8aa308d26e6e09c4a2",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.unlinkedBody\": \"Không gian Web vẫn hoạt động độc lập khi chưa liên kết Telegram.\",",
+      "after": "      \"accountCenter.profile.unlinkedBody\": \"Bạn vẫn có thể dùng ứng dụng khi chưa liên kết Telegram.\",",
+      "before_sha256": "16934e0b2664ef91664a5f441676e27b7fa8290443c363b4afac41e2c8a77372",
+      "after_sha256": "c140f8ac4b41a8e73daaabddb65ad1385046f9f6cf85e5c639289bceaacefaca",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.unlinkedBody\": \"The Web Workspace remains independent before Telegram is linked.\",",
+      "after": "      \"accountCenter.profile.unlinkedBody\": \"You can still use the app when Telegram isn't linked.\",",
+      "before_sha256": "f40c220c70cf527ce3477d94baf4110b8bbefcadde4ada18d4f306f2abe5f7f5",
+      "after_sha256": "c98d41ca4d4d5c522996e23d1bae5a40ad103cfb069420f8d778ef8654a9e175",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.unlinkedBody\": \"在关联 Telegram 前，Web Workspace 仍可独立使用。\",",
+      "after": "      \"accountCenter.profile.unlinkedBody\": \"未关联 Telegram 时，您仍可使用本应用。\",",
+      "before_sha256": "3e4b60b4889fa746c91e32bd87766d56e22225640ac9f7ea98ce2cdcb8570d85",
+      "after_sha256": "de9f01ffece3110e233aeacf095f5122f4292c5fa803f36ffa1eb2e3f6fb8ea3",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.profileFact\": \"Hồ sơ Web\",",
+      "after": "      \"accountCenter.profile.profileFact\": \"Hồ sơ\",",
+      "before_sha256": "24d8905eb5f0d3e75c21a2d8752e4fe1229e0dab16c110a4565be7b0b52e6b3e",
+      "after_sha256": "02f77c365e6711ec9e7163f90e91a11c30be70427b61f5aff6164ebd28014994",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.profileFact\": \"Web profile\",",
+      "after": "      \"accountCenter.profile.profileFact\": \"Profile\",",
+      "before_sha256": "f3366783e22b9ef4b62e8359ff11b21c8acfa3afe33a9c19d88eea95a965f444",
+      "after_sha256": "a088621ece699d25a2bc52612dd446e5f63aa9cd0c4eb3803f5d88c5bc13fec5",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.profileFact\": \"Web 个人资料\",",
+      "after": "      \"accountCenter.profile.profileFact\": \"个人资料\",",
+      "before_sha256": "a74ad15d68c521a55ac3c4a448e3d8e1a8384a889aed9470664e5ed7a4dcdd4f",
+      "after_sha256": "7b4bb06c7ced7dcd775223beb2801d9440d78213466c52f9d2570144408b61a7",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.dataControlsLink\": \"Kiểm soát dữ liệu Web →\",",
+      "after": "      \"accountCenter.profile.dataControlsLink\": \"Quản lý thông tin của bạn →\",",
+      "before_sha256": "bbd520e980b0e01fa89b79414c55b544748149e52a64c12e490a7c53596857f1",
+      "after_sha256": "381ce8e8b1b0628989815b78fbb91cf45a0704a8f8e70ea79b731171938f8ec7",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.dataControlsLink\": \"Web data controls →\",",
+      "after": "      \"accountCenter.profile.dataControlsLink\": \"Manage your information →\",",
+      "before_sha256": "5a29b19bb2edbdb52bf91013b0b80113d7c195e6df84bce80d7619fea3de3ce2",
+      "after_sha256": "1766396fd0008ddc3a501c21f55c75e91ce1348c7aad8b7ff6e4ca96ea406d2f",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.dataControlsLink\": \"Web 数据控制 →\",",
+      "after": "      \"accountCenter.profile.dataControlsLink\": \"管理您的信息 →\",",
+      "before_sha256": "20dc831f0f5faff51dab50e7a73963d48cd254ffbc0eafa6cf112ba06650f839",
+      "after_sha256": "7be6c391a65b484f94fff601b9dcfa665915ccb1af673b60938dee9606a4cac5",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.sessionFact\": \"Phiên\",",
+      "after": "      \"accountCenter.profile.sessionFact\": \"Đăng nhập\",",
+      "before_sha256": "48046791c5d85f1f715ddbf73b89094929194ea5fad8af0209519e1b6df4cb47",
+      "after_sha256": "63a349d7b1a3fefe953d56e6d1047af301d34758785ed58d5fea1779faf59c54",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.sessionFact\": \"Session\",",
+      "after": "      \"accountCenter.profile.sessionFact\": \"Sign-in\",",
+      "before_sha256": "05e078465a24d261423e44d477b090ecb49071555fe06098850addbec29ecaa5",
+      "after_sha256": "347e6e93279560698db31b02009f4c6fc340420a93d98e66a8c0cce98add7fd7",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.sessionFact\": \"会话\",",
+      "after": "      \"accountCenter.profile.sessionFact\": \"登录\",",
+      "before_sha256": "1b7c75338f96c85590f1590e107c8bfe409a22030003377f01eb50890d6f0d84",
+      "after_sha256": "c4adbd55432deee2acd1849e63e8118f5660e4499aaff918d95144a4ae51ba21",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.sessionLabel\": \"Phiên\",",
+      "after": "      \"accountCenter.profile.sessionLabel\": \"Đăng nhập\",",
+      "before_sha256": "c8719f8a9993e383745f6fda034a52f4ab48da0a5022716fd4771ac80372fbe1",
+      "after_sha256": "512a01c719103b6498e9e640822e94eed0368aa59880cabe2728af2eed109e21",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.sessionLabel\": \"Session\",",
+      "after": "      \"accountCenter.profile.sessionLabel\": \"Sign-in\",",
+      "before_sha256": "47ce83b0c7cec73206334c639b15335e500c42d7b58bf9891303be464bfb4fa2",
+      "after_sha256": "7d1ebc8e9f69b2cadf5f362739a6b09a7d7f80bd067a35388a3cb1a847008b32",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"accountCenter.profile.sessionLabel\": \"会话\",",
+      "after": "      \"accountCenter.profile.sessionLabel\": \"登录\",",
+      "before_sha256": "c38876d0ac93c76e4ab17b088a96974877d943c0994b28a09ea4c454d72be615",
+      "after_sha256": "30a572ad4bedcd11e39b160783dc6422fae334f13cbf9497e82edee7a6e06c3e",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"accountCenter.profile.canonicalFact\": \"Thông tin đã xác minh\",",
+      "after": "    \"accountCenter.profile.canonicalFact\": \"Liên kết Telegram\",",
+      "before_sha256": "ad508b80d360e481da9f1336557e5ca7748e4017ba7a6286dfba239bec5d1d0b",
+      "after_sha256": "3344e1761abad9c24a308fb1194d0984876bc37a904fac75ee117ac27b2ab823",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"accountCenter.profile.canonicalFact\": \"Verified information\",",
+      "after": "    \"accountCenter.profile.canonicalFact\": \"Telegram link\",",
+      "before_sha256": "df49bb4fd6c7185a88bbb39dcad8c56f9195a2ba7b66e30f4e32a8187a72db3d",
+      "after_sha256": "114ff9b1661229f9b4cda2e049796a7fe75ffecf95598813f1545567a2072c32",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"accountCenter.profile.canonicalFact\": \"已验证信息\",",
+      "after": "    \"accountCenter.profile.canonicalFact\": \"Telegram 关联\",",
+      "before_sha256": "1c8c3f82f27e8b14b1709e27e36b3e3968cd7348e59401ec0b6610accdb038df",
+      "after_sha256": "c50ec8e8cc55ad343f89bfcc3d6d146b9163cb230ed7113b69bb55781c3fd955",
+      "spec": "CL-ACCOUNT-LABELS"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"page.interfaceLocale.description\": \"Chọn catalogue giao diện Web đã được review; lựa chọn này độc lập với ngôn ngữ/menu Telegram và workflow content.\",",
+      "after": "      \"page.interfaceLocale.description\": \"Chọn ngôn ngữ bạn muốn dùng trong ứng dụng.\",",
+      "before_sha256": "7a05049e02eaf88c47b4b76a7c2573f0b28c55de74dab061e7cedf1e2ee81571",
+      "after_sha256": "59954022fcff17fce8ed5734dfd3153b2a3033748a1f803c20ad0db693d4daa5",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"page.interfaceLocale.description\": \"Choose a reviewed Web interface catalogue; this preference is independent of Telegram language/menu and content workflows.\",",
+      "after": "      \"page.interfaceLocale.description\": \"Choose the language you want to use in the app.\",",
+      "before_sha256": "17104592af25ad31398d10454ba7b33f36d33af86504529c787e8f673cb7ecb9",
+      "after_sha256": "1a8838f0341fe0146beaa16d6f3c7e3f43d5d84a970547a6888f2278417d8f68",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"page.interfaceLocale.description\": \"选择已审核的 Web 界面目录；此偏好独立于 Telegram 语言/菜单和内容工作流。\",",
+      "after": "      \"page.interfaceLocale.description\": \"选择您想在应用中使用的语言。\",",
+      "before_sha256": "bdbb4b6dd36b64b95368c7aecfdab94ea4a2d8b1429d59c9c1ad94842a2daf4b",
+      "after_sha256": "d04813f88bd9ec1bccfbd5a0f9e5881f297c3e49060e0aa3eb33f7292a5c94fd",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"interfaceLocale.formLegend\": \"Chọn một catalogue đã được review\",",
+      "after": "      \"interfaceLocale.formLegend\": \"Ngôn ngữ hiển thị\",",
+      "before_sha256": "3523cc51d89df310836425eca59f4704dd9386b200e410eb53e25648f4eb0048",
+      "after_sha256": "d063a6e4396211afb5de86f65753d86759e94922fe0375e9155630af72d93060",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"interfaceLocale.formLegend\": \"Choose a reviewed catalogue\",",
+      "after": "      \"interfaceLocale.formLegend\": \"Display language\",",
+      "before_sha256": "ffc6ab4343e2f2439a712b9f8d39b67fb631d89ccc9fefb29e8b0bc5bd748a32",
+      "after_sha256": "093af0fd14d4e4c7dff7156721700dfce917ca504e0a4cdf23f4696857b22bc9",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"interfaceLocale.formLegend\": \"选择一个已审核的目录\",",
+      "after": "      \"interfaceLocale.formLegend\": \"显示语言\",",
+      "before_sha256": "1503c1697a766d054d89d0d44639719f6a23b8c8f0f71d1b027b57e959b0ac52",
+      "after_sha256": "df78a0d2dc592dde8ad34fdae789be6a3402c152b07ca0912149ed3335a10207",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"interfaceLocale.formHelp\": \"Được lưu theo phiên đăng nhập hiện tại. Thay đổi chỉ áp dụng sau khi hệ thống xác nhận cho tài khoản này.\",",
+      "after": "    \"interfaceLocale.formHelp\": \"Chọn một ngôn ngữ rồi bấm Lưu ngôn ngữ.\",",
+      "before_sha256": "5cb09a854863573caf44eba70a3d8d04ee2ade35cbe8b5be55d4c63fe02e0ccf",
+      "after_sha256": "ee1a37cd5ffa858cf61d3af92fb5e14f556e5b1ec0f3aa6bcdf053830ee711c3",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"interfaceLocale.formHelp\": \"Saved while you are signed in. Changes appear only after they are confirmed for this account.\",",
+      "after": "    \"interfaceLocale.formHelp\": \"Choose a language, then click Save language.\",",
+      "before_sha256": "58c98c1d64ae3d0d98f4e6c70194b346a6286d10a3b8d96f002868dbceb7f944",
+      "after_sha256": "c5f9fa6788cb9eb5ae4c762c4a1a48fc43fcf7ec8e1c745537a675a574e106f9",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"interfaceLocale.formHelp\": \"在当前登录会话中保存。确认属于当前账户后，更改才会生效。\",",
+      "after": "    \"interfaceLocale.formHelp\": \"选择一种语言，然后点击保存语言。\",",
+      "before_sha256": "d85dbee90b5f850e507c2e91f3ae2e553da4b25af09ff0d10064d639fbf9aedb",
+      "after_sha256": "a5d56a9851bed69e627b5077a69876d5b47ab7d2752a85dae02aeecb388879f3",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"interfaceLocale.saveHelp\": \"Chọn ngôn ngữ hiển thị trong ứng dụng. Nếu chưa thể lưu, hãy đăng nhập rồi thử lại.\",",
+      "after": "    \"interfaceLocale.saveHelp\": \"Lựa chọn này không dịch hoặc thay đổi nội dung bạn đã nhập.\",",
+      "before_sha256": "042e6eb10da66eeb07c8228eb3f6008d48070223dd6a19ff1fac6601f4e2d8c9",
+      "after_sha256": "f9a4537de922ad0731a4cb69ae267478bb2a02b03918edb24cd5f9ced9acf778",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"interfaceLocale.saveHelp\": \"Choose the display language in the app. If it cannot be saved yet, sign in and try again.\",",
+      "after": "    \"interfaceLocale.saveHelp\": \"This choice does not translate or change the content you entered.\",",
+      "before_sha256": "281ee079d3f9bb1e3c41501d3bf1da21d98c5ae0652d6fd59a7297970eb77a50",
+      "after_sha256": "939dc757f4445c56c7a4a99f8dd3db30d7f02a25d1b2c715d83027371b8bf9fd",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "    \"interfaceLocale.saveHelp\": \"选择应用的显示语言。如果暂时无法保存，请登录后重试。\",",
+      "after": "    \"interfaceLocale.saveHelp\": \"此选择不会翻译或更改您输入的内容。\",",
+      "before_sha256": "c1532ce5a069002081ede62d136bd3d4e1794db42b48d4f20e836a6a6f9fd9e9",
+      "after_sha256": "8cbb5e1d30b6c5a069c4a15aaf31f790ef1eb65dcc1f1324ea3fc97b61f19eaa",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"interfaceLocale.save\": \"Lưu ngôn ngữ giao diện\",",
+      "after": "      \"interfaceLocale.save\": \"Lưu ngôn ngữ\",",
+      "before_sha256": "580082c574b5dd2b0fef015ebd9a4e181d293c86421ed83876d86fb9c052eb9e",
+      "after_sha256": "78d2b72bcab94f0500bdf874861180b6e89531670a9bbc1b5a146fff3e5019ff",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"interfaceLocale.save\": \"Save interface language\",",
+      "after": "      \"interfaceLocale.save\": \"Save language\",",
+      "before_sha256": "e698dc200717c691703f43fcd6f7eaf7bf445e2a8b49a559e7d6a114a85110d5",
+      "after_sha256": "e473c3261d3a34ef2677a3a9780b0a2b832ae54e237f7438a7f499fe2195c180",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "      \"interfaceLocale.save\": \"保存界面语言\",",
+      "after": "      \"interfaceLocale.save\": \"保存语言\",",
+      "before_sha256": "1543ecbecd9800b795d63d2ff90e7db95db7c0ce018b999243cbccb12c5729ed",
+      "after_sha256": "bfd1f038bc781fa30532bacbd734c5855af712da04302a395186a6342886c6a1",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    },
+    {
+      "file": "static/portal/portal-i18n.js",
+      "before": "  verifyEqualKeysets();",
+      "after": "  // Plain language for the existing language-save guard.\n  Object.assign(MESSAGES.vi, {\"interfaceLocale.saveBlocked\":\"Chưa thể lưu lựa chọn. Hãy tải lại trang và thử lại.\"});\n  Object.assign(MESSAGES.en, {\"interfaceLocale.saveBlocked\":\"Unable to save your choice yet. Reload the page and try again.\"});\n  Object.assign(MESSAGES.zh, {\"interfaceLocale.saveBlocked\":\"暂时无法保存您的选择。请刷新页面后重试。\"});\n\n  verifyEqualKeysets();",
+      "before_sha256": "1d9d461b5f97c6453c8726d9d9ce29237b172dd8ef73cac4f2471df0251adf31",
+      "after_sha256": "68339dba72b30c6b7dc40b1f2afa7eee269485c2dee38a1f48e8afeac2a9645b",
+      "spec": "CL-LANGUAGE-SELECTOR"
+    }
+  ],
+  "values": [
+    {
+      "key": "page.account.description",
+      "before": {
+        "en": "Manage your Web account profile, security and access methods.",
+        "vi": "Quản lý hồ sơ, bảo mật và các phương thức truy cập của tài khoản Web.",
+        "zh": "管理您的 Web 账户资料、安全性和访问方式。"
+      },
+      "after": {
+        "en": "Manage your profile, sign-in options, and account protection.",
+        "vi": "Quản lý hồ sơ, cách đăng nhập và bảo vệ tài khoản của bạn.",
+        "zh": "管理您的个人资料、登录方式和账户保护。"
+      }
+    },
+    {
+      "key": "page.workspaceSetup.description",
+      "before": {
+        "en": "Set your web preferences so the workspace better fits how you work.",
+        "vi": "Thiết lập các tùy chọn trên web để không gian làm việc phù hợp hơn với cách bạn làm việc.",
+        "zh": "设置网页端偏好，让工作台更符合您的工作方式。"
+      },
+      "after": {
+        "en": "Choose your goals and how you work to get tailored suggestions. You can change this later.",
+        "vi": "Chọn mục tiêu và cách làm việc để nhận gợi ý phù hợp. Bạn có thể thay đổi sau.",
+        "zh": "选择您的目标和工作方式，以获取合适的建议。您可以稍后更改。"
+      }
+    },
+    {
+      "key": "setup.webNative",
+      "before": {
+        "en": "Web preference",
+        "vi": "Tùy chọn trên web",
+        "zh": "网页端偏好"
+      },
+      "after": {
+        "en": "Your preferences",
+        "vi": "Tùy chọn của bạn",
+        "zh": "您的偏好"
+      }
+    },
+    {
+      "key": "accountCenter.profile.upgradeEmailHelp",
+      "before": {
+        "en": "Adds email + password to the signed-in Telegram account only; it never automatically joins a different Web account.",
+        "vi": "Thêm Email + mật khẩu vào đúng tài khoản Telegram đang đăng nhập; không ghép tự động với tài khoản Web khác.",
+        "zh": "仅为当前登录的 Telegram 账户添加邮箱 + 密码；绝不会自动合并其他 Web 账户。"
+      },
+      "after": {
+        "en": "Add an email and password to the Telegram account you are using. The email must not already be in use, and this will not merge another account.",
+        "vi": "Thêm email và mật khẩu cho tài khoản Telegram bạn đang dùng. Email phải chưa được sử dụng và không làm gộp tài khoản khác.",
+        "zh": "为您当前使用的 Telegram 账户添加邮箱和密码。该邮箱必须尚未被使用，且不会合并其他账户。"
+      }
+    },
+    {
+      "key": "accountCenter.profile.unlinkedBody",
+      "before": {
+        "en": "The Web Workspace remains independent before Telegram is linked.",
+        "vi": "Không gian Web vẫn hoạt động độc lập khi chưa liên kết Telegram.",
+        "zh": "在关联 Telegram 前，Web Workspace 仍可独立使用。"
+      },
+      "after": {
+        "en": "You can still use the app when Telegram isn't linked.",
+        "vi": "Bạn vẫn có thể dùng ứng dụng khi chưa liên kết Telegram.",
+        "zh": "未关联 Telegram 时，您仍可使用本应用。"
+      }
+    },
+    {
+      "key": "accountCenter.profile.profileFact",
+      "before": {
+        "en": "Web profile",
+        "vi": "Hồ sơ Web",
+        "zh": "Web 个人资料"
+      },
+      "after": {
+        "en": "Profile",
+        "vi": "Hồ sơ",
+        "zh": "个人资料"
+      }
+    },
+    {
+      "key": "accountCenter.profile.dataControlsLink",
+      "before": {
+        "en": "Web data controls →",
+        "vi": "Kiểm soát dữ liệu Web →",
+        "zh": "Web 数据控制 →"
+      },
+      "after": {
+        "en": "Manage your information →",
+        "vi": "Quản lý thông tin của bạn →",
+        "zh": "管理您的信息 →"
+      }
+    },
+    {
+      "key": "accountCenter.profile.sessionFact",
+      "before": {
+        "en": "Session",
+        "vi": "Phiên",
+        "zh": "会话"
+      },
+      "after": {
+        "en": "Sign-in",
+        "vi": "Đăng nhập",
+        "zh": "登录"
+      }
+    },
+    {
+      "key": "accountCenter.profile.sessionLabel",
+      "before": {
+        "en": "Session",
+        "vi": "Phiên",
+        "zh": "会话"
+      },
+      "after": {
+        "en": "Sign-in",
+        "vi": "Đăng nhập",
+        "zh": "登录"
+      }
+    },
+    {
+      "key": "accountCenter.profile.canonicalFact",
+      "before": {
+        "en": "Verified information",
+        "vi": "Thông tin đã xác minh",
+        "zh": "已验证信息"
+      },
+      "after": {
+        "en": "Telegram link",
+        "vi": "Liên kết Telegram",
+        "zh": "Telegram 关联"
+      }
+    },
+    {
+      "key": "page.interfaceLocale.description",
+      "before": {
+        "en": "Choose a reviewed Web interface catalogue; this preference is independent of Telegram language/menu and content workflows.",
+        "vi": "Chọn catalogue giao diện Web đã được review; lựa chọn này độc lập với ngôn ngữ/menu Telegram và workflow content.",
+        "zh": "选择已审核的 Web 界面目录；此偏好独立于 Telegram 语言/菜单和内容工作流。"
+      },
+      "after": {
+        "en": "Choose the language you want to use in the app.",
+        "vi": "Chọn ngôn ngữ bạn muốn dùng trong ứng dụng.",
+        "zh": "选择您想在应用中使用的语言。"
+      }
+    },
+    {
+      "key": "interfaceLocale.formLegend",
+      "before": {
+        "en": "Choose a reviewed catalogue",
+        "vi": "Chọn một catalogue đã được review",
+        "zh": "选择一个已审核的目录"
+      },
+      "after": {
+        "en": "Display language",
+        "vi": "Ngôn ngữ hiển thị",
+        "zh": "显示语言"
+      }
+    },
+    {
+      "key": "interfaceLocale.formHelp",
+      "before": {
+        "en": "Saved while you are signed in. Changes appear only after they are confirmed for this account.",
+        "vi": "Được lưu theo phiên đăng nhập hiện tại. Thay đổi chỉ áp dụng sau khi hệ thống xác nhận cho tài khoản này.",
+        "zh": "在当前登录会话中保存。确认属于当前账户后，更改才会生效。"
+      },
+      "after": {
+        "en": "Choose a language, then click Save language.",
+        "vi": "Chọn một ngôn ngữ rồi bấm Lưu ngôn ngữ.",
+        "zh": "选择一种语言，然后点击保存语言。"
+      }
+    },
+    {
+      "key": "interfaceLocale.saveHelp",
+      "before": {
+        "en": "Choose the display language in the app. If it cannot be saved yet, sign in and try again.",
+        "vi": "Chọn ngôn ngữ hiển thị trong ứng dụng. Nếu chưa thể lưu, hãy đăng nhập rồi thử lại.",
+        "zh": "选择应用的显示语言。如果暂时无法保存，请登录后重试。"
+      },
+      "after": {
+        "en": "This choice does not translate or change the content you entered.",
+        "vi": "Lựa chọn này không dịch hoặc thay đổi nội dung bạn đã nhập.",
+        "zh": "此选择不会翻译或更改您输入的内容。"
+      }
+    },
+    {
+      "key": "interfaceLocale.save",
+      "before": {
+        "en": "Save interface language",
+        "vi": "Lưu ngôn ngữ giao diện",
+        "zh": "保存界面语言"
+      },
+      "after": {
+        "en": "Save language",
+        "vi": "Lưu ngôn ngữ",
+        "zh": "保存语言"
+      }
+    },
+    {
+      "key": "interfaceLocale.saveBlocked",
+      "before": {
+        "en": null,
+        "vi": null,
+        "zh": null
+      },
+      "after": {
+        "en": "Unable to save your choice yet. Reload the page and try again.",
+        "vi": "Chưa thể lưu lựa chọn. Hãy tải lại trang và thử lại.",
+        "zh": "暂时无法保存您的选择。请刷新页面后重试。"
+      }
+    }
+  ],
+  "existing_keys": 15,
+  "new_keys": [
+    "interfaceLocale.saveBlocked"
+  ]
+}

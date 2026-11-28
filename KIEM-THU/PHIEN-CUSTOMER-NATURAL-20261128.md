@@ -5,6 +5,20 @@ repo=manhtoangreensky-wq/toan-aas-standalone; Issue689;
 branch=codex/customer-natural-followup-20261128;
 BASE=469f70063217814522b674272185227d93c8a08c.
 
+## Bổ sung giao hàng — PR824
+
+Đợt này đã giao: HEAD930b4fc7a389374c8413e6165baaa887e4e3ff0f,
+kiểm tra46139279275 hai nhóm thành công,18trang/456bản ghi/456ảnh.
+Webdeploy46141881531 thành công;runtime2817dd9d221e04aa45945165ae60d5838cf9d920,
+cây9807ba77557dbd765d7e9b5995873e52141e5dff đúng bản đã kiểm.
+Bảy tệp nguồn,8tài nguyên trực tiếp,8theo phiên bản và17trong bộ nhớ
+ngoại tuyến khớp. ReceiptIssue689/7235804418 vàPR824/7238862093
+đã đọc lại đúng,bốn ô giao hàng củaPRđã tick.
+
+Các mốc chưa phát hành bên dưới là lịch sử,không sửa/xóa ledger cũ.
+Không có xác nhận thao tác khách thật trên production. Đợt tài khoản/
+ngôn ngữ tiếp theo có phiên CUSTOMER-LANGUAGE-CLEANUP riêng.
+
 ## Phạm vi khóa
 
 Hai tệp ứng dụng:413giá trị khóa sẵn có trong portal-i18n.js,không thêm

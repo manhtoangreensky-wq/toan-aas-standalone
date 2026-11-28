@@ -1,5 +1,29 @@
 # Nghiệp vụ vận hành hiện tại — TOAN AAS Web App
 
+## 28/11/2026 — Tài khoản và chọn ngôn ngữ: lời gọn, dễ dùng
+
+Đợt CUSTOMER-NATURAL bên dưới đã giao qua PR824: bản đang chạy
+`2817dd9d221e04aa45945165ae60d5838cf9d920`, kiểm tra46139279275,
+cập nhật Web46141881531. Bằng chứng456bản ghi/456ảnh và biên nhận
+Issue689/7235804418,PR824/7238862093 đã đối chiếu. Các dòng “chưa
+phát hành” của đợt đó bên dưới được giữ làm lịch sử.
+
+Ứng viên CUSTOMER-LANGUAGE-CLEANUP đổi16dòng dịch:15khóa cũ và
+một khóa mới,48record trong hai tệp ứng dụng. Tài khoản bỏ đúng
+một dòng mã ngôn ngữ/múi giờ/kiểu ảnh đại diện không cần thiết;
+các trường chỉnh sửa và dữ liệu hồ sơ không đổi.
+
+Trang chọn ngôn ngữ tập trung vào ba lựa chọn “Tiếng Việt”, “English”,
+“中文” và nút lưu. Bỏ giới thiệu lặp, chú thích lặp, bốn thẻ giải thích
+nội bộ và danh sách ngôn ngữ chưa chọn được. Giữ quyền lưu, lựa chọn
+hiện tại, nhãn cho trình đọc màn hình và hai liên kết cuối trang.
+
+Đã kiểm22ca riêng biệt theo ledger10lượt đầu+12lượt sửa tên bản địa;
+42lượt xem VI/EN/ZH,390tối/1440sáng,bảy trạng thái,không lỗi/tràn/
+kết nối ngoài. Phần kiểm tra lịch sử đang khép; chưa phát hành ứng
+viên mới hoặc kiểm thao tác thật bằng phiên khách trên production.
+Ghi chú chung,các mục vòng đời/thiết bị/offline và motion cuối vẫn mở.
+
 ## 28/11/2026 — lời tài khoản, bắt đầu dùng và dự án đang khép
 
 Đợt tài liệu bên dưới đã giao PR822:CI46116572440hai nhóm đạt,

@@ -1,5 +1,24 @@
 # Chức năng gốc và hiện tại — TOAN AAS Web App
 
+## 28/11/2026 — Tài khoản và chọn ngôn ngữ, giữ cách dùng
+
+Nguồn đối chiếu: Account Center Locale Clarity03/08, hợp đồng
+Interface Locale Navigator và mã tại BASE2817dd9d đã giao qua PR824.
+Bảng CUSTOMER-NATURAL bên dưới là lịch sử đợt413khóa,không gộp
+phạm vi đó vào đợt16dòng dịch này.
+
+| Trước | Ứng viên CUSTOMER-LANGUAGE-CLEANUP | Giữ nguyên |
+|---|---|---|
+| Lời tài khoản/thiết lập còn nhãn nội bộ |16dòng dịch tự nhiên VI/EN/ZH |Khóa ngoài phạm vi,nội dung khách,tên riêng,lệnh/liên kết thật |
+| Tóm tắt hiện mã ngôn ngữ/múi giờ/kiểu ảnh |Bỏ đúng một dòng tóm tắt |Biểu mẫu,giá trị và dữ liệu hồ sơ |
+| Trang ngôn ngữ có nhiều vùng giải thích dư |Chọn một trong ba ngôn ngữ rồi lưu |Radio vi/en/zh,tên bản địa,quyền,trạng thái chọn,ARIA,footer |
+| Bài kiểm tra cũ khóa lời trước khi tinh gọn |Đầu vào lịch sử hữu hạn đúng48record/16dòng dịch |Fixture/hash/assertion cũ;bài kiểm tra mới nhất đọc ứng dụng thật |
+
+Không thêm khả năng dịch dữ liệu khách hoặc ngôn ngữ mới. Lựa chọn
+giao diện vẫn không đổi múi giờ,hồ sơ,ngôn ngữ nội dung hoặc Telegram.
+22ca theo ledger và42lượt trình duyệt đã đạt trong phạm vi; kiểm tra
+liên quan và phát hành đợt mới chưa được ghi là hoàn thành.
+
 ## 28/11/2026 — lời tài khoản và bắt đầu sử dụng
 
 Nguồn gốc đã đối chiếu:WORKSPACE_SETUP_PROFILE_CONTRACT,

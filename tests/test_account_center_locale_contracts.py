@@ -2,10 +2,11 @@
 
 from pathlib import Path
 import re
+from tests.helpers.customer_language_cleanup_historical import customer_language_historical_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+PORTAL = customer_language_historical_source((ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8"), "static/portal/portal.js")
 from tests.helpers.customer_natural_followup_historical import customer_natural_historical_source
 I18N = customer_natural_historical_source((ROOT / "static" / "portal" / "portal-i18n.js").read_text(encoding="utf-8"), "static/portal/portal-i18n.js")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")

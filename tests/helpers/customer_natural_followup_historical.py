@@ -2,6 +2,7 @@
 import hashlib
 import json
 from pathlib import Path
+from tests.helpers.customer_language_cleanup_historical import customer_language_historical_source
 
 _raw = (Path(__file__).parents[1] / "fixtures" / "customer-natural-followup-history.json").read_text(encoding="utf-8").replace("\r\n", "\n")
 assert hashlib.sha256(_raw.encode()).hexdigest() == "d74a68658d1dedb5dc986debc874f45dfe50355175414e64f1d4fff68bb68eb6"
@@ -13,6 +14,7 @@ assert len(_fixture["values"]) == 413
 
 def customer_natural_historical_source(source: str, file: str) -> str:
     """Remove only a complete approved wording record, retaining foreign bytes."""
+    source = customer_language_historical_source(source, file)
     row = next((item for item in _fixture["records"] if item["file"] == file), None)
     if row is None:
         return source

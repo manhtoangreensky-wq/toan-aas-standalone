@@ -1,5 +1,18 @@
 # Danh sách case TOAN AAS Web App — nguồn Tester
 
+## CUSTOMER-LANGUAGE-CLEANUP-20261128 — Issue689
+
+| Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |
+|---|---|---|---|---|
+| CLC-COPY | nặng |Đọc tài khoản/thiết lập/ngôn ngữ bằng VI/EN/ZH |Lời tự nhiên,không giải thích nội bộ,nội dung khách giữ |22ca riêng biệt theo ledger10+12 |
+| CLC-PROFILE | nặng |Đọc tóm tắt và gõ ô hồ sơ |Không dòng mã mặc định;trường,giá trị,quyền,dữ liệu giữ |Renderer trước/sau và trình duyệt |
+| CLC-LANGUAGE | nặng |Chọn ba ngôn ngữ,Tab,kiểm trạng thái không được lưu |Tên bản địa,radio,lưu,ARIA,footer giữ;không vùng dư |42lượt xem390tối/1440sáng,0lỗi/tràn/kết nối ngoài |
+| CLC-HISTORY | nặng |Thiếu/đổi/lặp record/giá trị và thêm chữ ngoài phạm vi |Chỉ bóc48record/16giá trị đúng,không nới bài kiểm tra cũ |Nhóm đang khép;phiên riêng ghi từng lượt |
+| CLC-DELIVERY | nặng |Đúng nguồn→gộp→cập nhật Web→đối chiếu |Mỗi bước có bằng chứng riêng,không suy phiên khách thật |Chưa phát hành;PHIEN-CUSTOMER-LANGUAGE-CLEANUP-20261128 |
+
+Đợt CUSTOMER-NATURAL ngay dưới đã giao PR824. Cột “chưa phát hành”
+của đợt đó là lịch sử trước lần giao,không phải trạng thái CLC.
+
 ## CUSTOMER-NATURAL-20261128 — Issue689
 
 | Case | Mức | Thao tác | Điều kiện đạt | Bằng chứng |

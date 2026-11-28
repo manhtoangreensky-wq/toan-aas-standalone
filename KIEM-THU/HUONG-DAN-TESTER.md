@@ -1,5 +1,19 @@
 # Hướng dẫn Tester TOAN AAS Web App
 
+## Tài khoản và chọn ngôn ngữ — 28/11/2026
+
+Dùng PHIEN-CUSTOMER-LANGUAGE-CLEANUP-20261128 và năm caseCLC.
+Đọc trọn câu như khách sử dụng,không chỉ dò từ viết tắt. Tài khoản
+không còn dòng mã ngôn ngữ/múi giờ/kiểu ảnh,nhưng các trường chỉnh
+sửa phải còn nguyên. Nội dung khách tự nhập phải được giữ nguyên.
+
+Trang ngôn ngữ chỉ cần chọn và lưu: ba tên luôn là “Tiếng Việt”,
+“English”,“中文”. Chọn từng ô rồi dùngTab;kiểm nút bị khóa vẫn khóa,
+nhãn đọc đúng ô và hai liên kết cuối trang dùng được. Kiểm390tối và
+1440sáng riêng cho ba ngôn ngữ. Không lưu thật,thay đổi bảo mật hoặc
+dùng dữ liệu khách để lấy bằng chứng. Ảnh trên máy không thay bằng
+chứng phiên khách trên web thật. Giữ lịch sử PR824 riêng.
+
 ## Lời tài khoản và bắt đầu sử dụng — 28/11/2026
 
 Dùng PHIEN-CUSTOMER-NATURAL-20261128 và5caseCNtrong danh sách.
