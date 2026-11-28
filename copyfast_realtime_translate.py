@@ -1187,7 +1187,12 @@ def is_pricing_admission_allowed(
         # Only accounts with verified deposited balance > 0 are admitted.
         has_paid_balance = False
         if account and isinstance(account, dict):
+            role_val = str(account.get("role") or account.get("role_cache") or "").strip().lower()
+            if role_val == "admin":
+                has_paid_balance = True
             for balance_key in ("balance_xu", "credits", "balance"):
+                if has_paid_balance:
+                    break
                 val = account.get(balance_key)
                 if val is not None and isinstance(val, (int, float)) and val > 0:
                     has_paid_balance = True
@@ -1258,9 +1263,13 @@ async def create_live_translate_session(
         else RealtimeTranslateMode.LIVE_DUB_BILINGUAL
     )
 
+    is_admin_role = str(account.get("role") or account.get("role_cache") or "").strip().lower() == "admin"
     canonical_actor_id = str(account.get("canonical_user_id") or "").strip()
     effective_account = dict(account)
-    if canonical_actor_id and not any(k in effective_account for k in ("balance_xu", "credits", "balance")):
+    if canonical_actor_id and not any(
+        isinstance(effective_account.get(k), (int, float))
+        for k in ("balance_xu", "credits", "balance")
+    ):
         try:
             from copyfast_bridge import CoreBridgeClient, bridge_request
 
@@ -1271,11 +1280,24 @@ async def create_live_translate_session(
                     params={"user_id": canonical_actor_id},
                     actor_id=canonical_actor_id,
                 )
-                if isinstance(wallet_res, dict) and wallet_res.get("ok"):
+                if isinstance(wallet_res, dict):
                     w_data = wallet_res.get("data") or {}
                     bal = w_data.get("balance_xu", w_data.get("balance"))
-                    if isinstance(bal, (int, float)):
+                    if wallet_res.get("ok") and isinstance(bal, (int, float)):
                         effective_account["balance_xu"] = bal
+                    elif is_admin_role and isinstance(bal, (int, float)) and bal > 0:
+                        effective_account["balance_xu"] = bal
+                    elif (
+                        not is_admin_role
+                        and not wallet_res.get("ok")
+                        and str(wallet_res.get("error_code") or "") == "WALLET_LEDGER_UNRECONCILED"
+                    ):
+                        raise HTTPException(
+                            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                            detail=str(wallet_res.get("message") or "Ví Xu đang chờ đối soát số dư."),
+                        )
+        except HTTPException:
+            raise
         except Exception:
             pass
 
@@ -1598,7 +1620,7 @@ async def websocket_live_stream(websocket: WebSocket, session_id: str, token: st
     token_owner_id, token_device_id = token_res
 
     session = _get_or_load_session(session_id)
-    ingress = _ACTIVE_INGRESS_BUFFERS.get(session_id)
+    ingress = _ACTIVE_INGRESS_BUFFERS.setdefault(session_id, RealtimeAudioIngressBuffer()) if session else None
     if not session or not ingress:
         await websocket.close(code=4404, reason="Session not found")
         return

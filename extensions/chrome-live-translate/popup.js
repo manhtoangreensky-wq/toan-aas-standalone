@@ -99,6 +99,7 @@ function handleStopResponse(stopRes, elements) {
 
 let _currentUserBalanceXu = 0;
 let _isAuthenticated = false;
+let _isAdminUser = false;
 let _csrfToken = "";
 
 async function checkAccountAuth(apiBase) {
@@ -111,20 +112,25 @@ async function checkAccountAuth(apiBase) {
     const payload = data?.data || {};
     const account = payload.account || data?.account || (payload.id || payload.email ? payload : {});
     const csrfToken = payload.csrf_token || data?.csrf_token || "";
+    const isAdmin = String(account.role || account.role_cache || "").trim().toLowerCase() === "admin";
 
     // Check wallet balance
     let balance = 0;
+    let walletOk = false;
     try {
       const walletRes = await fetch(`${apiBase}/api/v1/wallet`, { credentials: "include" });
       if (walletRes.ok) {
         const wData = await walletRes.json();
         const w = wData?.data || wData || {};
         balance = typeof w.balance_xu === "number" ? w.balance_xu : (typeof w.balance === "number" ? w.balance : 0);
+        walletOk = Boolean(wData?.ok);
       }
     } catch (_) {}
 
     return {
       authenticated: true,
+      isAdmin,
+      walletOk,
       email: account.email || account.display_name || "Tài khoản TOAN AAS",
       balanceXu: balance,
       csrfToken,
@@ -137,6 +143,7 @@ async function checkAccountAuth(apiBase) {
 if (typeof document !== "undefined") {
   document.addEventListener("DOMContentLoaded", async () => {
     const selectMode = document.getElementById("select-mode");
+    const selectSourceLang = document.getElementById("select-source-lang");
     const selectLang = document.getElementById("select-lang");
     const selectVoice = document.getElementById("select-voice");
     const btnToggle = document.getElementById("btn-toggle");
@@ -159,6 +166,7 @@ if (typeof document !== "undefined") {
     async function refreshAccountUi() {
       const auth = await checkAccountAuth(DEFAULT_API_BASE);
       _isAuthenticated = auth.authenticated;
+      _isAdminUser = Boolean(auth.isAdmin);
       _currentUserBalanceXu = auth.balanceXu || 0;
       _csrfToken = auth.csrfToken || "";
 
@@ -169,9 +177,9 @@ if (typeof document !== "undefined") {
         if (userEmail) userEmail.textContent = auth.email;
         if (userBalance) userBalance.textContent = `Số dư: ${_currentUserBalanceXu.toLocaleString("vi-VN")} Xu`;
         if (balanceWarning) {
-          balanceWarning.style.display = _currentUserBalanceXu > 0 ? "none" : "block";
+          balanceWarning.style.display = (_currentUserBalanceXu > 0 || _isAdminUser) ? "none" : "block";
         }
-        if (selectVoice) {
+        if (selectVoice && (auth.walletOk || _isAdminUser)) {
           try {
             const vpRes = await fetch(`${DEFAULT_API_BASE}/api/v1/voice/profiles`, { credentials: "include" });
             if (vpRes.ok) {
@@ -282,7 +290,7 @@ if (typeof document !== "undefined") {
             });
           } else {
             // Check balance before starting
-            if (_isAuthenticated && _currentUserBalanceXu <= 0) {
+            if (_isAuthenticated && !_isAdminUser && _currentUserBalanceXu <= 0) {
               updateUiFailedElements(elements, "Tài khoản cần có số dư Xu để sử dụng dịch trực tiếp (Cước phí: 2x SubDub). Vui lòng nạp Xu tại app.toanaas.vn/wallet/topup.");
               return;
             }
@@ -298,6 +306,7 @@ if (typeof document !== "undefined") {
               const rawVoice = selectVoice?.value || "male";
               const sessionPayload = {
                 mode: selectMode?.value || "LIVE_DUB_BILINGUAL",
+                source_language: selectSourceLang?.value || "auto",
                 target_language: selectLang?.value || "vi",
                 gender_preference: rawVoice === "female" ? "female" : "male",
                 voice_profile_id: rawVoice.startsWith("vp_") ? rawVoice.slice(3) : null,
