@@ -144,3 +144,89 @@ def test_subdub_shell_includes_live_studio_and_excludes_from_auth_split():
     sw = (Path(__file__).resolve().parents[1] / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
     assert '"/static/portal/live-translate-studio.js"' in sw
     assert '"/static/portal/live-translate-studio.css"' in sw
+
+
+def test_admin_admission_with_unreconciled_wallet_and_multiworker_ws_ingress(tmp_path, monkeypatch):
+    db_file = tmp_path / "rt_admin_mw.db"
+    monkeypatch.setenv("DATABASE_PATH", str(db_file))
+    monkeypatch.setenv("SQLITE_DB_PATH", str(db_file))
+    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(db_file))
+    monkeypatch.setenv("TOAN_AAS_ENV", "production")
+    monkeypatch.setenv("REALTIME_STREAM_SECRET", "webapp-test-stream-secret-32-bytes")
+    monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://127.0.0.1:8080")
+    monkeypatch.setenv("CORE_BRIDGE_TOKEN", "test-bridge-token-32-bytes-minimum")
+    monkeypatch.setenv("CORE_BRIDGE_HMAC_SECRET", "test-hmac-secret-32-bytes-minimum")
+
+    async def fake_bridge(method, path, payload=None, params=None, actor_id=None, **kwargs):
+        if path == "/internal/v1/wallet":
+            # Matches real VPS scenario where Bot wallet has snapshot_credits=500 but ledger_credits=200
+            return {
+                "ok": False,
+                "status": "guarded",
+                "error_code": "WALLET_LEDGER_UNRECONCILED",
+                "message": "Phát hiện sai lệch đối soát giữa số dư ví và sổ cái giao dịch.",
+                "data": {"balance_xu": 500},
+            }
+        return {"ok": False}
+
+    monkeypatch.setattr(copyfast_bridge, "bridge_request", fake_bridge)
+
+    class DummyReq:
+        pass
+
+    async def _run():
+        req = rt.CreateSessionRequest(source_language="auto", target_language="vi", mode="LIVE_DUB_BILINGUAL")
+
+        # 1. Admin with unreconciled wallet (500 Xu) MUST be admitted cleanly
+        admin_acc = {"id": "web_admin_uuid", "role": "admin", "canonical_user_id": "7126457028"}
+        created = await rt.create_live_translate_session(req, DummyReq(), account=admin_acc)
+        assert created.ok is True
+        sid = created.session_id
+        token = created.stream_token
+
+        # 2. Non-admin with WALLET_LEDGER_UNRECONCILED remains fail-closed with 402
+        normal_acc = {"id": "web_user_uuid", "role": "user", "canonical_user_id": "999111222"}
+        import pytest as _pytest
+        with _pytest.raises(Exception) as exc:
+            await rt.create_live_translate_session(req, DummyReq(), account=normal_acc)
+        assert "402" in str(exc.value)
+
+        # 3. Worker #2 receives WebSocket connection even when _ACTIVE_INGRESS_BUFFERS is empty in RAM
+        rt._ACTIVE_SESSIONS.clear()
+        rt._ACTIVE_INGRESS_BUFFERS.clear()
+        rt._SESSION_CANONICAL_ACTORS.clear()
+
+        class FakeWS:
+            def __init__(self):
+                self.accepted = False
+                self.closed = False
+                self.close_code = None
+                self.sent = []
+            async def accept(self):
+                self.accepted = True
+            async def close(self, code=1000, reason=""):
+                self.closed = True
+                self.close_code = code
+            async def send_json(self, obj):
+                self.sent.append(obj)
+            async def receive(self):
+                from fastapi import WebSocketDisconnect
+                raise WebSocketDisconnect(code=1000)
+
+        ws = FakeWS()
+        await rt.websocket_live_stream(ws, sid, token=token)
+        assert ws.accepted is True
+        assert ws.close_code != 4404
+        assert any(m.get("type") == "session.ready" for m in ws.sent)
+
+    asyncio.run(_run())
+
+
+def test_focus_live_mode_and_extension_admin_guards():
+    root = Path(__file__).resolve().parents[1]
+    studio_js = (root / "static" / "portal" / "live-translate-studio.js").read_text(encoding="utf-8")
+    studio_css = (root / "static" / "portal" / "live-translate-studio.css").read_text(encoding="utf-8")
+    popup_js = (root / "extensions" / "chrome-live-translate" / "popup.js").read_text(encoding="utf-8")
+    assert "focus=live" in studio_js
+    assert "portal-lt-focus-mode" in studio_css
+    assert "_isAdminUser" in popup_js

@@ -9000,7 +9000,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 1215,
+      "line": 1220,
       "name": "ENV"
     },
     {
@@ -9140,7 +9140,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 1218,
+      "line": 1223,
       "name": "PYTEST_CURRENT_TEST"
     },
     {
@@ -9160,7 +9160,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 1220,
+      "line": 1225,
       "name": "REALTIME_ALLOW_UNPRICED_TEST_SESSION"
     },
     {
@@ -9215,7 +9215,7 @@
     },
     {
       "file": "copyfast_realtime_translate.py",
-      "line": 1216,
+      "line": 1221,
       "name": "TESTING"
     },
     {
@@ -10449,7 +10449,7 @@
         "copyfast_customer_crm_policy.py",
         "copyfast_data_controls.py"
       ],
-      "occurrences": 1246,
+      "occurrences": 1240,
       "provider": "PayOS"
     },
     {
@@ -10663,7 +10663,6 @@
         "KIEM-THU/DANH-SACH-CASE.md",
         "KIEM-THU/HUONG-DAN-TESTER.md",
         "KIEM-THU/PHIEN-ADMIN-GUARD-CUSTOMER-COPY-20261127.md",
-        "KIEM-THU/PHIEN-CUSTOMER-NATURAL-20261128.md",
         "README.md",
         "TAI-LIEU/01-NGHIEP-VU-VAN-HANH.md",
         "TAI-LIEU/02-CHUC-NANG-GOC-VA-HIEN-TAI.md",
@@ -10699,9 +10698,10 @@
         "copyfast_media_factory.py",
         "copyfast_memory.py",
         "copyfast_mfa.py",
-        "copyfast_music_library_bridge.py"
+        "copyfast_music_library_bridge.py",
+        "copyfast_music_media.py"
       ],
-      "occurrences": 2394,
+      "occurrences": 2116,
       "provider": "Telegram"
     }
   ],
@@ -13202,7 +13202,7 @@
     {
       "endpoint": "download_live_translate_extension",
       "file": "copyfast_realtime_translate.py",
-      "line": 1442,
+      "line": 1464,
       "methods": [
         "GET"
       ],
@@ -13211,7 +13211,7 @@
     {
       "endpoint": "download_live_translate_extension",
       "file": "copyfast_realtime_translate.py",
-      "line": 1442,
+      "line": 1464,
       "methods": [
         "GET"
       ],
@@ -16766,7 +16766,7 @@
     {
       "endpoint": "create_live_translate_session",
       "file": "copyfast_realtime_translate.py",
-      "line": 1245,
+      "line": 1250,
       "methods": [
         "POST"
       ],
@@ -16775,7 +16775,7 @@
     {
       "endpoint": "get_session_status",
       "file": "copyfast_realtime_translate.py",
-      "line": 1330,
+      "line": 1352,
       "methods": [
         "GET"
       ],
@@ -16784,7 +16784,7 @@
     {
       "endpoint": "export_session_subtitles",
       "file": "copyfast_realtime_translate.py",
-      "line": 1404,
+      "line": 1426,
       "methods": [
         "GET"
       ],
@@ -16793,7 +16793,7 @@
     {
       "endpoint": "stop_session",
       "file": "copyfast_realtime_translate.py",
-      "line": 1345,
+      "line": 1367,
       "methods": [
         "POST"
       ],
@@ -18853,9 +18853,9 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 749,
-  "source_files_scanned": 749,
-  "source_fingerprint_sha256": "f296d65c17beb1826e1bdae770fa2c9f8979b3927bc6f2c47274576df480213b",
+  "source_files_discovered": 747,
+  "source_files_scanned": 747,
+  "source_fingerprint_sha256": "1e3cfcf7aa6b82009424af0a3ad723b4b90bc423fe7a8d006ef52c3028a2ee50",
   "source_root": "repository-root",
   "ui_path_references": [
     {
@@ -18910,7 +18910,7 @@
     },
     {
       "file": "static/portal/live-translate-studio.js",
-      "line": 160,
+      "line": 174,
       "path": "/api/v1/auth/me"
     },
     {
@@ -18960,7 +18960,7 @@
     },
     {
       "file": "static/portal/live-translate-studio.js",
-      "line": 186,
+      "line": 201,
       "path": "/api/v1/core/status"
     },
     {
@@ -19085,7 +19085,7 @@
     },
     {
       "file": "static/portal/live-translate-studio.js",
-      "line": 395,
+      "line": 474,
       "path": "/api/v1/live-translate/sessions"
     },
     {
@@ -19115,12 +19115,12 @@
     },
     {
       "file": "static/portal/live-translate-studio.js",
-      "line": 215,
+      "line": 232,
       "path": "/api/v1/voice/profiles"
     },
     {
       "file": "static/portal/live-translate-studio.js",
-      "line": 195,
+      "line": 210,
       "path": "/api/v1/wallet"
     },
     {
