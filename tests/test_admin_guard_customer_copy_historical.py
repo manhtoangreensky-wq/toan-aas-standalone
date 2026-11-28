@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 
 import pytest
+from tests.helpers.document_natural_copy_historical import document_natural_historical_source
 
 from tests.helpers.admin_guard_customer_copy_historical import (
     admin_guard_customer_copy_historical_source as inverse,
@@ -64,6 +65,7 @@ def test_immutable_git_base_is_byte_exact_identity_noop(file):
 @pytest.mark.parametrize("file", FILES)
 def test_actual_current_is_exact_proposal_construction_and_inverse_equals_independent_git_base(file):
     physical = (ROOT / file).read_bytes().decode("utf-8").replace("\r\n", "\n")
+    physical = document_natural_historical_source(physical, file)
     metadata = next(row for row in FIXTURE["application_sources"] if row["file"] == file)
     assert digest(physical) == metadata["current_lf_sha256"]
     assert physical == CURRENT[file]

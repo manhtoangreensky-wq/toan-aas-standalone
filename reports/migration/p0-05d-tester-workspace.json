@@ -135,6 +135,23 @@
       "node_recovery_passed": 120,
       "python_recovery_passed": 120,
       "application_changes_for_recovery": 0
+    },
+    "ci2": {
+      "run": 46114374438,
+      "head": "2cf8a03198faf5f9558c2209c9f273054ae8f621",
+      "first_new_checks_passed": 50,
+      "auth_checks_passed": 208,
+      "document_python_group_passed": 45,
+      "document_python_group_failed": 1,
+      "source_python_files": 20,
+      "source_python_group_passed": 737,
+      "source_python_group_failed": 9,
+      "failed_only_recovered": 9,
+      "source_python_type_guard_order_failures_by_root": 3,
+      "node_physical_reader_failed_only_recovered": 11,
+      "application_changes_for_recovery": 0,
+      "old_fixture_hashes_and_assertions_held": true,
+      "broad_run_included_unchanged_backend_and_was_aborted": true
     }
   },
   "prior_gallery_customer_copy_verification_session": {
@@ -1110,9 +1127,9 @@
     },
     {
       "path": "KIEM-THU/PHIEN-DOCUMENT-NATURAL-20261128.md",
-      "lines": 69,
-      "bytes": 4521,
-      "sha256": "93d7a90de6c9355072195a9b1b1658a3e2d11659c986d9271b6c02b16bbb5f0d"
+      "lines": 77,
+      "bytes": 5146,
+      "sha256": "603d645f27af830dfb16e106509949a513c060824d61cc651745c9d01a3b348b"
     },
     {
       "path": "KIEM-THU/PHIEN-FAMILY-CHROME-NATIVE-20261127.md",
@@ -1338,9 +1355,9 @@
     },
     {
       "path": "reports/prepush/DOCUMENT-NATURAL-20261128.md",
-      "lines": 62,
-      "bytes": 3747,
-      "sha256": "3266e12a266e253b168a18dd67189990e987104c31ba2a6d304c2e85ed343581"
+      "lines": 82,
+      "bytes": 5243,
+      "sha256": "a03ea5b331fe3a248ac129cd4cc44fb7e8fc5fd29d8e3563429fcd7caef0c922"
     },
     {
       "path": "reports/tester/ADMIN-GUARD-CUSTOMER-COPY-20261127.md",

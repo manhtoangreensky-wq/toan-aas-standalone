@@ -67,3 +67,11 @@ Lượt kho46113947927:205/208đạt,3lỗi reader auth-return cũ so toàn
 integration với epoch cũ. Bổ sung input inverse hữu hạn đúng60record
 trước assertions ở Node/Python; không đổi fixture/pin/assertion hay app.
 120Node/120Python recovery đạt; workflow chạy raw34+pressure16 mới.
+
+CI-2 dừng ở reader tài liệu45đạt/1lỗi; kiểm rộng hơn đúng nguồn sau đó:
+20tệp Python746ca,737đạt/9lỗi; đúng9ca hồi phục9/9đạt.
+11Node reader vật lý/khóa cũ cũng hồi phục đúng11/11, không chạy lại
+nhóm đã đạt. Ba trong9lỗi là adapter kiểm kiểu dữ liệu do Root chèn sai
+thứ tự, không lỗi ứng dụng; đã khôi phục kiểm kiểu trước khi chiếu nguồn.
+App không đổi. Lượt gộp trước lẫn backend Gallery không đổi đã dừng riêng
+tiến trình tạm, không coi lượt đó PASS và không dừng web/máy chủ.

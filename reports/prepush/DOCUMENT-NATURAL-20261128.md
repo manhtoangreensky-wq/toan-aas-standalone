@@ -60,3 +60,23 @@ trước bài so sánh cũ trong hai tệp Node/Python, giữ fixture/hash/asser
 nguyên. Local recovery120Node/120Python đạt.
 Ứng dụng không đổi; workflow bổ sung raw34 và pressure16 của đợt này
 trước kiểm lịch sử. Không bỏ gate, không sửa auth/runtime để chiều test.
+
+Lượt kho46114374438 tại2cf8a031: raw50,auth208 và các nhóm đầu đạt,
+nhóm Python liên quan tài liệu45đạt/1lỗi reader so toàn nguồn cũ.
+Đã bổ sung inverse hữu hạn tại đầu reader đó. Rà gộp21tệp Python
+lịch sử của workflow phát hiện thêm điểm nối trước reader quản trị;
+chỉ bổ sung điểm nối đầu vào, không đổi ứng dụng. Đang thu kết quả gộp
+và giữ nguyên các lần lỗi, không suy đạt từ việc kiểm tra đang chạy.
+
+Kết quả rà gộp cuối:20tệp Python chỉ đọc nguồn,746ca:
+737đạt/9lỗi → đúng9ca lỗi chạy lại đạt9/9. Sáu ca là đầu vào reader
+còn ở epoch mới; ba ca là thứ tự kiểm tra kiểu dữ liệu trong điểm nối
+do Root thêm, đã đưa kiểm tra kiểu lên trước như cũ. Không phải lỗi app.
+Node reader vật lý quản trị/Gallery:11ca chưa đạt đúng nguồn/khóa cũ,
+chỉ sửa constructor input hữu hạn; đúng11ca chạy lại11/11đạt.
+
+Một lượt chọn21tệp trước đó lẫn backend Gallery không đổi và bị chậm;
+đã dừng đúng hai tiến trình do Root mở, không dịch vụ/web/user process.
+Không nhận phần chưa xong là PASS. Không chạy lại nhóm backend đó trong
+đợt chữ này. 737ca đã đạt không chạy lại; chỉ9Python/11Node phụ thuộc
+được chạy lại. Các fixture/hash/assertions cũ và ba tệp app vẫn nguyên.
