@@ -77,3 +77,8 @@ PR824lượtkho46134749159dừng49/50đạt vì olddocumentdictionary
 comparatorgặp nhãn đã đổi đúng. Chỉneo snapshotđầuvào tại phépso đó;
 failed-only1/1đạt,khôngđổisourceứngdụng hoặc rawrenderer. Bảnkiểm
 mới phải đạt trướcmerge/deploy;không xóalịchsửlượtlỗi.
+
+CI2run46135662732đạt141/141nhómmớivà50/50tàiliệu;72oldmembership
+comparatorfailcùngnhãntổnghợpđãđổi,khônglỗitiền/giá/dữliệu.
+InputI18Ngiữđúngepochcũ,72failed+12liênquanđạt84/84. Noappchange.
+CI3đúngHEADmớivẫnbắtbuộc,khôngdùngkếtquảlocalđểbỏgate.

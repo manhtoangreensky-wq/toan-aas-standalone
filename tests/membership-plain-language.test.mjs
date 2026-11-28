@@ -13,7 +13,7 @@ import {chatDocAccessHistoricalSnapshot} from './helpers/chat-doc-access-snapsho
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const BASE='1f48b08e753c6b91b1d9b0b7986e80589d413c00';
 const HELPER=path.join(ROOT,'tests/helpers/publishing-child-render.mjs');
-const {renderChild:renderCurrent}=await import(pathToFileURL(HELPER).href);
+const {renderChild:renderCurrent}=await import("./helpers/customer-natural-historical-render.mjs");
 const baseSource=file=>execFileSync('git',['show',`${BASE}:${file}`],{cwd:ROOT,encoding:'utf8',maxBuffer:30*1024*1024});
 const basePortal=baseSource('static/portal/portal.js'),baseI18n=baseSource('static/portal/portal-i18n.js');
 let helper=fs.readFileSync(HELPER,'utf8');

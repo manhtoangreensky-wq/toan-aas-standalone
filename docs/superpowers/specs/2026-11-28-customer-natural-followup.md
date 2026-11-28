@@ -246,3 +246,18 @@ kỳ vọng cũ. Không bóc sourcekhỏi runtimecác renderer/transporttài li�
 rawprimarymới luôn đọcứngdụng hiện tại. Không sửa ứng dụng và không
 chạy lại nhóm đã đạt ởlocal;kiểm failed-only1ca rồi cùngPR824chạy
 đúngHEADmới. Giữlịch sửrunlỗi,khôngmerge/deploykhi chưa đạt.
+
+## Phụ lục lượt kho hai — hai reader cũ của gói thành viên
+
+Run46135662732/HEAD314ec679:nhómmới141/141đạt,gồmcả134rawprimary
+và7pressure;lỗilượt1đãkhép50/50. Lượtnàyđi tới hai oldmembership
+HTMLcomparatorbịảnhhưởngduynhấtbởisummary.companion;60casefallback
+originvà12caseplainlanguagefail,trongnhóm156có84đạt/72lỗi.
+Khôngliênquanviệcghiđọcsốdư,giáhoặcthanhtoán;khôngsửaứngdụng.
+
+Cho phép neo nguồnI18Ncủa hai reader
+membership-fallback-origin.test.mjs/membership-plain-language.test.mjs
+quahelperhữuhạnmớidànhriênginputrenderlịchsử;portalrendererđọcthật
+vànguồnbấtkỳngoàirecordđượcgiữ. KỳvọngHTML/control/fixture/pin cũ
+khôngđổi. Chạy72casefailed-onlyvàcácđốichiếumembershipliênquan một
+lượtgộp,táchkếtquả;khônglặpcáctestđãđạttrênkhohoặcđổi134raw.

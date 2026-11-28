@@ -51,6 +51,11 @@ tài liệu cũ. Chỉ phép so giá trị của test đó nhận snapshotđã b
 413khóa;renderer/transportvẫn đọc raw hiện tại. Failed-only1/1đạt.
 Không đổi hai tệpứngdụng,fixture/pin/assertioncũ hoặc rawprimarymới.
 
+Lượtkhohai46135662732đãđạt141/141nhómmới,50/50nhómtàiliệu.
+Sauđó72casecủahaioldmembershipcomparatorvướngsummary.companion;
+neoI18Nđầuvàoriênggiữrendererthật/control/sốdư/giá/kỳvọngcũ.
+Gộpđúng72casevà12liênquanđạt84/84,0lỗi;khôngsửalạimãứngdụng.
+
 ## Giới hạn và mục còn mở
 
 Ảnh chỉ renderer/kiểu dáng vật lý quaHTTP cục bộ và điều khiển native;
