@@ -56,6 +56,12 @@ Sauđó72casecủahaioldmembershipcomparatorvướngsummary.companion;
 neoI18Nđầuvàoriênggiữrendererthật/control/sốdư/giá/kỳvọngcũ.
 Gộpđúng72casevà12liênquanđạt84/84,0lỗi;khôngsửalạimãứngdụng.
 
+Accountreaderảnhhưởngđãđo39/45đạt,6failvìsubsetcũ. Neođầuvào
+đúngwholedictionarytrước33khóa;họpressurecũ/mới14/14đạt,không
+lặplại39caseđãđạt. Mainvừa nhậnPR823,khôngđụnghaiappfileđợtlời;
+giữtoànbộPR823vàchỉgiảiquyếtJSONprovenancebằngmáysinh,không
+ghiđèfixture/mãcủathayđổibênkia hoặc tựsửaroute-engine/tiền.
+
 ## Giới hạn và mục còn mở
 
 Ảnh chỉ renderer/kiểu dáng vật lý quaHTTP cục bộ và điều khiển native;

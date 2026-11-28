@@ -3,10 +3,12 @@ import test from 'node:test';
 import fs from 'node:fs';
 import {accountPlainLanguageHistoricalSnapshot} from './helpers/account-plain-language-snapshot.mjs';
 import {renderPlainLanguage} from './helpers/account-plain-language-render.mjs';
+import {customerNaturalHistoricalSnapshot} from './helpers/customer-natural-followup-historical.mjs';
 const rows=JSON.parse(fs.readFileSync(new URL('./fixtures/account-plain-language-snapshot.json',import.meta.url),'utf8'));
 for(const locale of ['vi','en','zh']){
  test(locale+': historical adapter accepts exactly reviewed current copy and retains original literal values',()=>{
-  const actual=renderPlainLanguage(locale,'/account').messages;
+  const current=renderPlainLanguage(locale,'/account').messages;
+  const actual=Object.fromEntries(customerNaturalHistoricalSnapshot(Object.entries(current),locale));
   const entries=rows.map(row=>[row.key,actual[row.key]]),snapshot=JSON.stringify(entries);
   assert.deepEqual(accountPlainLanguageHistoricalSnapshot(entries,locale),rows.map(row=>[row.key,row.before[locale]]));
   assert.equal(JSON.stringify(entries),snapshot);

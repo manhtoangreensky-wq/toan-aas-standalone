@@ -34,7 +34,10 @@ export function documentNaturalHistoricalSource(source,file){
 }
 export function documentNaturalHistoricalSnapshot(entries,locale){
   assert(Array.isArray(entries)&&locales.includes(locale),fail+" snapshot input");
-  entries=customerNaturalHistoricalSnapshot(entries,locale);
+  // This chain also accepts tiny older-fixture subsets. Only a whole
+  // dictionary carries the unrelated stable chrome marker for this epoch.
+  if(entries.some(row=>Array.isArray(row)&&row[0]==="chrome.newWorkflow"))
+    entries=customerNaturalHistoricalSnapshot(entries,locale);
   const found=entries.filter(row=>Array.isArray(row)&&owned.has(row[0]));
   if(!found.length)return entries;
   assert.deepEqual(found,fixture.snapshots[locale],fail+" complete exact ordered values");

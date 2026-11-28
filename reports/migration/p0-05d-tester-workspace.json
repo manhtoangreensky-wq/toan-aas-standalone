@@ -60,7 +60,7 @@
       "CN-HISTORY",
       "CN-DELIVERY"
     ],
-    "status": "CI2_INPUT_RECOVERED_EXACT_HEAD_CI3_PENDING",
+    "status": "LOCAL_INPUTS_RECOVERED_CONCURRENT_MAIN_MERGE_CI_PENDING",
     "model": "gemini-4-hydrogen-xhigh",
     "application_files": 2,
     "exact_application_records": 2,
@@ -173,6 +173,22 @@
       "application_changes": 0,
       "old_pins_fixtures_assertions_held": true,
       "newest_primary_remains_raw": true
+    },
+    "account_reader_impact": {
+      "passed": 39,
+      "failed": 6,
+      "failed_and_pressure_recovery_passed": 14,
+      "application_changes": 0
+    },
+    "concurrent_main": {
+      "sha": "564f5dede3122f62a567804c6fdabdac18cd68db",
+      "pr": 823,
+      "application_pair_unchanged": true,
+      "only_conflicting_paths": [
+        "reports/migration/preflight.json",
+        "reports/migration/web_inventory.json"
+      ],
+      "status": "MERGE_PENDING"
     }
   },
   "prior_gallery_customer_copy_verification_session": {
@@ -1148,9 +1164,9 @@
     },
     {
       "path": "KIEM-THU/PHIEN-CUSTOMER-NATURAL-20261128.md",
-      "lines": 77,
-      "bytes": 5447,
-      "sha256": "6643f5ba674c7eee2bfc84f655443324218b3aaa6bdc903ec229b827fdcc467d"
+      "lines": 83,
+      "bytes": 5843,
+      "sha256": "75056dde5e83d80c00b977305f63ded83a026cd8f3b08e331976a1de772889e8"
     },
     {
       "path": "KIEM-THU/PHIEN-DOCUMENT-NATURAL-20261128.md",
@@ -1370,9 +1386,9 @@
     },
     {
       "path": "docs/superpowers/specs/2026-11-28-customer-natural-followup.md",
-      "lines": 263,
-      "bytes": 18303,
-      "sha256": "c246b7dc348ff634721ca009288445945cc0ac59de83f78db790df6dcc05db31"
+      "lines": 277,
+      "bytes": 19223,
+      "sha256": "6769384f2430fef77c7d26edfa484c10241402046e0aa6f570bb2b3a25583328"
     },
     {
       "path": "docs/superpowers/specs/2026-11-28-document-natural-wording.md",
@@ -1388,9 +1404,9 @@
     },
     {
       "path": "reports/prepush/CUSTOMER-NATURAL-20261128.md",
-      "lines": 84,
-      "bytes": 4845,
-      "sha256": "e5ceee8c2217e44bd9e06885e9291317275ff083f5484b132fd066dc1c89f065"
+      "lines": 89,
+      "bytes": 5165,
+      "sha256": "aa16191c8b5d9b3c8fd944ce993ede6e9fc0a038994fca93ffbd04dacbd424e7"
     },
     {
       "path": "reports/prepush/DOCUMENT-NATURAL-20261128.md",
@@ -1459,6 +1475,12 @@
       "sha256": "7f621362e137ee6d2db3518da0ca8ad84c8e368c792b25faec8d6450a42f43c6"
     },
     {
+      "path": "tests/account-plain-language-snapshot.test.mjs",
+      "lines": 22,
+      "bytes": 1625,
+      "sha256": "97517c80a97e9a679ad09ce2cff9b47ecfb47c553f0b10690b5a269e3030eb1c"
+    },
+    {
       "path": "tests/customer-natural-followup-copy.test.mjs",
       "lines": 189,
       "bytes": 17051,
@@ -1495,6 +1517,12 @@
       "sha256": "aa3a7ff8ac3723b8f84af27c0a9160cd0e631ba5f8dd50a5f11f15ca1108ee18"
     },
     {
+      "path": "tests/helpers/document-natural-copy-historical.mjs",
+      "lines": 45,
+      "bytes": 2858,
+      "sha256": "b0fae7068a2e12f883d7a081b1343f30247e7235d6012015f7b66507e39f168c"
+    },
+    {
       "path": "tests/test_p0_05d_tester_workspace.py",
       "lines": 385,
       "bytes": 17905,
@@ -1519,7 +1547,7 @@
       "CN-HISTORY",
       "CN-DELIVERY"
     ],
-    "status": "CI2_INPUT_RECOVERED_EXACT_HEAD_CI3_PENDING",
+    "status": "LOCAL_INPUTS_RECOVERED_CONCURRENT_MAIN_MERGE_CI_PENDING",
     "manifest": "KIEM-THU/PHIEN-CUSTOMER-NATURAL-20261128.md",
     "signed_ui_live": "NOT_TESTED",
     "legacy_push_gate_field": "Historical snapshot retained; CUSTOMER-NATURAL prepush defines the current release."

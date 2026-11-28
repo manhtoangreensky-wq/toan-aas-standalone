@@ -82,3 +82,8 @@ CI2run46135662732đạt141/141nhómmớivà50/50tàiliệu;72oldmembership
 comparatorfailcùngnhãntổnghợpđãđổi,khônglỗitiền/giá/dữliệu.
 InputI18Ngiữđúngepochcũ,72failed+12liênquanđạt84/84. Noappchange.
 CI3đúngHEADmớivẫnbắtbuộc,khôngdùngkếtquảlocalđểbỏgate.
+
+ĐoảnhhưởngAccountsnapshot45ca:39đạt/6failđầuvàolịchsử;đúng14ca
+failed/pressureliênquanđạt,khôngsửanguồnứngdụng. Bảnchínhhiện
+564f5ded/PR823,tươngthíchhaiappfileđợtlờikhôngđổitrênmain;chỉhai
+JSONprovenancexungđột.CầnmergemainvàregeneratedúngnguồntrướcCI3.
