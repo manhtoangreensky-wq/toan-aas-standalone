@@ -10414,6 +10414,7 @@
         "KIEM-THU/PHIEN-CATALOGUE-DESCRIPTIONS108-20261126.md",
         "KIEM-THU/PHIEN-CATALOGUE-FULL-BUNDLE135-20261126.md",
         "KIEM-THU/PHIEN-CATALOGUE-VIDEO-NATIVE-20261126.md",
+        "KIEM-THU/PHIEN-CUSTOMER-LANGUAGE-CLEANUP-20261128.md",
         "KIEM-THU/PHIEN-FAMILY-CHROME-NATIVE-20261127.md",
         "KIEM-THU/PHIEN-IMAGE-COMPOSER-NATIVE-LOCALE-20261126.md",
         "KIEM-THU/PHIEN-IMAGE-RESIZE-POLISH-20261117.md",
@@ -10446,10 +10447,9 @@
         "copyfast_capability_hub.py",
         "copyfast_channel_strategy.py",
         "copyfast_community_trust.py",
-        "copyfast_customer_crm_policy.py",
-        "copyfast_data_controls.py"
+        "copyfast_customer_crm_policy.py"
       ],
-      "occurrences": 1246,
+      "occurrences": 1247,
       "provider": "PayOS"
     },
     {
@@ -10701,7 +10701,7 @@
         "copyfast_mfa.py",
         "copyfast_music_library_bridge.py"
       ],
-      "occurrences": 2394,
+      "occurrences": 2391,
       "provider": "Telegram"
     }
   ],
@@ -18853,39 +18853,39 @@
     }
   ],
   "schema_version": "2.0",
-  "source_files_discovered": 749,
-  "source_files_scanned": 749,
-  "source_fingerprint_sha256": "4934f4e03c8902ecd4c6c79bcad6a0fb62fed53a3a7c917df61670f101fcc53c",
+  "source_files_discovered": 751,
+  "source_files_scanned": 751,
+  "source_fingerprint_sha256": "99bf3dffce8a4e89b86b098a3688f609b65c917779c09d30d7d0f342c9c753a5",
   "source_root": "repository-root",
   "ui_path_references": [
     {
       "file": "static/portal/portal.js",
-      "line": 36244,
+      "line": 36237,
       "path": "/api/admin/commercial/packages"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36560,
+      "line": 36553,
       "path": "/api/admin/commercial/packages/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35908,
+      "line": 35901,
       "path": "/api/admin/commercial/pricing"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 36157,
+      "line": 36150,
       "path": "/api/admin/commercial/pricing/"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35529,
+      "line": 35522,
       "path": "/api/admin/commercial/products"
     },
     {
       "file": "static/portal/portal.js",
-      "line": 35821,
+      "line": 35814,
       "path": "/api/admin/commercial/products/"
     },
     {
@@ -19125,7 +19125,7 @@
     },
     {
       "file": "static/portal/portal.js",
-      "line": 37680,
+      "line": 37673,
       "path": "/features"
     },
     {

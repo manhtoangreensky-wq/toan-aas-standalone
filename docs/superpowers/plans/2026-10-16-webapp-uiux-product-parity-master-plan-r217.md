@@ -5,6 +5,36 @@
 **Nhánh tài liệu:** `webapp-plan-r116` → push vào `webapp-checklist-r116`
 **Mục tiêu:** có một thứ tự thi công duy nhất, một checklist có trạng thái và các spec đủ cụ thể để người thực hiện không phải đoán.
 
+### Cập nhật28/11/2026 — PR824đãgiao;tiếptụcgọnlờivàngônngữ
+
+CUSTOMER-NATURALđãgiaoPR824:CI46139279275haiSUCCESS,18trang/
+456bảnghi/456ảnhđốichiếu.Webdeploy46141881531SUCCESS,runtime
+2817dd9d221e04aa45945165ae60d5838cf9d920/cây9807ba77đúngbản.
+7sourcehash/8direct/8versioned/17cachekhớp;Web/Bot/nginxactive.
+ReceiptIssue689/7235804418vàPR824/7238862093readbackđúng,bốnôPRđãtick.
+ĐãgiữPR823nguyênvẹnkhihòamain,khôngghiđènguồnrealtime/fixturebênkia.
+
+ĐợttiếptheoCUSTOMER-LANGUAGE-CLEANUPcóspec/plan28/11cùngIssue689,
+contract7238953042.BASEđúngbảnvừagiao,nhánhcodex/customer-language-cleanup-20261128.
+Bađầura:10nhãntàikhoản/thiếtlập;bỏduynhấtdòngmãmặcđịnhkhông
+cầnhiện;trangchọnngônngữchỉgiữlựachọn/nútlưu/cảnhbáocầnthiết.
+22rawprimarybanđầuREDđúngchỗ;lượtđầu10đạt,lượtchỉsửatênbảnđịa12đạt.
+BaAntigravity4ExtraHighđãtrảđềxuấtcôlập,48recordđượcghépcơhọc;
+haiappfile,15khóacũ+1mới;Rootkhôngtựviếtlogicứngdụng.42lượt
+trìnhduyệtđúngkhungđạt,0lỗi/tràn/kếtnốingoài;ràđộclậpứngdụngvà
+phầnhistorymớikhôngfinding.10Nodepressure/4Pythonleafvàcác
+readerliênquanđãkhépđúngphầnsai,khôngđổipin/assertioncũ.
+Đangchốttàiliệu/nguồntrướcbảnkiểmtrênkho,gộpvàcậpnhậtWeb.
+PR825CI1chỉcònmộtoldZHsectionfinderđãfailed-onlykhép;khôngđổiapp.
+29/11mainnhậnPR826/a75ad840:đãgiữtámfileupstreamblobexact,
+workflowmain+hailệnhtest,haiJSONgeneratedtạolại;khôngsửaphần
+realtime/extension/tiền.Haifilecâuchữgiữnguyênhashđãkiểm;C6vẫnmở.
+
+Bướcsau:ghichúmặcđịnhworkspaceđãcóđườnghiểnthịthật,rồicác
+bảnnháp/lifecycle/race/AX/responsive/thiếtbị/Safari/offline/phiên
+productioncònmở;motioncuối.KhôngBot/route-engine/provider/tiền/
+ENV/dữliệuthật.Khôngcoi141casecủaPR824làtoàngoalhoànthành.
+
 ### Cập nhật28/11/2026 — tài liệu đã giao;đang chốt lời tài khoản
 
 DOCUMENT-NATURALđã giao PR822/CI46116572440/Webdeploy46119482936,

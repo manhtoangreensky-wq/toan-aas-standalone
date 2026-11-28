@@ -4,14 +4,15 @@ import fs from "node:fs";
 import path from "node:path";
 import {execFileSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
+import {customerLanguageHistoricalSource} from "./helpers/customer-language-cleanup-historical.mjs";
 
 // Catches technical customer wording across real stateful renderer branches.
-// This suite reads the raw application; historical inverses are not used.
+// This older primary reads its reviewed epoch; the newest primary is raw.
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const BASE="469f70063217814522b674272185227d93c8a08c";
-const actualI18n=fs.readFileSync(path.join(ROOT,"static/portal/portal-i18n.js"),"utf8");
+const actualI18n=customerLanguageHistoricalSource(fs.readFileSync(path.join(ROOT,"static/portal/portal-i18n.js"),"utf8"),"static/portal/portal-i18n.js");
 const oldI18n=execFileSync("git",["show",BASE+":static/portal/portal-i18n.js"],{cwd:ROOT,encoding:"utf8",maxBuffer:30e6});
-const actualPortal=fs.readFileSync(path.join(ROOT,"static/portal/portal.js"),"utf8");
+const actualPortal=customerLanguageHistoricalSource(fs.readFileSync(path.join(ROOT,"static/portal/portal.js"),"utf8"),"static/portal/portal.js");
 const oldPortal=execFileSync("git",["show",BASE+":static/portal/portal.js"],{cwd:ROOT,encoding:"utf8",maxBuffer:30e6});
 const helper=fs.readFileSync(path.join(ROOT,"tests/helpers/publishing-child-render.mjs"),"utf8");
 const rootAnchor="const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');";

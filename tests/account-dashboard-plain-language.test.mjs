@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {renderPlainLanguage,sectionWith} from './helpers/account-plain-language-render.mjs';
+import fs from 'node:fs';
+import {renderPlainLanguage as currentRender,sectionWith} from './helpers/account-plain-language-render.mjs';
+import {customerLanguageHistoricalSource} from './helpers/customer-language-cleanup-historical.mjs';
+
+// This older copy contract keeps its reviewed dictionary epoch. The current
+// raw account/language acceptance remains in customer-language-cleanup.test.mjs.
+const i18n=customerLanguageHistoricalSource(fs.readFileSync('static/portal/portal-i18n.js','utf8'),'static/portal/portal-i18n.js');
+const renderPlainLanguage=(locale,route,raw={},search='')=>currentRender(locale,route,raw,search,{i18n});
 
 const locales=['vi','en','zh'];
 const technical=/CSRF|OAuth|BOT_USERNAME|canonical|metadata|signed session|元数据|已签名会话|nguồn chuẩn|siêu dữ liệu|cấu hình máy chủ|服务器.*配置/i;

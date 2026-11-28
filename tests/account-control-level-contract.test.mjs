@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
+import {customerLanguageHistoricalSource} from "./helpers/customer-language-cleanup-historical.mjs";
 
-const portal = fs.readFileSync("static/portal/portal.js", "utf8");
+const portal = customerLanguageHistoricalSource(fs.readFileSync("static/portal/portal.js", "utf8"), "static/portal/portal.js");
 const integration = fs.readFileSync("static/portal/integration.js", "utf8");
 
 function between(source, startNeedle, endNeedle) {

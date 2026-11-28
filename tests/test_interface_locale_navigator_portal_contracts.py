@@ -7,10 +7,11 @@ it is not a Bot callback replay, bridge surface or workflow-language control.
 from __future__ import annotations
 
 from pathlib import Path
+from tests.helpers.customer_language_cleanup_historical import customer_language_historical_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+PORTAL = customer_language_historical_source((ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8"), "static/portal/portal.js")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
 STYLES = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 from tests.helpers.customer_natural_followup_historical import customer_natural_historical_source

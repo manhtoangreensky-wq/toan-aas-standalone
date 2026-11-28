@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHash} from "node:crypto";
+import {customerLanguageHistoricalSource,customerLanguageHistoricalSnapshot} from "./customer-language-cleanup-historical.mjs";
 const fail="Unreviewed customer natural-copy history";
 const sha=value=>createHash("sha256").update(value).digest("hex");
 const raw=fs.readFileSync(new URL("../fixtures/customer-natural-followup-history.json",import.meta.url),"utf8").replace(/\r\n/g,"\n");
@@ -18,6 +19,7 @@ for(const row of fixture.records){
 }
 export function customerNaturalHistoricalSource(source,file){
   assert.equal(typeof source,"string");
+  source=customerLanguageHistoricalSource(source,file);
   const row=fixture.records.find(record=>record.file===file);
   if(!row)return source;
   const ending=source.includes("\r\n")?"\r\n":"\n";
@@ -32,6 +34,7 @@ export function customerNaturalHistoricalSource(source,file){
 }
 export function customerNaturalHistoricalSnapshot(entries,locale){
   assert(Array.isArray(entries)&&locales.includes(locale));
+  entries=customerLanguageHistoricalSnapshot(entries,locale);
   const owned=new Map(fixture.values.map(row=>[row.key,row]));
   const found=entries.filter(row=>Array.isArray(row)&&owned.has(row[0]));
   if(!found.length)return entries;
